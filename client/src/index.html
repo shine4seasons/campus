@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Marketplace — Mua bán đồ sinh viên</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+
+  <!-- Navbar (injected by JS) -->
+  <div id="navbar"></div>
+
+  <!-- ── HERO ──────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span></span> Nền tảng số 1 dành cho sinh viên
+      </div>
+      <h1>Mua bán <em>thông minh</em><br>trong khuôn viên trường</h1>
+      <p class="hero-sub">
+        Hàng nghìn sản phẩm second-hand từ sách vở, điện tử đến đồ dùng hàng ngày. An toàn, nhanh chóng, tiết kiệm.
+      </p>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <select class="search-select" id="search-cat">
+          <option value="">Tất cả</option>
+          <option value="books">Sách vở</option>
+          <option value="electronics">Điện tử</option>
+          <option value="clothing">Quần áo</option>
+          <option value="furniture">Nội thất</option>
+          <option value="daily-needs">Đồ dùng</option>
+          <option value="sports">Thể thao</option>
+        </select>
+        <input class="search-input" type="text" id="search-input" placeholder="Tìm kiếm sản phẩm...">
+        <button class="search-btn" onclick="handleSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Tìm
+        </button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num" id="stat-products">1,240+</div><div class="stat-label">Sản phẩm</div></div>
+        <div class="stat"><div class="stat-num" id="stat-users">850+</div><div class="stat-label">Sinh viên</div></div>
+        <div class="stat"><div class="stat-num" id="stat-deals">3,500+</div><div class="stat-label">Giao dịch</div></div>
+        <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">Đánh giá</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CATEGORIES ─────────────────────────────── -->
+  <section class="categories" id="categories">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">Danh mục</div>
+        <h2>Tìm đúng thứ bạn cần</h2>
+        <p>Từ giáo trình đến laptop, mọi thứ đều có ở đây</p>
+      </div>
+      <div class="cat-grid fade-up" id="cat-grid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURED ────────────────────────────────── -->
+  <section class="featured" id="featured">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">Nổi bật hôm nay</div>
+        <h2>Sản phẩm mới nhất</h2>
+        <p>Được đăng trong 24 giờ qua</p>
+      </div>
+
+      <div class="filter-bar fade-up" id="filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">Tất cả</button>
+        <button class="filter-btn" data-filter="books"       onclick="setFilter(this,'books')">📚 Sách vở</button>
+        <button class="filter-btn" data-filter="electronics" onclick="setFilter(this,'electronics')">💻 Điện tử</button>
+        <button class="filter-btn" data-filter="clothing"    onclick="setFilter(this,'clothing')">👕 Quần áo</button>
+        <button class="filter-btn" data-filter="daily-needs" onclick="setFilter(this,'daily-needs')">🧴 Đồ dùng</button>
+        <button class="filter-btn" data-filter="sports"      onclick="setFilter(this,'sports')">⚽ Thể thao</button>
+      </div>
+
+      <div class="products-grid" id="products-grid">
+        <!-- Filled by JS -->
+      </div>
+
+      <div class="load-more-wrap fade-up">
+        <button class="btn btn-secondary" style="padding:12px 32px;font-size:15px;" onclick="loadMore()">
+          Xem thêm sản phẩm
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ──────────────────────────────── -->
+  <section class="how-it-works" id="how">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">Cách hoạt động</div>
+        <h2>Đơn giản — Nhanh chóng — Tin cậy</h2>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card fade-up" style="transition-delay:0s">
+          <div class="step-icon">🔐</div>
+          <div class="step-title">Đăng nhập bằng Email trường</div>
+          <div class="step-desc">Dùng tài khoản Google của trường để xác thực danh tính sinh viên.</div>
+        </div>
+        <div class="step-card fade-up" style="transition-delay:0.08s">
+          <div class="step-icon">📦</div>
+          <div class="step-title">Đăng sản phẩm</div>
+          <div class="step-desc">Upload ảnh, AI tự động tạo mô tả hấp dẫn cho sản phẩm của bạn.</div>
+        </div>
+        <div class="step-card fade-up" style="transition-delay:0.16s">
+          <div class="step-icon">💬</div>
+          <div class="step-title">Nhắn tin trực tiếp</div>
+          <div class="step-desc">Chat real-time với người bán, thương lượng giá và hẹn gặp.</div>
+        </div>
+        <div class="step-card fade-up" style="transition-delay:0.24s">
+          <div class="step-icon">🤝</div>
+          <div class="step-title">Giao nhận an toàn</div>
+          <div class="step-desc">Gặp mặt trực tiếp trong khuôn viên trường hoặc giao hàng.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TRUST BANNER ────────────────────────────── -->
+  <section class="trust-banner">
+    <div class="container">
+      <div class="trust-inner fade-up">
+        <div class="trust-text">
+          <h2>Bắt đầu ngay hôm nay 🎓</h2>
+          <p>Tham gia cộng đồng mua bán của hơn 850 sinh viên</p>
+        </div>
+        <div class="trust-actions" id="trust-actions">
+          <!-- Filled by JS based on auth state -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">📚 Campus Marketplace</div>
+          <div class="footer-desc">Nền tảng mua bán đồ cũ dành riêng cho sinh viên. An toàn, tiện lợi, tiết kiệm.</div>
+        </div>
+        <div class="footer-col">
+          <h4>Khám phá</h4>
+          <a href="#">Sách vở</a>
+          <a href="#">Điện tử</a>
+          <a href="#">Quần áo</a>
+          <a href="#">Đồ dùng</a>
+        </div>
+        <div class="footer-col">
+          <h4>Hỗ trợ</h4>
+          <a href="#">Trung tâm hỗ trợ</a>
+          <a href="#">Điều khoản</a>
+          <a href="#">Bảo mật</a>
+          <a href="#">Liên hệ</a>
+        </div>
+        <div class="footer-col">
+          <h4>Kết nối</h4>
+          <a href="#">Facebook</a>
+          <a href="#">Instagram</a>
+          <a href="#">Zalo Group</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 Campus Marketplace. Tất cả quyền được bảo lưu.</span>
+        <span>Made with ❤️ by sinh viên, cho sinh viên</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { auth }          from './js/auth.js';
+    import { renderNavbar }  from './js/components/navbar.js';
+    import { ROUTES }        from './js/config.js';
+
+    // ── 1. Render navbar (hiện "Xin chào, [tên]" nếu đã login) ──
+    renderNavbar();
+
+    // ── 2. Cập nhật trust banner theo trạng thái auth ──────────
+    const trustActions = document.getElementById('trust-actions');
+    if (auth.isAuthenticated()) {
+      trustActions.innerHTML = `
+        <a href="${ROUTES.SELL}" class="btn-white">+ Đăng bán ngay</a>
+        <a href="#featured" class="btn-outline-white">Xem sản phẩm</a>
+      `;
+    } else {
+      trustActions.innerHTML = `
+        <a href="${ROUTES.LOGIN}" class="btn-white">Đăng nhập ngay</a>
+        <a href="#featured" class="btn-outline-white">Xem sản phẩm</a>
+      `;
+    }
+
+    // ── 3. Render categories ─────────────────────────────────
+    const CATEGORIES = [
+      { icon:'📚', name:'Sách & Giáo trình', slug:'books',       count:'320+ sản phẩm' },
+      { icon:'💻', name:'Điện tử & Máy tính', slug:'electronics', count:'210+ sản phẩm' },
+      { icon:'👕', name:'Quần áo & Thời trang',slug:'clothing',   count:'180+ sản phẩm' },
+      { icon:'🛋️', name:'Nội thất & Phòng trọ',slug:'furniture',  count:'95+ sản phẩm'  },
+      { icon:'🧴', name:'Đồ dùng hàng ngày',  slug:'daily-needs', count:'270+ sản phẩm' },
+      { icon:'⚽', name:'Thể thao & Gym',     slug:'sports',      count:'120+ sản phẩm' },
+      { icon:'🎮', name:'Giải trí & Sở thích',slug:'other',       count:'85+ sản phẩm'  },
+      { icon:'🎒', name:'Khác',               slug:'misc',         count:'160+ sản phẩm' },
+    ];
+
+    const catGrid = document.getElementById('cat-grid');
+    catGrid.innerHTML = CATEGORIES.map(c => `
+      <div class="cat-card" onclick="filterByCategory('${c.slug}')">
+        <div class="cat-icon">${c.icon}</div>
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-count">${c.count}</div>
+      </div>
+    `).join('');
+
+    // ── 4. Sample products (sẽ thay bằng API call sau) ────────
+    window.ALL_PRODUCTS = [
+      { id:1, name:'Giáo trình Giải tích 1 — ĐH Bách Khoa', category:'books', price:45000, condition:'good', emoji:'📚', seller:'Minh Anh', desc:'Bản mới nhất 2023, còn rất mới, chỉ đọc 1 kỳ.', badge:'hot' },
+      { id:2, name:'Laptop Dell XPS 13 2022', category:'electronics', price:14500000, condition:'like-new', emoji:'💻', seller:'Hùng Việt', desc:'Core i7, 16GB RAM, SSD 512GB. Tặng kèm túi chống sốc.', badge:'new' },
+      { id:3, name:'Bộ quần áo thể thao Nike', category:'clothing', price:180000, condition:'good', emoji:'👕', seller:'Thu Hằng', desc:'Size M, mặc vài lần còn rất đẹp, không phai màu.', badge:null },
+      { id:4, name:'Đèn học LED thông minh', category:'daily-needs', price:120000, condition:'like-new', emoji:'💡', seller:'Quang Huy', desc:'Điều chỉnh độ sáng, bảo vệ mắt, pin sạc USB-C.', badge:'hot' },
+      { id:5, name:'Sách Tư duy nhanh & chậm', category:'books', price:55000, condition:'good', emoji:'📖', seller:'Lan Anh', desc:'Daniel Kahneman, bản dịch tiếng Việt, đọc 1 lần.', badge:null },
+      { id:6, name:'Tai nghe Sony WH-1000XM4', category:'electronics', price:4200000, condition:'like-new', emoji:'🎧', seller:'Đức Minh', desc:'Chống ồn ANC, pin 30h, đầy đủ phụ kiện.', badge:'new' },
+      { id:7, name:'Xe đạp thể thao Giant ATX', category:'sports', price:2800000, condition:'good', emoji:'🚲', seller:'Thanh Tùng', desc:'Size M, phanh đĩa, đã thay lốp mới, đi hàng ngày.', badge:null },
+      { id:8, name:'Bàn học gấp gọn', category:'furniture', price:350000, condition:'good', emoji:'🪑', seller:'Ngọc Mai', desc:'Kích thước 80x50cm, gấp gọn tiện lợi cho phòng trọ.', badge:null },
+    ];
+
+    window.currentFilter = 'all';
+    renderProducts(window.ALL_PRODUCTS);
+
+    // ── 5. Intersection Observer cho fade-up animations ───────
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold:0.12 });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // ── 6. Enter key on search ────────────────────────────────
+    document.getElementById('search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') window.handleSearch();
+    });
+
+    // ── Helper functions (global scope) ──────────────────────
+    window.handleSearch = function() {
+      const q   = document.getElementById('search-input').value.toLowerCase();
+      const cat = document.getElementById('search-cat').value;
+      let filtered = window.ALL_PRODUCTS;
+      if (cat)  filtered = filtered.filter(p => p.category === cat);
+      if (q)    filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+      renderProducts(filtered);
+      document.querySelector('#featured').scrollIntoView({ behavior:'smooth' });
+    };
+
+    window.setFilter = function(btn, filter) {
+      window.currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filtered = filter === 'all' ? window.ALL_PRODUCTS : window.ALL_PRODUCTS.filter(p => p.category === filter);
+      renderProducts(filtered);
+    };
+
+    window.filterByCategory = function(slug) {
+      document.querySelector('#featured').scrollIntoView({ behavior:'smooth' });
+      const btn = document.querySelector(`[data-filter="${slug}"]`);
+      if (btn) window.setFilter(btn, slug);
+      else {
+        const filtered = window.ALL_PRODUCTS.filter(p => p.category === slug);
+        renderProducts(filtered);
+      }
+    };
+
+    window.loadMore = function() {
+      showToast('Đang tải thêm sản phẩm...', 'success');
+    };
+
+    window.showToast = function(msg, type = 'success') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `${type === 'success' ? '✓' : '✕'} ${msg}`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    };
+
+    function formatPrice(p) {
+      return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p);
+    }
+
+    function conditionLabel(c) {
+      const map = { 'new':'Mới','like-new':'Như mới','good':'Tốt','fair':'Khá' };
+      const cls = { 'new':'new','like-new':'like-new','good':'good','fair':'fair' };
+      return `<span class="product-condition condition-${cls[c]}">${map[c]||c}</span>`;
+    }
+
+    function renderProducts(products) {
+      const grid = document.getElementById('products-grid');
+      if (!products.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-3);">
+          <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+          <p style="font-size:16px;font-weight:600;color:var(--text-2);">Không tìm thấy sản phẩm</p>
+          <p>Hãy thử từ khóa khác hoặc chọn danh mục khác.</p>
+        </div>`;
+        return;
+      }
+      grid.innerHTML = products.map(p => `
+        <div class="product-card" onclick="openProduct(${p.id})">
+          <div class="product-img-placeholder">
+            ${p.emoji}
+            ${p.badge ? `<span class="product-badge ${p.badge === 'new' ? 'new' : ''}">${p.badge === 'new' ? 'MỚI' : '🔥 Hot'}</span>` : ''}
+          </div>
+          <div class="product-body">
+            <div class="product-category">${{books:'Sách vở',electronics:'Điện tử',clothing:'Quần áo',furniture:'Nội thất','daily-needs':'Đồ dùng',sports:'Thể thao'}[p.category]||p.category}</div>
+            ${conditionLabel(p.condition)}
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.desc}</div>
+            <div class="product-footer">
+              <div class="product-price">${formatPrice(p.price)}</div>
+              <div class="product-seller">
+                <div class="seller-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">${p.seller[0]}</div>
+                ${p.seller}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.openProduct = function(id) {
+      if (!auth.isAuthenticated()) {
+        showToast('Vui lòng đăng nhập để xem chi tiết sản phẩm', 'error');
+        setTimeout(() => { window.location.href = '/pages/login.html'; }, 1200);
+        return;
+      }
+      window.location.href = `/pages/product.html?id=${id}`;
+    };
+  </script>
+
+</body>
+</html>

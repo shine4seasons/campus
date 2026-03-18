@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đang xác thực — Campus Marketplace</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#070D1F; min-height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      font-family:'Plus Jakarta Sans', system-ui, sans-serif;
+      gap:20px;
+    }
+    .logo { font-size:16px; color:rgba(255,255,255,0.3); letter-spacing:0.1em; font-weight:600; }
+    .spinner {
+      width:44px; height:44px;
+      border:3px solid rgba(255,255,255,0.08);
+      border-top-color:#1D6AE5;
+      border-radius:50%;
+      animation:spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .msg { color:rgba(255,255,255,0.4); font-size:14px; }
+    .err-card {
+      background:rgba(220,38,38,0.1); border:1px solid rgba(220,38,38,0.25);
+      border-radius:16px; padding:28px 32px; text-align:center; max-width:360px;
+      display:none;
+    }
+    .err-card p { color:#FCA5A5; margin-bottom:16px; font-size:15px; }
+    .err-card a {
+      display:inline-block; padding:10px 24px; background:#1D6AE5; color:#fff;
+      border-radius:10px; font-weight:700; font-size:14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">📚 Campus Marketplace</div>
+  <div class="spinner" id="spinner"></div>
+  <p class="msg" id="msg">Đang xác thực với Google...</p>
+  <div class="err-card" id="err-card">
+    <p id="err-text">Đăng nhập thất bại. Vui lòng thử lại.</p>
+    <a href="/pages/login.html">Thử lại</a>
+  </div>
+
+<script type="module">
+  import { auth }   from '../js/auth.js';
+  import { ROUTES } from '../js/config.js';
+
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('token');
+  const error  = params.get('error');
+
+  function showError(msg) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('msg').style.display = 'none';
+    document.getElementById('err-text').textContent = msg;
+    document.getElementById('err-card').style.display = 'block';
+  }
+
+  if (error || !token) {
+    showError('Đăng nhập thất bại. Google không xác thực được tài khoản.');
+  } else {
+    document.getElementById('msg').textContent = 'Đang tải thông tin tài khoản...';
+    try {
+      await auth.loginWithToken(token);
+      // Redirect về trang người dùng định vào (nếu có)
+      const redirectTo = sessionStorage.getItem('redirect_after_login');
+      sessionStorage.removeItem('redirect_after_login');
+      window.location.replace(redirectTo || ROUTES.HOME);
+    } catch (e) {
+      showError('Không thể lấy thông tin tài khoản. Vui lòng thử lại.');
+    }
+  }
+</script>
+</body>
+</html>

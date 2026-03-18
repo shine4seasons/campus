@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng bán — Campus Marketplace</title>
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <main class="container">
+    <h1>Đăng bán sản phẩm</h1>
+    <!-- Form sẽ làm ở chức năng Product -->
+  </main>
+
+  <script type="module">
+    import { router }      from '../js/router.js';
+    import { renderNavbar } from '../js/components/navbar.js';
+
+    // ① Kiểm tra auth TRƯỚC — nếu chưa login thì không chạy gì thêm
+    if (!router.requireAuth()) throw new Error('stop');
+
+    // ② Render navbar (có avatar, dropdown)
+    renderNavbar();
+
+    // ③ Logic của trang — chắc chắn user đã login
+    console.log('Trang sell đã load, user đã login');
+  </script>
+</body>
+</html>
