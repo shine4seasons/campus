@@ -1,28 +1,38 @@
+// Thêm vào server/src/app.js (sau dòng authRoutes đã có)
+
+const productRoutes = require('./routes/products');
+app.use('/api/products', productRoutes);
+
+// ── app.js đầy đủ sau khi thêm product routes ───────────
 require('dotenv').config();
 const express      = require('express');
 const cors         = require('cors');
 const helmet       = require('helmet');
 const cookieParser = require('cookie-parser');
-const passport     = require('./src/config/passport');   // import để register strategy
-const connectDB    = require('./src/config/database');
-const authRoutes   = require('./src/routes/authRoutes');
-const productRoutes = require('./src/routes/products');  
+const passport     = require('./config/passport');
+const connectDB    = require('./config/database');
+const authRoutes    = require('./routes/auth');
+const productRoutes = require('./routes/products');   // ← THÊM
 
 connectDB();
 
 const app = express();
-app.use('/api/products', productRoutes);  
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin:      process.env.CLIENT_URL,
-  credentials: true,        // ← bắt buộc để cookie cross-origin hoạt động
+  credentials: true,
 }));
-app.use(cookieParser());     // ← đọc req.cookies
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
-app.use(passport.initialize());   // không dùng session
+app.use(passport.initialize());
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth',     authRoutes);
+app.use('/api/products', productRoutes);   // ← THÊM
+
+// Health check
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
 // Global error handler
 app.use((err, req, res, _next) => {

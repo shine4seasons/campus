@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { authApi } from './auth';
+import { api } from './api.js';
+import { STORAGE_KEYS, ROUTES } from './config.js';
 
 export const useAuthStore = create(
   persist(
@@ -13,42 +14,51 @@ export const useAuthStore = create(
       setTokenAndFetchUser: async (token) => {
         set({ token, loading: true });
         try {
-          const user = await authApi.getMe(token);
-          set({ user, loading: false });
+          const data = await api.get('/auth/me');
+          const user = data.data;
+          set({ user, token, loading: false });
+          // Sync với localStorage
+          localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
         } catch {
           set({ user: null, token: null, loading: false });
+          localStorage.removeItem(STORAGE_KEYS.TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.USER);
         }
       },
 
       // Kiểm tra session còn sống khi app khởi động
       initAuth: async () => {
-        const { token } = get();
-        if (!token) return;
-        set({ loading: true });
-        try {
-          const user = await authApi.getMe(token);
-          set({ user, loading: false });
-        } catch {
-          // Token hết hạn → thử refresh silent
-          try {
-            const { token: newToken } = await authApi.refresh();
-            const user = await authApi.getMe(newToken);
-            set({ user, token: newToken, loading: false });
-          } catch {
-            set({ user: null, token: null, loading: false });
-          }
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+        
+        if (!token || !userStr) {
+          set({ user: null, token: null, loading: false });
+          return;
         }
+
+        set({ token, user: JSON.parse(userStr), loading: false });
       },
 
       logout: async () => {
-        await authApi.logout().catch(() => {});
+        await api.post('/auth/logout').catch(() => {});
         set({ user: null, token: null });
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER);
+      },
+
+      // Cập nhật user info (sau khi chỉnh sửa profile)
+      updateUser: (updates) => {
+        const current = get().user;
+        const updated = { ...current, ...updates };
+        set({ user: updated });
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
       },
     }),
     {
       name:    'campus-auth',
-      storage: createJSONStorage(() => sessionStorage), // tab-scoped
-      partialize: (s) => ({ token: s.token }),            // chỉ persist token
+      storage: createJSONStorage(() => localStorage), // Sử dụng localStorage thay vì sessionStorage
+      partialize: (s) => ({ user: s.user, token: s.token }), // Persist cả token và user
     }
   )
 );

@@ -6,9 +6,10 @@ export const STORAGE_KEYS = {
 };
 
 export const ROUTES = {
-  HOME:      '/pages/index.html',
-  LOGIN:     '/pages/login.html',
-  CALLBACK:  '/pages/callback.html',
-  SELL:      '/pages/sell.html',
-  DASHBOARD: '/pages/dashboard.html',
+  HOME:        '/pages/index.html',
+  LOGIN:       '/pages/login.html',
+  CALLBACK:    '/pages/callback.html',
+  SELL:        '/pages/sell.html',
+  MY_PRODUCTS: '/pages/my-products.html',
+  DASHBOARD:   '/pages/dashboard.html',
 };

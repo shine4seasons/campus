@@ -1,13 +1,19 @@
 const router = require('express').Router();
-const { getProducts, getProduct, createProduct, updateProduct, deleteProduct } =
-  require('../controllers/productsController');
+const {
+  getProducts, getProduct, createProduct, updateProduct,
+  deleteProduct, getMyProducts, toggleInterested,
+} = require('../controllers/productController');
 const { protect } = require('../middleware/auth');
 
-// Routes
-router.get('/', getProducts);
-router.get('/:id', getProduct);
-router.post('/', protect, createProduct);
-router.put('/:id', protect, updateProduct);
-router.delete('/:id', protect, deleteProduct);
+// Public
+router.get('/',     getProducts);
+router.get('/my',   protect, getMyProducts);      // phải đặt trước /:id
+router.get('/:id',  getProduct);
+
+// Protected
+router.post('/',           protect, createProduct);
+router.patch('/:id',       protect, updateProduct);
+router.delete('/:id',      protect, deleteProduct);
+router.post('/:id/interested', protect, toggleInterested);
 
 module.exports = router;

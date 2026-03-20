@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sản phẩm của tôi — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body { background: #F7F8FC; }
+    .page-wrap { max-width: 1000px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    .page-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-top h1 { font-size: 22px; font-weight: 900; color: #0D0F1A; }
+
+    .status-tabs { display: flex; gap: 4px; background: #fff; border: 1px solid #E4E7F2; border-radius: 12px; padding: 4px; }
+    .status-tab {
+      padding: 7px 18px; border-radius: 9px; font-size: 13px; font-weight: 700;
+      color: #8890B0; cursor: pointer; transition: all 0.15s; font-family: inherit; border: none; background: none;
+    }
+    .status-tab.active { background: #1B5EFF; color: #fff; }
+
+    .products-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .product-row {
+      background: #fff; border: 1px solid #E4E7F2; border-radius: 16px;
+      padding: 16px 20px;
+      display: grid; grid-template-columns: 72px 1fr auto;
+      gap: 16px; align-items: center;
+      transition: border-color 0.15s;
+    }
+    .product-row:hover { border-color: #C4C8DC; }
+    .row-thumb {
+      width: 72px; height: 72px; border-radius: 12px;
+      background: #EBF0FF; overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 30px;
+    }
+    .row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .row-title  { font-size: 15px; font-weight: 800; color: #0D0F1A; margin-bottom: 4px; }
+    .row-meta   { display: flex; gap: 12px; font-size: 12px; color: #8890B0; flex-wrap: wrap; align-items: center; }
+    .row-price  { font-size: 16px; font-weight: 900; color: #1B5EFF; margin-top: 4px; }
+    .row-status { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .s-active  { background: #D1FAE5; color: #065F46; }
+    .s-sold    { background: #FEE2E2; color: #991B1B; }
+    .s-hidden  { background: #F0F1F8; color: #8890B0; }
+
+    .row-actions { display: flex; gap: 8px; }
+    .row-btn {
+      padding: 8px 14px; border-radius: 9px; font-size: 12px; font-weight: 700;
+      border: 1.5px solid; cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .row-btn-edit   { border-color: #1B5EFF; color: #1B5EFF; background: #EBF0FF; }
+    .row-btn-edit:hover { background: #D6E4FF; }
+    .row-btn-del    { border-color: #E4E7F2; color: #8890B0; background: #fff; }
+    .row-btn-del:hover { background: #FEE2E2; border-color: #E84040; color: #E84040; }
+
+    .empty-state { text-align: center; padding: 80px 20px; }
+    .empty-icon  { font-size: 56px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .empty-sub   { color: #8890B0; font-size: 14px; margin-bottom: 24px; }
+
+    .btn-new {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 12px;
+      background: #1B5EFF; color: #fff;
+      font-size: 14px; font-weight: 800; font-family: inherit;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-new:hover { background: #1348D6; transform: translateY(-1px); }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;
+    }
+    .stat-card { background: #fff; border: 1px solid #E4E7F2; border-radius: 14px; padding: 16px; }
+    .stat-num  { font-size: 24px; font-weight: 900; color: #0D0F1A; letter-spacing: -0.02em; }
+    .stat-lbl  { font-size: 12px; color: #8890B0; margin-top: 3px; }
+
+    #toast-wrap { position:fixed; bottom:24px; right:24px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+    .toast { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:12px;
+      font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(13,15,26,0.15);
+      animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1); max-width:320px; }
+    .toast.ok  { background:#0D0F1A; color:#fff; }
+    .toast.err { background:#E84040; color:#fff; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } }
+
+    @media (max-width: 600px) {
+      .product-row { grid-template-columns: 56px 1fr; }
+      .row-actions { grid-column: 1/-1; }
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <div class="page-wrap">
+    <div class="page-top">
+      <h1>Sản phẩm của tôi</h1>
+      <button class="btn-new" onclick="window.location.href='/pages/sell.html'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Đăng sản phẩm mới
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-num" id="st-total">—</div><div class="stat-lbl">Tổng sản phẩm</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-active">—</div><div class="stat-lbl">Đang bán</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-sold">—</div><div class="stat-lbl">Đã bán</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-views">—</div><div class="stat-lbl">Lượt xem</div></div>
+    </div>
+
+    <!-- Status filter tabs -->
+    <div class="status-tabs" style="margin-bottom:20px;display:inline-flex;">
+      <button class="status-tab active" data-status="all"    onclick="filterStatus('all',this)">Tất cả</button>
+      <button class="status-tab"        data-status="active" onclick="filterStatus('active',this)">Đang bán</button>
+      <button class="status-tab"        data-status="sold"   onclick="filterStatus('sold',this)">Đã bán</button>
+      <button class="status-tab"        data-status="hidden" onclick="filterStatus('hidden',this)">Nháp</button>
+    </div>
+
+    <div class="products-list" id="products-list">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <div id="toast-wrap"></div>
+
+  <script type="module">
+    import { auth }         from '../js/auth.js';
+    import { router }       from '../js/router.js';
+    import { api }          from '../js/api.js';
+    import { renderNavbar } from '../js/components/navbar.js';
+    import { ROUTES }       from '../js/config.js';
+
+    if (!router.requireAuth()) throw new Error('stop');
+    renderNavbar();
+
+    const fmt     = n => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n);
+    const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
+
+    let allProducts = [];
+    let currentStatus = 'all';
+
+    (async () => {
+      try {
+        const res  = await api.get('/products/my');
+        allProducts = res.data || [];
+        updateStats();
+        render();
+      } catch (err) {
+        toast(err.message || 'Không thể tải sản phẩm', 'err');
+      }
+    })();
+
+    function updateStats() {
+      const active = allProducts.filter(p => p.status === 'active').length;
+      const sold   = allProducts.filter(p => p.status === 'sold').length;
+      const views  = allProducts.reduce((s, p) => s + (p.views || 0), 0);
+      document.getElementById('st-total').textContent  = allProducts.length;
+      document.getElementById('st-active').textContent = active;
+      document.getElementById('st-sold').textContent   = sold;
+      document.getElementById('st-views').textContent  = views.toLocaleString('vi-VN');
+    }
+
+    function render() {
+      const list = document.getElementById('products-list');
+      const filtered = currentStatus === 'all' ? allProducts : allProducts.filter(p => p.status === currentStatus);
+
+      if (!filtered.length) {
+        const msgs = { all:'Bạn chưa có sản phẩm nào.', active:'Không có sản phẩm đang bán.', sold:'Chưa bán được sản phẩm nào.', hidden:'Không có sản phẩm nháp.' };
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">${currentStatus === 'sold' ? '🎉' : '📦'}</div>
+            <div class="empty-title">${msgs[currentStatus]}</div>
+            <div class="empty-sub">Đăng sản phẩm đầu tiên của bạn ngay bây giờ!</div>
+            <button class="btn-new" onclick="window.location.href='/pages/sell.html'">+ Đăng sản phẩm</button>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(p => {
+        const thumbHtml = p.images?.[0]
+          ? `<img src="${p.images[0]}" alt="${p.title}" onerror="this.parentElement.textContent='${CAT_EMOJI[p.category]||'📦'}';">`
+          : CAT_EMOJI[p.category] || '📦';
+
+        const statusCls = { active:'s-active', sold:'s-sold', hidden:'s-hidden' }[p.status] || 's-hidden';
+        const statusLbl = { active:'Đang bán', sold:'Đã bán', hidden:'Nháp' }[p.status] || p.status;
+
+        const date = new Date(p.createdAt).toLocaleDateString('vi-VN');
+
+        return `
+          <div class="product-row">
+            <div class="row-thumb">${thumbHtml}</div>
+            <div>
+              <div class="row-title">${p.title}</div>
+              <div class="row-meta">
+                <span class="row-status ${statusCls}">${statusLbl}</span>
+                <span>👁 ${p.views || 0} xem</span>
+                <span>❤️ ${p.interested || 0} quan tâm</span>
+                <span>📅 ${date}</span>
+              </div>
+              <div class="row-price">${fmt(p.price)}</div>
+            </div>
+            <div class="row-actions">
+              <button class="row-btn row-btn-edit" onclick="window.location.href='/pages/sell.html?id=${p._id}'">Sửa</button>
+              <button class="row-btn row-btn-del"  onclick="deleteProduct('${p._id}')">Xóa</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.filterStatus = function (status, btn) {
+      currentStatus = status;
+      document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    };
+
+    window.deleteProduct = async function (pid) {
+      if (!confirm('Xóa sản phẩm này? Hành động không thể hoàn tác.')) return;
+      try {
+        await api.delete(`/products/${pid}`);
+        allProducts = allProducts.filter(p => p._id !== pid);
+        updateStats();
+        render();
+        toast('Đã xóa sản phẩm', 'ok');
+      } catch (err) { toast(err.message, 'err'); }
+    };
+
+    function toast(msg, type = 'ok') {
+      const c = document.getElementById('toast-wrap');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `${type === 'ok' ? '✓' : '✕'} ${msg}`;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+    }
+  </script>
+</body>
+</html>

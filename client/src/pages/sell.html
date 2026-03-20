@@ -2,29 +2,642 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Đăng bán — Campus Marketplace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng sản phẩm — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body { background: #F7F8FC; }
+
+    .page-header {
+      background: #fff;
+      border-bottom: 1px solid #E4E7F2;
+      padding: 0;
+    }
+    .page-header-inner {
+      max-width: 1000px; margin: 0 auto; padding: 0 24px;
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-title { font-size: 15px; font-weight: 800; color: #0D0F1A; }
+    .page-subtitle { font-size: 13px; color: #8890B0; }
+    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8890B0; }
+    .breadcrumb a { color: #1B5EFF; }
+    .breadcrumb-sep { color: #C4C8DC; }
+
+    .form-layout {
+      max-width: 1000px; margin: 0 auto;
+      padding: 28px 24px 60px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border: 1px solid #E4E7F2;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid #F0F1F8;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-head-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #EBF0FF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .card-head-title { font-size: 14px; font-weight: 800; color: #0D0F1A; }
+    .card-head-sub { font-size: 12px; color: #8890B0; }
+    .card-body { padding: 20px 24px; }
+
+    /* Form */
+    .fg { margin-bottom: 18px; }
+    .fg:last-child { margin-bottom: 0; }
+    .fl { display: block; font-size: 12px; font-weight: 700; color: #3D4258; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px; }
+    .fl .req { color: #E84040; margin-left: 3px; }
+    .fi, .fs, .ft {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #E4E7F2; border-radius: 10px;
+      font-size: 14px; color: #0D0F1A; font-family: inherit;
+      background: #fff; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .fi:focus, .fs:focus, .ft:focus {
+      border-color: #1B5EFF;
+      box-shadow: 0 0 0 3px rgba(27,94,255,0.1);
+    }
+    .fi.err, .fs.err, .ft.err { border-color: #E84040; }
+    .ft { resize: vertical; min-height: 110px; line-height: 1.55; }
+    .fi-hint { font-size: 11px; color: #8890B0; margin-top: 5px; }
+
+    /* Price input with unit */
+    .price-wrap { position: relative; }
+    .price-wrap .fi { padding-right: 52px; }
+    .price-unit {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; font-weight: 700; color: #8890B0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .price-display { font-size: 11px; color: #1B5EFF; margin-top: 5px; font-weight: 600; }
+
+    /* Grid for 2 cols */
+    .fg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Image uploader */
+    .img-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+    .img-slot {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 1.5px dashed #C4C8DC;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; cursor: pointer;
+      transition: all 0.2s; background: #F7F8FC;
+    }
+    .img-slot:hover { border-color: #1B5EFF; background: #EBF0FF; }
+    .img-slot.has-img { border-style: solid; border-color: #E4E7F2; padding: 0; }
+    .img-slot.add-btn { border-style: dashed; }
+    .img-slot img { width: 100%; height: 100%; object-fit: cover; }
+    .img-slot .del-btn {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,0,0,0.55); color: #fff;
+      display: none; align-items: center; justify-content: center;
+      font-size: 11px; cursor: pointer; z-index: 2;
+      border: none; padding: 0;
+    }
+    .img-slot.has-img:hover .del-btn { display: flex; }
+    .img-slot .add-icon { font-size: 20px; color: #8890B0; }
+    .img-hint { font-size: 11px; color: #8890B0; }
+
+    /* URL input for images (before Cloudinary) */
+    .img-url-wrap { display: flex; gap: 8px; margin-bottom: 8px; }
+    .img-url-wrap .fi { flex: 1; }
+    .btn-add-img {
+      padding: 10px 14px; border-radius: 10px;
+      background: #EBF0FF; color: #1B5EFF;
+      font-size: 13px; font-weight: 700; font-family: inherit;
+      border: none; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-add-img:hover { background: #D6E4FF; }
+
+    /* Condition selector */
+    .cond-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .cond-opt {
+      border: 1.5px solid #E4E7F2; border-radius: 10px;
+      padding: 10px 8px; text-align: center; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cond-opt:hover { border-color: #1B5EFF; background: #EBF0FF; }
+    .cond-opt.selected { border-color: #1B5EFF; background: #EBF0FF; }
+    .cond-opt .cond-emoji { font-size: 18px; margin-bottom: 4px; }
+    .cond-opt .cond-label { font-size: 12px; font-weight: 700; color: #0D0F1A; }
+    .cond-opt .cond-sub { font-size: 10px; color: #8890B0; }
+
+    /* Sidebar card */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .btn-submit {
+      width: 100%; padding: 14px; border-radius: 12px;
+      background: #1B5EFF; color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: all 0.2s;
+    }
+    .btn-submit:hover { background: #1348D6; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.35); }
+    .btn-submit:disabled { opacity: 0.55; pointer-events: none; }
+    .btn-draft {
+      width: 100%; padding: 12px;
+      border-radius: 12px; border: 1.5px solid #E4E7F2;
+      background: #fff; color: #3D4258;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-draft:hover { background: #F7F8FC; border-color: #C4C8DC; }
+
+    /* Preview card */
+    .preview-card {
+      background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 12px;
+      overflow: hidden;
+    }
+    .preview-thumb {
+      aspect-ratio: 4/3; background: #EBF0FF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; position: relative;
+    }
+    .preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-body { padding: 12px; }
+    .preview-cat { font-size: 10px; font-weight: 700; color: #1B5EFF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .preview-title { font-size: 14px; font-weight: 700; color: #0D0F1A; margin-bottom: 8px; line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .preview-price { font-size: 17px; font-weight: 900; color: #1B5EFF; }
+    .preview-empty { font-size: 12px; color: #8890B0; text-align: center; padding: 20px 12px; }
+
+    /* Tips */
+    .tip-list { display: flex; flex-direction: column; gap: 10px; }
+    .tip { display: flex; gap: 10px; font-size: 13px; color: #3D4258; line-height: 1.5; }
+    .tip-icon { font-size: 16px; flex-shrink: 0; }
+
+    /* Char counter */
+    .char-count { font-size: 11px; color: #8890B0; text-align: right; margin-top: 4px; }
+    .char-count.warn { color: #F5A623; }
+    .char-count.over { color: #E84040; }
+
+    /* Toast */
+    #toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 12px;
+      font-size: 14px; font-weight: 600; box-shadow: 0 8px 32px rgba(13,15,26,0.15);
+      animation: slideIn 0.3s cubic-bezier(0.16,1,0.3,1); max-width: 320px; }
+    .toast.ok  { background: #0D0F1A; color: #fff; }
+    .toast.err { background: #E84040; color: #fff; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } }
+    @keyframes spin    { to   { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .form-layout { grid-template-columns: 1fr; }
+      .cond-grid { grid-template-columns: repeat(2, 1fr); }
+      .img-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
 </head>
 <body>
   <div id="navbar"></div>
 
-  <main class="container">
-    <h1>Đăng bán sản phẩm</h1>
-    <!-- Form sẽ làm ở chức năng Product -->
-  </main>
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <div class="page-title">Đăng sản phẩm</div>
+      </div>
+      <div class="breadcrumb">
+        <a href="/pages/index.html">Trang chủ</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Đăng bán</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-layout">
+
+    <!-- ══ LEFT: Main form ══ -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Thông tin cơ bản -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">📝</div>
+          <div>
+            <div class="card-head-title">Thông tin sản phẩm</div>
+            <div class="card-head-sub">Mô tả càng chi tiết, bán càng nhanh</div>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <div class="fg">
+            <label class="fl">Tiêu đề <span class="req">*</span></label>
+            <input type="text" class="fi" id="f-title" placeholder="VD: Giáo trình Giải tích 1 — ĐH Bách Khoa HN" maxlength="120">
+            <div class="char-count" id="title-count">0 / 120</div>
+          </div>
+
+          <div class="fg">
+            <label class="fl">Mô tả chi tiết <span class="req">*</span></label>
+            <textarea class="ft" id="f-desc" placeholder="Mô tả tình trạng, lý do bán, đặc điểm nổi bật..." maxlength="2000" rows="5"></textarea>
+            <div class="char-count" id="desc-count">0 / 2000</div>
+          </div>
+
+          <div class="fg-grid">
+            <div class="fg">
+              <label class="fl">Danh mục <span class="req">*</span></label>
+              <select class="fs" id="f-cat">
+                <option value="">-- Chọn danh mục --</option>
+                <option value="books">📚 Sách & Giáo trình</option>
+                <option value="electronics">💻 Điện tử & Máy tính</option>
+                <option value="clothing">👕 Quần áo & Thời trang</option>
+                <option value="furniture">🛋️ Nội thất & Phòng trọ</option>
+                <option value="daily-needs">🧴 Đồ dùng hàng ngày</option>
+                <option value="sports">⚽ Thể thao & Gym</option>
+                <option value="gaming">🎮 Giải trí & Sở thích</option>
+                <option value="other">📦 Khác</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Giá bán <span class="req">*</span></label>
+              <div class="price-wrap">
+                <input type="number" class="fi" id="f-price" placeholder="0" min="0" step="1000">
+                <span class="price-unit">VNĐ</span>
+              </div>
+              <div class="price-display" id="price-display"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tình trạng -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">⭐</div>
+          <div>
+            <div class="card-head-title">Tình trạng sản phẩm <span style="color:#E84040;font-size:13px;">*</span></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cond-grid" id="cond-grid">
+            <div class="cond-opt" data-val="new">
+              <div class="cond-emoji">✨</div>
+              <div class="cond-label">Mới</div>
+              <div class="cond-sub">Chưa qua sử dụng</div>
+            </div>
+            <div class="cond-opt" data-val="like-new">
+              <div class="cond-emoji">💎</div>
+              <div class="cond-label">Như mới</div>
+              <div class="cond-sub">Dùng ít, còn tốt</div>
+            </div>
+            <div class="cond-opt" data-val="good">
+              <div class="cond-emoji">👍</div>
+              <div class="cond-label">Tốt</div>
+              <div class="cond-sub">Dùng nhiều, vẫn ok</div>
+            </div>
+            <div class="cond-opt" data-val="fair">
+              <div class="cond-emoji">🔧</div>
+              <div class="cond-label">Khá</div>
+              <div class="cond-sub">Có vết xước nhỏ</div>
+            </div>
+          </div>
+          <input type="hidden" id="f-condition" value="">
+        </div>
+      </div>
+
+      <!-- Hình ảnh -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">🖼️</div>
+          <div>
+            <div class="card-head-title">Hình ảnh</div>
+            <div class="card-head-sub">Tối đa 5 ảnh — ảnh đầu là ảnh bìa</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Nhập URL ảnh (Feature 4 sẽ thay bằng Cloudinary upload) -->
+          <div class="img-url-wrap">
+            <input type="url" class="fi" id="img-url-input" placeholder="Dán URL ảnh (imgur, google drive...) hoặc để trống">
+            <button class="btn-add-img" onclick="addImageUrl()">+ Thêm</button>
+          </div>
+          <div class="img-grid" id="img-grid">
+            <!-- Slots filled by JS -->
+          </div>
+          <div class="img-hint">💡 Tính năng upload ảnh trực tiếp sẽ có ở bản tiếp theo (Cloudinary). Hiện tại dán URL ảnh.</div>
+        </div>
+      </div>
+
+      <!-- Địa điểm -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">📍</div>
+          <div>
+            <div class="card-head-title">Địa điểm giao nhận</div>
+            <div class="card-head-sub">Giúp người mua biết cần đến đâu</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="fg" style="margin:0;">
+            <input type="text" class="fi" id="f-location" placeholder="VD: Cổng B ĐH Bách Khoa, ký túc xá A, thư viện trường...">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ RIGHT: Sidebar ══ -->
+    <div class="sidebar">
+
+      <!-- Preview -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">👁️</div>
+          <div><div class="card-head-title">Xem trước</div></div>
+        </div>
+        <div class="card-body" style="padding: 12px;">
+          <div id="preview-wrap">
+            <div class="preview-empty">Điền thông tin để xem trước sản phẩm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card">
+        <div class="card-body">
+          <button class="btn-submit" id="btn-submit" onclick="submitProduct()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Đăng sản phẩm
+          </button>
+          <div style="height:10px;"></div>
+          <button class="btn-draft" onclick="submitProduct('hidden')">Lưu nháp</button>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">💡</div>
+          <div><div class="card-head-title">Bán nhanh hơn</div></div>
+        </div>
+        <div class="card-body">
+          <div class="tip-list">
+            <div class="tip"><span class="tip-icon">📸</span>Ảnh rõ nét, nhiều góc chụp sẽ tăng 3x tỷ lệ bán</div>
+            <div class="tip"><span class="tip-icon">💰</span>Định giá thấp hơn giá mua 30–50% để bán nhanh</div>
+            <div class="tip"><span class="tip-icon">📝</span>Ghi rõ năm mua, lý do bán, tình trạng thực tế</div>
+            <div class="tip"><span class="tip-icon">📍</span>Ghi địa điểm giao nhận cụ thể trong trường</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast-wrap"></div>
 
   <script type="module">
-    import { router }      from '../js/router.js';
+    import { auth }         from '../js/auth.js';
+    import { router }       from '../js/router.js';
+    import { api }          from '../js/api.js';
     import { renderNavbar } from '../js/components/navbar.js';
+    import { ROUTES }       from '../js/config.js';
 
-    // ① Kiểm tra auth TRƯỚC — nếu chưa login thì không chạy gì thêm
+    // Guard: phải đăng nhập
     if (!router.requireAuth()) throw new Error('stop');
-
-    // ② Render navbar (có avatar, dropdown)
     renderNavbar();
 
-    // ③ Logic của trang — chắc chắn user đã login
-    console.log('Trang sell đã load, user đã login');
+    // ── Edit mode: load product nếu có ?id= ──────────────
+    const editId = new URLSearchParams(location.search).get('id');
+    if (editId) {
+      document.querySelector('.page-title').textContent = 'Chỉnh sửa sản phẩm';
+      (async () => {
+        try {
+          const { data } = await api.get(`/products/${editId}`);
+          if (String(data.seller._id || data.seller) !== auth.getUser()?._id) {
+            toast('Bạn không có quyền chỉnh sửa sản phẩm này', 'err');
+            return;
+          }
+          // Pre-fill form
+          document.getElementById('f-title').value = data.title;
+          document.getElementById('f-desc').value  = data.description;
+          document.getElementById('f-cat').value   = data.category;
+          document.getElementById('f-price').value = data.price;
+          document.getElementById('f-location').value = data.location?.address || '';
+          document.getElementById('f-condition').value = data.condition;
+          document.querySelector(`[data-val="${data.condition}"]`)?.classList.add('selected');
+          imgUrls = data.images || [];
+          renderImgGrid();
+          updatePreview();
+          updateCounters();
+        } catch { toast('Không thể tải sản phẩm', 'err'); }
+      })();
+    }
+
+    // ── State ────────────────────────────────────────────
+    let imgUrls = [];
+
+    // ── Image grid ───────────────────────────────────────
+    window.renderImgGrid = function () {
+      const grid = document.getElementById('img-grid');
+      grid.innerHTML = '';
+      // Existing images
+      imgUrls.forEach((url, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'img-slot has-img';
+        slot.innerHTML = `
+          <img src="${url}" alt="ảnh ${i+1}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23EBF0FF%22 width=%22100%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%238890B0%22 font-size=%2224%22>?</text></svg>'">
+          <button class="del-btn" onclick="removeImg(${i})">✕</button>
+          ${i === 0 ? '<div style="position:absolute;bottom:4px;left:4px;background:rgba(27,94,255,0.85);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;">BÌA</div>' : ''}
+        `;
+        grid.appendChild(slot);
+      });
+      // Add button if < 5
+      if (imgUrls.length < 5) {
+        const add = document.createElement('div');
+        add.className = 'img-slot add-btn';
+        add.innerHTML = '<span class="add-icon">+</span>';
+        add.onclick = () => document.getElementById('img-url-input').focus();
+        grid.appendChild(add);
+      }
+      updatePreview();
+    };
+
+    window.addImageUrl = function () {
+      const input = document.getElementById('img-url-input');
+      const url   = input.value.trim();
+      if (!url) return;
+      if (imgUrls.length >= 5) { toast('Tối đa 5 ảnh', 'err'); return; }
+      try { new URL(url); } catch { toast('URL ảnh không hợp lệ', 'err'); return; }
+      imgUrls.push(url);
+      input.value = '';
+      renderImgGrid();
+    };
+
+    window.removeImg = function (i) {
+      imgUrls.splice(i, 1);
+      renderImgGrid();
+    };
+
+    // Enter in URL input → add image
+    document.getElementById('img-url-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); window.addImageUrl(); }
+    });
+
+    renderImgGrid();
+
+    // ── Condition selector ───────────────────────────────
+    document.getElementById('cond-grid').addEventListener('click', e => {
+      const opt = e.target.closest('.cond-opt');
+      if (!opt) return;
+      document.querySelectorAll('.cond-opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      document.getElementById('f-condition').value = opt.dataset.val;
+    });
+
+    // ── Char counters ────────────────────────────────────
+    function updateCounters() {
+      const titleEl = document.getElementById('f-title');
+      const descEl  = document.getElementById('f-desc');
+      const tc = document.getElementById('title-count');
+      const dc = document.getElementById('desc-count');
+      const tl = titleEl.value.length;
+      const dl = descEl.value.length;
+      tc.textContent = `${tl} / 120`;
+      tc.className = 'char-count' + (tl > 100 ? (tl > 115 ? ' over' : ' warn') : '');
+      dc.textContent = `${dl} / 2000`;
+      dc.className = 'char-count' + (dl > 1800 ? (dl > 1950 ? ' over' : ' warn') : '');
+    }
+    window.updateCounters = updateCounters;
+
+    document.getElementById('f-title').addEventListener('input', () => { updateCounters(); updatePreview(); });
+    document.getElementById('f-desc').addEventListener('input', updateCounters);
+
+    // ── Price formatter ──────────────────────────────────
+    document.getElementById('f-price').addEventListener('input', () => {
+      const val = Number(document.getElementById('f-price').value);
+      const el  = document.getElementById('price-display');
+      el.textContent = val > 0
+        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+        : '';
+      updatePreview();
+    });
+    document.getElementById('f-cat').addEventListener('change', updatePreview);
+
+    // ── Live preview ─────────────────────────────────────
+    const CAT_LABEL = {
+      books:'Sách vở', electronics:'Điện tử', clothing:'Quần áo',
+      furniture:'Nội thất', 'daily-needs':'Đồ dùng', sports:'Thể thao',
+      gaming:'Giải trí', other:'Khác',
+    };
+    const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
+
+    function updatePreview() {
+      const title = document.getElementById('f-title').value.trim();
+      const price = Number(document.getElementById('f-price').value);
+      const cat   = document.getElementById('f-cat').value;
+      const wrap  = document.getElementById('preview-wrap');
+
+      if (!title && !price) {
+        wrap.innerHTML = '<div class="preview-empty">Điền thông tin để xem trước sản phẩm</div>';
+        return;
+      }
+
+      const thumbHtml = imgUrls.length
+        ? `<img src="${imgUrls[0]}" onerror="this.parentElement.innerHTML='<span style=font-size:48px>${CAT_EMOJI[cat]||'📦'}</span>'">`
+        : `<span style="font-size:48px;">${CAT_EMOJI[cat] || '📦'}</span>`;
+
+      wrap.innerHTML = `
+        <div class="preview-card">
+          <div class="preview-thumb">${thumbHtml}</div>
+          <div class="preview-body">
+            <div class="preview-cat">${CAT_LABEL[cat] || 'Sản phẩm'}</div>
+            <div class="preview-title">${title || 'Tiêu đề sản phẩm'}</div>
+            <div class="preview-price">${price > 0 ? new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(price) : '---'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Submit ───────────────────────────────────────────
+    window.submitProduct = async function (forcedStatus) {
+      const title     = document.getElementById('f-title').value.trim();
+      const desc      = document.getElementById('f-desc').value.trim();
+      const cat       = document.getElementById('f-cat').value;
+      const price     = Number(document.getElementById('f-price').value);
+      const condition = document.getElementById('f-condition').value;
+      const location  = document.getElementById('f-location').value.trim();
+
+      // Validate
+      const errors = [];
+      if (!title)     errors.push('f-title');
+      if (!desc)      errors.push('f-desc');
+      if (!cat)       errors.push('f-cat');
+      if (!price || price <= 0) errors.push('f-price');
+      if (!condition) {
+        toast('Vui lòng chọn tình trạng sản phẩm', 'err');
+        document.getElementById('cond-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      errors.forEach(id => document.getElementById(id)?.classList.add('err'));
+      document.querySelectorAll('.fi, .fs, .ft').forEach(el => {
+        if (!errors.includes(el.id)) el.classList.remove('err');
+      });
+      if (errors.length) {
+        toast('Vui lòng điền đầy đủ thông tin bắt buộc', 'err');
+        document.getElementById(errors[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Đang đăng...`;
+
+      const payload = {
+        title, description: desc, price, category: cat, condition,
+        images:   imgUrls,
+        status:   forcedStatus || 'active',
+        location: { address: location },
+      };
+
+      try {
+        let result;
+        if (editId) {
+          result = await api.patch(`/products/${editId}`, payload);
+          toast('Đã cập nhật sản phẩm! ✓', 'ok');
+        } else {
+          result = await api.post('/products', payload);
+          toast('Đã đăng sản phẩm thành công! ✓', 'ok');
+        }
+
+        setTimeout(() => {
+          window.location.href = `/pages/product.html?id=${result.data._id}`;
+        }, 1200);
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Đăng sản phẩm`;
+        toast(err.message || 'Đăng thất bại. Vui lòng thử lại.', 'err');
+      }
+    };
+
+    // ── Toast ────────────────────────────────────────────
+    function toast(msg, type = 'ok') {
+      const c = document.getElementById('toast-wrap');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `${type === 'ok' ? '✓' : '✕'} ${msg}`;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
   </script>
 </body>
 </html>

@@ -11,8 +11,8 @@ export const auth = {
   },
 
   isAuthenticated() { return !!this.getToken() && !!this.getUser(); },
-  isAdmin()   { return this.getUser()?.role === 'admin'; },
-  isSeller()  { return ['seller','admin'].includes(this.getUser()?.role); },
+  isAdmin() { return this.getUser()?.role === 'admin'; },
+  // Không còn phân biệt seller/buyer — mọi user đều có thể mua và bán
 
   setToken(token) { localStorage.setItem(STORAGE_KEYS.TOKEN, token); },
   setUser(user)   { localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)); },

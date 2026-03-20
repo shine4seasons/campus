@@ -12,15 +12,25 @@ passport.use(
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
-        const email = profile.emails[0].value;
+        const email  = profile.emails[0].value;
         const avatar = profile.photos[0]?.value;
 
-        // Upsert — tạo mới nếu chưa có, cập nhật nếu đã có
+        // Kiểm tra user đã tồn tại chưa TRƯỚC KHI upsert
+        const existingUser = await User.findOne({ googleId: profile.id });
+        const isNewUser    = !existingUser;
+
+        // Upsert — tạo mới nếu chưa có
         const user = await User.findOneAndUpdate(
           { googleId: profile.id },
           {
-            $setOnInsert: { email, role: 'buyer' },
+            $setOnInsert: {
+              // Chỉ set khi tạo mới
+              email,
+              role:     'user',   // tất cả đều là 'user', không phân biệt buyer/seller
+              isNewUser: true,
+            },
             $set: {
+              // Luôn cập nhật từ Google mỗi lần login
               googleId: profile.id,
               name:     profile.displayName,
               avatar,
@@ -28,6 +38,9 @@ passport.use(
           },
           { upsert: true, new: true, runValidators: true }
         );
+
+        // Đính thêm flag để controller đọc
+        user._isNewUser = isNewUser;
 
         return done(null, user);
       } catch (err) {
@@ -37,8 +50,7 @@ passport.use(
   )
 );
 
-// Không dùng session — JWT stateless
-passport.serializeUser((user, done) => done(null, user));
+passport.serializeUser((user, done)   => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
 module.exports = passport;

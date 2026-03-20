@@ -1,550 +1,433 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product — Campus Marketplace</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:20px;scroll-behavior:smooth}
-body{font-family:'Geist',system-ui,sans-serif;background:#F7F5F0;color:#1C1917;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
-a{text-decoration:none;color:inherit}
-img{max-width:100%;display:block}
-button{cursor:pointer;font-family:inherit;border:none;background:none}
-:root{
-  --ink:#1C1917;--ink2:#44403C;--ink3:#78716C;--ink4:#A8A29E;
-  --bg:#F7F5F0;--surface:#FFFFFF;--surface2:#F0EDE8;
-  --border:#E7E3DC;--border2:#D5D0C8;
-  --amber:#C2681A;--amber-light:#FEF3E2;
-  --blue:#1B56D6;--blue-light:#EEF4FF;
-  --green:#166534;--green-light:#F0FDF4;
-  --red:#991B1B;--red-light:#FEF2F2;
-  --r-sm:8px;--r-md:14px;--r-lg:20px;--r-xl:28px;
-  --shadow-sm:0 1px 4px rgba(28,25,23,0.07);
-  --shadow-md:0 4px 20px rgba(28,25,23,0.1);
-  --shadow-lg:0 16px 56px rgba(28,25,23,0.13);
-}
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết sản phẩm — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body { background: #F7F8FC; }
 
-/* NAVBAR */
-.navbar{position:sticky;top:0;z-index:200;height:60px;background:rgba(247,245,240,0.92);backdrop-filter:blur(16px) saturate(1.8);border-bottom:1px solid var(--border)}
-.nav-inner{max-width:1320px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;gap:16px}
-.nav-brand{font-size:1.05rem;font-weight:800;letter-spacing:-0.03em;color:var(--ink);display:flex;align-items:center;gap:8px}
-.nav-breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.72rem;color:var(--ink3);font-family:'Geist Mono',monospace;margin-left:8px}
-.nav-breadcrumb a{transition:color 0.15s}
-.nav-breadcrumb a:hover{color:var(--ink)}
-.nav-breadcrumb span{color:var(--border2);font-size:0.65rem}
-.nav-spacer{flex:1}
-.btn-login-nav{display:flex;align-items:center;gap:7px;padding:8px 18px;border-radius:var(--r-md);border:1.5px solid var(--border2);font-size:0.78rem;font-weight:600;color:var(--ink);background:var(--surface);transition:all 0.2s}
-.btn-login-nav:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
-.nav-user-btn{display:flex;align-items:center;gap:9px;padding:5px 14px 5px 6px;border:1.5px solid var(--border);border-radius:var(--r-md);background:var(--surface);cursor:pointer;transition:all 0.15s;font-size:0.75rem;font-weight:600}
-.nav-user-btn:hover{border-color:var(--border2);background:var(--surface2)}
-.nav-user-btn img{width:28px;height:28px;border-radius:50%;object-fit:cover}
-.nav-avatar-init{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.68rem;font-weight:800;flex-shrink:0}
-.nav-dd-wrap{position:relative}
-.nav-dd{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:210px;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-6px) scale(0.97);transform-origin:top right;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);font-size:0.75rem}
-.nav-dd.open{opacity:1;pointer-events:all;transform:none}
-.dd-header{padding:13px 15px;background:var(--surface2);border-bottom:1px solid var(--border)}
-.dd-name{font-weight:700;font-size:0.8rem;color:var(--ink)}
-.dd-email{font-size:0.68rem;color:var(--ink3);margin-top:1px}
-.dd-menu{padding:6px}
-.dd-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:var(--r-sm);font-size:0.75rem;color:var(--ink2);transition:background 0.12s;text-align:left}
-.dd-item:hover{background:var(--surface2);color:var(--ink)}
-.dd-item.danger{color:var(--red)}
-.dd-item.danger:hover{background:var(--red-light)}
-.dd-divider{height:1px;background:var(--border);margin:4px 0}
+    .detail-layout {
+      max-width: 1100px; margin: 0 auto;
+      padding: 28px 24px 60px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px; align-items: start;
+    }
 
-/* PAGE */
-.page-wrap{max-width:1320px;margin:0 auto;padding:36px 32px 80px}
-.back-link{display:inline-flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;color:var(--ink3);margin-bottom:28px;transition:all 0.15s;padding:8px 0}
-.back-link:hover{color:var(--ink);gap:12px}
-.back-link svg{transition:transform 0.15s}
-.back-link:hover svg{transform:translateX(-3px)}
+    /* ── Gallery ─────────────────────── */
+    .gallery { position: sticky; top: 80px; }
+    .gallery-main {
+      aspect-ratio: 1;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #EBF0FF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 80px; margin-bottom: 12px;
+      border: 1px solid #E4E7F2;
+    }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-thumbs { display: flex; gap: 8px; }
+    .gallery-thumb {
+      width: 64px; height: 64px; border-radius: 10px;
+      overflow: hidden; cursor: pointer;
+      border: 2px solid transparent;
+      background: #EBF0FF; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .gallery-thumb.active { border-color: #1B5EFF; }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-/* GRID */
-.product-grid{display:grid;grid-template-columns:1fr 460px;gap:52px;align-items:start}
+    /* ── Product info ────────────────── */
+    .info-section { display: flex; flex-direction: column; gap: 20px; }
 
-/* GALLERY */
-.gallery{position:sticky;top:76px}
-.gallery-main{position:relative;border-radius:var(--r-xl);overflow:hidden;background:var(--surface);border:1.5px solid var(--border);aspect-ratio:1/1;margin-bottom:12px;cursor:zoom-in}
-.main-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:7rem;background:linear-gradient(135deg,#F0EDE8,#E7E3DC);transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
-.gallery-main:hover .main-emoji{transform:scale(1.06)}
-.gallery-badges{position:absolute;top:16px;left:16px;display:flex;flex-direction:column;gap:6px}
-.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
-.badge-like-new{background:#DBEAFE;color:#1E3A8A}
-.badge-new{background:#D1FAE5;color:#064E3B}
-.badge-good{background:#FEF3C7;color:#78350F}
-.badge-fair{background:#FEE2E2;color:#7F1D1D}
-.badge-hot{background:#C2681A;color:#fff}
-.gallery-thumbs{display:flex;gap:8px}
-.thumb{width:70px;height:70px;border-radius:var(--r-md);overflow:hidden;border:2px solid var(--border);cursor:pointer;transition:all 0.2s;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
-.thumb:hover{border-color:var(--border2);transform:scale(1.05)}
-.thumb.active{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+    .product-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-cat   { background: #EBF0FF; color: #1B5EFF; }
+    .badge-new   { background: #D1FAE5; color: #065F46; }
+    .badge-like-new { background: #DBEAFE; color: #1E40AF; }
+    .badge-good  { background: #FEF3C7; color: #92400E; }
+    .badge-fair  { background: #FEE2E2; color: #991B1B; }
+    .badge-sold  { background: #FEE2E2; color: #991B1B; }
+    .badge-hidden { background: #F0F1F8; color: #8890B0; }
 
-/* PRODUCT INFO */
-.info-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.meta-cat{font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--blue-light);padding:4px 12px;border-radius:999px}
-.meta-id{font-size:0.68rem;color:var(--ink4);font-family:'Geist Mono',monospace}
-.meta-views{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:var(--ink4);margin-left:auto}
+    .product-title { font-size: clamp(20px,3vw,28px); font-weight: 900; color: #0D0F1A; letter-spacing: -0.02em; line-height: 1.2; }
+    .product-price { font-size: 32px; font-weight: 900; color: #1B5EFF; letter-spacing: -0.03em; margin: 8px 0; }
+    .product-meta  { display: flex; gap: 16px; font-size: 12px; color: #8890B0; flex-wrap: wrap; }
+    .product-meta span { display: flex; align-items: center; gap: 5px; }
 
-.product-title{font-family:'Instrument Serif',serif;font-size:2.0rem;line-height:1.18;letter-spacing:-0.02em;color:var(--ink);margin-bottom:16px}
+    .product-desc {
+      font-size: 14px; color: #3D4258; line-height: 1.75;
+      white-space: pre-wrap; word-break: break-word;
+    }
 
-.price-row{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding:18px 20px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg)}
-.price-main{font-size:2.1rem;font-weight:800;color:var(--amber);letter-spacing:-0.03em;line-height:1}
-.price-original{font-size:0.95rem;color:var(--ink4);text-decoration:line-through}
-.price-save{font-size:0.68rem;font-weight:700;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:999px}
+    .section-title { font-size: 13px; font-weight: 800; color: #0D0F1A; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
-.stat-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;text-align:center}
-.stat-val{font-size:1.0rem;font-weight:800;color:var(--ink);letter-spacing:-0.02em}
-.stat-label{font-size:0.62rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+    /* ── CTA sidebar ──────────────────── */
+    .cta-card {
+      background: #fff; border: 1px solid #E4E7F2; border-radius: 20px;
+      padding: 24px; position: sticky; top: 80px;
+    }
+    .cta-price { font-size: 28px; font-weight: 900; color: #1B5EFF; letter-spacing: -0.03em; margin-bottom: 20px; }
+    .btn-contact {
+      width: 100%; padding: 14px; border-radius: 12px;
+      background: #1B5EFF; color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: all 0.2s; margin-bottom: 10px;
+    }
+    .btn-contact:hover { background: #1348D6; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.35); }
+    .btn-interested {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 1.5px solid #E4E7F2; background: #fff;
+      color: #3D4258; font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-interested:hover { background: #FFF0F0; border-color: #FFAAAA; color: #E84040; }
+    .btn-interested.active { background: #FFF0F0; border-color: #E84040; color: #E84040; }
 
-.divider{height:1px;background:var(--border);margin:22px 0}
-.sec-title{font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:11px;font-family:'Geist Mono',monospace}
+    /* Sold overlay */
+    .sold-overlay {
+      background: rgba(232,64,64,0.08); border: 1px solid rgba(232,64,64,0.2);
+      border-radius: 12px; padding: 14px 16px; text-align: center;
+      color: #E84040; font-size: 14px; font-weight: 700; margin-bottom: 14px;
+    }
 
-.product-desc{font-size:0.95rem;color:var(--ink2);line-height:1.8}
-.product-desc p{margin-bottom:10px}
-.product-desc p:last-child{margin-bottom:0}
+    /* Owner actions */
+    .owner-actions {
+      display: flex; gap: 10px; margin-top: 14px;
+    }
+    .btn-edit {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 1.5px solid #1B5EFF; color: #1B5EFF;
+      background: #EBF0FF; font-size: 13px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-edit:hover { background: #D6E4FF; }
+    .btn-mark-sold {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 1.5px solid #0DAF6E; color: #0DAF6E;
+      background: #E8FBF3; font-size: 13px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-mark-sold:hover { background: #D1F5E8; }
+    .btn-delete {
+      padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid #E4E7F2; color: #8890B0;
+      background: #fff; font-size: 13px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-delete:hover { background: #FEE2E2; border-color: #E84040; color: #E84040; }
 
-.tags-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.tag{padding:5px 14px;border-radius:999px;border:1.5px solid var(--border2);font-size:0.7rem;font-weight:600;color:var(--ink3);transition:all 0.15s}
-.tag:hover{border-color:var(--blue);color:var(--blue)}
+    /* Seller card */
+    .seller-card {
+      background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 14px;
+      padding: 16px;
+    }
+    .seller-row { display: flex; align-items: center; gap: 12px; }
+    .seller-avatar {
+      width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
+      background: #EBF0FF; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: #1B5EFF;
+    }
+    .seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .seller-name  { font-size: 14px; font-weight: 800; color: #0D0F1A; }
+    .seller-uni   { font-size: 12px; color: #8890B0; margin-top: 2px; }
+    .seller-stats { display: flex; gap: 16px; margin-top: 12px; }
+    .stat-item { text-align: center; }
+    .stat-num  { font-size: 16px; font-weight: 900; color: #0D0F1A; }
+    .stat-lbl  { font-size: 11px; color: #8890B0; }
 
-.details-table{width:100%;font-size:0.82rem;border-collapse:collapse}
-.details-table tr{border-bottom:1px solid var(--border)}
-.details-table tr:last-child{border-bottom:none}
-.details-table td{padding:11px 0}
-.details-table td:first-child{color:var(--ink3);width:130px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;font-family:'Geist Mono',monospace}
-.details-table td:last-child{font-weight:600;color:var(--ink)}
+    /* Location */
+    .location-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #F7F8FC; border: 1px solid #E4E7F2;
+      border-radius: 8px; padding: 8px 12px;
+      font-size: 13px; color: #3D4258;
+    }
 
-/* CTAs */
-.cta-section{margin-top:26px}
-.cta-primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:var(--r-lg);background:var(--ink);color:#fff;font-size:0.95rem;font-weight:700;transition:all 0.2s;margin-bottom:10px}
-.cta-primary:hover{background:#2D2A27;transform:translateY(-1px);box-shadow:0 6px 24px rgba(28,25,23,0.25)}
-.cta-secondary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:var(--r-lg);border:2px solid var(--border2);font-size:0.88rem;font-weight:600;color:var(--ink2);background:var(--surface);transition:all 0.2s;margin-bottom:10px}
-.cta-secondary:hover{border-color:var(--ink3);color:var(--ink);background:var(--surface2)}
-.cta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn-save,.btn-share{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:var(--r-lg);border:2px solid var(--border2);font-size:0.82rem;font-weight:600;color:var(--ink3);background:var(--surface);transition:all 0.2s}
-.btn-save:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
-.btn-save.saved{border-color:var(--red);color:var(--red);background:var(--red-light)}
-.btn-share:hover{border-color:var(--ink3);color:var(--ink);background:var(--surface2)}
+    /* Skeleton loader */
+    .skeleton { background: linear-gradient(90deg, #F0F1F8 25%, #E4E7F2 50%, #F0F1F8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-.safety-note{margin-top:15px;padding:13px 15px;background:var(--green-light);border:1.5px solid #BBF7D0;border-radius:var(--r-md);display:flex;gap:10px;align-items:flex-start}
-.safety-note p{font-size:0.72rem;color:var(--green);line-height:1.55}
-.safety-note strong{font-weight:700}
+    /* Toast */
+    #toast-wrap { position:fixed; bottom:24px; right:24px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+    .toast { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:12px;
+      font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(13,15,26,0.15);
+      animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1); max-width:320px; }
+    .toast.ok  { background:#0D0F1A; color:#fff; }
+    .toast.err { background:#E84040; color:#fff; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } }
 
-/* SELLER CARD */
-.seller-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:22px;margin-top:28px}
-.seller-profile{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.seller-avatar-lg{width:50px;height:50px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.05rem;font-weight:800}
-.seller-name{font-size:0.95rem;font-weight:800;color:var(--ink);line-height:1.2}
-.seller-since{font-size:0.7rem;color:var(--ink3);margin-top:2px}
-.seller-verified{display:inline-flex;align-items:center;gap:4px;font-size:0.63rem;font-weight:700;background:#DBEAFE;color:#1E3A8A;padding:2px 8px;border-radius:999px;margin-top:4px}
-.seller-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.s-stat{text-align:center;padding:11px 8px;background:var(--surface2);border-radius:var(--r-md)}
-.s-stat-val{font-size:0.95rem;font-weight:800;color:var(--ink)}
-.s-stat-label{font-size:0.6rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
-.seller-bio{font-size:0.78rem;color:var(--ink3);line-height:1.65;margin-bottom:14px}
-.btn-view-seller{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:var(--r-md);border:1.5px solid var(--border2);font-size:0.78rem;font-weight:600;color:var(--ink2);background:var(--surface2);transition:all 0.2s}
-.btn-view-seller:hover{border-color:var(--blue);color:var(--blue)}
-
-/* RELATED */
-.related{margin-top:64px}
-.related-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px}
-.related-header h2{font-family:'Instrument Serif',serif;font-size:1.55rem;letter-spacing:-0.02em}
-.related-header a{font-size:0.78rem;font-weight:600;color:var(--ink3);display:flex;align-items:center;gap:5px;transition:color 0.15s}
-.related-header a:hover{color:var(--blue)}
-.related-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.related-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all 0.25s}
-.related-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--border2)}
-.related-img{aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:2.4rem}
-.related-body{padding:13px}
-.related-name{font-size:0.82rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.related-price{font-size:0.95rem;font-weight:800;color:var(--amber)}
-
-/* STICKY MOBILE */
-.sticky-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1.5px solid var(--border);padding:13px 18px;z-index:300;gap:10px;align-items:center}
-.sticky-price{font-size:1.05rem;font-weight:800;color:var(--amber);flex:1}
-
-/* TOAST */
-#toast{position:fixed;bottom:28px;right:28px;z-index:999;background:var(--ink);color:#fff;padding:12px 20px;border-radius:var(--r-md);font-size:0.82rem;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:none;display:flex;align-items:center;gap:9px}
-#toast.show{opacity:1;transform:none}
-
-/* LOGIN MODAL */
-.overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:all 0.25s}
-.overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border-radius:var(--r-xl);width:100%;max-width:410px;overflow:hidden;box-shadow:var(--shadow-lg);transform:scale(0.95) translateY(12px);transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
-.overlay.open .modal{transform:none}
-.modal-top{padding:26px 26px 0;display:flex;justify-content:flex-end}
-.modal-close{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink3);transition:all 0.15s;font-size:0.95rem}
-.modal-close:hover{background:var(--surface2);color:var(--ink)}
-.modal-body{padding:20px 26px 30px}
-.modal-icon{font-size:2.1rem;margin-bottom:14px}
-.modal-title{font-family:'Instrument Serif',serif;font-size:1.5rem;letter-spacing:-0.02em;color:var(--ink);margin-bottom:8px}
-.modal-sub{font-size:0.85rem;color:var(--ink3);margin-bottom:26px;line-height:1.6}
-.btn-google-modal{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;padding:14px;border-radius:var(--r-md);background:var(--ink);color:#fff;font-size:0.9rem;font-weight:700;transition:all 0.2s;margin-bottom:11px}
-.btn-google-modal:hover{background:#2D2A27;transform:translateY(-1px);box-shadow:var(--shadow-md)}
-.modal-note{font-size:0.68rem;color:var(--ink4);text-align:center;line-height:1.5}
-
-@media(max-width:1100px){.product-grid{grid-template-columns:1fr;gap:36px}.gallery{position:static}.related-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:768px){html{font-size:18px}.page-wrap{padding:20px 18px 100px}.product-title{font-size:1.65rem}.sticky-bar{display:flex}.cta-primary{display:none}.nav-breadcrumb{display:none}}
-@media(max-width:480px){html{font-size:17px}.related-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
-</style>
+    @media (max-width: 768px) {
+      .detail-layout { grid-template-columns: 1fr; }
+      .gallery { position: static; }
+      .cta-card { position: static; }
+    }
+  </style>
 </head>
 <body>
+  <div id="navbar"></div>
 
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="index.html" class="nav-brand">📚 Campus</a>
-    <div class="nav-breadcrumb">
-      <a href="index.html">Home</a>
-      <span>›</span>
-      <a href="#" id="bc-cat">—</a>
-      <span>›</span>
-      <span id="bc-name">—</span>
+  <div class="detail-layout" id="detail-layout">
+    <!-- Filled by JS -->
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:#8890B0;" id="loading-state">
+      <div class="skeleton" style="height:400px;border-radius:20px;margin-bottom:16px;"></div>
     </div>
-    <div class="nav-spacer"></div>
-    <div id="nav-auth"></div>
   </div>
-</nav>
 
-<div class="page-wrap">
-  <a href="index.html" class="back-link">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    Back to Marketplace
-  </a>
+  <div id="toast-wrap"></div>
 
-  <div class="product-grid">
+  <script type="module">
+    import { auth }         from '../js/auth.js';
+    import { api }          from '../js/api.js';
+    import { renderNavbar } from '../js/components/navbar.js';
+    import { ROUTES }       from '../js/config.js';
 
-    <!-- Gallery -->
-    <div class="gallery">
-      <div class="gallery-main">
-        <div class="main-emoji" id="main-emoji">—</div>
-        <div class="gallery-badges">
-          <span class="badge" id="cond-badge">—</span>
-          <span class="badge badge-hot" id="hot-badge" style="display:none">🔥 Hot</span>
-        </div>
-      </div>
-      <div class="gallery-thumbs" id="thumbs"></div>
-    </div>
+    renderNavbar();
 
-    <!-- Info -->
-    <div>
-      <div class="info-meta">
-        <span class="meta-cat" id="meta-cat">—</span>
-        <span class="meta-id" id="meta-id">—</span>
-        <div class="meta-views">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span id="meta-views-txt">—</span>
-        </div>
-      </div>
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) { window.location.href = ROUTES.HOME; }
 
-      <h1 class="product-title" id="prod-title">Loading…</h1>
+    const fmt = n => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n);
+    const CAT_LABEL = { books:'Sách vở', electronics:'Điện tử', clothing:'Quần áo', furniture:'Nội thất', 'daily-needs':'Đồ dùng', sports:'Thể thao', gaming:'Giải trí', other:'Khác' };
+    const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
+    const COND_INFO = { new:['✨','Mới','badge-new'], 'like-new':['💎','Như mới','badge-like-new'], good:['👍','Tốt','badge-good'], fair:['🔧','Khá','badge-fair'] };
+    const COND_LBL  = { new:'Mới', 'like-new':'Như mới', good:'Tốt', fair:'Khá' };
 
-      <div class="price-row">
-        <div class="price-main" id="price-main">—</div>
-        <div class="price-original" id="price-orig" style="display:none"></div>
-        <div class="price-save" id="price-save" style="display:none"></div>
-      </div>
+    let product = null;
+    let currentImg = 0;
+    let interested = false;
 
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-val" id="st-cond">—</div><div class="stat-label">Condition</div></div>
-        <div class="stat-box"><div class="stat-val" id="st-posted">—</div><div class="stat-label">Posted</div></div>
-        <div class="stat-box"><div class="stat-val" id="st-loc">—</div><div class="stat-label">Location</div></div>
-      </div>
+    (async () => {
+      try {
+        const res = await api.get(`/products/${id}`);
+        product   = res.data;
+        renderProduct();
+      } catch {
+        document.getElementById('detail-layout').innerHTML =
+          `<div style="grid-column:1/-1;text-align:center;padding:80px;color:#8890B0;">
+            <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+            <p style="font-size:18px;font-weight:700;color:#0D0F1A;">Không tìm thấy sản phẩm</p>
+            <p style="margin-top:8px;">Sản phẩm đã bị xóa hoặc không tồn tại.</p>
+            <a href="${ROUTES.HOME}" style="display:inline-block;margin-top:20px;padding:12px 28px;background:#1B5EFF;color:#fff;border-radius:12px;font-weight:700;">Về trang chủ</a>
+          </div>`;
+      }
+    })();
 
-      <div class="divider"></div>
-      <div class="sec-title">Description</div>
-      <div class="product-desc" id="prod-desc"></div>
-      <div class="tags-row" id="tags-row"></div>
+    function renderProduct() {
+      const p = product;
+      const user     = auth.getUser();
+      const isOwner  = user && (String(p.seller?._id || p.seller) === String(user._id));
+      const isSold   = p.status === 'sold';
+      const cond     = COND_INFO[p.condition] || ['📦', p.condition, 'badge-new'];
 
-      <div class="divider"></div>
-      <div class="sec-title">Details</div>
-      <table class="details-table" id="details-table"></table>
+      // Update page title
+      document.title = `${p.title} — Campus Marketplace`;
 
-      <div class="cta-section">
-        <button class="cta-primary" onclick="handleChat()">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          Message Seller
-        </button>
-        <button class="cta-secondary" onclick="handleOffer()">Make an Offer</button>
-        <div class="cta-row">
-          <button class="btn-save" id="btn-save" onclick="toggleSave()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            Save
-          </button>
-          <button class="btn-share" onclick="handleShare()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Share
-          </button>
-        </div>
-      </div>
+      // Gallery
+      const thumbsHtml = (p.images?.length ? p.images : [''])
+        .map((url, i) => url
+          ? `<div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="setImg(${i})"><img src="${url}" alt="ảnh ${i+1}"></div>`
+          : ''
+        ).join('');
 
-      <div class="safety-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <p><strong>Stay safe:</strong> Meet in public areas on campus. Never send money in advance. Use the in-app chat for all communication.</p>
-      </div>
+      const mainImgHtml = p.images?.[0]
+        ? `<img id="main-img" src="${p.images[0]}" alt="${p.title}" onerror="this.parentElement.innerHTML='<span style=font-size:80px>${CAT_EMOJI[p.category]||'📦'}</span>'">`
+        : `<span style="font-size:80px;">${CAT_EMOJI[p.category] || '📦'}</span>`;
 
-      <!-- Seller card -->
-      <div class="seller-card">
-        <div class="sec-title">Seller</div>
-        <div class="seller-profile">
-          <div class="seller-avatar-lg" id="seller-av">—</div>
-          <div>
-            <div class="seller-name" id="seller-name">—</div>
-            <div class="seller-since" id="seller-since">—</div>
-            <div class="seller-verified">✓ Verified Student</div>
+      // CTA / Owner actions
+      let ctaHtml = '';
+      if (isSold) {
+        ctaHtml = `<div class="sold-overlay">🔒 Sản phẩm này đã được bán</div>`;
+      } else if (isOwner) {
+        ctaHtml = `
+          <div class="owner-actions">
+            <button class="btn-edit" onclick="editProduct()">✏️ Chỉnh sửa</button>
+            <button class="btn-mark-sold" onclick="markSold()">✓ Đánh dấu đã bán</button>
+            <button class="btn-delete" onclick="deleteProduct()">🗑</button>
           </div>
+        `;
+      } else {
+        ctaHtml = `
+          <button class="btn-contact" onclick="contactSeller()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Nhắn tin người bán
+          </button>
+          <button class="btn-interested ${interested ? 'active' : ''}" id="btn-interested" onclick="toggleInterested()">
+            <span id="heart-icon">${interested ? '❤️' : '🤍'}</span>
+            Quan tâm <span id="interested-count">(${p.interested || 0})</span>
+          </button>
+        `;
+      }
+
+      // Seller info
+      const seller     = p.seller || {};
+      const sellerName = seller.nickname || seller.name || 'Ẩn danh';
+      const sellerAvatar = seller.avatar
+        ? `<img src="${seller.avatar}" alt="${sellerName}">`
+        : `<span>${sellerName[0]?.toUpperCase() || '?'}</span>`;
+
+      const joinDate = seller.createdAt
+        ? new Date(seller.createdAt).toLocaleDateString('vi-VN', { month:'long', year:'numeric' })
+        : '';
+
+      // Render
+      document.getElementById('detail-layout').innerHTML = `
+        <!-- Gallery -->
+        <div class="gallery">
+          <div class="gallery-main">${mainImgHtml}</div>
+          ${p.images?.length > 1 ? `<div class="gallery-thumbs">${thumbsHtml}</div>` : ''}
         </div>
-        <div class="seller-stats">
-          <div class="s-stat"><div class="s-stat-val" id="s-sales">—</div><div class="s-stat-label">Sales</div></div>
-          <div class="s-stat"><div class="s-stat-val" id="s-rating">—</div><div class="s-stat-label">Rating</div></div>
-          <div class="s-stat"><div class="s-stat-val" id="s-resp">—</div><div class="s-stat-label">Response</div></div>
+
+        <!-- Right column -->
+        <div class="info-section">
+
+          <!-- CTA card -->
+          <div class="cta-card">
+            <div class="product-badges">
+              <span class="badge badge-cat">${CAT_LABEL[p.category] || p.category}</span>
+              <span class="badge ${cond[2]}">${cond[0]} ${cond[1]}</span>
+              ${isSold ? '<span class="badge badge-sold">Đã bán</span>' : ''}
+            </div>
+            <div class="product-title">${p.title}</div>
+            <div class="cta-price">${fmt(p.price)}</div>
+            <div class="product-meta" style="margin-bottom:16px;">
+              <span>👁 ${p.views || 0} lượt xem</span>
+              <span>❤️ ${p.interested || 0} quan tâm</span>
+              <span>🕐 ${timeAgo(p.createdAt)}</span>
+            </div>
+            ${ctaHtml}
+          </div>
+
+          <!-- Description -->
+          <div>
+            <div class="section-title">Mô tả sản phẩm</div>
+            <p class="product-desc">${escapeHtml(p.description)}</p>
+          </div>
+
+          <!-- Location -->
+          ${p.location?.address ? `
+          <div>
+            <div class="section-title">Địa điểm giao nhận</div>
+            <div class="location-chip">📍 ${escapeHtml(p.location.address)}</div>
+          </div>` : ''}
+
+          <!-- Seller -->
+          <div>
+            <div class="section-title">Người bán</div>
+            <div class="seller-card">
+              <div class="seller-row">
+                <div class="seller-avatar">${sellerAvatar}</div>
+                <div>
+                  <div class="seller-name">${sellerName}</div>
+                  <div class="seller-uni">${seller.university || ''} ${joinDate ? '· Tham gia ' + joinDate : ''}</div>
+                </div>
+              </div>
+              <div class="seller-stats">
+                <div class="stat-item"><div class="stat-num">⭐ ${(seller.rating||5).toFixed(1)}</div><div class="stat-lbl">Đánh giá</div></div>
+                <div class="stat-item"><div class="stat-num">${seller.totalSales || 0}</div><div class="stat-lbl">Đã bán</div></div>
+                <div class="stat-item"><div class="stat-num">${seller.ratingCount || 0}</div><div class="stat-lbl">Nhận xét</div></div>
+              </div>
+            </div>
+          </div>
+
         </div>
-        <div class="seller-bio" id="seller-bio">—</div>
-        <button class="btn-view-seller" onclick="toast('👤 Seller profile coming soon!')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          View All Listings
-        </button>
-      </div>
-    </div>
-  </div>
+      `;
+    }
 
-  <!-- Related -->
-  <div class="related">
-    <div class="related-header">
-      <h2>You might also like</h2>
-      <a href="index.html">Browse all <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-    </div>
-    <div class="related-grid" id="related-grid"></div>
-  </div>
-</div>
+    // ── Gallery interaction ────────────────────────────
+    window.setImg = function (i) {
+      currentImg = i;
+      const imgs = product.images || [];
+      const main = document.getElementById('main-img');
+      if (main && imgs[i]) main.src = imgs[i];
+      document.querySelectorAll('.gallery-thumb').forEach((t, j) => {
+        t.classList.toggle('active', j === i);
+      });
+    };
 
-<!-- Sticky mobile bar -->
-<div class="sticky-bar">
-  <div class="sticky-price" id="sticky-price">—</div>
-  <button class="cta-primary" style="display:flex;width:auto;padding:13px 26px;margin:0;border-radius:var(--r-md)" onclick="handleChat()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    Chat
-  </button>
-</div>
+    // ── Actions ────────────────────────────────────────
+    window.contactSeller = function () {
+      if (!auth.isAuthenticated()) {
+        toast('Vui lòng đăng nhập để nhắn tin', 'err');
+        setTimeout(() => window.location.href = ROUTES.LOGIN, 900);
+        return;
+      }
+      toast('Tính năng chat sắp ra mắt!', 'ok');
+    };
 
-<!-- Login modal -->
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-top">
-      <button class="modal-close" onclick="closeModal()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-icon" id="m-icon">💬</div>
-      <h2 class="modal-title" id="m-title">Sign in to continue</h2>
-      <p class="modal-sub" id="m-sub">You need an account to do this.</p>
-      <button class="btn-google-modal" onclick="doLogin()">
-        <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
-      </button>
-      <p class="modal-note">Use your university email address to sign in.</p>
-    </div>
-  </div>
-</div>
+    window.toggleInterested = async function () {
+      if (!auth.isAuthenticated()) {
+        toast('Vui lòng đăng nhập', 'err');
+        return;
+      }
+      interested = !interested;
+      try {
+        const res = await api.post(`/products/${id}/interested`);
+        document.getElementById('heart-icon').textContent = interested ? '❤️' : '🤍';
+        document.getElementById('interested-count').textContent = `(${res.interested})`;
+        document.getElementById('btn-interested').classList.toggle('active', interested);
+      } catch { interested = !interested; }
+    };
 
-<div id="toast"></div>
+    window.editProduct = function () {
+      window.location.href = `/pages/sell.html?id=${id}`;
+    };
 
-<script type="module">
-const API_URL = 'http://localhost:5000/api';
-const KEYS = { TOKEN:'campus_token', USER:'campus_user' };
+    window.markSold = async function () {
+      if (!confirm('Đánh dấu sản phẩm này là đã bán?')) return;
+      try {
+        await api.patch(`/products/${id}`, { status: 'sold' });
+        toast('Đã cập nhật trạng thái!', 'ok');
+        setTimeout(() => location.reload(), 1000);
+      } catch (err) { toast(err.message, 'err'); }
+    };
 
-const auth = {
-  getUser()  { try{return JSON.parse(localStorage.getItem(KEYS.USER))}catch{return null} },
-  getToken() { return localStorage.getItem(KEYS.TOKEN) },
-  isAuth()   { return !!this.getToken()&&!!this.getUser() },
-  loginWithGoogle(){ window.location.href=`${API_URL}/auth/google` },
-  async logout(){
-    try{await fetch(`${API_URL}/auth/logout`,{method:'POST',credentials:'include'})}catch{}
-    localStorage.removeItem(KEYS.TOKEN);localStorage.removeItem(KEYS.USER);
-    window.location.href='/pages/login.html';
-  }
-};
+    window.deleteProduct = async function () {
+      if (!confirm('Xóa sản phẩm này? Hành động không thể hoàn tác.')) return;
+      try {
+        await api.delete(`/products/${id}`);
+        toast('Đã xóa sản phẩm', 'ok');
+        setTimeout(() => window.location.href = ROUTES.HOME, 1200);
+      } catch (err) { toast(err.message, 'err'); }
+    };
 
-const PRODUCTS=[
-  {id:1,emoji:'💻',name:'Dell XPS 13 9310 (2022)',category:'Electronics',slug:'electronics',price:14500000,origPrice:22000000,cond:'like-new',condLabel:'Like New',posted:'2 days ago',loc:'Building A',views:248,hot:true,
-   desc:'<p>Barely used Dell XPS 13 in immaculate condition. Purchased last year, used only for light coursework. Battery holds charge beautifully — easily 8+ hours per session.</p><p>Stunning 1920×1200 IPS display. Keyboard is tight with zero flex. No scratches, no dents whatsoever.</p><p>Includes original charger, sleeve case, and retail box. Ready to use immediately.</p>',
-   tags:['Laptop','Dell','XPS','Core i7','16GB RAM'],
-   details:{Brand:'Dell',Model:'XPS 13 9310',CPU:'Intel Core i7-1165G7',RAM:'16 GB LPDDR4x',Storage:'512 GB NVMe SSD',Display:'13.4" FHD+ IPS',Battery:'~8–10 hrs',OS:'Windows 11 Pro'},
-   seller:{name:'Hùng Việt',init:'H',sales:23,rating:'4.9★',resp:'< 1 hr',since:'Sep 2023',bio:'Final-year CS student. Upgrading to M-series Mac, so letting go of this beauty. Serious buyers only.'},
-   related:[2,4,6,8]},
-  {id:2,emoji:'📚',name:'Calculus & Linear Algebra Bundle',category:'Books',slug:'books',price:85000,origPrice:320000,cond:'good',condLabel:'Good',posted:'5 hours ago',loc:'Library area',views:91,hot:false,
-   desc:'<p>Complete set of Year 1 maths textbooks. Thomas Calculus (14th ed) and Gilbert Strang Linear Algebra — both highly recommended by lecturers.</p><p>Some light pencil notes in margins from my own study sessions. Highlights on key theorems only.</p><p>Perfect for incoming Year 1 students. Save ₫235,000 vs buying new.</p>',
-   tags:['Textbook','Maths','Calculus','Year 1'],
-   details:{Titles:'Calculus + Linear Algebra',Editions:'14th & 4th','Condition':'Light pencil notes',Language:'English',Pages:'900 + 574'},
-   seller:{name:'Lan Anh',init:'L',sales:8,rating:'5.0★',resp:'< 3 hrs',since:'Feb 2024',bio:'Year 2 Engineering. Clearing out first-year books. All priced to sell fast!'},
-   related:[1,3,5,7]},
-  {id:3,emoji:'🎧',name:'Sony WH-1000XM4 Wireless',category:'Electronics',slug:'electronics',price:4200000,origPrice:7490000,cond:'like-new',condLabel:'Like New',posted:'1 day ago',loc:'Dorm Block C',views:315,hot:true,
-   desc:'<p>Sony\'s best ANC headphones. Industry-leading noise cancellation — transforms library study sessions completely.</p><p>Used for ~3 months, then switched to earbuds for gym. No scratches, ear cups supple and fresh. Battery still at factory spec (30 hrs ANC on).</p><p>Comes with original carry case, 3.5mm cable, USB-C charger, and airplane adapter.</p>',
-   tags:['Sony','Headphones','ANC','Wireless','Hi-Fi'],
-   details:{Brand:'Sony',Model:'WH-1000XM4',Connection:'Bluetooth 5.0',Battery:'30 hrs (ANC on)',Drivers:'40mm Dynamic',Codec:'LDAC, AAC, SBC',Weight:'254 g',Color:'Black'},
-   seller:{name:'Đức Minh',init:'Đ',sales:14,rating:'4.8★',resp:'< 2 hrs',since:'Oct 2023',bio:'Music lover upgrading my entire audio setup. All gear well-maintained.'},
-   related:[1,2,4,6]},
-  {id:4,emoji:'🚲',name:'Giant ATX 810 Mountain Bike',category:'Sports',slug:'sports',price:2800000,origPrice:5200000,cond:'good',condLabel:'Good',posted:'3 days ago',loc:'Sports Hall',views:127,hot:false,
-   desc:'<p>Giant ATX 810 size Medium. My daily campus commute for a year and a half — reliable, comfortable, genuinely fun to ride.</p><p>Recently serviced: new tyres, brake pads replaced, chain cleaned and lubed. All 21 speeds shift smoothly.</p><p>Minor scuffs from everyday use — nothing structural. A solid buy for campus transport.</p>',
-   tags:['Giant','MTB','Bicycle','Commuter','Size M'],
-   details:{Brand:'Giant',Model:'ATX 810',Frame:'Aluminium',Size:'Medium (170–180 cm)',Speeds:'21-speed Shimano',Brakes:'Mechanical disc',Tyres:'New (replaced)'},
-   seller:{name:'Thanh Tùng',init:'T',sales:5,rating:'4.7★',resp:'< 4 hrs',since:'Mar 2023',bio:'Graduated last semester, moving abroad. Clearing everything.'},
-   related:[5,6,7,8]},
-  {id:5,emoji:'🪑',name:'Foldable Study Desk + Chair Set',category:'Furniture',slug:'furniture',price:550000,origPrice:1200000,cond:'good',condLabel:'Good',posted:'6 days ago',loc:'Dorm Block B',views:73,hot:false,
-   desc:'<p>Compact foldable desk (80×50cm) with ergonomic mesh chair. Both fold flat — great for small dorm rooms or moving.</p><p>Desk has a few light pen marks, otherwise clean. Chair mesh intact, height adjustment works perfectly.</p><p>Selling as a set only. Priced for a quick sale before semester ends.</p>',
-   tags:['Desk','Chair','Furniture','Dorm','Foldable'],
-   details:{'Desk size':'80 × 50 cm','Chair type':'Mesh ergonomic',Foldable:'Yes (both)',Material:'MDF + Steel','Weight limit':'100 kg'},
-   seller:{name:'Ngọc Mai',init:'N',sales:3,rating:'5.0★',resp:'Same day',since:'Jan 2024',bio:'Moving out of dorms. Everything must go this week!'},
-   related:[3,4,7,8]},
-  {id:6,emoji:'👟',name:'Nike Air Max 270 — Size 42',category:'Clothing',slug:'clothing',price:850000,origPrice:3200000,cond:'good',condLabel:'Good',posted:'4 days ago',loc:'Building E',views:186,hot:true,
-   desc:'<p>Authentic Nike Air Max 270 in Summit White / Black. Bought directly from Nike.com — receipt available if needed.</p><p>Worn maybe 8–10 times to classes. Soles clean with minimal wear. Air unit fully intact.</p><p>Size EU 42 / UK 7.5. Runs slightly large so a 41.5 foot works fine too.</p>',
-   tags:['Nike','Air Max','Sneakers','Size 42','White'],
-   details:{Brand:'Nike',Model:'Air Max 270',Size:'EU 42 / UK 7.5',Color:'Summit White/Black',Condition:'Light wear (~10×)','Insole':'Original included'},
-   seller:{name:'Thu Hằng',init:'T',sales:11,rating:'4.9★',resp:'< 1 hr',since:'Aug 2023',bio:'Sneaker collector. Always genuine goods, always honest descriptions.'},
-   related:[1,2,4,5]},
-  {id:7,emoji:'💡',name:'LED Smart Desk Lamp — USB-C',category:'Daily Needs',slug:'daily-needs',price:120000,origPrice:280000,cond:'like-new',condLabel:'Like New',posted:'1 day ago',loc:'Dorm Block A',views:64,hot:false,
-   desc:'<p>Adjustable LED desk lamp with touch dimmer (3 brightness levels) and warm/cool/neutral colour modes. Perfect for late-night study sessions.</p><p>Charges via USB-C (cable included). Folds completely flat. Leaving Vietnam next month so clearing out everything.</p>',
-   tags:['Lamp','LED','Study','USB-C','Dorm'],
-   details:{Power:'5W LED','Color modes':'Warm / Neutral / Cool',Brightness:'3 levels',Connection:'USB-C',Foldable:'Yes'},
-   seller:{name:'Quang Huy',init:'Q',sales:6,rating:'4.8★',resp:'< 2 hrs',since:'Jun 2023',bio:'Exchange student heading home. Selling everything this week. Very negotiable!'},
-   related:[3,5,6,8]},
-  {id:8,emoji:'📖',name:'Thinking Fast & Slow — Kahneman',category:'Books',slug:'books',price:55000,origPrice:175000,cond:'good',condLabel:'Good',posted:'8 hours ago',loc:'Library area',views:44,hot:false,
-   desc:'<p>Vietnamese-translated edition of Daniel Kahneman\'s classic. Read once, very lightly. Light pencil underlines in the first third — nothing distracting.</p><p>This book genuinely changed how I think about decision-making. Highly recommended for anyone in business, psychology, or curious minds.</p>',
-   tags:['Book','Psychology','Kahneman','Non-fiction'],
-   details:{Author:'Daniel Kahneman',Language:'Vietnamese',Pages:'512',Publisher:'NXB Trẻ',Edition:'3rd Vietnamese printing'},
-   seller:{name:'Lan Anh',init:'L',sales:8,rating:'5.0★',resp:'< 3 hrs',since:'Feb 2024',bio:'Year 2 Engineering. Clearing out books.'},
-   related:[2,3,5,7]},
-];
+    // ── Utils ──────────────────────────────────────────
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1)   return 'Vừa xong';
+      if (m < 60)  return `${m} phút trước`;
+      const h = Math.floor(m / 60);
+      if (h < 24)  return `${h} giờ trước`;
+      const d = Math.floor(h / 24);
+      if (d < 30)  return `${d} ngày trước`;
+      const mo = Math.floor(d / 30);
+      return `${mo} tháng trước`;
+    }
 
-const condMap={'like-new':'badge-like-new','new':'badge-new','good':'badge-good','fair':'badge-fair'};
-function vnd(n){return new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n)}
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
 
-// Get product
-const pid=parseInt(new URLSearchParams(location.search).get('id')||'1');
-const p=PRODUCTS.find(x=>x.id===pid)||PRODUCTS[0];
-
-// Render nav
-function renderNav(){
-  const u=auth.getUser(),isA=auth.isAuth(),el=document.getElementById('nav-auth');
-  if(isA&&u){
-    const av=u.avatar?`<img src="${u.avatar}" alt="">`:`<div class="nav-avatar-init">${u.name[0]}</div>`;
-    el.innerHTML=`<div class="nav-dd-wrap"><div class="nav-user-btn" id="nub">${av}<span>Hello, <strong>${u.name.split(' ').pop()}</strong></span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div><div class="nav-dd" id="ndd"><div class="dd-header"><div class="dd-name">${u.name}</div><div class="dd-email">${u.email}</div></div><div class="dd-menu"><div class="dd-divider"></div><button class="dd-item danger" id="logout-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button></div></div></div>`;
-    document.getElementById('nub').addEventListener('click',e=>{e.stopPropagation();document.getElementById('ndd').classList.toggle('open')});
-    document.addEventListener('click',()=>document.getElementById('ndd')?.classList.remove('open'));
-    document.getElementById('logout-btn').addEventListener('click',()=>auth.logout());
-  } else {
-    el.innerHTML=`<a href="login.html" class="btn-login-nav"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Sign In</a>`;
-  }
-}
-
-// Render product
-function render(p){
-  document.title=`${p.name} — Campus Marketplace`;
-  document.getElementById('bc-cat').textContent=p.category;
-  document.getElementById('bc-name').textContent=p.name.length>28?p.name.slice(0,28)+'…':p.name;
-  document.getElementById('main-emoji').textContent=p.emoji;
-  const cb=document.getElementById('cond-badge');
-  cb.textContent=p.condLabel;cb.className=`badge ${condMap[p.cond]||'badge-good'}`;
-  if(p.hot)document.getElementById('hot-badge').style.display='';
-  // Thumbs
-  const extras=['📸','🔍','📦','✨'];
-  document.getElementById('thumbs').innerHTML=[p.emoji,...extras].slice(0,4).map((e,i)=>`
-    <div class="thumb ${i===0?'active':''}" onclick="selThumb(this,'${e}')">
-      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">${e}</div>
-    </div>`).join('');
-  // Meta
-  document.getElementById('meta-cat').textContent=p.category;
-  document.getElementById('meta-id').textContent=`#PRD-00${p.id}`;
-  document.getElementById('meta-views-txt').textContent=`${p.views} views`;
-  // Title & price
-  document.getElementById('prod-title').textContent=p.name;
-  document.getElementById('price-main').textContent=vnd(p.price);
-  if(p.origPrice){
-    const saved=Math.round((1-p.price/p.origPrice)*100);
-    document.getElementById('price-orig').style.display='';
-    document.getElementById('price-orig').textContent=vnd(p.origPrice);
-    document.getElementById('price-save').style.display='';
-    document.getElementById('price-save').textContent=`Save ${saved}%`;
-  }
-  document.getElementById('sticky-price').textContent=vnd(p.price);
-  // Stats
-  document.getElementById('st-cond').textContent=p.condLabel;
-  document.getElementById('st-posted').textContent=p.posted;
-  document.getElementById('st-loc').textContent=p.loc;
-  // Desc + tags
-  document.getElementById('prod-desc').innerHTML=p.desc;
-  document.getElementById('tags-row').innerHTML=p.tags.map(t=>`<span class="tag">${t}</span>`).join('');
-  // Details
-  document.getElementById('details-table').innerHTML=Object.entries(p.details).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
-  // Seller
-  document.getElementById('seller-av').textContent=p.seller.init;
-  document.getElementById('seller-name').textContent=p.seller.name;
-  document.getElementById('seller-since').textContent=`Member since ${p.seller.since}`;
-  document.getElementById('s-sales').textContent=p.seller.sales;
-  document.getElementById('s-rating').textContent=p.seller.rating;
-  document.getElementById('s-resp').textContent=p.seller.resp;
-  document.getElementById('seller-bio').textContent=p.seller.bio;
-  // Related
-  document.getElementById('related-grid').innerHTML=p.related.map(id=>{
-    const r=PRODUCTS.find(x=>x.id===id);
-    return r?`<div class="related-card" onclick="location.href='product.html?id=${r.id}'"><div class="related-img">${r.emoji}</div><div class="related-body"><div class="related-name">${r.name}</div><div class="related-price">${vnd(r.price)}</div></div></div>`:'';
-  }).join('');
-}
-
-window.selThumb=function(el,e){
-  document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('main-emoji').textContent=e;
-};
-
-window.handleChat=function(){
-  if(!auth.isAuth()){openModal('💬','Sign in to message seller','You need an account to contact the seller.');return;}
-  toast('💬 Opening chat with '+p.seller.name+'…');
-};
-window.handleOffer=function(){
-  if(!auth.isAuth()){openModal('🤝','Sign in to make an offer','Create an account to send offers and negotiate prices.');return;}
-  toast('✉️ Offer form coming soon!');
-};
-let saved=false;
-window.toggleSave=function(){
-  if(!auth.isAuth()){openModal('❤️','Sign in to save items','Save your favourite listings and come back later.');return;}
-  saved=!saved;
-  const btn=document.getElementById('btn-save');
-  btn.classList.toggle('saved',saved);
-  btn.innerHTML=saved?
-    `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> Saved`:
-    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> Save`;
-  toast(saved?'❤️ Saved to wishlist':'Removed from wishlist');
-};
-window.handleShare=function(){
-  navigator.clipboard.writeText(location.href).then(()=>toast('🔗 Link copied!'));
-};
-
-function openModal(icon,title,sub){
-  document.getElementById('m-icon').textContent=icon;
-  document.getElementById('m-title').textContent=title;
-  document.getElementById('m-sub').textContent=sub;
-  document.getElementById('overlay').classList.add('open');
-}
-window.closeModal=function(){document.getElementById('overlay').classList.remove('open')};
-window.doLogin=function(){auth.loginWithGoogle()};
-document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeModal()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-
-window.toast=function(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
-};
-
-renderNav();
-render(p);
-</script>
+    function toast(msg, type = 'ok') {
+      const c = document.getElementById('toast-wrap');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `${type === 'ok' ? '✓' : '✕'} ${msg}`;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+    }
+  </script>
 </body>
 </html>

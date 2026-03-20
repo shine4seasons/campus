@@ -5,172 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đăng nhập — Campus Marketplace</title>
   <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/login.css">
   <style>
-    body { background:#070D1F; min-height:100vh; overflow-x:hidden; }
+    /* ── Step indicator ─────────────────────────── */
+    .steps-indicator {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 28px;
+    }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.35);
+      transition: all 0.3s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .step-dot.done { background: rgba(13,175,110,0.2); border-color: #0DAF6E; color: #0DAF6E; }
+    .step-dot.active { background: #1B5EFF; border-color: #1B5EFF; color: #fff; }
+    .step-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); transition: background 0.4s; }
+    .step-line.done { background: #0DAF6E; }
 
-    .bg-mesh {
-      position:fixed; inset:0; z-index:0; pointer-events:none;
-      background:
-        radial-gradient(ellipse 70% 70% at 15% 50%, rgba(29,106,229,0.18) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 60% at 85% 20%, rgba(245,158,11,0.1) 0%, transparent 50%),
-        radial-gradient(ellipse 40% 50% at 60% 80%, rgba(5,150,105,0.08) 0%, transparent 45%);
+    /* ── Two-step transition ─────────────────────── */
+    .right-panel { position: relative; overflow: hidden; }
+    .card-step {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 48px;
+      transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.35s ease;
     }
-    .bg-grid {
-      position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.03;
-      background-image:
-        linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px);
-      background-size:48px 48px;
-    }
+    .card-step.hidden-left  { transform: translateX(-60px); opacity: 0; pointer-events: none; }
+    .card-step.hidden-right { transform: translateX(60px);  opacity: 0; pointer-events: none; }
+    .card-step.visible      { transform: translateX(0); opacity: 1; pointer-events: all; position: relative; inset: unset; }
 
-    .page {
-      position:relative; z-index:1;
-      min-height:100vh;
-      display:grid; grid-template-columns:1fr 1fr;
+    /* ── Step 2 form ────────────────────────────── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.45); letter-spacing: 0.07em;
+      text-transform: uppercase; margin-bottom: 7px;
     }
+    .form-input {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px; font-size: 14px; color: #fff;
+      font-family: inherit; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.22); }
+    .form-input:focus { border-color: rgba(27,94,255,0.7); background: rgba(27,94,255,0.06); }
+    .form-input.has-error { border-color: rgba(232,64,64,0.7); }
+    .form-hint { font-size: 11px; color: rgba(255,255,255,0.22); margin-top: 5px; }
 
-    /* ── Left panel ─────────── */
-    .left-panel {
-      display:flex; flex-direction:column; justify-content:center;
-      padding:60px 64px; color:#fff;
+    /* Avatar row */
+    .avatar-row {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
     }
-    .left-brand {
-      font-size:22px; font-weight:800; margin-bottom:60px;
-      letter-spacing:-0.02em;
+    .avatar-preview {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(27,94,255,0.2); border: 2px solid rgba(27,94,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: #7AABFF; overflow: hidden;
     }
-    .left-brand span { opacity:0.5; font-weight:400; }
-    .left-headline {
-      font-size:clamp(32px, 3.5vw, 52px);
-      font-weight:800; line-height:1.1;
-      letter-spacing:-0.03em; margin-bottom:20px;
-    }
-    .left-headline em { font-style:normal; color:#FCD34D; }
-    .left-sub { color:rgba(255,255,255,0.5); font-size:16px; line-height:1.7; max-width:380px; margin-bottom:48px; }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-meta { font-size: 13px; }
+    .avatar-meta strong { display: block; color: rgba(255,255,255,0.85); margin-bottom: 3px; }
+    .avatar-meta span { color: rgba(255,255,255,0.3); font-size: 12px; }
 
-    .feature-list { display:flex; flex-direction:column; gap:16px; }
-    .feature-item {
-      display:flex; align-items:flex-start; gap:14px;
+    /* Submit */
+    .btn-submit {
+      width: 100%; padding: 14px; border-radius: 12px;
+      background: #1B5EFF; color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: all 0.2s; margin-top: 4px;
     }
-    .feature-icon {
-      width:40px; height:40px; border-radius:10px; flex-shrink:0;
-      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
-      display:flex; align-items:center; justify-content:center; font-size:18px;
-    }
-    .feature-text strong { display:block; font-size:14px; color:rgba(255,255,255,0.9); }
-    .feature-text span { font-size:13px; color:rgba(255,255,255,0.4); }
+    .btn-submit:hover { background: #1348D6; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.4); }
+    .btn-submit:disabled { opacity: 0.5; pointer-events: none; }
 
-    /* ── Right panel (card) ─── */
-    .right-panel {
-      display:flex; align-items:center; justify-content:center;
-      padding:40px 48px;
-      background:rgba(255,255,255,0.02);
-      border-left:1px solid rgba(255,255,255,0.06);
+    .skip-link {
+      display: block; text-align: center; margin-top: 14px;
+      font-size: 13px; color: rgba(255,255,255,0.28); cursor: pointer; transition: color 0.15s;
     }
+    .skip-link:hover { color: rgba(255,255,255,0.55); }
 
-    .login-card {
-      width:100%; max-width:400px;
+    /* Success overlay */
+    .success-flash {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(7,13,31,0.8);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
-    .card-eyebrow {
-      font-size:11px; font-weight:700; letter-spacing:0.14em;
-      text-transform:uppercase; color:rgba(255,255,255,0.3);
-      font-family:'DM Mono', monospace; margin-bottom:20px;
+    .success-flash.show { opacity: 1; pointer-events: all; }
+    .success-card {
+      background: #0D1520; border: 1px solid rgba(13,175,110,0.3);
+      border-radius: 20px; padding: 44px 36px; text-align: center; max-width: 340px;
     }
-    .card-title {
-      font-size:30px; font-weight:800; color:#fff;
-      letter-spacing:-0.03em; margin-bottom:8px;
-    }
-    .card-sub { font-size:14px; color:rgba(255,255,255,0.4); margin-bottom:36px; line-height:1.6; }
+    .success-icon { font-size: 52px; margin-bottom: 16px; }
+    .success-card h3 { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .success-card p { color: rgba(255,255,255,0.4); font-size: 14px; line-height: 1.6; }
 
-    /* Error */
-    .error-box {
-      background:rgba(220,38,38,0.12); border:1px solid rgba(220,38,38,0.3);
-      border-radius:10px; padding:12px 16px;
-      color:#FCA5A5; font-size:13px; margin-bottom:20px;
-      display:flex; align-items:center; gap:10px;
+    /* Left panel step 2 content */
+    .left-perks { display: none; flex-direction: column; gap: 14px; }
+    .perk-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 14px 16px;
+      font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.55;
     }
+    .perk-item strong { display: block; color: rgba(255,255,255,0.8); margin-bottom: 4px; font-size: 14px; }
 
-    /* Google button */
-    .btn-google {
-      display:flex; align-items:center; justify-content:center; gap:12px;
-      width:100%; padding:14px 20px; border-radius:12px;
-      background:#fff; color:#3C4043;
-      font-size:15px; font-weight:700;
-      border:none; cursor:pointer; font-family:inherit;
-      box-shadow:0 2px 12px rgba(0,0,0,0.4);
-      transition:all 0.2s;
-      position:relative; overflow:hidden;
-    }
-    .btn-google::before {
-      content:''; position:absolute; inset:0;
-      background:linear-gradient(135deg, transparent 40%, rgba(29,106,229,0.05));
-      opacity:0; transition:opacity 0.2s;
-    }
-    .btn-google:hover { box-shadow:0 6px 24px rgba(0,0,0,0.5); transform:translateY(-1px); }
-    .btn-google:hover::before { opacity:1; }
-    .btn-google:active { transform:scale(0.99); }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .btn-google.loading { pointer-events:none; opacity:0.7; }
-    .spinner-sm {
-      width:18px; height:18px; border:2px solid rgba(60,64,67,0.2);
-      border-top-color:#3C4043; border-radius:50%;
-      animation:spin 0.7s linear infinite; display:none;
-    }
-    .btn-google.loading .spinner-sm { display:block; }
-    .btn-google.loading .google-icon { display:none; }
-    .btn-google.loading .btn-google-text::after { content:'Đang kết nối...'; }
-    .btn-google.loading .btn-google-text { font-size:0; }
-    .btn-google.loading .btn-google-text::after { font-size:15px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    .divider {
-      display:flex; align-items:center; gap:14px;
-      margin:24px 0; color:rgba(255,255,255,0.15); font-size:12px;
-      font-family:'DM Mono', monospace;
-    }
-    .divider::before,.divider::after {
-      content:''; flex:1; height:1px; background:rgba(255,255,255,0.08);
-    }
-
-    .info-note {
-      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
-      border-radius:10px; padding:14px 16px;
-      display:flex; gap:12px; align-items:flex-start;
-    }
-    .info-note svg { flex-shrink:0; margin-top:1px; opacity:0.5; }
-    .info-note p { font-size:12.5px; color:rgba(255,255,255,0.35); line-height:1.6; }
-    .info-note p strong { color:rgba(255,255,255,0.6); }
-
-    .card-footer { margin-top:28px; text-align:center; }
-    .card-footer a { color:rgba(255,255,255,0.35); font-size:12px; }
-    .card-footer a:hover { color:rgba(255,255,255,0.6); }
-
-    /* Responsive */
-    @media(max-width:900px) {
-      .page { grid-template-columns:1fr; }
-      .left-panel { display:none; }
-      .right-panel { border-left:none; padding:60px 24px; }
-      body { background:#070D1F; }
+    @media (max-width: 900px) {
+      .card-step { padding: 40px 24px; }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-
+<div id="navbar"></div>
 <div class="bg-mesh"></div>
 <div class="bg-grid"></div>
 
 <div class="page">
 
-  <!-- Left: Branding -->
-  <div class="left-panel">
-    <div class="left-brand">📚 Campus <span>Marketplace</span></div>
-    <h1 class="left-headline">Mua bán thông minh<br>cho <em>sinh viên</em></h1>
-    <p class="left-sub"></p>
-    <div class="feature-list">
+  <!-- ── Left panel ─────────────────────────────────── -->
+  <div class="left-panel" id="left-panel">
+    <h1 class="left-headline" id="left-headline">Mua bán thông minh<br>cho <em>sinh viên</em></h1>
+ 
+
+    <!-- Step 1 features -->
+    <div class="feature-list" id="feature-list">
       <div class="feature-item">
         <div class="feature-icon">🔒</div>
         <div class="feature-text">
           <strong>An toàn & Tin cậy</strong>
-          <span>Chỉ sinh viên với email trường mới được tham gia</span>
         </div>
       </div>
       <div class="feature-item">
@@ -181,81 +156,358 @@
         </div>
       </div>
       <div class="feature-item">
-        <div class="feature-icon">💬</div>
+        <div class="feature-icon">🛒</div>
         <div class="feature-text">
-          <strong>Chat real-time</strong>
-          <span>Nhắn tin trực tiếp với người bán, thương lượng ngay</span>
+          <strong>Mua & Bán cùng 1 tài khoản</strong>
+          <span>Không cần tài khoản riêng — đăng bán và mua từ một nơi</span>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Right: Login form -->
-  <div class="right-panel">
-    <div class="login-card">
-      <div class="card-eyebrow">Bước 1 / 1</div>
-      <h1 class="card-title">Chào mừng!</h1>
-      <p class="card-sub">Đăng nhập để bắt đầu mua bán trong cộng đồng sinh viên.</p>
-
-      <!-- Error message (hidden by default) -->
-      <div id="error-box" class="error-box" style="display:none">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="error-text">Đăng nhập thất bại. Vui lòng thử lại.</span>
+    <!-- Step 2 perks (hidden by default) -->
+    <div class="left-perks" id="left-perks">
+      <div class="perk-item">
+        <strong>📦 Mua & bán trên cùng 1 tài khoản</strong>
+        Không phân biệt vai trò — ai cũng có thể đăng sản phẩm lên bán và mua hàng từ người khác.
       </div>
-
-      <!-- Google OAuth button -->
-      <button class="btn-google" id="google-btn">
-        <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        <div class="spinner-sm"></div>
-        <span class="btn-google-text">Continue with Google</span>
-      </button>
-
-
-      <div class="info-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p> Personal information is protected according to the GDPR policy.</p>
+      <div class="perk-item">
+        <strong>⭐ Uy tín theo giao dịch</strong>
+        Điểm đánh giá tăng sau mỗi giao dịch — càng nhiều sao, càng được tin tưởng.
       </div>
-
-      <div class="card-footer">
-        <a href="/index.html">← Back to home</a>
+      <div class="perk-item">
+        <strong>📍 Kết nối đúng trường</strong>
+        Tên trường giúp ghép giao dịch với sinh viên cùng khuôn viên dễ dàng hơn.
       </div>
     </div>
   </div>
 
+  <!-- ── Right panel ─────────────────────────────────── -->
+  <div class="right-panel" id="right-panel">
+
+    <!-- ════ STEP 1: Google OAuth ════ -->
+    <div class="card-step visible" id="step1">
+      <div class="login-card">
+
+        <div class="steps-indicator">
+          <div class="step-dot active">1</div>
+          <div class="step-line" id="line-1"></div>
+          <div class="step-dot" id="dot-2">2</div>
+        </div>
+
+        <div class="card-eyebrow">Bước 1 / 2 — Xác thực</div>
+        <h1 class="card-title">Chào mừng!</h1>
+        <p class="card-sub">Đăng nhập bằng tài khoản Google để bắt đầu. Một tài khoản vừa có thể mua, vừa có thể bán.</p>
+
+        <div id="error-box" class="error-box" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="error-text">Đăng nhập thất bại. Vui lòng thử lại.</span>
+        </div>
+
+        <button class="btn-google" id="google-btn">
+          <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <div class="spinner-sm"></div>
+          <span class="btn-google-text">Tiếp tục với Google</span>
+        </button>
+
+        <div class="card-footer">
+          <a href="/index.html">← Quay lại trang chủ</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ STEP 2: Hoàn thiện hồ sơ ════ -->
+    <div class="card-step hidden-right" id="step2">
+      <div class="login-card" style="width:100%;max-width:440px;">
+
+        <div class="steps-indicator">
+          <div class="step-dot done">✓</div>
+          <div class="step-line done"></div>
+          <div class="step-dot active">2</div>
+        </div>
+
+        <div class="card-eyebrow">Bước 2 / 2 — Hoàn thiện hồ sơ</div>
+        <h1 class="card-title" style="font-size:24px;">
+          Chào, <span id="welcome-name">bạn</span>! 👋
+        </h1>
+        <p class="card-sub">Thêm vài thông tin để người mua/bán tin tưởng bạn hơn.</p>
+
+        <!-- Avatar preview -->
+        <div class="avatar-row">
+          <div class="avatar-preview" id="avatar-preview">?</div>
+          <div class="avatar-meta">
+            <strong id="profile-google-name">Tên Google</strong>
+            <span>Ảnh đại diện lấy từ tài khoản Google của bạn.</span>
+          </div>
+        </div>
+
+        <!-- Form fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tên hiển thị *</label>
+            <input type="text" class="form-input" id="f-nickname" placeholder="VD: Minh Anh" maxlength="40">
+            <div class="form-hint">Tên người khác thấy khi giao dịch</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số điện thoại</label>
+            <input type="tel" class="form-input" id="f-phone" placeholder="0912 345 678" maxlength="15">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Trường / Đại học *</label>
+            <input type="text" class="form-input" id="f-university" placeholder="VD: ĐH Bách Khoa HN" maxlength="80">
+          </div>
+          <div class="form-group">
+            <label class="form-label">MSSV</label>
+            <input type="text" class="form-input" id="f-student-id" placeholder="20210001" maxlength="20">
+            <div class="form-hint">Không bắt buộc</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Giới thiệu ngắn</label>
+          <textarea class="form-input" id="f-bio"
+            placeholder="VD: SV năm 3 CNTT, hay mua bán sách và đồ điện tử..."
+            rows="2" maxlength="200" style="resize:none;line-height:1.5;"></textarea>
+        </div>
+
+        <button class="btn-submit" id="btn-submit" onclick="submitProfile()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Hoàn tất & Vào trang chủ
+        </button>
+
+        <span class="skip-link" onclick="skipProfile()">Bỏ qua, tôi sẽ điền sau →</span>
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+</div>
+
+<!-- Success flash -->
+<div class="success-flash" id="success-flash">
+  <div class="success-card">
+    <div class="success-icon">🎉</div>
+    <h3>Chào mừng đến Campus!</h3>
+    <p id="success-msg">Hồ sơ đã được lưu. Đang chuyển đến trang chủ...</p>
+  </div>
 </div>
 
 <script type="module">
-  import { auth }   from '../js/auth.js';
-  import { router } from '../js/router.js';
+  import { auth }         from '../js/auth.js';
+  import { router }       from '../js/router.js';
+  import { api }          from '../js/api.js';
+  import { renderNavbar } from '../js/components/navbar.js';
+  import { ROUTES }       from '../js/config.js';
 
-  // Nếu đã đăng nhập rồi thì redirect về home
-  router.redirectIfAuth();
+  // Kiểm tra xem user đã login đầy đủ chưa
+  const checkAuth = async () => {
+    // Kiểm tra localStorage
+    const token = localStorage.getItem('campus_token');
+    const userStr = localStorage.getItem('campus_user');
+    
+    if (token && userStr) {
+      const user = JSON.parse(userStr);
+      if (user?.profileComplete) {
+        // Đã login đầy đủ → home
+        window.location.href = ROUTES.HOME;
+        return;
+      }
+    }
+  };
+  
+  await checkAuth();
 
-  // Kiểm tra nếu có lỗi từ URL (?error=...)
+  renderNavbar();
+
   const params = new URLSearchParams(location.search);
+  const step   = params.get('step');
+  const token  = params.get('token');
   const error  = params.get('error');
+
+  // Hiện lỗi
   if (error) {
-    const box = document.getElementById('error-box');
-    const txt = document.getElementById('error-text');
     const msgs = {
       oauth_failed:      'Google OAuth thất bại. Vui lòng thử lại.',
       auth_failed:       'Xác thực thất bại. Vui lòng thử lại.',
       fetch_user_failed: 'Không thể lấy thông tin người dùng.',
     };
-    txt.textContent = msgs[error] || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+    const box = document.getElementById('error-box');
+    document.getElementById('error-text').textContent = msgs[error] || 'Đã xảy ra lỗi.';
     box.style.display = 'flex';
   }
 
+  // ?step=setup&token=xxx → server redirect đến đây với token
+  if (step === 'setup' && token) {
+    try {
+      // 1. Lưu token vào localStorage + fetch user data từ /auth/me
+      await auth.loginWithToken(token);
+
+      // 2. Xóa token khỏi URL ngay sau khi lưu (tránh lộ trong browser history)
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('token');
+      window.history.replaceState({}, '', cleanUrl.toString());
+
+      // 3. Chuyển sang step 2 (token đã có trong localStorage, api.patch sẽ hoạt động)
+      goToStep2();
+    } catch (err) {
+      console.error('Token login failed:', err);
+      document.getElementById('error-text').textContent = 'Không thể lấy thông tin tài khoản. Vui lòng thử lại.';
+      document.getElementById('error-box').style.display = 'flex';
+    }
+  }
+  // ?step=setup (nếu có user trong localStorage nhưng chưa hoàn thành profile)
+  else if (step === 'setup') {
+    goToStep2();
+  }
+
   // Nút Google
-  document.getElementById('google-btn').addEventListener('click', function() {
+  document.getElementById('google-btn').addEventListener('click', function () {
     this.classList.add('loading');
-    auth.loginWithGoogle(); // redirect sang Google, không return
+    auth.loginWithGoogle();
   });
+
+  // ── Chuyển sang Step 2 ──────────────────────────
+  function goToStep2() {
+    const user = auth.getUser();
+
+    // Đổi nội dung left panel (an toàn nếu component không tồn tại)
+    const featureList = document.getElementById('feature-list');
+    const leftPerks = document.getElementById('left-perks');
+    const leftSub = document.getElementById('left-sub');
+    const leftHeadline = document.getElementById('left-headline');
+
+    if (featureList) featureList.style.display = 'none';
+    if (leftPerks) leftPerks.style.display = 'flex';
+    if (leftSub) leftSub.textContent = 'Thêm thông tin để giao dịch thuận lợi hơn. Chỉ mất 30 giây!';
+    if (leftHeadline) leftHeadline.innerHTML = 'Một bước nữa<br>thôi — <em>dễ lắm!</em>';
+
+    // Pre-fill từ Google data
+    if (user) {
+      const firstName = (user.name || '').split(' ').pop();
+      const welcomeName = document.getElementById('welcome-name');
+      const profileGoogleName = document.getElementById('profile-google-name');
+      const fNickname = document.getElementById('f-nickname');
+      const fPhone = document.getElementById('f-phone');
+      const fUniversity = document.getElementById('f-university');
+      const fStudentId = document.getElementById('f-student-id');
+      const fBio = document.getElementById('f-bio');
+
+      if (welcomeName) welcomeName.textContent = firstName || 'bạn';
+      if (profileGoogleName) profileGoogleName.textContent = user.name || '';
+      if (fNickname) fNickname.value = user.name || '';
+      if (fPhone && user.phone) fPhone.value = user.phone;
+      if (fUniversity && user.university) fUniversity.value = user.university;
+      if (fStudentId && user.studentId) fStudentId.value = user.studentId;
+      if (fBio && user.bio) fBio.value = user.bio;
+
+      // Avatar
+      const ap = document.getElementById('avatar-preview');
+      if (ap) {
+        if (user.avatar) {
+          ap.innerHTML = `<img src="${user.avatar}" alt="${user.name}" onerror="this.parentElement.textContent='${(user.name||'?')[0]}'">`;
+        } else {
+          ap.textContent = (user.name || '?')[0].toUpperCase();
+        }
+      }
+    }
+
+    // Slide animation
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    s1.classList.remove('visible');
+    s1.classList.add('hidden-left');
+    setTimeout(() => {
+      s2.classList.remove('hidden-right');
+      s2.classList.add('visible');
+    }, 80);
+  }
+
+  // ── Submit profile ───────────────────────────────
+  window.submitProfile = async function () {
+    const nickname   = document.getElementById('f-nickname').value.trim();
+    const university = document.getElementById('f-university').value.trim();
+    const phone      = document.getElementById('f-phone').value.trim();
+    const studentId  = document.getElementById('f-student-id').value.trim();
+    const bio        = document.getElementById('f-bio').value.trim();
+
+    // Validate
+    let ok = true;
+    ['f-nickname', 'f-university'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) { el.classList.add('has-error'); ok = false; }
+      else el.classList.remove('has-error');
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Đang lưu...`;
+
+    try {
+      const response = await api.patch('/auth/profile', {
+        nickname, phone, university, studentId, bio, profileComplete: true,
+      });
+      
+      // Response có dạng { success: true, data: {...} }
+      const userData = response.data || response;
+      auth.setUser({ ...auth.getUser(), ...userData, profileComplete: true });
+      
+      showSuccess('Hồ sơ đã được lưu. Đang chuyển đến trang chủ...');
+    } catch (err) {
+      console.error('Profile update error:', err);
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hoàn tất & Vào trang chủ`;
+
+      // Hiện lỗi cụ thể để debug
+      const errorBox = document.getElementById('error-box');
+      if (errorBox) {
+        const errMsg = err?.message || 'Không thể lưu hồ sơ';
+        document.getElementById('error-text').textContent =
+          errMsg.includes('401')
+            ? 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'
+            : `Lỗi: ${errMsg}. Hãy kiểm tra backend đang chạy và CORS được cấu hình đúng.`;
+        errorBox.style.display = 'flex';
+      }
+    }
+  };
+
+  // ── Skip ────────────────────────────────────────
+  window.skipProfile = async function () {
+    // Khi skip, cũng cần set profileComplete: true để không bị yêu cầu setup lại
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    
+    try {
+      // Gửi API để set profileComplete: true ngay cả khi skip
+      const response = await api.patch('/auth/profile', { profileComplete: true });
+      const userData  = response.data || response;
+      auth.setUser({ ...auth.getUser(), ...userData, profileComplete: true });
+    } catch (err) {
+      // Nếu API fail → vẫn cho vào trang chủ nhưng lần sau sẽ bị hỏi lại
+      // KHÔNG lưu profileComplete=true local — để DB là nguồn sự thật duy nhất
+      console.error('Skip profile error:', err);
+    }
+    
+    document.getElementById('success-msg').textContent =
+      'Bạn có thể hoàn thiện hồ sơ sau trong phần Cài đặt.';
+    showSuccess();
+  };
+
+  function showSuccess(msg) {
+    if (msg) document.getElementById('success-msg').textContent = msg;
+    document.getElementById('success-flash').classList.add('show');
+    setTimeout(() => {
+      const redirectTo = sessionStorage.getItem('redirect_after_login');
+      sessionStorage.removeItem('redirect_after_login');
+      window.location.href = redirectTo || ROUTES.HOME;
+    }, 1600);
+  }
 </script>
 
 </body>
