@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Campus Marketplace</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="page-wrap" style="max-width:900px;margin:0 auto;padding:40px 24px;">
+    <% if (user && user.role === 'admin') { %>
+      <h1 style="font-size:22px;font-weight:900;margin-bottom:24px;">Admin Dashboard</h1>
+      <p style="color:#8890B0;">Dashboard content coming soon...</p>
+    <% } else { %>
+      <h1 style="font-size:22px;font-weight:900;color:#E84040;">Access Denied</h1>
+      <p style="color:#8890B0;margin:12px 0;">This page is for admins only.</p>
+      <a href="/" style="color:#1B5EFF;font-weight:700;">← Back to homepage</a>
+    <% } %>
+  </div>
+</body>
+</html>
