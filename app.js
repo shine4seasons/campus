@@ -34,7 +34,7 @@ app.use('/api/ai',       aiRoutes);
 app.use('/',             pageRoutes);
 
 app.use((req, res) => {
-  res.status(404).render('404', { title: '404 — Not Found' });
+  res.status(404).render('404', { title: '404 — Not Found', isLoginPage: false });
 });
 
 const PORT = process.env.PORT || 5000;

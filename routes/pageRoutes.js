@@ -1,6 +1,6 @@
 const router  = require('express').Router();
 const Product = require('../models/Product');
-
+const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 // ── Guard: redirect về /login nếu chưa đăng nhập ──────
 const requireAuth = (req, res, next) => {
   if (!res.locals.user) {
@@ -58,7 +58,8 @@ router.get('/products/:id', async (req, res) => {
     if (!product || product.status === 'hidden') {
       return res.status(404).render('404', { 
         title: '404 — Not Found',
-        isLoginPage: false
+        isLoginPage: false,
+        mapsKey: MAPS_KEY,
       });
     }
 
@@ -115,7 +116,8 @@ router.get('/sell', requireAuth, async (req, res) => {
   res.render('sell', {
     title      : editProduct ? 'Edit Listing — Campus Marketplace' : 'Post a Listing — Campus Marketplace',
     editProduct,
-    isLoginPage: false
+    isLoginPage: false,
+    mapsKey    : MAPS_KEY,
   });
 });
 
@@ -140,11 +142,28 @@ router.get('/profile', requireAuth, async (req, res) => {
 });
 
 // ── GET /orders ────────────────────────────────────────
-router.get('/orders', requireAuth, (req, res) => {
-  res.render('orders', { 
-    title: 'My Orders — Campus Marketplace',
-    isLoginPage: false
-  });
+router.get('/orders', requireAuth, async (req, res) => {
+  try {
+    const orders = await Product.find({ buyer: res.locals.user._id })
+      .sort('-soldAt')
+      .populate('seller', 'name nickname avatar university rating')
+      .lean();
+    
+    res.render('orders', { 
+      title: 'My Orders — Campus Marketplace',
+      isLoginPage: false,
+      mapsKey: MAPS_KEY,
+      orders: orders
+    });
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+    res.status(500).render('orders', {
+      title: 'My Orders — Campus Marketplace',
+      isLoginPage: false,
+      mapsKey: MAPS_KEY,
+      orders: []
+    });
+  }
 });
 
 // ── GET /dashboard ─────────────────────────────────────

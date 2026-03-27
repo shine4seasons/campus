@@ -8,7 +8,217 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/sell.css">
+  <link rel="stylesheet" href="/css/1.css">
+  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+<style>
+  .dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #F0F1F8;
+    transition: background-color 0.2s;
+  }
+  .dropdown-item:hover {
+    background-color: #F7F8FC;
+  }
+  .dropdown-item:last-child {
+    border-bottom: none;
+  }
+  .dropdown-name {
+    font-weight: 600;
+    color: #0D0F1A;
+    font-size: 14px;
+  }
+  .dropdown-address {
+    color: #8890B0;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+</style>
+<script>
+  // Initialize map after page load
+  function initLocationPicker() {
+    const defaultLat = parseFloat(document.getElementById('f-lat').value) || 21.0285;
+    const defaultLng = parseFloat(document.getElementById('f-lng').value) || 105.8542;
+    const hasExisting = !!document.getElementById('f-lat').value;
 
+    const map = new maplibregl.Map({
+      container: 'location-map',
+      style: {
+        version: 8,
+        sources: {
+          'osm': {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [{
+          id: 'osm',
+          type: 'raster',
+          source: 'osm'
+        }]
+      },
+      center: [defaultLng, defaultLat],
+      zoom: 13
+    });
+
+    // Store map instance globally
+    window.mapInstance = map;
+    let marker;
+
+    // If coordinates already exist, show marker
+    if (hasExisting) {
+      marker = new maplibregl.Marker()
+        .setLngLat([defaultLng, defaultLat])
+        .addTo(map);
+      window.currentMarker = marker;
+    }
+
+    // Click on map to place marker
+    map.on('click', function (e) {
+      const { lng, lat } = e.lngLat;
+
+      if (window.currentMarker) window.currentMarker.remove();
+
+      marker = new maplibregl.Marker()
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      window.currentMarker = marker;
+      updateLocation(lat, lng);
+    });
+
+    // Initialize autocomplete
+    initAutocomplete(map, marker);
+  }
+
+  // Update location fields
+  async function updateLocation(lat, lng) {
+    document.getElementById('f-lat').value = lat;
+    document.getElementById('f-lng').value = lng;
+
+    try {
+      const address = await reverseGeocode(lat, lng);
+      document.getElementById('f-location').value = address;
+    } catch (err) {
+      console.error('Geocoding failed:', err);
+    }
+  }
+
+  // Reverse geocoding using Nominatim (OpenStreetMap)
+  async function reverseGeocode(lat, lng) {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+    const data = await res.json();
+    return data.display_name;
+  }
+
+  // Search locations using Photon API
+  async function searchLocation(query) {
+    const res = await fetch(
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
+    );
+    const data = await res.json();
+    return data.features || [];
+  }
+
+  // Initialize autocomplete functionality
+  function initAutocomplete(map, marker) {
+    const input = document.getElementById('location-search');
+    const dropdown = document.getElementById('location-dropdown');
+    let timeout;
+
+    input.addEventListener('input', function() {
+      clearTimeout(timeout);
+      const query = this.value.trim();
+
+      if (query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      timeout = setTimeout(async () => {
+        try {
+          const results = await searchLocation(query);
+          showDropdown(results, map, marker);
+        } catch (err) {
+          console.error('Search failed:', err);
+        }
+      }, 300);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+
+  // Show search results dropdown
+  function showDropdown(results, map, marker) {
+    const dropdown = document.getElementById('location-dropdown');
+    const input = document.getElementById('location-search');
+
+    if (results.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    dropdown.innerHTML = results.map(result => `
+      <div class="dropdown-item" onclick="selectLocation(${result.geometry.coordinates[1]}, ${result.geometry.coordinates[0]}, '${result.properties.name || result.properties.city || result.properties.country}')">
+        <div class="dropdown-name">${result.properties.name || 'Unknown'}</div>
+        <div class="dropdown-address">${result.properties.city || ''} ${result.properties.country || ''}</div>
+      </div>
+    `).join('');
+
+    dropdown.style.display = 'block';
+  }
+
+  // Select location from dropdown
+  window.selectLocation = function(lat, lng, name) {
+    const map = window.mapInstance;
+    if (window.currentMarker) window.currentMarker.remove();
+
+    window.currentMarker = new maplibregl.Marker()
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+    map.setCenter([lng, lat]);
+    map.setZoom(16);
+
+    updateLocation(lat, lng);
+    document.getElementById('location-dropdown').style.display = 'none';
+    document.getElementById('location-search').value = name;
+  };
+
+  // GPS geolocation
+  window.geolocateMe = function () {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (window.currentMarker) window.currentMarker.remove();
+
+      window.currentMarker = new maplibregl.Marker()
+        .setLngLat([lng, lat])
+        .addTo(window.mapInstance);
+
+      window.mapInstance.setCenter([lng, lat]);
+      window.mapInstance.setZoom(16);
+
+      await updateLocation(lat, lng);
+    });
+  };
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initLocationPicker);
+</script>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -135,21 +345,51 @@
       </div>
 
       <!-- Location -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon">📍</div>
-          <div><div class="card-head-title">Pickup location</div><div class="card-head-sub">Help buyers know where to meet you</div></div>
-        </div>
-        <div class="card-body">
-          <div class="fg" style="margin:0;">
-            <input type="text" class="fi" id="f-location"
-              value="<%= ep && ep.location ? (ep.location.address || '') : '' %>"
-              placeholder="E.g.: Main campus gate, dorm building A...">
-          </div>
-        </div>
-      </div>
-
+ <div class="card">
+  <div class="card-head">
+    <div class="card-head-icon">📍</div>
+    <div>
+      <div class="card-head-title">Pickup location</div>
+      <div class="card-head-sub">Click on map or search to set meeting point</div>
     </div>
+  </div>
+  <div class="card-body">
+    <!-- Search box -->
+    <div style="position:relative;margin-bottom:12px;">
+      <div style="position:relative;">
+        <input type="text" id="location-search" placeholder="Search address or click on map below..."
+          style="width:100%;padding:12px 40px 12px 16px;border:1.5px solid #E4E7F2;border-radius:12px;font-size:14px;font-family:'Be Vietnam Pro',sans-serif;background:white;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#1B5EFF'"
+          onblur="this.style.borderColor='#E4E7F2'">
+        <div id="location-dropdown" style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #E4E7F2;border-radius:8px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+          <!-- Search results will appear here -->
+        </div>
+        <button type="button" onclick="geolocateMe()" title="Use my current location"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;z-index:10;">
+          🎯
+        </button>
+      </div>
+      <input type="hidden" id="f-location" value="<%= ep && ep.location ? (ep.location.address || '') : '' %>">
+    </div>
+
+    <!-- Map container -->
+    <div id="location-map"
+      style="width:100%;height:260px;border-radius:14px;border:1.5px solid #E4E7F2;overflow:hidden;background:#EBF0FF;display:flex;align-items:center;justify-content:center;">
+      <div style="text-align:center;color:#8890B0;">
+        <div style="font-size:32px;margin-bottom:8px;">🗺️</div>
+        <div style="font-size:13px;font-weight:600;">Loading map...</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:#8890B0;margin-top:8px;">
+      📌 Click anywhere on the map to set pickup point
+    </div>
+
+    <!-- Hidden fields lưu tọa độ -->
+    <input type="hidden" id="f-lat" value="<%= ep && ep.location ? (ep.location.lat || '') : '' %>">
+    <input type="hidden" id="f-lng" value="<%= ep && ep.location ? (ep.location.lng || '') : '' %>">
+  </div>
+</div>
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -290,7 +530,7 @@
     renderImgGrid();
   }
 
-  // ── Upload ──────────────────────────────────────────────
+  // ── Upload ─────────────────────────────────────────────
   async function handleFiles(files) {
     const images = files.filter(f => f.type.startsWith('image/'));
     if (!images.length) { toast('Please select image files', 'err'); return; }
@@ -422,7 +662,15 @@
       const res    = await fetch(url, {
         method, credentials:'include',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ title, description:desc, price, category:cat, condition, images:finalImgs, status:forcedStatus||'active', location:{address:location} }),
+       body: JSON.stringify({
+  title, description: desc, price, category: cat, condition,
+  images: finalImgs, status: forcedStatus || 'active',
+  location: {
+    address : document.getElementById('f-location').value.trim(),
+    lat     : parseFloat(document.getElementById('f-lat').value) || null,
+    lng     : parseFloat(document.getElementById('f-lng').value) || null,
+  },
+}),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Request failed');
