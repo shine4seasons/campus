@@ -31,10 +31,11 @@ app.use('/api/auth',     authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload',   uploadRoutes);
 app.use('/api/ai',       aiRoutes);
+app.use('/api/chat',     require('./routes/chatRoutes'));
 app.use('/',             pageRoutes);
 
 app.use((req, res) => {
-  res.status(404).render('404', { title: '404 — Not Found', isLoginPage: false });
+  res.status(404).render('404', { title: '404 — Not Found' });
 });
 
 const PORT = process.env.PORT || 5000;

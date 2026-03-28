@@ -1,6 +1,6 @@
 const router  = require('express').Router();
 const Product = require('../models/Product');
-const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
+
 // ── Guard: redirect về /login nếu chưa đăng nhập ──────
 const requireAuth = (req, res, next) => {
   if (!res.locals.user) {
@@ -58,17 +58,27 @@ router.get('/products/:id', async (req, res) => {
     if (!product || product.status === 'hidden') {
       return res.status(404).render('404', { 
         title: '404 — Not Found',
-        isLoginPage: false,
-        mapsKey: MAPS_KEY,
+        isLoginPage: false
       });
     }
 
     // Tăng view count (fire-and-forget)
     Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
 
+    // Fetch related products (same category, active, not the current one)
+    const relatedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'active'
+    })
+      .sort('-views') // Sort by popularity
+      .limit(4)
+      .lean();
+
     res.render('product', {
       title  : product.title + ' — Campus Marketplace',
       product,
+      relatedProducts, // Pass related products to view
       isLoginPage: false
     });
   } catch {
@@ -116,8 +126,7 @@ router.get('/sell', requireAuth, async (req, res) => {
   res.render('sell', {
     title      : editProduct ? 'Edit Listing — Campus Marketplace' : 'Post a Listing — Campus Marketplace',
     editProduct,
-    isLoginPage: false,
-    mapsKey    : MAPS_KEY,
+    isLoginPage: false
   });
 });
 
@@ -142,28 +151,21 @@ router.get('/profile', requireAuth, async (req, res) => {
 });
 
 // ── GET /orders ────────────────────────────────────────
-router.get('/orders', requireAuth, async (req, res) => {
-  try {
-    const orders = await Product.find({ buyer: res.locals.user._id })
-      .sort('-soldAt')
-      .populate('seller', 'name nickname avatar university rating')
-      .lean();
-    
-    res.render('orders', { 
-      title: 'My Orders — Campus Marketplace',
-      isLoginPage: false,
-      mapsKey: MAPS_KEY,
-      orders: orders
-    });
-  } catch (err) {
-    console.error('Error fetching orders:', err);
-    res.status(500).render('orders', {
-      title: 'My Orders — Campus Marketplace',
-      isLoginPage: false,
-      mapsKey: MAPS_KEY,
-      orders: []
-    });
-  }
+router.get('/orders', requireAuth, (req, res) => {
+  res.render('orders', { 
+    title: 'My Orders — Campus Marketplace',
+    isLoginPage: false
+  });
+});
+
+// ── GET /messages ──────────────────────────────────────
+router.get('/messages', requireAuth, (req, res) => {
+  // Pass down standard variables; the JS polling handles the data fetching
+  res.render('messages', {
+    title: 'Messages — Campus Marketplace',
+    conversationId: req.query.id || null, // Optional: auto-select a specific conversation
+    isLoginPage: false
+  });
 });
 
 // ── GET /dashboard ─────────────────────────────────────

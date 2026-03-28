@@ -8,8 +8,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/product.css">
-  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+  <style>
+    .similar-section { max-width:1100px; margin:0 auto; padding:0 24px 60px; }
+    .similar-title { font-size:20px; font-weight:800; color:#0D0F1A; margin-bottom:20px; }
+    .products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:20px; }
+    .product-card { background:#fff; border-radius:16px; border:1px solid #E4E7F2; overflow:hidden; transition:all 0.25s; cursor:pointer; text-decoration:none; color:inherit; display:block; }
+    .product-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(13,15,26,0.08); border-color:#1B5EFF; }
+    .product-img-placeholder { width:100%; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; font-size:48px; background:linear-gradient(135deg,#EBF0FF,#E4E7F2); }
+    .product-body { padding:16px; }
+    .product-category { font-size:11px; font-weight:600; color:#1B5EFF; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+    .product-name { font-size:15px; font-weight:700; color:#0D0F1A; margin-bottom:6px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .product-footer { display:flex; align-items:center; justify-content:space-between; }
+    .product-price { font-size:18px; font-weight:800; color:#1B5EFF; }
+  </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -83,7 +94,7 @@
         </div>
 
         <% if (isSold) { %>
-          <div class="sold-overlay"> This item has been sold</div>
+          <div class="sold-overlay">🔒 This item has been sold</div>
         <% } else if (isOwner) { %>
           <div class="owner-actions">
             <button class="btn-edit" onclick="window.location.href='/sell?id=<%= p._id %>'">✏️ Edit listing</button>
@@ -92,7 +103,7 @@
           </div>
         <% } else { %>
           <% if (user) { %>
-            <button class="btn-contact" onclick="toast('Chat feature coming soon!','ok')">
+            <button class="btn-contact" id="btn-msg-seller" onclick="initChat()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               Message seller
             </button>
@@ -115,39 +126,13 @@
         <p class="product-desc"><%= p.description %></p>
       </div>
 
-<!-- Location + Map -->
-<% if (p.location && p.location.address) { %>
-  <div>
-    <div class="section-title">Pickup location</div>
-    <div class="location-chip" style="margin-bottom:12px;">
-      📍 <%= p.location.address %>
-    </div>
-
-    <% if (p.location.lat && p.location.lng) { %>
-      <!-- Static map embed — không cần JS -->
-      <div style="border-radius:14px;overflow:hidden;border:1.5px solid #E4E7F2;">
-        <% if (typeof mapsKey !== 'undefined' && mapsKey) { %>
-          <div id="map-<%= p._id %>" style="height:200px;"></div>
-        <% } else { %>
-          <!-- Fallback: OpenStreetMap iframe không cần key -->
-          <iframe
-            src="https://www.openstreetmap.org/export/embed.html?bbox=<%= p.location.lng - 0.002 %>%2C<%= p.location.lat - 0.002 %>%2C<%= p.location.lng + 0.002 %>%2C<%= p.location.lat + 0.002 %>&layer=mapnik&marker=<%= p.location.lat %>%2C<%= p.location.lng %>"
-            style="width:100%;height:200px;border:none;display:block;"
-            loading="lazy">
-          </iframe>
-        <% } %>
-      </div>
-      <!-- Link mở OpenStreetMap -->
-      <a href="https://www.openstreetmap.org/?mlat=<%= p.location.lat %>&mlon=<%= p.location.lng %>#map=16/<%= p.location.lat %>/<%= p.location.lng %>"
-        target="_blank" rel="noopener"
-        style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:#1B5EFF;font-weight:700;text-decoration:none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Open in OpenStreetMap
-      </a>
-      </a>
-    <% } %>
-  </div>
-<% } %>
+      <!-- Location -->
+      <% if (p.location && p.location.address) { %>
+        <div>
+          <div class="section-title">Pickup location</div>
+          <div class="location-chip">📍 <%= p.location.address %></div>
+        </div>
+      <% } %>
 
       <!-- Seller -->
       <div>
@@ -179,6 +164,32 @@
     </div>
   </div>
 
+  <% if (typeof relatedProducts !== 'undefined' && relatedProducts.length > 0) { %>
+    <div class="similar-section">
+      <div class="similar-title">Similar Listings</div>
+      <div class="products-grid">
+        <% relatedProducts.forEach(function(rp) { %>
+          <a href="/products/<%= rp._id %>" class="product-card">
+            <div class="product-img-placeholder">
+              <% if (rp.images && rp.images[0]) { %>
+                <img src="<%= rp.images[0] %>" style="width:100%;height:100%;object-fit:cover;">
+              <% } else { %>
+                <%= CAT_EMOJI[rp.category] || '📦' %>
+              <% } %>
+            </div>
+            <div class="product-body">
+              <div class="product-category"><%= CAT_LABEL[rp.category] || rp.category %></div>
+              <div class="product-name"><%= rp.title %></div>
+              <div class="product-footer">
+                <div class="product-price"><%= new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(rp.price) %></div>
+              </div>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
   <div id="toast-wrap"></div>
 
   <!-- Truyền data từ server vào client JS — không cần fetch lại -->
@@ -187,31 +198,7 @@
     const IS_AUTH    = <%= !!user %>;
     const IMAGES     = <%- JSON.stringify(p.images || []) %>;
     let interestedState = false;
-const map_<%= p._id %> = new maplibregl.Map({
-  container: 'map-<%= p._id %>',
-  style: {
-    version: 8,
-    sources: {
-      'osm': {
-        type: 'raster',
-        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-        tileSize: 256,
-        attribution: '© OpenStreetMap contributors'
-      }
-    },
-    layers: [{
-      id: 'osm',
-      type: 'raster',
-      source: 'osm'
-    }]
-  },
-  center: [<%= p.location.lng %>, <%= p.location.lat %>],
-  zoom: 15
-});
 
-new maplibregl.Marker()
-  .setLngLat([<%= p.location.lng %>, <%= p.location.lat %>])
-  .addTo(map_<%= p._id %>);
     // ── Gallery ──────────────────────────────────────────
     window.setImg = function (i) {
       const main = document.getElementById('main-img');
@@ -230,6 +217,30 @@ new maplibregl.Marker()
         document.getElementById('int-count').textContent  = '(' + data.interested + ')';
         document.getElementById('btn-interested').classList.toggle('active', interestedState);
       } catch { interestedState = !interestedState; }
+    };
+
+    // ── Chat ──────────────────────────────────────────────
+    window.initChat = async function () {
+      const btn = document.getElementById('btn-msg-seller');
+      if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+      try {
+        const res = await fetch('/api/chat/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: PRODUCT_ID }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          window.location.href = '/messages?id=' + json.conversationId;
+        } else {
+          toast(json.message, 'err');
+          if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        }
+      } catch (err) {
+        toast(err.message, 'err');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+      }
     };
 
     // ── Owner: mark sold ──────────────────────────────────

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/messages.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="chat-container">
+    <!-- SIDEBAR (Inbox) -->
+    <div class="chat-sidebar">
+      <div class="sidebar-header">Inbox</div>
+      <div class="conv-list" id="conv-list">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- MAIN CHAT -->
+    <div class="chat-main">
+      <div class="chat-empty" id="chat-empty">
+        <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <p>Select a conversation to start messaging</p>
+      </div>
+
+      <div class="chat-header" id="chat-header">
+        <div class="conv-avatar" id="header-avatar" style="width:40px;height:40px;font-size:16px;"></div>
+        <div>
+          <div class="chat-partner-name" id="header-name"></div>
+          <div class="chat-partner-status">Active now</div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages" style="display:none;">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="chat-input-area" id="chat-input-area">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
+        <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left:-2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MY_USER_ID = '<%= String(user._id) %>';
+    let currentConvId = '<%= conversationId || "" %>';
+    let pollInterval = null;
+    let autoScroll = true;
+
+    async function fetchInbox() {
+      try {
+        const res = await fetch('/api/chat', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) renderInbox(json.data);
+      } catch (err) { console.error('Error fetching inbox:', err); }
+    }
+
+    function renderInbox(convs) {
+      const list = document.getElementById('conv-list');
+      if (convs.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages yet.</div>';
+        return;
+      }
+
+      list.innerHTML = convs.map(c => {
+        const partner = c.participants.find(p => String(p._id) !== MY_USER_ID) || { name: 'Unknown', nickname: '' };
+        const name = partner.nickname || partner.name;
+        const initial = name.charAt(0).toUpperCase();
+        const activeClass = c._id === currentConvId ? 'active' : '';
+        const unreadHtml = c.unreadCount > 0 ? `<div class="unread-badge">${c.unreadCount}</div>` : '';
+        const prodName = c.product ? c.product.title : 'Deleted Product';
+
+        return `
+          <div class="conv-item ${activeClass}" onclick="selectConversation('${c._id}', '${name}', '${encodeURIComponent(JSON.stringify(partner))}')">
+            <div class="conv-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);">${initial}</div>
+            <div class="conv-info">
+              <div style="display:flex;align-items:center;">
+                <div class="conv-name">${name}</div>
+                ${unreadHtml}
+              </div>
+              <div class="conv-product">📦 ${prodName}</div>
+              <div class="conv-lastmsg">${c.lastMessage || '...'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.selectConversation = async function(convId, partnerName, partnerDataRaw) {
+      currentConvId = convId;
+      document.getElementById('chat-empty').style.display = 'none';
+      document.getElementById('chat-header').classList.add('active');
+      document.getElementById('chat-messages').style.display = 'flex';
+      document.getElementById('chat-input-area').classList.add('active');
+      document.getElementById('header-name').textContent = partnerName;
+      document.getElementById('header-avatar').textContent = partnerName.charAt(0).toUpperCase();
+      document.getElementById('chat-input').focus();
+      
+      autoScroll = true; // force scroll on first load
+      await fetchMessages();
+      fetchInbox(); // refresh inbox read status
+      
+      // Update URL without reload to support refreshing gracefully
+      window.history.replaceState(null, '', '/messages?id=' + convId);
+    };
+
+    async function fetchMessages() {
+      if (!currentConvId) return;
+      try {
+        const res = await fetch('/api/chat/' + currentConvId + '/messages', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) renderMessages(json.data);
+      } catch (err) { console.error('Error fetching messages:', err); }
+    }
+
+    function renderMessages(messages) {
+      const container = document.getElementById('chat-messages');
+      const shouldScroll = autoScroll || (container.scrollTop + container.clientHeight >= container.scrollHeight - 50);
+
+      container.innerHTML = messages.map(m => {
+        const isMe = String(m.sender._id) === MY_USER_ID;
+        const time = new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        return `
+          <div class="message-row ${isMe ? 'me' : 'other'}">
+            <div class="message-bubble">${m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+            <div class="message-time">${time}</div>
+          </div>
+        `;
+      }).join('');
+
+      if (shouldScroll) {
+        container.scrollTop = container.scrollHeight;
+        autoScroll = false;
+      }
+    }
+
+    window.sendMessage = async function() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      const btn = document.getElementById('chat-send-btn');
+      
+      if (!text || !currentConvId) return;
+      
+      input.disabled = true;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/chat/' + currentConvId + '/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          input.value = '';
+          autoScroll = true;
+          await fetchMessages();
+          fetchInbox();
+        }
+      } catch (err) { console.error('Error sending message:', err); }
+      
+      input.disabled = false;
+      btn.disabled = false;
+      input.focus();
+    };
+
+    // Chat sending hit Enter
+    document.getElementById('chat-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Initial load
+    fetchInbox();
+    if (currentConvId) {
+      // If we landed directly via "Message Seller" link (with ?id=...)
+      // The name might not be known until inbox fetches, but we can initialize polling
+      // Wait for inbox fetch to complete, then auto select
+      setTimeout(() => {
+        const convItem = document.querySelector(`.conv-item[onclick*="${currentConvId}"]`);
+        if (convItem) convItem.click();
+      }, 500);
+    }
+
+    // Polling every 3 seconds
+    pollInterval = setInterval(() => {
+      fetchInbox();
+      if (currentConvId) {
+        // Only auto-scroll if user is already at the bottom
+        const container = document.getElementById('chat-messages');
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+          autoScroll = true;
+        }
+        fetchMessages();
+      }
+    }, 3000);
+
+  </script>
+</body>
+</html>
