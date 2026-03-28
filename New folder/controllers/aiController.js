@@ -1,6 +1,6 @@
 const describeProduct = async (req, res) => {
   try {
-    const { title, category, condition, price, location } = req.body;
+    const { title, category, condition, price, location, imageUrl } = req.body;
 
     if (!title) {
       return res.status(400).json({ success: false, message: 'Title is required' });
@@ -58,11 +58,29 @@ Ví dụ mô tả HAY (học theo phong cách này):
 
 Bây giờ hãy viết mô tả cho sản phẩm trên:`;
 
-    const modelName = 'gemma-3-1b-it';
-    const parts = [{ text: prompt }];
+    let parts = [{ text: prompt }];
+
+    // Nếu có ảnh → thêm để AI nhận diện chi tiết thực tế
+    if (imageUrl) {
+      try {
+        const imgRes    = await fetch(imageUrl);
+        const imgBuffer = await imgRes.arrayBuffer();
+        const base64    = Buffer.from(imgBuffer).toString('base64');
+        const mimeType  = imgRes.headers.get('content-type') || 'image/jpeg';
+
+        parts = [
+          {
+            text: prompt + '\n\nDựa thêm vào hình ảnh thực tế của sản phẩm để mô tả chính xác hơn (màu sắc, tình trạng thực tế nhìn thấy trong ảnh):',
+          },
+          { inline_data: { mime_type: mimeType, data: base64 } },
+        ];
+      } catch {
+        // Không load được ảnh → dùng text only
+      }
+    }
 
     const apiUrl =
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent` +
+      `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-1b-it:generateContent` +
       `?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await fetch(apiUrl, {

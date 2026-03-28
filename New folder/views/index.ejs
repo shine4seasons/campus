@@ -197,7 +197,7 @@
     // Render categories
     document.getElementById('cat-grid').innerHTML = CATEGORIES.map(c =>
       '<div class="cat-card" onclick="filterByCategory(\'' + c.slug + '\')">' +
-      '<div class="cat-icon">' + c.icon.replace(/width="28" height="28"/, 'width="4vw" height="4vw"') + '</div>' +
+      '<div class="cat-icon">' + c.icon + '</div>' +
       '<div class="cat-name">' + c.name + '</div>' +
       '<div class="cat-count" style="opacity:0.6;">Loading...</div></div>'
     ).join('');

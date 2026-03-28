@@ -8,21 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/profile.css">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <style>
-    .card-title svg  { width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px; }
-    .stat-mini-num svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
-    .mini-meta svg   { width: 13px; height: 13px; display: inline-block; vertical-align: middle; }
-    .avatar-change-btn svg { width: 18px; height: 18px; display: block; }
-    .avatar-hint svg { width: 13px; height: 13px; display: inline-block; vertical-align: middle; }
-    .avatar-change-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-  </style>
+
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -47,24 +33,17 @@
               id="avatar-img"
             >
             <label class="avatar-change-btn" for="avatar-upload-input" title="Change avatar">
-              <i data-lucide="camera"></i>
+              📷
             </label>
-            <input type="file" id="avatar-upload-input" style="display:none" accept="image/*">
+            <input type="file" id="avatar-upload-input" accept="image/*">
           </div>
           <div class="avatar-name"><%= user.nickname || user.name %></div>
           <div class="avatar-email"><%= user.email %></div>
-          <div class="avatar-hint">
-            Avatar is synced from Google.<br>
-            Or upload a custom one
-            <i data-lucide="arrow-up" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i>
-          </div>
+          <div class="avatar-hint">Avatar is synced from Google.<br>Or upload a custom one ↑</div>
 
           <div class="stats-mini">
             <div class="stat-mini">
-              <div class="stat-mini-num">
-                <i data-lucide="star" style="color:#F59E0B;fill:#F59E0B;"></i>
-                <%= (user.rating || 5).toFixed(1) %>
-              </div>
+              <div class="stat-mini-num">⭐ <%= (user.rating || 5).toFixed(1) %></div>
               <div class="stat-mini-lbl">Rating</div>
             </div>
             <div class="stat-mini">
@@ -81,29 +60,18 @@
         <!-- Recent products -->
         <div class="card">
           <div class="card-title">
-            <i data-lucide="package"></i>My Listings
+            📦 My Listings
           </div>
           <% if (products && products.length > 0) { %>
             <div class="recent-products">
-              <%
-                const CAT_ICON = {
-                  books:        'book-open',
-                  electronics:  'monitor',
-                  clothing:     'shirt',
-                  furniture:    'sofa',
-                  'daily-needs':'shopping-bag',
-                  sports:       'dumbbell',
-                  gaming:       'gamepad-2',
-                  other:        'package',
-                };
-              %>
+              <% const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' }; %>
               <% products.slice(0, 4).forEach(function(p) { %>
                 <div class="mini-row">
                   <div class="mini-thumb">
                     <% if (p.images && p.images[0]) { %>
                       <img src="<%= p.images[0] %>" alt="<%= p.title %>">
                     <% } else { %>
-                      <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>" style="width:20px;height:20px;stroke:#8890B0;"></i>
+                      <%= CAT_EMOJI[p.category] || '📦' %>
                     <% } %>
                   </div>
                   <div style="flex:1;min-width:0;">
@@ -111,8 +79,7 @@
                     <div class="mini-meta">
                       <span class="status-dot dot-<%= p.status %>"></span>
                       <%= p.status === 'active' ? 'Active' : p.status === 'sold' ? 'Sold' : 'Draft' %>
-                      ·
-                      <i data-lucide="eye"></i> <%= p.views || 0 %>
+                      · 👁 <%= p.views || 0 %>
                     </div>
                   </div>
                   <div class="mini-price">
@@ -122,18 +89,12 @@
               <% }) %>
             </div>
             <% if (products.length > 4) { %>
-              <a href="/my-products" class="see-all">
-                See all <%= products.length %> listings
-                <i data-lucide="arrow-right" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-left:3px;"></i>
-              </a>
+              <a href="/my-products" class="see-all">See all <%= products.length %> listings →</a>
             <% } %>
           <% } else { %>
             <div class="empty-mini">
               No listings yet.<br>
-              <a href="/sell" style="color:#1B5EFF;font-weight:700;">
-                Post your first item
-                <i data-lucide="arrow-right" style="width:13px;height:13px;display:inline-block;vertical-align:middle;"></i>
-              </a>
+              <a href="/sell" style="color:#1B5EFF;font-weight:700;">Post your first item →</a>
             </div>
           <% } %>
         </div>
@@ -142,9 +103,7 @@
 
       <!-- ── RIGHT: Edit form ── -->
       <div class="card form-section">
-        <div class="card-title">
-          <i data-lucide="pencil"></i>Edit Profile
-        </div>
+        <div class="card-title">✏️ Edit Profile</div>
 
         <!-- Read-only: từ Google -->
         <div class="form-row">
@@ -200,7 +159,7 @@
 
         <div style="display:flex;align-items:center;gap:12px;padding-top:4px;">
           <button class="btn-save" id="btn-save" onclick="saveProfile()">
-            <i data-lucide="check" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Save changes
           </button>
           <span id="save-status" style="font-size:13px;color:#8890B0;"></span>
@@ -213,9 +172,6 @@
   <div id="toast-wrap"></div>
 
   <script>
-    // Init Lucide static icons
-    lucide.createIcons();
-
     // ── Bio counter ──────────────────────────────────────
     document.getElementById('f-bio').addEventListener('input', function () {
       document.getElementById('bio-count').textContent = this.value.length + ' / 200';
@@ -239,10 +195,7 @@
 
       const btn = document.getElementById('btn-save');
       btn.disabled = true;
-      btn.innerHTML =
-        '<svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;">' +
-        '<circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>' +
-        '<path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Saving...';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Saving...';
 
       try {
         const res = await fetch('/api/auth/profile', {
@@ -262,17 +215,17 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Save failed');
 
-        toast('Profile saved!', 'ok');
+        toast('Profile saved! ✓', 'ok');
         document.getElementById('save-status').textContent = 'Last saved: ' + new Date().toLocaleTimeString();
+
+        // Cập nhật tên hiển thị ở avatar card
         document.querySelector('.avatar-name').textContent = data.data.nickname || data.data.name;
 
       } catch (err) {
         toast(err.message || 'Failed to save', 'err');
       } finally {
         btn.disabled = false;
-        btn.innerHTML =
-          '<i data-lucide="check" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></i> Save changes';
-        lucide.createIcons({ nodes: [document.getElementById('btn-save')] });
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Save changes';
       }
     };
 
@@ -297,8 +250,10 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Upload failed');
 
+        // Cập nhật avatar trên trang
         document.getElementById('avatar-img').src = data.url;
 
+        // Lưu avatar mới vào profile
         await fetch('/api/auth/profile', {
           method: 'PATCH',
           credentials: 'include',
@@ -306,7 +261,7 @@
           body: JSON.stringify({ avatar: data.url }),
         });
 
-        toast('Avatar updated!', 'ok');
+        toast('Avatar updated! ✓', 'ok');
       } catch (err) {
         toast(err.message || 'Upload failed', 'err');
       } finally {
@@ -322,16 +277,11 @@
       });
     });
 
-    // ── Toast ─────────────────────────────────────────────
     function toast(msg, type) {
       const c = document.getElementById('toast-wrap');
       const t = document.createElement('div');
       t.className = 'toast ' + (type || 'ok');
-      const icon = type === 'err'
-        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
-      t.style.cssText = 'display:flex;align-items:center;gap:8px;';
-      t.innerHTML = icon + msg;
+      t.innerHTML = (type === 'err' ? '✕' : '✓') + ' ' + msg;
       c.appendChild(t);
       setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(), 300); }, 3000);
     }
