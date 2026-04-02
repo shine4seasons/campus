@@ -192,26 +192,25 @@
 
   <div id="toast-wrap"></div>
 
-  <!-- Truyền data từ server vào client JS — không cần fetch lại -->
   <script>
     const PRODUCT_ID = '<%= p._id %>';
     const IS_AUTH    = <%= !!user %>;
     const IMAGES     = <%- JSON.stringify(p.images || []) %>;
     let interestedState = false;
 
-    // ── Gallery ──────────────────────────────────────────
+    // ── Gallery ──────────────────────────────────────────────────────────
     window.setImg = function (i) {
       const main = document.getElementById('main-img');
       if (main && IMAGES[i]) main.src = IMAGES[i];
       document.querySelectorAll('.gallery-thumb').forEach((t, j) => t.classList.toggle('active', j === i));
     };
 
-    // ── Interested ────────────────────────────────────────
+    // ── Interested ───────────────────────────────────────────────────────
     window.toggleInterested = async function () {
       if (!IS_AUTH) { toast('Please sign in to mark interest', 'err'); return; }
       interestedState = !interestedState;
       try {
-        const res  = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method:'POST', credentials:'include' });
+        const res  = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
         const data = await res.json();
         document.getElementById('heart-icon').textContent = interestedState ? '❤️' : '🤍';
         document.getElementById('int-count').textContent  = '(' + data.interested + ')';
@@ -219,12 +218,12 @@
       } catch { interestedState = !interestedState; }
     };
 
-    // ── Chat ──────────────────────────────────────────────
+    // ── Chat — redirect to /messages with conversation pre-selected ──────
     window.initChat = async function () {
       const btn = document.getElementById('btn-msg-seller');
       if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
       try {
-        const res = await fetch('/api/chat/init', {
+        const res  = await fetch('/api/chat/init', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId: PRODUCT_ID }),
@@ -243,14 +242,14 @@
       }
     };
 
-    // ── Owner: mark sold ──────────────────────────────────
+    // ── Owner: mark sold ─────────────────────────────────────────────────
     window.markSold = async function () {
       if (!confirm('Mark this item as sold?')) return;
       try {
         const res = await fetch('/api/products/' + PRODUCT_ID, {
-          method:'PATCH', credentials:'include',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ status:'sold' }),
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'sold' })
         });
         if (!res.ok) throw new Error((await res.json()).message);
         toast('Status updated!', 'ok');
@@ -258,11 +257,11 @@
       } catch (err) { toast(err.message, 'err'); }
     };
 
-    // ── Owner: delete ─────────────────────────────────────
+    // ── Owner: delete ────────────────────────────────────────────────────
     window.deleteProduct = async function () {
       if (!confirm('Delete this listing? This action cannot be undone.')) return;
       try {
-        const res = await fetch('/api/products/' + PRODUCT_ID, { method:'DELETE', credentials:'include' });
+        const res = await fetch('/api/products/' + PRODUCT_ID, { method: 'DELETE', credentials: 'include' });
         if (!res.ok) throw new Error((await res.json()).message);
         toast('Listing deleted', 'ok');
         setTimeout(() => window.location.href = '/', 1200);
@@ -275,7 +274,7 @@
       t.className = 'toast ' + (type || 'ok');
       t.innerHTML = (type === 'err' ? '✕' : '✓') + ' ' + msg;
       c.appendChild(t);
-      setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
     }
   </script>
 </body>

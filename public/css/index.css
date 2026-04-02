@@ -162,7 +162,7 @@
       text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;
     }
     .product-name {
-      font-size:15px; font-weight:700; color:var(--text);
+      font-size:18px; font-weight:700; color:var(--text);
       margin-bottom:6px; line-height:1.4;
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     }

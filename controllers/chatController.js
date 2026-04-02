@@ -21,18 +21,24 @@ exports.initChat = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot message yourself' });
     }
 
-    // Tìm xem đã có conversation giữa 2 người về sp này chưa
+    // Tìm conversation theo cặp người dùng (không lọc theo product)
+    // → cùng 1 người bán chỉ có đúng 1 cuộc hội thoại
     let conv = await Conversation.findOne({
-      participants: { $all: [buyerId, sellerId] },
-      product: productId
+      participants: { $all: [buyerId, sellerId] }
     });
 
     if (!conv) {
+      // Chưa có → tạo mới
       conv = await Conversation.create({
         participants: [buyerId, sellerId],
         product: productId,
-        lastMessage: 'Conversation started'
+        lastMessage: ''
       });
+    } else {
+      // Đã có → cập nhật product context sang sản phẩm vừa bấm
+      // (để banner ở trang messages luôn hiện đúng sản phẩm mới nhất)
+      conv.product = productId;
+      await conv.save();
     }
 
     res.json({ success: true, conversationId: conv._id });
@@ -77,7 +83,7 @@ exports.getMessages = async (req, res) => {
 
     const conv = await Conversation.findById(id);
     if (!conv) return res.status(404).json({ success: false, message: 'Conversation not found' });
-    
+
     // Check permission
     if (!conv.participants.includes(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
@@ -89,7 +95,7 @@ exports.getMessages = async (req, res) => {
       .sort('createdAt')
       .lean();
 
-    // Mark as read cho tin nhắn của người kiaửi
+    // Mark as read cho tin nhắn của người kia gửi
     await Message.updateMany(
       { conversationId: id, sender: { $ne: userId }, isRead: false },
       { $set: { isRead: true } }
@@ -127,14 +133,15 @@ exports.sendMessage = async (req, res) => {
       isRead: false
     });
 
-    // Cập nhật last message
+    // Cập nhật last message và chạm updatedAt để trồi lên trên inbox
     conv.lastMessage = text.trim();
-    // Chạm updatedAt để trồi lên trên inbox
     conv.updatedAt = new Date();
     await conv.save();
 
-    // Lấy chi tiết sender để trả về web (cho polling update)
-    const populatedMsg = await Message.findById(msg._id).populate('sender', 'name nickname avatar').lean();
+    // Lấy chi tiết sender để trả về client (cho polling update)
+    const populatedMsg = await Message.findById(msg._id)
+      .populate('sender', 'name nickname avatar')
+      .lean();
 
     res.json({ success: true, data: populatedMsg });
   } catch (error) {

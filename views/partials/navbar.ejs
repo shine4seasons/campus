@@ -12,6 +12,14 @@
 
     <div class="nav-actions">
       <% if (user) { %>
+        <!-- Chat Icon Button -->
+        <a href="/messages" class="nav-chat-btn" id="nav-chat-btn" title="Messages">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span class="nav-chat-badge" id="nav-chat-badge" style="display:none;">0</span>
+        </a>
+
         <div class="nav-user-wrap" id="nav-user-wrap">
           <div class="nav-user-btn">
             <img src="<%= user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=E8F0FE&color=2563EB' %>"
@@ -68,6 +76,43 @@
 </header>
 
 <% if (user) { %>
+<style>
+  .nav-chat-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    color: #4B5568;
+    text-decoration: none;
+    transition: background 0.18s, color 0.18s;
+    margin-right: 4px;
+  }
+  .nav-chat-btn:hover {
+    background: #EBF0FF;
+    color: #1B5EFF;
+  }
+  .nav-chat-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    background: #EF4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid #fff;
+  }
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const wrap     = document.getElementById('nav-user-wrap');
@@ -86,6 +131,30 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('campus_user');
     window.location.href = '/login';
   });
+
+  // Fetch total unread message count for badge
+  async function updateChatBadge() {
+    try {
+      const res  = await fetch('/api/chat', { credentials: 'include' });
+      const json = await res.json();
+      if (!json.success) return;
+      const total = json.data.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      const badge = document.getElementById('nav-chat-badge');
+      if (!badge) return;
+      if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch {}
+  }
+
+  updateChatBadge();
+  // Refresh badge every 15s (lightweight, only on non-messages pages)
+  if (!window.location.pathname.startsWith('/messages')) {
+    setInterval(updateChatBadge, 15000);
+  }
 });
 </script>
 <% } %>

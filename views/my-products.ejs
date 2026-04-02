@@ -8,7 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/my-products.css">
-
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    .empty-icon svg { width: 48px; height: 48px; stroke: #C4CADF; }
+    .row-meta svg   { width: 14px; height: 14px; display: inline-block; vertical-align: middle; }
+    .row-thumb svg  { width: 24px; height: 24px; stroke: #8890B0; }
+  </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -26,14 +32,36 @@
       const _active = products.filter(p => p.status === 'active').length;
       const _sold   = products.filter(p => p.status === 'sold').length;
       const _views  = products.reduce((s, p) => s + (p.views || 0), 0);
-      const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
+
+      const CAT_ICON = {
+        books:        'book-open',
+        electronics:  'monitor',
+        clothing:     'shirt',
+        furniture:    'sofa',
+        'daily-needs':'shopping-bag',
+        sports:       'dumbbell',
+        gaming:       'gamepad-2',
+        other:        'package',
+      };
     %>
 
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-num"><%= products.length %></div><div class="stat-lbl">Total listings</div></div>
-      <div class="stat-card"><div class="stat-num"><%= _active %></div><div class="stat-lbl">Active</div></div>
-      <div class="stat-card"><div class="stat-num"><%= _sold %></div><div class="stat-lbl">Sold</div></div>
-      <div class="stat-card"><div class="stat-num"><%= _views.toLocaleString('en-US') %></div><div class="stat-lbl">Views</div></div>
+      <div class="stat-card">
+        <div class="stat-num"><%= products.length %></div>
+        <div class="stat-lbl">Total listings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><%= _active %></div>
+        <div class="stat-lbl">Active</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><%= _sold %></div>
+        <div class="stat-lbl">Sold</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num"><%= _views.toLocaleString('en-US') %></div>
+        <div class="stat-lbl">Views</div>
+      </div>
     </div>
 
     <div class="status-tabs" style="margin-bottom:20px;display:inline-flex;">
@@ -46,7 +74,9 @@
     <div class="products-list" id="products-list">
       <% if (products.length === 0) { %>
         <div class="empty-state">
-          <div class="empty-icon">📦</div>
+          <div class="empty-icon">
+            <i data-lucide="package" style="width:48px;height:48px;stroke:#C4CADF;"></i>
+          </div>
           <div class="empty-title">You don't have any listings yet.</div>
           <div class="empty-sub">Post your first listing right now!</div>
           <a href="/sell" class="btn-new">+ Post a listing</a>
@@ -54,28 +84,41 @@
       <% } else { %>
         <% products.forEach(p => { %>
           <div class="product-row" data-status="<%= p.status %>">
+
             <div class="row-thumb">
               <% if (p.images && p.images[0]) { %>
                 <img src="<%= p.images[0] %>" alt="<%= p.title %>"
-                  onerror="this.parentElement.textContent='<%= CAT_EMOJI[p.category] || '📦' %>'">
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"
+                  style="display:none;width:24px;height:24px;stroke:#8890B0;"></i>
               <% } else { %>
-                <%= CAT_EMOJI[p.category] || '📦' %>
+                <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"
+                  style="width:24px;height:24px;stroke:#8890B0;"></i>
               <% } %>
             </div>
+
             <div>
               <div class="row-title"><%= p.title %></div>
               <div class="row-meta">
                 <span class="row-status <%= p.status === 'active' ? 's-active' : p.status === 'sold' ? 's-sold' : 's-hidden' %>">
                   <%= p.status === 'active' ? 'Active' : p.status === 'sold' ? 'Sold' : 'Draft' %>
                 </span>
-                <span>👁 <%= p.views || 0 %> views</span>
-                <span>❤️ <%= p.interested || 0 %> interested</span>
-                <span>📅 <%= new Date(p.createdAt).toLocaleDateString('en-US') %></span>
+                <span style="display:inline-flex;align-items:center;gap:3px;">
+                  <i data-lucide="eye"></i> <%= p.views || 0 %> views
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:3px;">
+                  <i data-lucide="heart"></i> <%= p.interested || 0 %> interested
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:3px;">
+                  <i data-lucide="calendar"></i>
+                  <%= new Date(p.createdAt).toLocaleDateString('en-US') %>
+                </span>
               </div>
               <div class="row-price">
                 <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price) %>
               </div>
             </div>
+
             <div class="row-actions">
               <button class="row-btn row-btn-edit"
                 onclick="window.location.href='/sell?id=<%= p._id %>'">Edit</button>
@@ -91,7 +134,10 @@
   <div id="toast-wrap"></div>
 
   <script>
-    // ── Filter by status (DOM-based, no fetch needed) ──────
+    // Init Lucide static icons
+    lucide.createIcons();
+
+    // ── Filter by status ───────────────────────────────────
     window.filterStatus = function (status, btn) {
       document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
@@ -108,8 +154,20 @@
         if (!empty) {
           empty = document.createElement('div');
           empty.className = 'empty-state filter-empty';
-          const msgs = { active: 'No active listings.', sold: "You haven't sold anything yet.", hidden: 'No draft listings.' };
-          empty.innerHTML = '<div class="empty-icon">📭</div><div class="empty-title">' + (msgs[status] || 'No listings.') + '</div>';
+          const msgs = {
+            active: 'No active listings.',
+            sold:   "You haven't sold anything yet.",
+            hidden: 'No draft listings.',
+          };
+          // Inline SVG for dynamically injected empty state
+          const inboxSVG =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C4CADF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+            '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>' +
+            '<path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' +
+            '</svg>';
+          empty.innerHTML =
+            '<div class="empty-icon">' + inboxSVG + '</div>' +
+            '<div class="empty-title">' + (msgs[status] || 'No listings.') + '</div>';
           list.appendChild(empty);
         }
       } else if (empty) {
@@ -133,11 +191,16 @@
       }
     };
 
+    // ── Toast ──────────────────────────────────────────────
     function toast(msg, type) {
       const c = document.getElementById('toast-wrap');
       const t = document.createElement('div');
       t.className = 'toast ' + (type || 'ok');
-      t.innerHTML = (type === 'err' ? '✕' : '✓') + ' ' + msg;
+      const icon = type === 'err'
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
+      t.style.cssText = 'display:flex;align-items:center;gap:8px;';
+      t.innerHTML = icon + msg;
       c.appendChild(t);
       setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
     }

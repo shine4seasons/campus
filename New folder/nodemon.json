@@ -1,6 +1,0 @@
-{
-  "delay": 500,
-  "watch": ["controllers", "routes", "middleware", "models", "config", "app.js"],
-  "ignore": ["public/", "views/", "node_modules/"],
-  "ext": "js,json"
-}

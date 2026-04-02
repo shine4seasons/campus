@@ -8,6 +8,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/messages.css">
+  <style>
+    /* ── Date divider ── */
+    .date-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 10px;
+      padding: 0 4px;
+    }
+    .date-divider::before,
+    .date-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E4E7F2;
+    }
+    .date-divider-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8890B0;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -55,6 +80,49 @@
     let pollInterval = null;
     let autoScroll = true;
 
+    // ── Date divider helpers ────────────────────────────────────────────────
+    /**
+     * Returns a smart date label for a chat date divider.
+     * - Same day as today   → "Today"
+     * - Yesterday           → "Yesterday"
+     * - Same year & month   → "Monday 15"  (weekday + day)
+     * - Same year           → "March 15"   (month + day)
+     * - Older               → "March 15, 2023"
+     */
+    function formatDateLabel(dateStr) {
+      const now = new Date();
+      const d   = new Date(dateStr);
+
+      const nowY = now.getFullYear(), nowM = now.getMonth(), nowD = now.getDate();
+      const dY   = d.getFullYear(),   dM   = d.getMonth(),   dD   = d.getDate();
+
+      if (dY === nowY && dM === nowM && dD === nowD) return 'Today';
+
+      const yest = new Date(now);
+      yest.setDate(yest.getDate() - 1);
+      if (dY === yest.getFullYear() && dM === yest.getMonth() && dD === yest.getDate()) return 'Yesterday';
+
+      if (dY === nowY && dM === nowM) {
+        // Same year, same month → show weekday + numeric day
+        return d.toLocaleDateString('en-US', { weekday: 'long' }) + ' ' + dD;
+      }
+
+      if (dY === nowY) {
+        // Same year, different month → show "March 15"
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      }
+
+      // Different year → full date
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    /** Returns "YYYY-MM-DD" string for grouping messages by calendar day */
+    function dayKey(dateStr) {
+      const d = new Date(dateStr);
+      return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    }
+
+    // ── Inbox ───────────────────────────────────────────────────────────────
     async function fetchInbox() {
       try {
         const res = await fetch('/api/chat', { credentials: 'include' });
@@ -69,7 +137,6 @@
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages yet.</div>';
         return;
       }
-
       list.innerHTML = convs.map(c => {
         const partner = c.participants.find(p => String(p._id) !== MY_USER_ID) || { name: 'Unknown', nickname: '' };
         const name = partner.nickname || partner.name;
@@ -92,6 +159,16 @@
           </div>
         `;
       }).join('');
+
+      // If a conversationId was provided (via ?id=...), attempt to auto-select
+      // the matching conversation after the inbox has been rendered.
+      if (currentConvId) {
+        // small timeout to ensure DOM is painted
+        setTimeout(() => {
+          const convItem = document.querySelector(`.conv-item[onclick*="${currentConvId}"]`);
+          if (convItem) convItem.click();
+        }, 50);
+      }
     }
 
     window.selectConversation = async function(convId, partnerName, partnerDataRaw) {
@@ -103,15 +180,15 @@
       document.getElementById('header-name').textContent = partnerName;
       document.getElementById('header-avatar').textContent = partnerName.charAt(0).toUpperCase();
       document.getElementById('chat-input').focus();
-      
-      autoScroll = true; // force scroll on first load
+
+      autoScroll = true;
       await fetchMessages();
-      fetchInbox(); // refresh inbox read status
-      
-      // Update URL without reload to support refreshing gracefully
+      fetchInbox();
+
       window.history.replaceState(null, '', '/messages?id=' + convId);
     };
 
+    // ── Messages ────────────────────────────────────────────────────────────
     async function fetchMessages() {
       if (!currentConvId) return;
       try {
@@ -122,19 +199,37 @@
     }
 
     function renderMessages(messages) {
-      const container = document.getElementById('chat-messages');
+      const container   = document.getElementById('chat-messages');
       const shouldScroll = autoScroll || (container.scrollTop + container.clientHeight >= container.scrollHeight - 50);
 
-      container.innerHTML = messages.map(m => {
-        const isMe = String(m.sender._id) === MY_USER_ID;
-        const time = new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        return `
+      let lastDayKey = null;
+      let html = '';
+
+      messages.forEach(m => {
+        const isMe  = String(m.sender._id) === MY_USER_ID;
+        const time  = new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const msgDay = dayKey(m.createdAt);
+
+        // Insert date divider when the calendar day changes
+        if (msgDay !== lastDayKey) {
+          lastDayKey = msgDay;
+          const label = formatDateLabel(m.createdAt);
+          html += `
+            <div class="date-divider">
+              <span class="date-divider-label">${label}</span>
+            </div>
+          `;
+        }
+
+        html += `
           <div class="message-row ${isMe ? 'me' : 'other'}">
             <div class="message-bubble">${m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
             <div class="message-time">${time}</div>
           </div>
         `;
-      }).join('');
+      });
+
+      container.innerHTML = html;
 
       if (shouldScroll) {
         container.scrollTop = container.scrollHeight;
@@ -142,15 +237,16 @@
       }
     }
 
+    // ── Send ────────────────────────────────────────────────────────────────
     window.sendMessage = async function() {
       const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      const btn = document.getElementById('chat-send-btn');
-      
+      const text  = input.value.trim();
+      const btn   = document.getElementById('chat-send-btn');
+
       if (!text || !currentConvId) return;
-      
+
       input.disabled = true;
-      btn.disabled = true;
+      btn.disabled   = true;
 
       try {
         const res = await fetch('/api/chat/' + currentConvId + '/messages', {
@@ -162,39 +258,33 @@
         const json = await res.json();
         if (json.success) {
           input.value = '';
-          autoScroll = true;
+          autoScroll  = true;
           await fetchMessages();
           fetchInbox();
         }
       } catch (err) { console.error('Error sending message:', err); }
-      
+
       input.disabled = false;
-      btn.disabled = false;
+      btn.disabled   = false;
       input.focus();
     };
 
-    // Chat sending hit Enter
     document.getElementById('chat-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') sendMessage();
     });
 
-    // Initial load
+    // ── Init ────────────────────────────────────────────────────────────────
     fetchInbox();
     if (currentConvId) {
-      // If we landed directly via "Message Seller" link (with ?id=...)
-      // The name might not be known until inbox fetches, but we can initialize polling
-      // Wait for inbox fetch to complete, then auto select
       setTimeout(() => {
         const convItem = document.querySelector(`.conv-item[onclick*="${currentConvId}"]`);
         if (convItem) convItem.click();
       }, 500);
     }
 
-    // Polling every 3 seconds
     pollInterval = setInterval(() => {
       fetchInbox();
       if (currentConvId) {
-        // Only auto-scroll if user is already at the bottom
         const container = document.getElementById('chat-messages');
         if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
           autoScroll = true;
