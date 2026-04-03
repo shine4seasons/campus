@@ -192,11 +192,66 @@
 
   <div id="toast-wrap"></div>
 
+  <!-- ── Fixed bottom buy bar ── -->
+  <% if (!isSold && !isOwner) { %>
+  <div class="buy-bar" id="buy-bar">
+    <div class="buy-bar-price">
+      <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price) %>
+    </div>
+    <div class="buy-bar-actions">
+      <button class="buy-bar-cart" onclick="initChat()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Chat
+      </button>
+      <button class="buy-bar-buy" onclick="goCheckout()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Mua ngay
+      </button>
+    </div>
+  </div>
+  <style>
+    body { padding-bottom: 80px; }
+    .buy-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: #fff; border-top: 1px solid #E4E7F2;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; box-shadow: 0 -4px 24px rgba(13,15,26,0.10); gap: 16px;
+    }
+    .buy-bar-price { font-size: 20px; font-weight: 900; color: #1B5EFF; white-space: nowrap; }
+    .buy-bar-actions { display: flex; gap: 10px; align-items: center; }
+    .buy-bar-cart {
+      display: flex; align-items: center; gap: 6px;
+      padding: 11px 20px; border: 2px solid #1B5EFF; border-radius: 12px;
+      background: #fff; color: #1B5EFF; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s; font-family: inherit;
+    }
+    .buy-bar-cart:hover { background: #EBF0FF; }
+    .buy-bar-buy {
+      display: flex; align-items: center; gap: 6px;
+      padding: 11px 28px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #1B5EFF, #5B8AFF); color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.18s;
+      font-family: inherit; box-shadow: 0 4px 14px rgba(27,94,255,0.35);
+    }
+    .buy-bar-buy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.45); }
+    .buy-bar-buy:active { transform: translateY(0); }
+  </style>
+  <% } %>
+
   <script>
     const PRODUCT_ID = '<%= p._id %>';
     const IS_AUTH    = <%= !!user %>;
     const IMAGES     = <%- JSON.stringify(p.images || []) %>;
     let interestedState = false;
+
+    // Product metadata — truyền sang /messages để hiện banner context
+    const PRODUCT_META = {
+      id:    PRODUCT_ID,
+      title: <%- JSON.stringify(p.title) %>,
+      price: <%- JSON.stringify(new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price)) %>,
+      image: <%- JSON.stringify((p.images && p.images[0]) || '') %>,
+      url:   '/products/' + PRODUCT_ID
+    };
 
     // ── Gallery ──────────────────────────────────────────────────────────
     window.setImg = function (i) {
@@ -231,7 +286,8 @@
         });
         const json = await res.json();
         if (json.success) {
-          window.location.href = '/messages?id=' + json.conversationId;
+          window.location.href = '/messages?id=' + json.conversationId
+            + '&product=' + encodeURIComponent(JSON.stringify(PRODUCT_META));
         } else {
           toast(json.message, 'err');
           if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
@@ -268,6 +324,12 @@
       } catch (err) { toast(err.message, 'err'); }
     };
 
+
+    // ── Buy Now — go to checkout ─────────────────────────────────────────
+    window.goCheckout = function () {
+      if (!IS_AUTH) { toast('Please sign in to purchase', 'err'); return; }
+      window.location.href = '/checkout/' + PRODUCT_ID;
+    };
     function toast(msg, type) {
       const c = document.getElementById('toast-wrap');
       const t = document.createElement('div');

@@ -572,6 +572,21 @@ body {
 .ai-hint { font-size: 14px; color: #8890B0; line-height: 1.5; padding-top: 2px; }
 
 /* Toast */
+
+@media (min-width: 768px) {
+  .page-title { font-size: 22px; }
+  .page-subtitle { font-size: 16px; }
+  .breadcrumb { font-size: 19px; }
+  .card-head-title { font-size: 17px; }
+  .card-head-sub { font-size: 17px; }
+  .fl { font-size: 18px; }
+  .fi, .fs, .ft { font-size: 17px; }
+  .price-unit { font-size: 17px; }
+  .price-display { font-size: 16px; }
+  .btn-submit { font-size: 20px; }
+  .btn-draft { font-size: 19px; }
+  .img-slot .add-icon { font-size: 28px; }
+}
 #toast-wrap { position:fixed; bottom:24px; right:24px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
 .toast { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:12px; font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(13,15,26,0.15); animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1); max-width:320px; }
 .toast.ok  { background:#0D0F1A; color:#fff; }

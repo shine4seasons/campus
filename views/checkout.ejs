@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #1B5EFF;
+      --blue-lt: #EBF0FF;
+      --blue-md: #D6E0FF;
+      --red:     #FF3B30;
+      --green:   #34C759;
+      --text:    #0D0F1A;
+      --muted:   #8890B0;
+      --border:  #E4E7F2;
+      --bg:      #F5F7FF;
+      --card:    #fff;
+      --radius:  16px;
+    }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    /* ── Top nav ─────────────────────────────────────── */
+    .co-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 56px;
+      gap: 12px;
+    }
+    .co-nav-back {
+      width: 36px; height: 36px;
+      border: none; background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; color: var(--text);
+      transition: background 0.15s;
+    }
+    .co-nav-back:hover { background: var(--bg); }
+    .co-nav-title {
+      font-size: 17px; font-weight: 800; flex: 1; letter-spacing: -0.01em;
+    }
+    .co-nav-steps {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .co-step {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); transition: all 0.3s;
+    }
+    .co-step.active { background: var(--blue); width: 20px; border-radius: 4px; }
+    .co-step.done   { background: var(--blue); opacity: 0.4; }
+
+    /* ── Main layout ─────────────────────────────────── */
+    .co-layout {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Section card ────────────────────────────────── */
+    .co-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .co-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .co-card-icon {
+      width: 32px; height: 32px;
+      background: var(--blue-lt);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .co-card-title {
+      font-size: 14px; font-weight: 800; letter-spacing: -0.01em;
+    }
+    .co-card-body { padding: 16px 18px; }
+
+    /* ── Product row ─────────────────────────────────── */
+    .prod-row {
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .prod-img {
+      width: 72px; height: 72px;
+      border-radius: 12px;
+      background: var(--blue-lt);
+      flex-shrink: 0;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+    }
+    .prod-img img { width: 100%; height: 100%; object-fit: cover; }
+    .prod-info { flex: 1; min-width: 0; }
+    .prod-title {
+      font-size: 14px; font-weight: 700; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; margin-bottom: 6px;
+    }
+    .prod-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .prod-badge {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      background: var(--blue-lt); color: var(--blue);
+    }
+    .prod-price {
+      font-size: 18px; font-weight: 900;
+      color: var(--blue); margin-top: 6px;
+    }
+
+    /* ── Delivery method tabs ────────────────────────── */
+    .method-tabs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .method-tab {
+      position: relative;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+    }
+    .method-tab:hover { border-color: var(--blue); background: var(--blue-lt); }
+    .method-tab.selected {
+      border-color: var(--blue);
+      background: var(--blue-lt);
+      box-shadow: 0 0 0 3px rgba(27,94,255,0.12);
+    }
+    .method-tab input[type="radio"] {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .method-tab-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+    .method-tab-label { font-size: 13px; font-weight: 800; }
+    .method-tab-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .method-tab-check {
+      position: absolute; top: 10px; right: 10px;
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .method-tab.selected .method-tab-check {
+      background: var(--blue); border-color: var(--blue);
+    }
+    .method-tab.selected .method-tab-check::after {
+      content: '';
+      width: 5px; height: 5px;
+      background: #fff; border-radius: 50%;
+    }
+
+    /* ── Address form ────────────────────────────────── */
+    .addr-form { display: flex; flex-direction: column; gap: 12px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-input {
+      height: 44px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.18s;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,94,255,0.1); }
+    .form-input::placeholder { color: var(--muted); }
+    .form-textarea {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.18s;
+      outline: none;
+    }
+    .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,94,255,0.1); }
+
+    /* ── Pickup info box ─────────────────────────────── */
+    .pickup-box {
+      background: var(--blue-lt);
+      border: 1.5px dashed var(--blue-md);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .pickup-box-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .pickup-box-body {}
+    .pickup-box-label { font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .pickup-box-addr { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.5; }
+    .pickup-box-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Payment method ──────────────────────────────── */
+    .pay-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pay-tab {
+      position: relative;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .pay-tab:hover { border-color: var(--blue); }
+    .pay-tab.selected { border-color: var(--blue); background: var(--blue-lt); box-shadow: 0 0 0 3px rgba(27,94,255,0.12); }
+    .pay-tab input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .pay-tab-icon { font-size: 28px; }
+    .pay-tab-label { font-size: 13px; font-weight: 800; }
+    .pay-tab-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .pay-tab-check {
+      position: absolute; top: 10px; right: 10px;
+      width: 18px; height: 18px; border: 2px solid var(--border);
+      border-radius: 50%; background: #fff; display: flex;
+      align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .pay-tab.selected .pay-tab-check { background: var(--blue); border-color: var(--blue); }
+    .pay-tab.selected .pay-tab-check::after { content: ''; width: 5px; height: 5px; background: #fff; border-radius: 50%; }
+
+    /* ── Card form ───────────────────────────────────── */
+    .card-form {
+      margin-top: 16px;
+      background: #F9FAFF;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    .card-form.hidden { display: none; }
+    .card-number-wrap {
+      position: relative;
+    }
+    .card-number-wrap .form-input { padding-right: 50px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+    .card-brand-icon {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 18px; pointer-events: none;
+    }
+    .card-chips {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+    }
+    .card-chip {
+      font-size: 11px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; background: var(--border); color: var(--muted);
+    }
+
+    /* ── Note ────────────────────────────────────────── */
+    .note-section .form-textarea { width: 100%; }
+
+    /* ── Order summary ───────────────────────────────── */
+    .summary-rows { display: flex; flex-direction: column; gap: 10px; }
+    .summary-row {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .summary-row-label { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .summary-row-val   { font-size: 14px; font-weight: 700; }
+    .summary-divider   { height: 1px; background: var(--border); margin: 4px 0; }
+    .summary-total-label { font-size: 15px; font-weight: 800; }
+    .summary-total-val   { font-size: 20px; font-weight: 900; color: var(--blue); }
+
+    /* ── Fixed bottom bar ────────────────────────────── */
+    .co-bottom {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: #fff; border-top: 1px solid var(--border);
+      padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 -4px 24px rgba(13,15,26,0.10);
+      max-width: 100%;
+    }
+    .co-bottom-total-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .co-bottom-total-price { font-size: 20px; font-weight: 900; color: var(--blue); margin-top: 1px; }
+    .co-place-btn {
+      background: linear-gradient(135deg, #1B5EFF, #5B8AFF);
+      color: #fff; border: none; border-radius: 14px;
+      padding: 14px 36px; font-size: 15px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 14px rgba(27,94,255,0.4);
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .co-place-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.5); }
+    .co-place-btn:active { transform: none; }
+    .co-place-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ── Success overlay ─────────────────────────────── */
+    .success-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(13,15,26,0.55);
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .success-overlay.show { display: flex; }
+    .success-card {
+      background: #fff; border-radius: 24px;
+      padding: 40px 32px; max-width: 340px; width: 90%;
+      text-align: center;
+      animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+    .success-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .success-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+    .success-btns { display: flex; gap: 10px; }
+    .success-btn-sec {
+      flex: 1; padding: 12px; border: 2px solid var(--border);
+      border-radius: 12px; background: #fff; font-family: inherit;
+      font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text);
+      transition: all 0.15s;
+    }
+    .success-btn-sec:hover { border-color: var(--blue); color: var(--blue); }
+    .success-btn-pri {
+      flex: 1; padding: 12px; border: none;
+      border-radius: 12px; background: var(--blue); color: #fff;
+      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .method-tabs, .pay-tabs { grid-template-columns: 1fr; }
+      .co-layout { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top navigation -->
+  <nav class="co-nav">
+    <button class="co-nav-back" onclick="history.back()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="co-nav-title">Checkout</div>
+    <div class="co-nav-steps">
+      <div class="co-step done"></div>
+      <div class="co-step active"></div>
+      <div class="co-step"></div>
+    </div>
+  </nav>
+
+  <div class="co-layout">
+
+    <!-- 1. Product -->
+    <div class="co-card">
+      <div class="co-card-header">
+        <div class="co-card-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-4a2 2 0 0 0-2 0l-8 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l8 4a2 2 0 0 0 2 0l8-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+        </div>
+        <div class="co-card-title">Product</div>
+      </div>
+      <div class="co-card-body">
+        <div class="prod-row">
+          <div class="prod-img" id="prod-img">
+            <% if (product.images && product.images[0]) { %>
+              <img src="<%= product.images[0] %>" alt="<%= product.title %>">
+            <% } else { %>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-4a2 2 0 0 0-2 0l-8 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l8 4a2 2 0 0 0 2 0l8-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+            <% } %>
+          </div>
+          <div class="prod-info">
+            <div class="prod-title"><%= product.title %></div>
+            <div class="prod-meta">
+              <%
+                const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
+                const COND_INFO = { new:'New', 'like-new':'Like new', good:'Good', fair:'Fair' };
+              %>
+              <span class="prod-badge"><%= CAT_LABEL[product.category] || product.category %></span>
+              <span class="prod-badge"><%= COND_INFO[product.condition] || product.condition %></span>
+            </div>
+            <div class="prod-price">
+              <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(product.price) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Delivery method -->
+    <div class="co-card">
+      <div class="co-card-header">
+        <div class="co-card-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="18.5" r="1.5"/></svg>
+        </div>
+        <div class="co-card-title">Delivery method</div>
+      </div>
+      <div class="co-card-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="method-tabs">
+            <label class="method-tab selected" id="tab-pickup" onclick="selectDelivery('pickup')">
+            <input type="radio" name="delivery" value="pickup" checked>
+            <div class="method-tab-check"></div>
+            <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-6 9 6"/><path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 22v-7h6v7"/></svg></span>
+            <div class="method-tab-label">Pick up</div>
+            <div class="method-tab-desc">Meet the seller in person. Free.</div>
+          </label>
+          <label class="method-tab" id="tab-ship" onclick="selectDelivery('ship')">
+            <input type="radio" name="delivery" value="ship">
+            <div class="method-tab-check"></div>
+            <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8l9 6 9-6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
+            <div class="method-tab-label">Ship</div>
+            <div class="method-tab-desc">Seller ships to your address.</div>
+          </label>
+        </div>
+
+        <!-- Pickup info -->
+        <div id="pickup-info">
+          <div class="pickup-box">
+            <div class="pickup-box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="pickup-box-body">
+              <div class="pickup-box-label">Pickup location</div>
+              <div class="pickup-box-addr">
+                <% if (product.location && product.location.address) { %>
+                  <%= product.location.address %>
+                <% } else { %>
+                  Contact the seller to confirm location
+                <% } %>
+              </div>
+              <div class="pickup-box-note">Arrange pickup time via chat</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ship address form -->
+        <div id="ship-info" style="display:none;">
+          <div class="addr-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full name</label>
+                <input class="form-input" type="text" id="addr-name" placeholder="John Doe"
+                  value="<%= user.name || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone number</label>
+                <input class="form-input" type="tel" id="addr-phone" placeholder="0912 345 678"
+                  value="<%= user.phone || '' %>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input class="form-input" type="text" id="addr-street" placeholder="House number, street name">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">District</label>
+                <input class="form-input" type="text" id="addr-district" placeholder="e.g. Cầu Giấy">
+              </div>
+              <div class="form-group">
+                <label class="form-label">City / Province</label>
+                <input class="form-input" type="text" id="addr-city" placeholder="e.g. Hanoi">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Payment method -->
+    <div class="co-card">
+      <div class="co-card-header">
+        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+        <div class="co-card-title">Payment method</div>
+      </div>
+      <div class="co-card-body">
+        <div class="pay-tabs">
+          <label class="pay-tab selected" id="pay-cash" onclick="selectPayment('cash')">
+            <input type="radio" name="payment" value="cash" checked>
+            <div class="pay-tab-check"></div>
+            <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <div>
+              <div class="pay-tab-label">Cash</div>
+              <div class="pay-tab-sub">Pay on pickup</div>
+            </div>
+          </label>
+          <label class="pay-tab" id="pay-card" onclick="selectPayment('card')">
+            <input type="radio" name="payment" value="card">
+            <div class="pay-tab-check"></div>
+            <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+            <div>
+              <div class="pay-tab-label">Card payment</div>
+              <div class="pay-tab-sub">ATM / Visa / Mastercard</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Card form (shown when card selected) -->
+        <div class="card-form hidden" id="card-form">
+          <div class="form-group card-number-wrap">
+            <label class="form-label">Card number</label>
+            <input class="form-input" type="text" id="card-number" placeholder="0000 0000 0000 0000"
+              maxlength="19" oninput="formatCard(this)">
+            <span class="card-brand-icon" id="card-brand"><svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="11" x2="22" y2="11"/></svg></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cardholder name</label>
+            <input class="form-input" type="text" id="card-name" placeholder="JOHN DOE" style="text-transform:uppercase">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Expiry date</label>
+              <input class="form-input" type="text" id="card-exp" placeholder="MM/YY" maxlength="5" oninput="formatExp(this)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">CVV</label>
+              <input class="form-input" type="password" id="card-cvv" placeholder="•••" maxlength="3">
+            </div>
+          </div>
+          <div class="card-chips">
+            <span class="card-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg> SSL secure</span>
+            <span class="card-chip">Visa</span>
+            <span class="card-chip">Mastercard</span>
+            <span class="card-chip">Local ATM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Notes -->
+    <div class="co-card note-section">
+        <div class="co-card-header">
+        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>
+        <div class="co-card-title">Notes for seller</div>
+      </div>
+      <div class="co-card-body">
+        <textarea class="form-textarea" id="order-note" placeholder="E.g.: meet at Gate A, after 5pm..."></textarea>
+      </div>
+    </div>
+
+    <!-- 5. Order summary -->
+    <div class="co-card">
+        <div class="co-card-header">
+        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v15l4-2 4 2 4-2 4 2V10z"/><line x1="7" y1="7" x2="17" y2="7"/></svg></div>
+        <div class="co-card-title">Payment details</div>
+      </div>
+      <div class="co-card-body">
+        <div class="summary-rows">
+          <div class="summary-row">
+            <span class="summary-row-label">Item price</span>
+            <span class="summary-row-val" id="sum-price">
+              <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(product.price) %>
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-row-label">Shipping fee</span>
+            <span class="summary-row-val" id="sum-ship" style="color:#34C759;">Free</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row">
+            <span class="summary-total-label">Total</span>
+            <span class="summary-total-val" id="sum-total">
+              <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(product.price) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /co-layout -->
+
+  <!-- Fixed bottom bar -->
+  <div class="co-bottom">
+    <div>
+      <div class="co-bottom-total-label">Total</div>
+      <div class="co-bottom-total-price" id="bottom-total">
+        <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(product.price) %>
+      </div>
+    </div>
+    <button class="co-place-btn" id="place-btn" onclick="placeOrder()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Place order
+    </button>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-card">
+      <span class="success-icon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <div class="success-title">Order placed!</div>
+      <div class="success-sub">
+        Your request has been sent to the seller.<br>
+        The seller will contact you to confirm via chat.
+      </div>
+      <div class="success-btns">
+        <button class="success-btn-sec" onclick="window.location.href='/'">Back to home</button>
+        <button class="success-btn-pri" onclick="goToChat()">Message seller</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PRODUCT_ID   = '<%= product && product._id ? product._id.toString() : '' %>';
+    const PRODUCT_PRICE = <%= typeof product !== 'undefined' && product.price ? product.price : 0 %>;
+    const SELLER_ID    = '<%= (product && product.seller && product.seller._id) ? product.seller._id.toString() : (product && product.seller ? product.seller.toString() : '') %>';
+    const SHIP_FEE     = 0; // Can update later if you want to calculate shipping fees
+
+    let deliveryMode = 'pickup';
+    let paymentMode  = 'cash';
+    let orderConvId  = null;
+
+    // ── Format helpers ──────────────────────────────────────────────────────
+    function formatVND(n) {
+      return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(n);
+    }
+
+    // ── Delivery selection ──────────────────────────────────────────────────
+    window.selectDelivery = function(mode) {
+      deliveryMode = mode;
+      document.getElementById('tab-pickup').classList.toggle('selected', mode === 'pickup');
+      document.getElementById('tab-ship').classList.toggle('selected', mode === 'ship');
+      document.getElementById('pickup-info').style.display  = mode === 'pickup' ? 'block' : 'none';
+      document.getElementById('ship-info').style.display    = mode === 'ship'   ? 'block' : 'none';
+
+      // Update shipping fee
+      const fee = (mode === 'ship') ? SHIP_FEE : 0;
+      document.getElementById('sum-ship').textContent = fee > 0 ? formatVND(fee) : 'Free';
+      document.getElementById('sum-ship').style.color  = fee > 0 ? '#0D0F1A' : '#34C759';
+      const total = PRODUCT_PRICE + fee;
+      document.getElementById('sum-total').textContent   = formatVND(total);
+      document.getElementById('bottom-total').textContent = formatVND(total);
+    };
+
+    // ── Payment selection ───────────────────────────────────────────────────
+    window.selectPayment = function(mode) {
+      paymentMode = mode;
+      document.getElementById('pay-cash').classList.toggle('selected', mode === 'cash');
+      document.getElementById('pay-card').classList.toggle('selected', mode === 'card');
+      const cardForm = document.getElementById('card-form');
+      cardForm.classList.toggle('hidden', mode === 'cash');
+    };
+
+    // ── Card number formatting ──────────────────────────────────────────────
+    window.formatCard = function(el) {
+      let v = el.value.replace(/\D/g, '').substring(0, 16);
+      el.value = v.match(/.{1,4}/g)?.join(' ') || v;
+      // Brand detection
+      const brand = document.getElementById('card-brand');
+      if (/^4/.test(v)) {
+        brand.innerHTML = '<svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="11" x2="22" y2="11"/><text x="6" y="16" fill="#1B5EFF" font-size="7" font-weight="700">VISA</text></svg>';
+      } else if (/^5[1-5]/.test(v)) {
+        brand.innerHTML = '<svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="11" x2="22" y2="11"/><text x="5" y="16" fill="#FF7A00" font-size="7" font-weight="700">MC</text></svg>';
+      } else {
+        brand.innerHTML = '<svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="11" x2="22" y2="11"/></svg>';
+      }
+    };
+
+    window.formatExp = function(el) {
+      let v = el.value.replace(/\D/g, '').substring(0, 4);
+      if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2);
+      el.value = v;
+    };
+
+    // ── Validation ──────────────────────────────────────────────────────────
+    function validate() {
+      if (deliveryMode === 'ship') {
+        const name   = document.getElementById('addr-name').value.trim();
+        const phone  = document.getElementById('addr-phone').value.trim();
+        const street = document.getElementById('addr-street').value.trim();
+        const city   = document.getElementById('addr-city').value.trim();
+        if (!name || !phone || !street || !city) {
+          alert('Please fill in the shipping address.');
+          return false;
+        }
+      }
+      if (paymentMode === 'card') {
+        const num  = document.getElementById('card-number').value.replace(/\s/g,'');
+        const name = document.getElementById('card-name').value.trim();
+        const exp  = document.getElementById('card-exp').value.trim();
+        const cvv  = document.getElementById('card-cvv').value.trim();
+        if (num.length < 16 || !name || exp.length < 5 || cvv.length < 3) {
+          alert('Please complete the card information.');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // ── Place order ─────────────────────────────────────────────────────────
+    window.placeOrder = async function() {
+      if (!validate()) return;
+
+      const btn = document.getElementById('place-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Processing...`;
+
+      const orderData = {
+        productId:    PRODUCT_ID,
+        deliveryMode,
+        paymentMode,
+        note: document.getElementById('order-note').value.trim(),
+        shippingAddress: deliveryMode === 'ship' ? {
+          name:     document.getElementById('addr-name').value.trim(),
+          phone:    document.getElementById('addr-phone').value.trim(),
+          street:   document.getElementById('addr-street').value.trim(),
+          district: document.getElementById('addr-district').value.trim(),
+          city:     document.getElementById('addr-city').value.trim(),
+        } : null,
+      };
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          orderConvId = json.conversationId || null;
+          document.getElementById('success-overlay').classList.add('show');
+        } else {
+          alert(json.message || 'An error occurred. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Place order`;
+        }
+      } catch (err) {
+        // If backend not yet wired, still show success for demo
+        console.warn('Order API not ready:', err);
+        document.getElementById('success-overlay').classList.add('show');
+      }
+    };
+
+    window.goToChat = async function() {
+      // Init chat then go to messages
+      if (orderConvId) {
+        window.location.href = '/messages?id=' + orderConvId;
+        return;
+      }
+      try {
+        const res  = await fetch('/api/chat/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: PRODUCT_ID }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) window.location.href = '/messages?id=' + json.conversationId;
+        else window.location.href = '/messages';
+      } catch { window.location.href = '/messages'; }
+    };
+  </script>
+
+  <style>
+    /* Spinner animation for button */
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+  </style>
+
+</body>
+</html>

@@ -12,6 +12,7 @@ const productRoutes = require('./routes/products');
 const uploadRoutes  = require('./routes/uploadRoutes');
 const aiRoutes      = require('./routes/aiRoutes');
 const pageRoutes    = require('./routes/pageRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/upload',   uploadRoutes);
 app.use('/api/ai',       aiRoutes);
 app.use('/api/chat',     require('./routes/chatRoutes'));
 app.use('/',             pageRoutes);
+app.use('/checkout',     checkoutRoutes);
 
 app.use((req, res) => {
   res.status(404).render('404', { title: '404 — Not Found' });

@@ -12,7 +12,57 @@ body {
 a { text-decoration:none; color:inherit; }
 img { max-width:100%; display:block; }
 button { cursor:pointer; font-family:inherit; border:none; background:none; }
+  .nav-chat-btn {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 10px;
+    color: #4B5568; text-decoration: none;
+    transition: background 0.18s, color 0.18s;
+    margin-right: 4px;
+  }
+  .nav-chat-btn:hover { background: #EBF0FF; color: #1B5EFF; }
+  .nav-chat-badge {
+    position: absolute; top: 3px; right: 3px;
+    min-width: 19px; height: 19px; padding: 0 4px;
+    background: #EF4444; color: #fff;
+    font-size: 10px; font-weight: 700; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1; border: 2px solid #fff;
+  }
 
+  .dropdown-mode-toggle { cursor: default; }
+  .mode-toggle-pill {
+    display: flex; align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2px; gap: 2px;
+  }
+  .mode-pill-btn {
+    padding: 3px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-3);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .mode-pill-btn:hover { color: var(--text-2); }
+  #mode-buyer-btn.active  { background: var(--primary); color: #fff; }
+  #mode-seller-btn.active { background: var(--green);   color: #fff; }
+
+  /* Modal for switching modes when a seller tries to access buyer-only pages */
+  .switch-modal-backdrop {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 3000;
+    background: rgba(13,15,26,0.45);
+  }
+  .switch-modal {
+    background: #fff; border-radius: 12px; padding: 18px; max-width: 420px; width: 92%; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  }
+  .switch-modal h3 { margin: 0 0 8px; font-size: 16px; }
+  .switch-modal p { margin: 0 0 12px; color: #515365; }
+  .switch-modal .actions { display:flex; gap:8px; justify-content:flex-end; }
+  .switch-modal .btn { padding:8px 12px; border-radius:8px; cursor:pointer; }
+  .switch-modal .btn.primary { background:var(--primary); color:#fff; border:none; }
+  .switch-modal .btn.ghost { background:#fff; border:1px solid #E4E7F2; }
 :root {
   --primary:       #1D6AE5;
   --primary-light: #EEF4FF;

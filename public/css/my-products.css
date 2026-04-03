@@ -71,3 +71,18 @@ body { background: #F7F8FC; }
   .row-thumb { width: 64px; height: 64px; margin: 0 auto; font-size: 28px; }
   .row-actions { grid-column: unset; justify-content: center; margin-top: 12px; }
 }
+
+@media (min-width: 768px) {
+  .page-top h1 { font-size: 30px; }
+  .status-tab { font-size: 18px; }
+  .row-title { font-size: 22px; }
+  .row-meta { font-size: 17px; }
+  .row-price { font-size: 22px; }
+  .row-status { font-size: 15px; }
+  .row-btn { font-size: 17px; }
+  .empty-title { font-size: 24px; }
+  .empty-sub { font-size: 19px; }
+  .btn-new { font-size: 20px; }
+  .stat-num { font-size: 36px; }
+  .stat-lbl { font-size: 17px; }
+}

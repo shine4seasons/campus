@@ -53,7 +53,7 @@ exports.getConversations = async (req, res) => {
     const userId = req.user._id;
     const convs = await Conversation.find({ participants: userId })
       .populate('participants', 'name nickname avatar')
-      .populate('product', 'title images price')
+      .populate('product', 'title images price seller')
       .sort('-updatedAt')
       .lean();
 
@@ -66,6 +66,12 @@ exports.getConversations = async (req, res) => {
         isRead: false
       });
       c.unreadCount = unread;
+      // mark whether this conversation is one where the current user is the seller
+      try {
+        c.isSellerConversation = !!(c.product && String(c.product.seller) === String(userId));
+      } catch (e) {
+        c.isSellerConversation = false;
+      }
       results.push(c);
     }
 

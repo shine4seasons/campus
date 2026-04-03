@@ -9,6 +9,78 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/messages.css">
   <style>
+    /* ── Product context banner ── */
+    .product-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: #F0F4FF;
+      border-top: 1px solid #D6E0FF;
+      border-bottom: 1px solid #D6E0FF;
+      flex-shrink: 0;
+      animation: bannerSlideIn 0.25s ease;
+    }
+    @keyframes bannerSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .product-banner-img {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #C5D2FF;
+      flex-shrink: 0;
+      background: #E4E7F2;
+    }
+    .product-banner-img-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      border: 1px solid #C5D2FF;
+      flex-shrink: 0;
+      background: #E4E7F2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .product-banner-info { flex: 1; min-width: 0; }
+    .product-banner-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #1B5EFF;
+      margin-bottom: 2px;
+    }
+    .product-banner-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #0D0F1A;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-banner-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .product-banner-price {
+      font-weight: 800;
+      color: #1B5EFF;
+      font-size: 13px;
+    }
+    .product-banner-cond {
+      font-size: 11px;
+      color: #6B7399;
+      background: #E8EDFF;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
     /* ── Date divider ── */
     .date-divider {
       display: flex;
@@ -40,7 +112,7 @@
   <div class="chat-container">
     <!-- SIDEBAR (Inbox) -->
     <div class="chat-sidebar">
-      <div class="sidebar-header">Inbox</div>
+      <div class="sidebar-header">Inbox <span id="mode-label" style="font-weight:700;margin-left:8px;color:#1B5EFF;font-size:12px;"></span></div>
       <div class="conv-list" id="conv-list">
         <!-- Rendered by JS -->
       </div>
@@ -65,6 +137,9 @@
         <!-- Rendered by JS -->
       </div>
 
+      <!-- Product context banner (shown when coming from a product page or stored) -->
+      <div class="product-banner" id="product-banner" style="display:none;"></div>
+
       <div class="chat-input-area" id="chat-input-area">
         <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
         <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">
@@ -79,6 +154,59 @@
     let currentConvId = '<%= conversationId || "" %>';
     let pollInterval = null;
     let autoScroll = true;
+
+    // ── Product Banner ──────────────────────────────────────────────────────
+    const COND_LABEL = { new:'New', 'like-new':'Like new', good:'Good', fair:'Fair' };
+
+    function renderProductBanner(convId, productData) {
+      const banner = document.getElementById('product-banner');
+      if (!banner || !productData) return;
+      // Persist to localStorage so banner shows on reload / direct link
+      try { localStorage.setItem('conv_product_' + convId, JSON.stringify(productData)); } catch(e) {}
+
+      const priceStr = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(productData.price);
+      const condLabel = COND_LABEL[productData.condition] || productData.condition || '';
+      const imgHtml = productData.image
+        ? `<img class="product-banner-img" src="${productData.image}" alt="">`
+        : `<div class="product-banner-img-placeholder">📦</div>`;
+
+      banner.innerHTML = `
+        ${imgHtml}
+        <div class="product-banner-info">
+          <div class="product-banner-label">Discussing product</div>
+          <div class="product-banner-title">${productData.title || ''}</div>
+          <div class="product-banner-meta">
+            <span class="product-banner-price">${priceStr}</span>
+            ${condLabel ? `<span class="product-banner-cond">${condLabel}</span>` : ''}
+          </div>
+        </div>
+      `;
+      banner.style.display = 'flex';
+    }
+
+    function tryLoadBannerFromStorage(convId) {
+      try {
+        const raw = localStorage.getItem('conv_product_' + convId);
+        if (raw) renderProductBanner(convId, JSON.parse(raw));
+        else document.getElementById('product-banner').style.display = 'none';
+      } catch(e) {}
+    }
+
+    // On page load: parse ?pd= param if present
+    (function parsePdParam() {
+      const params = new URLSearchParams(window.location.search);
+      const pdRaw  = params.get('pd');
+      if (pdRaw && currentConvId) {
+        try {
+          const productData = JSON.parse(decodeURIComponent(pdRaw));
+          renderProductBanner(currentConvId, productData);
+        } catch(e) {}
+        // Strip ?pd= from URL
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('pd');
+        window.history.replaceState(null, '', clean.toString());
+      }
+    })();
 
     // ── Date divider helpers ────────────────────────────────────────────────
     /**
@@ -133,11 +261,27 @@
 
     function renderInbox(convs) {
       const list = document.getElementById('conv-list');
+      // Filter conversations according to current UI mode (buyer/seller)
+      const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+      document.getElementById('mode-label').textContent = uiMode === 'seller' ? 'Seller view' : 'Buyer view';
+
       if (convs.length === 0) {
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages yet.</div>';
         return;
       }
-      list.innerHTML = convs.map(c => {
+        // Apply mode filter: sellers see conversations where they are the product seller;
+        // buyers see conversations where they are the buyer (i.e., not the product seller).
+        const filtered = convs.filter(c => {
+          if (uiMode === 'seller') return c.isSellerConversation;
+          return !c.isSellerConversation;
+        });
+
+        if (filtered.length === 0) {
+          list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages for current mode.</div>';
+          return;
+        }
+
+        list.innerHTML = filtered.map(c => {
         const partner = c.participants.find(p => String(p._id) !== MY_USER_ID) || { name: 'Unknown', nickname: '' };
         const name = partner.nickname || partner.name;
         const initial = name.charAt(0).toUpperCase();
@@ -173,6 +317,7 @@
 
     window.selectConversation = async function(convId, partnerName, partnerDataRaw) {
       currentConvId = convId;
+      tryLoadBannerFromStorage(convId);
       document.getElementById('chat-empty').style.display = 'none';
       document.getElementById('chat-header').classList.add('active');
       document.getElementById('chat-messages').style.display = 'flex';
