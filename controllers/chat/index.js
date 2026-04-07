@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
-const Conversation = require('../models/Conversation');
-const Message = require('../models/Message');
-const Product = require('../models/Product');
+const Conversation = require('../../models/Conversation');
+const Message = require('../../models/Message');
+const Product = require('../../models/Product');
+const { findOrCreateConversation } = require('./conversation');
 
 // 1. Khởi tạo cuộc trò chuyện (hoặc lấy cuộc trò chuyện hiện có)
 exports.initChat = async (req, res) => {
@@ -21,25 +22,7 @@ exports.initChat = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cannot message yourself' });
     }
 
-    // Tìm conversation theo cặp người dùng (không lọc theo product)
-    // → cùng 1 người bán chỉ có đúng 1 cuộc hội thoại
-    let conv = await Conversation.findOne({
-      participants: { $all: [buyerId, sellerId] }
-    });
-
-    if (!conv) {
-      // Chưa có → tạo mới
-      conv = await Conversation.create({
-        participants: [buyerId, sellerId],
-        product: productId,
-        lastMessage: ''
-      });
-    } else {
-      // Đã có → cập nhật product context sang sản phẩm vừa bấm
-      // (để banner ở trang messages luôn hiện đúng sản phẩm mới nhất)
-      conv.product = productId;
-      await conv.save();
-    }
+    const conv = await findOrCreateConversation(buyerId, sellerId, productId);
 
     res.json({ success: true, conversationId: conv._id });
   } catch (error) {
@@ -57,20 +40,21 @@ exports.getConversations = async (req, res) => {
       .sort('-updatedAt')
       .lean();
 
-    // Lấy thêm số lượng tin nhắn chưa đọc
     const results = [];
     for (let c of convs) {
-      const unread = await Message.countDocuments({
-        conversationId: c._id,
-        sender: { $ne: userId },
-        isRead: false
-      });
+      const unread = await Message.countDocuments({ conversationId: c._id, sender: { $ne: userId }, isRead: false }).catch(() => 0);
       c.unreadCount = unread;
-      // mark whether this conversation is one where the current user is the seller
       try {
         c.isSellerConversation = !!(c.product && String(c.product.seller) === String(userId));
       } catch (e) {
         c.isSellerConversation = false;
+      }
+      try {
+        c.partner = (c.participants || []).find(p => String(p._id) !== String(userId)) || (c.participants && c.participants[0]) || null;
+        c.partnerName = c.partner ? (c.partner.nickname || c.partner.name) : 'Unknown';
+      } catch (e) {
+        c.partner = null;
+        c.partnerName = 'Unknown';
       }
       results.push(c);
     }
@@ -90,22 +74,16 @@ exports.getMessages = async (req, res) => {
     const conv = await Conversation.findById(id);
     if (!conv) return res.status(404).json({ success: false, message: 'Conversation not found' });
 
-    // Check permission
     if (!conv.participants.includes(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
-    // Lấy messages
     const messages = await Message.find({ conversationId: id })
       .populate('sender', 'name nickname avatar')
       .sort('createdAt')
       .lean();
 
-    // Mark as read cho tin nhắn của người kia gửi
-    await Message.updateMany(
-      { conversationId: id, sender: { $ne: userId }, isRead: false },
-      { $set: { isRead: true } }
-    );
+    await Message.updateMany({ conversationId: id, sender: { $ne: userId }, isRead: false }, { $set: { isRead: true } });
 
     res.json({ success: true, data: messages });
   } catch (error) {
@@ -120,34 +98,28 @@ exports.sendMessage = async (req, res) => {
     const { text } = req.body;
     const userId = req.user._id;
 
-    if (!text || !text.trim()) {
-      return res.status(400).json({ success: false, message: 'Message text cannot be empty' });
-    }
+    if (!text || !text.trim()) return res.status(400).json({ success: false, message: 'Message text cannot be empty' });
 
     const conv = await Conversation.findById(id);
     if (!conv) return res.status(404).json({ success: false, message: 'Conversation not found' });
+    if (!conv.participants.includes(userId)) return res.status(403).json({ success: false, message: 'Forbidden' });
 
-    if (!conv.participants.includes(userId)) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
-    }
+    const msg = await Message.create({ conversationId: id, sender: userId, text: text.trim(), isRead: false });
 
-    // Tạo tin nhắn
-    const msg = await Message.create({
-      conversationId: id,
-      sender: userId,
-      text: text.trim(),
-      isRead: false
-    });
-
-    // Cập nhật last message và chạm updatedAt để trồi lên trên inbox
     conv.lastMessage = text.trim();
     conv.updatedAt = new Date();
     await conv.save();
 
-    // Lấy chi tiết sender để trả về client (cho polling update)
-    const populatedMsg = await Message.findById(msg._id)
-      .populate('sender', 'name nickname avatar')
-      .lean();
+    const populatedMsg = await Message.findById(msg._id).populate('sender', 'name nickname avatar').lean();
+
+    // Emit realtime event via Socket.IO
+    try {
+      const { getIO } = require('../../utils/socketServer');
+      const io = getIO();
+      if (io) io.to(`conv_${id}`).emit('message', populatedMsg);
+    } catch (e) {
+      console.error('Socket emit error:', e.message);
+    }
 
     res.json({ success: true, data: populatedMsg });
   } catch (error) {

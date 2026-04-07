@@ -1,5 +1,6 @@
 const jwt  = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../../models/User');
+const { ALLOWED_PROFILE_FIELDS } = require('./constants');
 
 const signToken = (userId) =>
   jwt.sign({ sub: userId.toString() }, process.env.JWT_SECRET, {
@@ -45,6 +46,16 @@ const logout = (req, res) => {
   res.json({ success: true });
 };
 
+// Clear auth cookie and redirect to login (used by server-rendered pages)
+const logoutRedirect = (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.redirect('/login');
+};
+
 // POST /api/auth/refresh
 const refresh = (req, res) => {
   const old = req.cookies?.token;
@@ -61,9 +72,8 @@ const refresh = (req, res) => {
 
 // PATCH /api/auth/profile
 const updateProfile = async (req, res) => {
-  const ALLOWED = ['nickname', 'phone', 'university', 'studentId', 'bio', 'profileComplete', 'avatar'];
   const updates = {};
-  ALLOWED.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+  ALLOWED_PROFILE_FIELDS.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
   try {
     const user = await User.findByIdAndUpdate(
@@ -78,4 +88,4 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { googleCallback, getMe, logout, refresh, updateProfile };
+module.exports = { googleCallback, getMe, logout, refresh, updateProfile, logoutRedirect };

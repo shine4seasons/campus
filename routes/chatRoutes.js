@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
-const chatController = require('../controllers/chatController');
+const chatController = require('../controllers/chat');
 
 // All chat APIs require user to be authenticated
 router.use(protect);

@@ -1,6 +1,6 @@
 const router  = require('express').Router();
 const { protect } = require('../middleware/auth');
-const checkoutController = require('../controllers/checkoutController');
+const checkoutController = require('../controllers/checkout');
 
 // Page: GET /checkout/:productId  → render checkout.ejs
 router.get('/:productId', protect, checkoutController.getCheckoutPage);

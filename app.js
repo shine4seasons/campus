@@ -41,4 +41,15 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅  Server running → http://localhost:${PORT}`));
+const http = require('http');
+const server = http.createServer(app);
+
+// Initialize socket server
+try {
+  const { init } = require('./utils/socketServer');
+  init(server);
+} catch (e) {
+  console.error('Socket init error:', e.message);
+}
+
+server.listen(PORT, () => console.log(`Server running → http://localhost:${PORT}`));

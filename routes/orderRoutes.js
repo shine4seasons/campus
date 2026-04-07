@@ -1,12 +1,13 @@
 const router          = require('express').Router();
 const { protect }     = require('../middleware/auth');
-const orderController = require('../controllers/orderController');
+const orderController = require('../controllers/orders');
+const checkoutController = require('../controllers/checkout');
 
 // ── Trang checkout (SSR) ──────────────────────────────────────────────────────
 // GET /checkout/:productId → render checkout.ejs
 // (Đặt trong app.js/server.js: app.use('/checkout', require('./routes/orderRoutes').page))
 const pageRouter = require('express').Router();
-pageRouter.get('/:productId', protect, orderController.getCheckoutPage);
+pageRouter.get('/:productId', protect, checkoutController.getCheckoutPage);
 
 // ── API ───────────────────────────────────────────────────────────────────────
 // Tất cả đều yêu cầu đăng nhập

@@ -1,7 +1,6 @@
-const Product = require('../models/Product');
-const User    = require('../models/User');
-
-// ── Helpers ────────────────────────────────────────────────
+const Product = require('../../models/Product');
+const User    = require('../../models/User');
+const { ALLOWED_UPDATE_FIELDS } = require('./constants');
 
 const buildFilter = (query) => {
   const filter = { status: 'active' };
@@ -16,17 +15,9 @@ const buildFilter = (query) => {
   return filter;
 };
 
-// ── GET /api/products ──────────────────────────────────────
-// Lấy danh sách sản phẩm, hỗ trợ filter + sort + pagination + search
 const getProducts = async (req, res) => {
   try {
-    const {
-      q,           // full-text search
-      page  = 1,
-      limit = 12,
-      sort  = '-createdAt',   // newest first
-    } = req.query;
-
+    const { q, page = 1, limit = 12, sort = '-createdAt' } = req.query;
     const filter = buildFilter(req.query);
 
     let query;
@@ -48,19 +39,13 @@ const getProducts = async (req, res) => {
     res.json({
       success: true,
       data: products,
-      pagination: {
-        total,
-        page:       Number(page),
-        limit:      Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
-      },
+      pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ── GET /api/products/:id ──────────────────────────────────
 const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -69,8 +54,7 @@ const getProduct = async (req, res) => {
 
     if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
 
-    // Tăng view count (fire-and-forget, không block response)
-    Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
+      incrementViews(req.params.id);
 
     res.json({ success: true, data: product });
   } catch (err) {
@@ -78,7 +62,6 @@ const getProduct = async (req, res) => {
   }
 };
 
-// ── POST /api/products ─────────────────────────────────────
 const createProduct = async (req, res) => {
   try {
     const { title, description, price, category, condition, images, location } = req.body;
@@ -90,7 +73,6 @@ const createProduct = async (req, res) => {
       seller:   req.user._id,
     });
 
-    // Tăng totalSales counter khi đăng sản phẩm (sẽ tăng lại khi sold)
     await User.findByIdAndUpdate(req.user._id, { $inc: { totalSales: 0 } });
 
     const populated = await product.populate('seller', 'name nickname avatar university');
@@ -100,21 +82,17 @@ const createProduct = async (req, res) => {
   }
 };
 
-// ── PATCH /api/products/:id ────────────────────────────────
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy' });
 
-    // Chỉ seller hoặc admin mới được sửa
     if (String(product.seller) !== String(req.user._id) && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Không có quyền' });
     }
 
-    const ALLOWED = ['title', 'description', 'price', 'category', 'condition', 'images', 'status', 'location'];
-    ALLOWED.forEach(k => { if (req.body[k] !== undefined) product[k] = req.body[k]; });
+    ALLOWED_UPDATE_FIELDS.forEach(k => { if (req.body[k] !== undefined) product[k] = req.body[k]; });
 
-    // Nếu đánh dấu sold → ghi nhận thời gian và update seller stats
     if (req.body.status === 'sold' && product.status !== 'sold') {
       product.soldAt = new Date();
       if (req.body.buyerId) product.buyer = req.body.buyerId;
@@ -129,7 +107,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// ── DELETE /api/products/:id ───────────────────────────────
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -146,32 +123,22 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// ── GET /api/products/my ───────────────────────────────────
-// Lấy sản phẩm của chính mình (mọi status)
 const getMyProducts = async (req, res) => {
   try {
     const { status } = req.query;
     const filter = { seller: req.user._id };
     if (status) filter.status = status;
 
-    const products = await Product.find(filter)
-      .sort('-createdAt')
-      .lean();
-
+    const products = await Product.find(filter).sort('-createdAt').lean();
     res.json({ success: true, data: products });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ── POST /api/products/:id/interested ─────────────────────
 const toggleInterested = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { interested: 1 } },
-      { new: true }
-    );
+    const product = await Product.findByIdAndUpdate(req.params.id, { $inc: { interested: 1 } }, { new: true });
     res.json({ success: true, interested: product.interested });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

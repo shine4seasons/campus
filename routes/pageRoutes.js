@@ -1,14 +1,8 @@
 const router  = require('express').Router();
 const Product = require('../models/Product');
 
-// ── Guard: redirect về /login nếu chưa đăng nhập ──────
-const requireAuth = (req, res, next) => {
-  if (!res.locals.user) {
-    const back = encodeURIComponent(req.originalUrl);
-    return res.redirect('/login?redirect=' + back);
-  }
-  next();
-};
+const requireAuth = require('../middleware/pageAuth');
+const authController = require('../controllers/auth');
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', (req, res) => {
@@ -33,14 +27,7 @@ router.get('/login', (req, res) => {
 });
 
 // ── GET /logout ────────────────────────────────────────
-router.get('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
-  res.redirect('/login');
-});
+router.get('/logout', authController.logoutRedirect);
 
 // ── GET /callback ──────────────────────────────────────
 // Fallback page sau khi Google OAuth (server đã set cookie)
@@ -63,7 +50,8 @@ router.get('/products/:id', async (req, res) => {
     }
 
     // Tăng view count (fire-and-forget)
-    Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
+    const { incrementViews } = require('../utils/viewCounter');
+    incrementViews(req.params.id);
 
     // Fetch related products (same category, active, not the current one)
     const relatedProducts = await Product.find({

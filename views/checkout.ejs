@@ -7,380 +7,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/checkout.css">
+  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --blue:    #1B5EFF;
-      --blue-lt: #EBF0FF;
-      --blue-md: #D6E0FF;
-      --red:     #FF3B30;
-      --green:   #34C759;
-      --text:    #0D0F1A;
-      --muted:   #8890B0;
-      --border:  #E4E7F2;
-      --bg:      #F5F7FF;
-      --card:    #fff;
-      --radius:  16px;
-    }
-
-    body {
-      font-family: 'Be Vietnam Pro', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: 100px;
-    }
-
-    /* ── Top nav ─────────────────────────────────────── */
-    .co-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      height: 56px;
-      gap: 12px;
-    }
-    .co-nav-back {
-      width: 36px; height: 36px;
-      border: none; background: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 10px; color: var(--text);
-      transition: background 0.15s;
-    }
-    .co-nav-back:hover { background: var(--bg); }
-    .co-nav-title {
-      font-size: 17px; font-weight: 800; flex: 1; letter-spacing: -0.01em;
-    }
-    .co-nav-steps {
-      display: flex; align-items: center; gap: 6px;
-    }
-    .co-step {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--border); transition: all 0.3s;
-    }
-    .co-step.active { background: var(--blue); width: 20px; border-radius: 4px; }
-    .co-step.done   { background: var(--blue); opacity: 0.4; }
-
-    /* ── Main layout ─────────────────────────────────── */
-    .co-layout {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    /* ── Section card ────────────────────────────────── */
-    .co-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .co-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 18px 14px;
-      border-bottom: 1px solid var(--border);
-    }
-    .co-card-icon {
-      width: 32px; height: 32px;
-      background: var(--blue-lt);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-    .co-card-title {
-      font-size: 14px; font-weight: 800; letter-spacing: -0.01em;
-    }
-    .co-card-body { padding: 16px 18px; }
-
-    /* ── Product row ─────────────────────────────────── */
-    .prod-row {
-      display: flex; gap: 14px; align-items: flex-start;
-    }
-    .prod-img {
-      width: 72px; height: 72px;
-      border-radius: 12px;
-      background: var(--blue-lt);
-      flex-shrink: 0;
-      overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 30px;
-    }
-    .prod-img img { width: 100%; height: 100%; object-fit: cover; }
-    .prod-info { flex: 1; min-width: 0; }
-    .prod-title {
-      font-size: 14px; font-weight: 700; line-height: 1.4;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-      overflow: hidden; margin-bottom: 6px;
-    }
-    .prod-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .prod-badge {
-      font-size: 11px; font-weight: 600;
-      padding: 2px 8px; border-radius: 20px;
-      background: var(--blue-lt); color: var(--blue);
-    }
-    .prod-price {
-      font-size: 18px; font-weight: 900;
-      color: var(--blue); margin-top: 6px;
-    }
-
-    /* ── Delivery method tabs ────────────────────────── */
-    .method-tabs {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    }
-    .method-tab {
-      position: relative;
-      border: 2px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 14px 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: #fff;
-    }
-    .method-tab:hover { border-color: var(--blue); background: var(--blue-lt); }
-    .method-tab.selected {
-      border-color: var(--blue);
-      background: var(--blue-lt);
-      box-shadow: 0 0 0 3px rgba(27,94,255,0.12);
-    }
-    .method-tab input[type="radio"] {
-      position: absolute; opacity: 0; pointer-events: none;
-    }
-    .method-tab-icon { font-size: 28px; margin-bottom: 8px; display: block; }
-    .method-tab-label { font-size: 13px; font-weight: 800; }
-    .method-tab-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
-    .method-tab-check {
-      position: absolute; top: 10px; right: 10px;
-      width: 18px; height: 18px;
-      border: 2px solid var(--border);
-      border-radius: 50%;
-      background: #fff;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .method-tab.selected .method-tab-check {
-      background: var(--blue); border-color: var(--blue);
-    }
-    .method-tab.selected .method-tab-check::after {
-      content: '';
-      width: 5px; height: 5px;
-      background: #fff; border-radius: 50%;
-    }
-
-    /* ── Address form ────────────────────────────────── */
-    .addr-form { display: flex; flex-direction: column; gap: 12px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .form-input {
-      height: 44px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 0 14px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--text);
-      background: #fff;
-      transition: border-color 0.18s;
-      outline: none;
-    }
-    .form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,94,255,0.1); }
-    .form-input::placeholder { color: var(--muted); }
-    .form-textarea {
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 14px;
-      font-family: inherit;
-      color: var(--text);
-      resize: vertical;
-      min-height: 80px;
-      transition: border-color 0.18s;
-      outline: none;
-    }
-    .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,94,255,0.1); }
-
-    /* ── Pickup info box ─────────────────────────────── */
-    .pickup-box {
-      background: var(--blue-lt);
-      border: 1.5px dashed var(--blue-md);
-      border-radius: 12px;
-      padding: 14px 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
-    .pickup-box-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-    .pickup-box-body {}
-    .pickup-box-label { font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-    .pickup-box-addr { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.5; }
-    .pickup-box-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-    /* ── Payment method ──────────────────────────────── */
-    .pay-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .pay-tab {
-      position: relative;
-      border: 2px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .pay-tab:hover { border-color: var(--blue); }
-    .pay-tab.selected { border-color: var(--blue); background: var(--blue-lt); box-shadow: 0 0 0 3px rgba(27,94,255,0.12); }
-    .pay-tab input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
-    .pay-tab-icon { font-size: 28px; }
-    .pay-tab-label { font-size: 13px; font-weight: 800; }
-    .pay-tab-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .pay-tab-check {
-      position: absolute; top: 10px; right: 10px;
-      width: 18px; height: 18px; border: 2px solid var(--border);
-      border-radius: 50%; background: #fff; display: flex;
-      align-items: center; justify-content: center; transition: all 0.2s;
-    }
-    .pay-tab.selected .pay-tab-check { background: var(--blue); border-color: var(--blue); }
-    .pay-tab.selected .pay-tab-check::after { content: ''; width: 5px; height: 5px; background: #fff; border-radius: 50%; }
-
-    /* ── Card form ───────────────────────────────────── */
-    .card-form {
-      margin-top: 16px;
-      background: #F9FAFF;
-      border-radius: 12px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 12px;
-      animation: fadeIn 0.2s ease;
-    }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-    .card-form.hidden { display: none; }
-    .card-number-wrap {
-      position: relative;
-    }
-    .card-number-wrap .form-input { padding-right: 50px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
-    .card-brand-icon {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      font-size: 18px; pointer-events: none;
-    }
-    .card-chips {
-      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;
-    }
-    .card-chip {
-      font-size: 11px; font-weight: 600; padding: 3px 10px;
-      border-radius: 20px; background: var(--border); color: var(--muted);
-    }
-
-    /* ── Note ────────────────────────────────────────── */
-    .note-section .form-textarea { width: 100%; }
-
-    /* ── Order summary ───────────────────────────────── */
-    .summary-rows { display: flex; flex-direction: column; gap: 10px; }
-    .summary-row {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .summary-row-label { font-size: 14px; color: var(--muted); font-weight: 500; }
-    .summary-row-val   { font-size: 14px; font-weight: 700; }
-    .summary-divider   { height: 1px; background: var(--border); margin: 4px 0; }
-    .summary-total-label { font-size: 15px; font-weight: 800; }
-    .summary-total-val   { font-size: 20px; font-weight: 900; color: var(--blue); }
-
-    /* ── Fixed bottom bar ────────────────────────────── */
-    .co-bottom {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-      background: #fff; border-top: 1px solid var(--border);
-      padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 -4px 24px rgba(13,15,26,0.10);
-      max-width: 100%;
-    }
-    .co-bottom-total-label { font-size: 12px; color: var(--muted); font-weight: 600; }
-    .co-bottom-total-price { font-size: 20px; font-weight: 900; color: var(--blue); margin-top: 1px; }
-    .co-place-btn {
-      background: linear-gradient(135deg, #1B5EFF, #5B8AFF);
-      color: #fff; border: none; border-radius: 14px;
-      padding: 14px 36px; font-size: 15px; font-weight: 800;
-      cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 14px rgba(27,94,255,0.4);
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .co-place-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.5); }
-    .co-place-btn:active { transform: none; }
-    .co-place-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-    /* ── Success overlay ─────────────────────────────── */
-    .success-overlay {
-      display: none;
-      position: fixed; inset: 0; z-index: 999;
-      background: rgba(13,15,26,0.55);
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(4px);
-    }
-    .success-overlay.show { display: flex; }
-    .success-card {
-      background: #fff; border-radius: 24px;
-      padding: 40px 32px; max-width: 340px; width: 90%;
-      text-align: center;
-      animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1);
-    }
-    @keyframes popIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
-    .success-icon { font-size: 56px; margin-bottom: 16px; display: block; }
-    .success-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
-    .success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
-    .success-btns { display: flex; gap: 10px; }
-    .success-btn-sec {
-      flex: 1; padding: 12px; border: 2px solid var(--border);
-      border-radius: 12px; background: #fff; font-family: inherit;
-      font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text);
-      transition: all 0.15s;
-    }
-    .success-btn-sec:hover { border-color: var(--blue); color: var(--blue); }
-    .success-btn-pri {
-      flex: 1; padding: 12px; border: none;
-      border-radius: 12px; background: var(--blue); color: #fff;
-      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-    }
-
-    /* ── Responsive ──────────────────────────────────── */
-    @media (max-width: 480px) {
-      .form-row { grid-template-columns: 1fr; }
-      .method-tabs, .pay-tabs { grid-template-columns: 1fr; }
-      .co-layout { padding: 12px; }
-    }
+    .dropdown-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #F0F1F8; }
+    .dropdown-item:hover { background: #F7F8FC; }
+    .dropdown-name { font-weight: 600; color: #0D0F1A; font-size: 14px; }
+    .dropdown-address { color: #8890B0; font-size: 12px; margin-top: 2px; }
   </style>
 </head>
 <body>
-
+ <%- include('partials/navbar') %>
   <!-- Top navigation -->
-  <nav class="co-nav">
-    <button class="co-nav-back" onclick="history.back()">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <div class="co-nav-title">Checkout</div>
-    <div class="co-nav-steps">
-      <div class="co-step done"></div>
-      <div class="co-step active"></div>
-      <div class="co-step"></div>
-    </div>
-  </nav>
+
 
   <div class="co-layout">
 
     <!-- 1. Product -->
     <div class="co-card">
       <div class="co-card-header">
-        <div class="co-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-4a2 2 0 0 0-2 0l-8 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l8 4a2 2 0 0 0 2 0l8-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
-        </div>
         <div class="co-card-title">Product</div>
       </div>
       <div class="co-card-body">
@@ -413,9 +60,6 @@
     <!-- 2. Delivery method -->
     <div class="co-card">
       <div class="co-card-header">
-        <div class="co-card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="18.5" r="1.5"/></svg>
-        </div>
         <div class="co-card-title">Delivery method</div>
       </div>
       <div class="co-card-body" style="display:flex;flex-direction:column;gap:14px;">
@@ -449,7 +93,32 @@
                   Contact the seller to confirm location
                 <% } %>
               </div>
-              <div class="pickup-box-note">Arrange pickup time via chat</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                  <div class="pickup-box-note">Arrange pickup time via chat</div>
+                  <button type="button" id="btn-open-map" onclick="toggleCheckoutMap(true)" class="btn" style="padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:#fff;">Select meeting point</button>
+                </div>
+                <input type="hidden" id="checkout-f-location" value="<%= product.location && product.location.address ? product.location.address : '' %>">
+                <input type="hidden" id="checkout-f-lat" value="<%= product.location && product.location.lat ? product.location.lat : '' %>">
+                <input type="hidden" id="checkout-f-lng" value="<%= product.location && product.location.lng ? product.location.lng : '' %>">
+            </div>
+          </div>
+          <div id="checkout-map-wrap" style="display:none;margin-top:12px;">
+            <div style="position:relative;margin-bottom:8px;">
+              <input type="text" id="checkout-location-search" placeholder="Search address or click on map..." style="width:100%;padding:10px 40px 10px 12px;border:1.5px solid #E4E7F2;border-radius:10px;font-size:14px;background:white;outline:none;">
+              <div id="checkout-location-dropdown" style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #E4E7F2;border-radius:8px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+              <button type="button" onclick="geolocateCheckout()" title="Use my current location" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="locate-fixed" style="width:18px;height:18px;stroke:#1B5EFF;"></i>
+              </button>
+            </div>
+            <div id="checkout-location-map" style="width:100%;height:260px;border-radius:12px;border:1.5px solid #E4E7F2;overflow:hidden;background:#EBF0FF;display:flex;align-items:center;justify-content:center;">
+              <div style="text-align:center;color:#8890B0;">
+                <i data-lucide="map" style="width:36px;height:36px;margin-bottom:8px;stroke:#8890B0;"></i>
+                <div style="font-size:13px;font-weight:600;">Loading map...</div>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+              <button type="button" class="btn" onclick="toggleCheckoutMap(false)" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;">Close</button>
+              <button type="button" class="btn" onclick="saveCheckoutLocation()" style="padding:8px 12px;border-radius:10px;background:linear-gradient(135deg,#1B5EFF,#5B8AFF);color:#fff;border:none;">Save location</button>
             </div>
           </div>
         </div>
@@ -491,7 +160,6 @@
     <!-- 3. Payment method -->
     <div class="co-card">
       <div class="co-card-header">
-        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
         <div class="co-card-title">Payment method</div>
       </div>
       <div class="co-card-body">
@@ -551,7 +219,6 @@
     <!-- 4. Notes -->
     <div class="co-card note-section">
         <div class="co-card-header">
-        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>
         <div class="co-card-title">Notes for seller</div>
       </div>
       <div class="co-card-body">
@@ -562,7 +229,6 @@
     <!-- 5. Order summary -->
     <div class="co-card">
         <div class="co-card-header">
-        <div class="co-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v15l4-2 4 2 4-2 4 2V10z"/><line x1="7" y1="7" x2="17" y2="7"/></svg></div>
         <div class="co-card-title">Payment details</div>
       </div>
       <div class="co-card-body">
@@ -770,6 +436,133 @@
         else window.location.href = '/messages';
       } catch { window.location.href = '/messages'; }
     };
+
+    // ── Checkout map integration (adapted from sell.ejs) ─────────────────
+    let checkoutMapInstance = null;
+    let checkoutCurrentMarker = null;
+
+    function toggleCheckoutMap(show) {
+      const wrap = document.getElementById('checkout-map-wrap');
+      wrap.style.display = show ? 'block' : 'none';
+      if (show && !checkoutMapInstance) initCheckoutMap();
+    }
+
+    function initCheckoutMap() {
+      const latVal = parseFloat(document.getElementById('checkout-f-lat').value) || 21.0285;
+      const lngVal = parseFloat(document.getElementById('checkout-f-lng').value) || 105.8542;
+      const hasExisting = !!document.getElementById('checkout-f-lat').value;
+
+      const map = new maplibregl.Map({
+        container: 'checkout-location-map',
+        style: {
+          version: 8,
+          sources: { 'osm': { type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256 } },
+          layers: [{ id:'osm', type:'raster', source:'osm' }]
+        },
+        center: [lngVal, latVal],
+        zoom: 13
+      });
+      checkoutMapInstance = map;
+
+      if (hasExisting) {
+        checkoutCurrentMarker = new maplibregl.Marker().setLngLat([lngVal, latVal]).addTo(map);
+      }
+
+      map.on('click', function(e) {
+        const { lng, lat } = e.lngLat;
+        if (checkoutCurrentMarker) checkoutCurrentMarker.remove();
+        checkoutCurrentMarker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
+        updateCheckoutLocation(lat, lng);
+      });
+
+      initCheckoutAutocomplete(map);
+    }
+
+    async function updateCheckoutLocation(lat, lng) {
+      document.getElementById('checkout-f-lat').value = lat;
+      document.getElementById('checkout-f-lng').value = lng;
+      try {
+        const address = await reverseGeocodeCheckout(lat, lng);
+        document.getElementById('checkout-f-location').value = address;
+        const addrEl = document.querySelector('.pickup-box-addr');
+        if (addrEl) addrEl.textContent = address;
+      } catch (err) { console.error('Geocoding failed:', err); }
+    }
+
+    async function reverseGeocodeCheckout(lat, lng) {
+      const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      return data.display_name;
+    }
+
+    async function searchLocationCheckout(query) {
+      const res  = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+      const data = await res.json();
+      return data.features || [];
+    }
+
+    function initCheckoutAutocomplete(map) {
+      const input    = document.getElementById('checkout-location-search');
+      const dropdown = document.getElementById('checkout-location-dropdown');
+      let timeout;
+
+      input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const query = this.value.trim();
+        if (query.length < 2) { dropdown.style.display = 'none'; return; }
+        timeout = setTimeout(async () => {
+          try {
+            const results = await searchLocationCheckout(query);
+            showCheckoutDropdown(results, map);
+          } catch (err) { console.error('Search failed:', err); }
+        }, 300);
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target))
+          dropdown.style.display = 'none';
+      });
+    }
+
+    function showCheckoutDropdown(results, map) {
+      const dropdown = document.getElementById('checkout-location-dropdown');
+      if (!results.length) { dropdown.style.display = 'none'; return; }
+      dropdown.innerHTML = results.map(r => `
+        <div class="dropdown-item" onclick="selectCheckoutLocation(${r.geometry.coordinates[1]}, ${r.geometry.coordinates[0]}, '${(r.properties.name||r.properties.city||r.properties.country||'').replace(/'/g,"\'")}')">
+          <div class="dropdown-name">${r.properties.name || 'Unknown'}</div>
+          <div class="dropdown-address">${r.properties.city || ''} ${r.properties.country || ''}</div>
+        </div>`).join('');
+      dropdown.style.display = 'block';
+    }
+
+    window.selectCheckoutLocation = function(lat, lng, name) {
+      const map = checkoutMapInstance;
+      if (checkoutCurrentMarker) checkoutCurrentMarker.remove();
+      checkoutCurrentMarker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
+      map.setCenter([lng, lat]);
+      map.setZoom(16);
+      updateCheckoutLocation(lat, lng);
+      document.getElementById('checkout-location-dropdown').style.display = 'none';
+      document.getElementById('checkout-location-search').value = name;
+    };
+
+    function geolocateCheckout() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (checkoutCurrentMarker) checkoutCurrentMarker.remove();
+        checkoutCurrentMarker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(checkoutMapInstance);
+        checkoutMapInstance.setCenter([lng, lat]);
+        checkoutMapInstance.setZoom(16);
+        await updateCheckoutLocation(lat, lng);
+      });
+    }
+
+    function saveCheckoutLocation() {
+      // simply close map; data is already written to hidden inputs and pickup-box-addr
+      toggleCheckoutMap(false);
+    }
   </script>
 
   <style>

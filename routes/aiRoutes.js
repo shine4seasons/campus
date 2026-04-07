@@ -1,6 +1,6 @@
 const router              = require('express').Router();
 const { protect }         = require('../middleware/auth');
-const { describeProduct } = require('../controllers/aiController');
+const { describeProduct } = require('../controllers/ai');
 
 // POST /api/ai/describe — sinh mô tả sản phẩm bằng AI
 router.post('/describe', protect, describeProduct);

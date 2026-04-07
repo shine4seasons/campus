@@ -2,7 +2,7 @@ const router = require('express').Router();
 const {
   getProducts, getProduct, createProduct, updateProduct,
   deleteProduct, getMyProducts, toggleInterested,
-} = require('../controllers/productController');
+} = require('../controllers/product');
 const { protect } = require('../middleware/auth');
 
 // Public

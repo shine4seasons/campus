@@ -149,11 +149,34 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const MY_USER_ID = '<%= String(user._id) %>';
-    let currentConvId = '<%= conversationId || "" %>';
-    let pollInterval = null;
-    let autoScroll = true;
+      // socket.io client will be loaded dynamically below
+      const MY_USER_ID = '<%= String(user._id) %>';
+      let currentConvId = '<%= conversationId || "" %>';
+      let pollInterval = null;
+      let autoScroll = true;
+      const socket = io ? io() : null;
+      let joinedConv = null;
+
+      if (socket) {
+        socket.on('connect', () => {
+          // connection ready
+        });
+
+        socket.on('message', (msg) => {
+          try {
+            // msg.conversationId may be ObjectId or string
+            const convId = msg.conversationId ? String(msg.conversationId) : null;
+            if (convId && convId === currentConvId) {
+              // refresh current messages
+              fetchMessages();
+            }
+            // update inbox for new message
+            fetchInbox();
+          } catch (e) { console.error('socket message handler error', e); }
+        });
+      }
 
     // ── Product Banner ──────────────────────────────────────────────────────
     const COND_LABEL = { new:'New', 'like-new':'Like new', good:'Good', fair:'Fair' };
@@ -282,9 +305,10 @@
         }
 
         list.innerHTML = filtered.map(c => {
-        const partner = c.participants.find(p => String(p._id) !== MY_USER_ID) || { name: 'Unknown', nickname: '' };
-        const name = partner.nickname || partner.name;
-        const initial = name.charAt(0).toUpperCase();
+        // Prefer server-provided partner object, fall back to client-side detection.
+        const partner = c.partner || (c.participants ? c.participants.find(p => String(p._id) !== MY_USER_ID) : null) || { name: 'Unknown', nickname: '' };
+        const name = partner.nickname || partner.name || 'Unknown';
+        const initial = (name && name.charAt) ? name.charAt(0).toUpperCase() : '?';
         const activeClass = c._id === currentConvId ? 'active' : '';
         const unreadHtml = c.unreadCount > 0 ? `<div class="unread-badge">${c.unreadCount}</div>` : '';
         const prodName = c.product ? c.product.title : 'Deleted Product';
@@ -317,6 +341,12 @@
 
     window.selectConversation = async function(convId, partnerName, partnerDataRaw) {
       currentConvId = convId;
+        // join socket room
+        if (socket) {
+          if (joinedConv && joinedConv !== convId) socket.emit('leaveConv', joinedConv);
+          socket.emit('joinConv', convId);
+          joinedConv = convId;
+        }
       tryLoadBannerFromStorage(convId);
       document.getElementById('chat-empty').style.display = 'none';
       document.getElementById('chat-header').classList.add('active');
@@ -404,8 +434,9 @@
         if (json.success) {
           input.value = '';
           autoScroll  = true;
-          await fetchMessages();
-          fetchInbox();
+            // fetchMessages will also be triggered by socket; but call once to be safe
+            await fetchMessages();
+            fetchInbox();
         }
       } catch (err) { console.error('Error sending message:', err); }
 

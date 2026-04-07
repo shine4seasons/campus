@@ -1,7 +1,7 @@
 const router   = require('express').Router();
 const passport = require('passport');
 const { googleCallback, getMe, logout, refresh, updateProfile } =
-  require('../controllers/authController');
+  require('../controllers/auth');
 const { protect } = require('../middleware/auth');
 
 // Bước 1: redirect sang Google

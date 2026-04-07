@@ -88,11 +88,29 @@ button { cursor:pointer; font-family:inherit; border:none; background:none; }
   --radius-md:     12px;
   --radius-lg:     20px;
   --radius-xl:     28px;
+  /* Typography scale (centralized) */
+  --font-h1: 32px;
+  --font-h2: 20px;
+  --font-h3: 18px;
+  --font-body: 16px;
+  --font-sub: 13px;
+  --font-btn: 15px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
 }
 
 /* ── Utilities ─────────────────────────── */
 .container { max-width:1200px; margin:0 auto; padding:0 24px; }
 .hidden { display:none !important; }
+
+/* ── Typography utilities ───────────────── */
+.type-h1 { font-size: var(--font-h1); font-weight: var(--fw-bold); line-height:1.15; }
+.type-h2 { font-size: var(--font-h2); font-weight: var(--fw-bold); line-height:1.2; }
+.type-h3 { font-size: var(--font-h3); font-weight: var(--fw-bold); line-height:1.25; }
+.type-body { font-size: var(--font-body); font-weight: var(--fw-regular); line-height:1.6; }
+.type-sub  { font-size: var(--font-sub); color: var(--text-3); font-weight: var(--fw-medium); }
+.type-btn  { font-size: var(--font-btn); font-weight: var(--fw-bold); }
 
 /* ── Buttons ───────────────────────────── */
 .btn {
