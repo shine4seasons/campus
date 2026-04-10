@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+<%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+  
+
+<main class="main">
+
+  <div class="content">
+
+    <!-- ── SECTION: Dashboard ── -->
+    <section class="section active" id="sDash">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-top">
+            <div><div class="stat-label">Listing đang bán</div></div>
+            <div class="stat-icon" style="background:#dcfce7;color:#16a34a">
+              <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+            </div>
+          </div>
+          <div class="stat-val">12</div>
+          <div class="stat-delta delta-up">↑ +2 tuần này</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div><div class="stat-label">Đơn chờ xác nhận</div></div>
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <div class="stat-val" style="color:#d97706">2</div>
+          <div class="stat-delta" style="color:#d97706">Cần xử lý ngay</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div><div class="stat-label">Doanh thu tháng này</div></div>
+            <div class="stat-icon" style="background:#dbeafe;color:#2563eb">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
+            </div>
+          </div>
+          <div class="stat-val">4.2M ₫</div>
+          <div class="stat-delta delta-up">↑ +18% vs tháng trước</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div><div class="stat-label">Đánh giá TB</div></div>
+            <div class="stat-icon" style="background:#fef3c7;color:#d97706">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+          <div class="stat-val">4.9 ⭐</div>
+          <div class="stat-delta delta-neu">Dựa trên 28 đánh giá</div>
+        </div>
+      </div>
+
+      <div class="alert-box alert-info" style="margin-bottom:18px">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="alert-box-text">Bạn có 2 đơn hàng đang chờ xác nhận. Vui lòng xác nhận trong 24 giờ để tránh bị huỷ tự động.</div>
+      </div>
+
+      <div class="quick-grid">
+        <div class="quick-card" onclick="nav(document.querySelector('#sellerNav [data-section=sListings]'), 'sListings')">
+          <div class="qc-icon" style="background:#dbeafe;color:#2563eb">
+            <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          </div>
+          <div class="qc-body"><div class="qc-label">Quản lý listing</div><div class="qc-sub">12 đang bán · 8 đã bán</div></div>
+        </div>
+        <div class="quick-card" onclick="nav(document.querySelector('#sellerNav [data-section=sOrders]'), 'sOrders')">
+          <div class="qc-icon" style="background:#fef3c7;color:#d97706">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="qc-body"><div class="qc-label">Xem đơn hàng</div><div class="qc-sub">2 đơn chờ xác nhận</div></div>
+        </div>
+        <div class="quick-card" onclick="showToast('Chuyển đến trang đăng sản phẩm','info')">
+          <div class="qc-icon" style="background:#dcfce7;color:#16a34a">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="qc-body"><div class="qc-label">Đăng sản phẩm mới</div><div class="qc-sub">Tạo listing mới</div></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title">Doanh thu của tôi — 2026</div><div class="card-sub">Theo tháng (₫ nghìn)</div></div>
+          </div>
+          <div style="position:relative;height:200px"><canvas id="cSellerRev"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title">Danh mục đã bán</div><div class="card-sub">Phân bổ</div></div>
+          </div>
+          <div style="position:relative;height:160px;margin-bottom:12px"><canvas id="cSellerCat"></canvas></div>
+          <div class="legend" style="flex-direction:column;gap:7px">
+            <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Electronics 45%</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Books 35%</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#f59e0b"></span>Khác 20%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: Listings ── -->
+    <section class="section" id="sListings">
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <div><div class="tbl-title">Sản phẩm của tôi</div><div class="tbl-count">20 listing tổng cộng</div></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="filter-pills">
+              <button class="f-pill on">Tất cả</button>
+              <button class="f-pill">Đang bán</button>
+              <button class="f-pill">Đã bán</button>
+              <button class="f-pill">Bị ẩn</button>
+            </div>
+            <button class="btn btn-primary" onclick="showToast('Đến trang đăng sản phẩm','info')">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Đăng sản phẩm
+            </button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Lượt xem</th><th>Quan tâm</th><th>Đăng</th><th>Trạng thái</th><th>Thao tác</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Máy tính Casio FX-580</strong></td>
+              <td style="color:var(--t2)">Electronics</td>
+              <td>320,000 ₫</td><td>124</td><td>8</td>
+              <td style="color:var(--t2);font-size:12px">02/04</td>
+              <td><span class="badge badge-active">Đang bán</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary">Sửa</button><button class="act-btn danger">Ẩn</button></div></td>
+            </tr>
+            <tr>
+              <td><strong>Giáo trình Toán cao cấp T1</strong></td>
+              <td style="color:var(--t2)">Books</td>
+              <td>60,000 ₫</td><td>55</td><td>4</td>
+              <td style="color:var(--t2);font-size:12px">28/03</td>
+              <td><span class="badge badge-active">Đang bán</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary">Sửa</button><button class="act-btn danger">Ẩn</button></div></td>
+            </tr>
+            <tr>
+              <td><strong>Tai nghe Sony WH-1000XM4</strong></td>
+              <td style="color:var(--t2)">Electronics</td>
+              <td>3,200,000 ₫</td><td>341</td><td>22</td>
+              <td style="color:var(--t2);font-size:12px">15/03</td>
+              <td><span class="badge badge-sold">Đã bán</span></td>
+              <td><div class="tbl-actions"><button class="act-btn">Xem</button></div></td>
+            </tr>
+            <tr>
+              <td><strong>Balo laptop 15.6"</strong></td>
+              <td style="color:var(--t2)">Khác</td>
+              <td>280,000 ₫</td><td>78</td><td>6</td>
+              <td style="color:var(--t2);font-size:12px">10/03</td>
+              <td><span class="badge badge-active">Đang bán</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary">Sửa</button><button class="act-btn danger">Ẩn</button></div></td>
+            </tr>
+            <tr>
+              <td><strong>Đèn bàn LED điều chỉnh</strong></td>
+              <td style="color:var(--t2)">Nội thất</td>
+              <td>150,000 ₫</td><td>33</td><td>2</td>
+              <td style="color:var(--t2);font-size:12px">05/03</td>
+              <td><span class="badge badge-hidden">Bị ẩn</span></td>
+              <td><div class="tbl-actions"><button class="act-btn success" onclick="showToast('Đã kích hoạt lại sản phẩm','ok')">Hiển thị</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pg-info">Hiển thị 1–5 / 20</span>
+          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">3</button>
+          <button class="pg-btn">4</button>
+          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: Orders ── -->
+    <section class="section" id="sOrders">
+      <div class="status-counters">
+        <div class="status-count-card" style="border-top-color:#d97706"><div class="sc-label">Chờ xác nhận</div><div class="sc-val" style="color:#d97706">2</div></div>
+        <div class="status-count-card" style="border-top-color:#2563eb"><div class="sc-label">Đã xác nhận</div><div class="sc-val" style="color:#2563eb">3</div></div>
+        <div class="status-count-card" style="border-top-color:#16a34a"><div class="sc-label">Hoàn thành</div><div class="sc-val" style="color:#16a34a">23</div></div>
+        <div class="status-count-card" style="border-top-color:#dc2626"><div class="sc-label">Đã huỷ</div><div class="sc-val" style="color:#dc2626">2</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <div><div class="tbl-title">Đơn hàng nhận được</div><div class="tbl-count">30 đơn tổng</div></div>
+          <div class="filter-pills">
+            <button class="f-pill on">Tất cả</button>
+            <button class="f-pill">Cần xử lý</button>
+            <button class="f-pill">Đang tiến hành</button>
+            <button class="f-pill">Đã xong</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Mã đơn</th><th>Sản phẩm</th><th>Người mua</th><th>Giá</th><th>Giao hàng</th><th>Thanh toán</th><th>Ghi chú</th><th>Trạng thái</th><th>Thao tác</th></tr>
+          </thead>
+          <tbody>
+            <tr style="background:#fffbeb">
+              <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-0098</td>
+              <td>Casio FX-580</td><td style="color:var(--t2)">Hùng Anh</td><td>320,000 ₫</td>
+              <td style="color:var(--t2)">Pickup</td><td style="color:var(--t2)">Cash</td>
+              <td style="color:var(--t2);font-size:12px">Gặp sau 5h</td>
+              <td><span class="badge badge-pending">Pending</span></td>
+              <td><div class="tbl-actions"><button class="act-btn success" onclick="showToast('Đã xác nhận đơn #0098','ok')">Xác nhận</button><button class="act-btn danger" onclick="showToast('Đã huỷ đơn #0098','ok')">Huỷ</button></div></td>
+            </tr>
+            <tr style="background:#fffbeb">
+              <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-0094</td>
+              <td>Balo laptop</td><td style="color:var(--t2)">Lan Chi</td><td>280,000 ₫</td>
+              <td style="color:var(--t2)">Ship</td><td style="color:var(--t2)">Card</td>
+              <td style="color:var(--t3);font-size:12px">—</td>
+              <td><span class="badge badge-pending">Pending</span></td>
+              <td><div class="tbl-actions"><button class="act-btn success" onclick="showToast('Đã xác nhận đơn #0094','ok')">Xác nhận</button><button class="act-btn danger" onclick="showToast('Đã huỷ đơn #0094','ok')">Huỷ</button></div></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-0090</td>
+              <td>Casio FX-580</td><td style="color:var(--t2)">Tú Anh</td><td>320,000 ₫</td>
+              <td style="color:var(--t2)">Pickup</td><td style="color:var(--t2)">Cash</td>
+              <td style="color:var(--t3);font-size:12px">—</td>
+              <td><span class="badge badge-confirmed">Confirmed</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Đã đánh dấu hoàn thành','ok')">Hoàn thành</button></div></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-0087</td>
+              <td>Giáo trình Toán</td><td style="color:var(--t2)">Hải Yến</td><td>60,000 ₫</td>
+              <td style="color:var(--t2)">Pickup</td><td style="color:var(--t2)">Cash</td>
+              <td style="color:var(--t3);font-size:12px">—</td>
+              <td><span class="badge badge-completed">Completed</span></td>
+              <td><div class="tbl-actions"><button class="act-btn">Xem</button></div></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-0082</td>
+              <td>Sony WH-1000XM4</td><td style="color:var(--t2)">Lan Chi</td><td>3,200,000 ₫</td>
+              <td style="color:var(--t2)">Ship</td><td style="color:var(--t2)">Card</td>
+              <td style="color:var(--t3);font-size:12px">—</td>
+              <td><span class="badge badge-completed">Completed</span></td>
+              <td><div class="tbl-actions"><button class="act-btn">Xem</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── SECTION: Revenue ── -->
+    <section class="section" id="sRevenue">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-top"><div><div class="stat-label">Tổng doanh thu</div></div></div><div class="stat-val">28.4M ₫</div><div class="stat-delta delta-neu">Tất cả thời gian</div></div>
+        <div class="stat-card"><div class="stat-top"><div><div class="stat-label">Tháng này</div></div></div><div class="stat-val">4.2M ₫</div><div class="stat-delta delta-up">↑ +18%</div></div>
+        <div class="stat-card"><div class="stat-top"><div><div class="stat-label">Tổng đã bán</div></div></div><div class="stat-val">28 sản phẩm</div><div class="stat-delta delta-neu">Trên 20 listing</div></div>
+        <div class="stat-card"><div class="stat-top"><div><div class="stat-label">Giá trị TB / đơn</div></div></div><div class="stat-val">1.01M ₫</div><div class="stat-delta delta-up">↑ +5%</div></div>
+      </div>
+      <div class="card" style="margin-bottom:22px">
+        <div class="card-head"><div><div class="card-title">Xu hướng doanh thu</div><div class="card-sub">Theo tháng (₫ nghìn)</div></div></div>
+        <div style="position:relative;height:220px"><canvas id="cRevTrend"></canvas></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><div><div class="tbl-title">Lịch sử giao dịch hoàn thành</div></div></div>
+        <table>
+          <thead><tr><th>Sản phẩm</th><th>Người mua</th><th>Ngày</th><th>Giá bán</th><th>Hình thức</th></tr></thead>
+          <tbody>
+            <tr><td>Sony WH-1000XM4</td><td style="color:var(--t2)">Lan Chi</td><td style="color:var(--t2)">28/03/2026</td><td style="font-weight:700;color:#16a34a">3,200,000 ₫</td><td style="color:var(--t2)">Ship</td></tr>
+            <tr><td>Casio FX-580</td><td style="color:var(--t2)">Tú Anh</td><td style="color:var(--t2)">20/03/2026</td><td style="font-weight:700;color:#16a34a">320,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
+            <tr><td>Giáo trình Toán</td><td style="color:var(--t2)">Hải Yến</td><td style="color:var(--t2)">15/03/2026</td><td style="font-weight:700;color:#16a34a">60,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
+            <tr><td>Balo laptop</td><td style="color:var(--t2)">Hùng Anh</td><td style="color:var(--t2)">05/03/2026</td><td style="font-weight:700;color:#16a34a">280,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── SECTION: Messages ── -->
+    <section class="section" id="sMessages">
+      <div class="alert-box alert-info" style="margin-bottom:16px">
+        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div class="alert-box-text">Bạn có 4 tin nhắn chưa đọc. <a href="/messages" style="color:var(--blue);font-weight:600">Mở hộp thư →</a></div>
+      </div>
+      <div class="two-col">
+        <div class="tbl-wrap" style="margin-bottom:0">
+          <div class="tbl-toolbar"><div><div class="tbl-title">Cuộc trò chuyện gần đây</div></div></div>
+          <div style="padding: 0 20px">
+            <div class="list-item"><div class="li-avatar" style="background:#dbeafe;color:#1d4ed8">HA</div><div class="li-info"><div class="li-name">Hùng Anh<span style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 phút trước</span></div><div class="li-sub">Casio FX-580 — Anh ơi mai giao được không?</div></div><span class="nav-badge" style="font-size:10px">2</span></div>
+            <div class="list-item"><div class="li-avatar" style="background:#dcfce7;color:#15803d">LC</div><div class="li-info"><div class="li-name">Lan Chi<span style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">1 giờ trước</span></div><div class="li-sub">Balo — Địa chỉ giao hàng của em là...</div></div><span class="nav-badge" style="font-size:10px">1</span></div>
+            <div class="list-item"><div class="li-avatar" style="background:#fef3c7;color:#b45309">TA</div><div class="li-info"><div class="li-name">Tú Anh<span style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">Hôm qua</span></div><div class="li-sub">Đã nhận hàng rồi, cảm ơn anh</div></div></div>
+            <div class="list-item"><div class="li-avatar" style="background:#ede9fe;color:#6d28d9">HY</div><div class="li-info"><div class="li-name">Hải Yến<span style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 ngày trước</span></div><div class="li-sub">Giáo trình — Ok anh, em nhận hàng rồi</div></div><span class="nav-badge" style="font-size:10px">1</span></div>
+          </div>
+          <div style="padding:12px 20px;border-top:1px solid var(--border)">
+            <a href="/messages" class="btn btn-primary" style="display:inline-flex">Mở hộp thư đầy đủ →</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Thống kê chat</div></div></div>
+          <div class="prog-row">
+            <div class="prog-item">
+              <div class="prog-meta"><span class="prog-label">Tỷ lệ phản hồi</span><span class="prog-val">95%</span></div>
+              <div class="prog-bar"><div class="prog-fill" style="width:95%;background:#22c55e"></div></div>
+            </div>
+            <div class="prog-item">
+              <div class="prog-meta"><span class="prog-label">Phản hồi trong 1 giờ</span><span class="prog-val">82%</span></div>
+              <div class="prog-bar"><div class="prog-fill" style="width:82%;background:#2563eb"></div></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Tổng cuộc trò chuyện</span><span style="font-weight:600">34</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Chưa đọc</span><span style="font-weight:600;color:#d97706">4</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Thời gian phản hồi TB</span><span style="font-weight:600">24 phút</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: Profile ── -->
+    <section class="section" id="sProfile">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Thông tin cá nhân</div><div class="card-sub">Hiển thị trên trang seller</div></div></div>
+          <div class="form-grid">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Họ và tên</label><input class="form-input" value="Trần Ngọc"></div>
+              <div class="form-group"><label class="form-label">Nickname</label><input class="form-input" value="ngoc.t"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Số điện thoại</label><input class="form-input" value="0912 345 678" type="tel"></div>
+              <div class="form-group"><label class="form-label">Trường đại học</label><input class="form-input" value="HUST"></div>
+            </div>
+            <div class="form-group"><label class="form-label">MSSV</label><input class="form-input" value="20200001"></div>
+            <div class="form-group"><label class="form-label">Giới thiệu bản thân</label><textarea class="form-textarea">Bán đồ điện tử, sách giáo khoa tại HUST. Giao dịch nhanh, uy tín. Liên hệ trực tiếp để được hỗ trợ.</textarea></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="showToast('Đã lưu thông tin','ok')">Lưu thay đổi</button>
+              <button class="btn btn-outline" onclick="showToast('Đã hủy chỉnh sửa','info')">Hủy</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-head"><div><div class="card-title">Thống kê seller</div></div></div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="list-item"><div class="li-info"><div class="li-name">Điểm đánh giá</div><div class="li-sub">Dựa trên 28 đánh giá</div></div><div style="font-size:20px;font-weight:800;color:#d97706">4.9 ⭐</div></div>
+              <div class="list-item"><div class="li-info"><div class="li-name">Tổng đã bán</div></div><div class="li-val">28 sản phẩm</div></div>
+              <div class="list-item"><div class="li-info"><div class="li-name">Tổng doanh thu</div></div><div class="li-val" style="color:#16a34a">28.4M ₫</div></div>
+              <div class="list-item"><div class="li-info"><div class="li-name">Thành viên từ</div></div><div class="li-val">Tháng 1, 2026</div></div>
+              <div class="list-item"><div class="li-info"><div class="li-name">Trạng thái profile</div></div><span class="badge badge-active">Hoàn chỉnh</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div><div class="card-title">Đánh giá gần đây</div></div><a class="card-action" href="#">Xem tất cả</a></div>
+            <div class="review-item">
+              <div class="review-top"><span class="review-author">Hùng Anh</span><span class="review-stars">★★★★★</span></div>
+              <div class="review-text">Seller rất nhiệt tình, giao hàng đúng hẹn và sản phẩm đúng mô tả.</div>
+              <div class="review-date">05/04/2026</div>
+            </div>
+            <div class="review-item">
+              <div class="review-top"><span class="review-author">Tú Anh</span><span class="review-stars">★★★★★</span></div>
+              <div class="review-text">Sản phẩm chất lượng, giao dịch nhanh, sẽ mua lại.</div>
+              <div class="review-date">20/03/2026</div>
+            </div>
+            <div class="review-item">
+              <div class="review-top"><span class="review-author">Lan Chi</span><span class="review-stars">★★★★☆</span></div>
+              <div class="review-text">Hàng tốt, giao hơi chậm nhưng có thông báo trước.</div>
+              <div class="review-date">28/03/2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /.content -->
+</main>
+
+<div id="toast-wrap"></div>
+
+<!-- Seller navigation (used by quick-card shortcuts) -->
+<nav id="sellerNav" style="display:none" aria-hidden="true">
+  <div class="nav-item" data-section="sDash"     onclick="nav(this,'sDash')"></div>
+  <div class="nav-item" data-section="sListings"  onclick="nav(this,'sListings')"></div>
+  <div class="nav-item" data-section="sOrders"    onclick="nav(this,'sOrders')"></div>
+  <div class="nav-item" data-section="sRevenue"   onclick="nav(this,'sRevenue')"></div>
+  <div class="nav-item" data-section="sMessages"  onclick="nav(this,'sMessages')"></div>
+  <div class="nav-item" data-section="sProfile"   onclick="nav(this,'sProfile')"></div>
+</nav>
+
+<script>window.INITIAL_SECTION = "<%= (typeof initialSection !== 'undefined' ? initialSection : 'sDash') %>";</script>
+<%- include('partials/dashboard-scripts') %>
+</body>
+</html>

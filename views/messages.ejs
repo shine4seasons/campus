@@ -191,7 +191,7 @@
       const condLabel = COND_LABEL[productData.condition] || productData.condition || '';
       const imgHtml = productData.image
         ? `<img class="product-banner-img" src="${productData.image}" alt="">`
-        : `<div class="product-banner-img-placeholder">📦</div>`;
+        : `<div class="product-banner-img-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg></div>`;
 
       banner.innerHTML = `
         ${imgHtml}
@@ -321,7 +321,7 @@
                 <div class="conv-name">${name}</div>
                 ${unreadHtml}
               </div>
-              <div class="conv-product">📦 ${prodName}</div>
+              <div class="conv-product"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:6px;vertical-align:middle;display:inline-block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg> ${prodName}</div>
               <div class="conv-lastmsg">${c.lastMessage || '...'}</div>
             </div>
           </div>

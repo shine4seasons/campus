@@ -1,0 +1,223 @@
+<script>
+  /* ── Page metadata ── */
+  // Ensure a global PAGE_META object exists and merge these entries without redeclaring a global const
+  window.PAGE_META = window.PAGE_META || {};
+  Object.assign(window.PAGE_META, {
+    aDash:      { title:'Dashboard overview',    sub:'Thứ Hai, 6 tháng 4, 2026',   cta:'Tạo báo cáo' },
+    aAnalytics: { title:'Analytics',             sub:'Dữ liệu theo thời gian thực', cta:'Export CSV' },
+    aUsers:     { title:'Quản lý người dùng',    sub:'1,284 tài khoản',             cta:'Mời user' },
+    aProducts:  { title:'Quản lý sản phẩm',      sub:'347 listing',                 cta:'Xem báo cáo' },
+    aOrders:    { title:'Quản lý đơn hàng',      sub:'106 đơn hàng',                cta:'Export đơn' },
+    aReports:   { title:'Kiểm duyệt & báo cáo', sub:'3 mục chờ xử lý',             cta:'Mark all read' },
+    aSettings:  { title:'Cài đặt hệ thống',      sub:'Admin console',               cta:'Lưu cài đặt' },
+    sDash:      { title:'Seller dashboard',      sub:'Chào buổi sáng, Trần Ngọc 👋', cta:'Đăng sản phẩm' },
+    sListings:  { title:'Sản phẩm của tôi',      sub:'20 listing',                  cta:'+ Đăng sản phẩm' },
+    sOrders:    { title:'Đơn hàng nhận được',    sub:'30 đơn tổng',                  cta:'Export' },
+    sRevenue:   { title:'Doanh thu',             sub:'Tổng: 28.4M ₫',               cta:'Export CSV' },
+    sMessages:  { title:'Tin nhắn',              sub:'4 chưa đọc',                  cta:'Mở hộp thư' },
+    sProfile:   { title:'Hồ sơ của tôi',         sub:'Chỉnh sửa thông tin',         cta:'Xem trang public' },
+  });
+
+  /* ── Navigation ── */
+  function nav(el, id) {
+    if (!el) return;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    showSection(id);
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById(id);
+    if (sec) sec.classList.add('active');
+
+    const meta = window.PAGE_META[id] || {};
+    const pgTitleEl = document.getElementById('pgTitle');
+    const pgSubEl = document.getElementById('pgSub');
+    const primaryLabelEl = document.getElementById('tbPrimaryLabel');
+    if (pgTitleEl) pgTitleEl.textContent = meta.title || id;
+    if (pgSubEl)   pgSubEl.textContent   = meta.sub   || '';
+    if (primaryLabelEl) primaryLabelEl.textContent = meta.cta || 'Action';
+
+    initCharts(id);
+  }
+
+  /* ── Role switcher ── */
+  function switchRole(role) {
+    if (document.getElementById('rAdmin')) document.getElementById('rAdmin').classList.toggle('active', role === 'admin');
+    if (document.getElementById('rSeller')) document.getElementById('rSeller').classList.toggle('active', role === 'seller');
+    if (document.getElementById('adminNav')) document.getElementById('adminNav').style.display  = role === 'admin'  ? 'block' : 'none';
+    if (document.getElementById('sellerNav')) document.getElementById('sellerNav').style.display = role === 'seller' ? 'block' : 'none';
+
+    if (role === 'admin') {
+      if (document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent = 'A';
+      if (document.getElementById('sbName')) document.getElementById('sbName').textContent   = 'Admin User';
+      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent   = 'Super Admin';
+      nav(document.querySelector('#adminNav .nav-item'), 'aDash');
+    } else {
+      if (document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent = 'TN';
+      if (document.getElementById('sbName')) document.getElementById('sbName').textContent   = 'Trần Ngọc';
+      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent   = 'Seller';
+      nav(document.querySelector('#sellerNav .nav-item'), 'sDash');
+    }
+  }
+
+  /* ── Filter pills ── */
+  document.querySelectorAll('.filter-pills').forEach(group => {
+    group.querySelectorAll('.f-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        group.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
+        pill.classList.add('on');
+      });
+    });
+  });
+
+  /* ── Toast ── */
+  function showToast(msg, type = 'ok') {
+    const wrap = document.getElementById('toast-wrap');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    const icons = {
+      ok:   '<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+      err:  '<svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      info: '<svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    };
+    t.innerHTML = (icons[type] || '') + msg;
+    wrap.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity .3s';
+      setTimeout(() => t.remove(), 300);
+    }, 2800);
+  }
+
+  /* ── Charts ── */
+  // Use a single dashboard namespace on window to avoid redeclaring values across templates
+  window._dashboard = window._dashboard || {};
+  window._dashboard.chartInited = window._dashboard.chartInited || {};
+  var chartInited = window._dashboard.chartInited;
+
+  window._dashboard.COLORS = window._dashboard.COLORS || { BLUE:'#2563eb', GREEN:'#22c55e', AMBER:'#f59e0b', PURPLE:'#8b5cf6', RED:'#ef4444', TEAL:'#06b6d4' };
+  var BLUE = window._dashboard.COLORS.BLUE;
+  var GREEN = window._dashboard.COLORS.GREEN;
+  var AMBER = window._dashboard.COLORS.AMBER;
+  var PURPLE = window._dashboard.COLORS.PURPLE;
+  var RED = window._dashboard.COLORS.RED;
+  var TEAL = window._dashboard.COLORS.TEAL;
+
+  window._dashboard.BASE_OPTS = window._dashboard.BASE_OPTS || {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { cornerRadius: 6, padding: 8 } },
+    animation: { duration: 600 },
+  };
+  var BASE_OPTS = window._dashboard.BASE_OPTS;
+
+  window._dashboard.AXIS_OPTS = window._dashboard.AXIS_OPTS || {
+    grid: { color: 'rgba(100,116,139,.1)' },
+    ticks: { color: '#94a3b8', font: { size: 11, family: "'Be Vietnam Pro'" } },
+    border: { display: false },
+  };
+  var AXIS_OPTS = window._dashboard.AXIS_OPTS;
+
+  window._dashboard.X_NO_GRID = window._dashboard.X_NO_GRID || Object.assign({}, window._dashboard.AXIS_OPTS, { grid: { display: false } });
+  var X_NO_GRID = window._dashboard.X_NO_GRID;
+
+  function initCharts(id) {
+    if (chartInited[id]) return;
+    chartInited[id] = true;
+
+    if (id === 'aDash') {
+      new Chart(document.getElementById('cAdminGMV'), {
+        type: 'bar',
+        data: {
+          labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
+          datasets: [
+            { label: 'GMV', data: [18,24,21,42,0,0,0,0,0,0,0,0], backgroundColor: BLUE+'33', borderColor: BLUE, borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
+            { type: 'line', label: 'Orders', data: [32,45,38,98,0,0,0,0,0,0,0,0], borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
+          ],
+        },
+        options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'M' } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display:false } }, x: X_NO_GRID } },
+      });
+      new Chart(document.getElementById('cAdminCat'), {
+        type: 'doughnut',
+        data: { labels: ['Electronics','Books','Clothing','Other'], datasets: [{ data: [28,24,19,29], backgroundColor: [BLUE, GREEN, AMBER, PURPLE], borderWidth: 0, hoverOffset: 6 }] },
+        options: { ...BASE_OPTS, cutout: '70%' },
+      });
+    }
+
+    if (id === 'aAnalytics') {
+      new Chart(document.getElementById('cUserGrowth'), {
+        type: 'line',
+        data: { labels: ['T1','T2','T3','T4'], datasets: [{ data: [820,980,1140,1284], borderColor: BLUE, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: BLUE, tension: .4, fill: true, backgroundColor: BLUE+'18' }] },
+        options: { ...BASE_OPTS, scales: { y: AXIS_OPTS, x: X_NO_GRID } },
+      });
+      new Chart(document.getElementById('cDelivery'), {
+        type: 'doughnut',
+        data: { labels: ['Pickup','Ship'], datasets: [{ data: [63,37], backgroundColor: [BLUE, GREEN], borderWidth: 0 }] },
+        options: { ...BASE_OPTS, cutout: '65%' },
+      });
+      new Chart(document.getElementById('cPayment'), {
+        type: 'doughnut',
+        data: { labels: ['Cash','Card'], datasets: [{ data: [71,29], backgroundColor: [AMBER, PURPLE], borderWidth: 0 }] },
+        options: { ...BASE_OPTS, cutout: '65%' },
+      });
+      new Chart(document.getElementById('cOrderStatus'), {
+        type: 'doughnut',
+        data: { labels: ['Completed','Confirmed','Pending','Cancelled'], datasets: [{ data: [62,23,7,8], backgroundColor: [GREEN, BLUE, AMBER, RED], borderWidth: 0 }] },
+        options: { ...BASE_OPTS, cutout: '65%' },
+      });
+    }
+
+    if (id === 'aReports') {
+      new Chart(document.getElementById('cRevCat'), {
+        type: 'bar',
+        data: { labels: ['Electronics','Books','Clothing','Furniture','Other'], datasets: [{ data: [18.4,6.2,4.8,3.1,2.9], backgroundColor: [BLUE+'cc',GREEN+'cc',AMBER+'cc',PURPLE+'cc',TEAL+'cc'], borderWidth: 0, borderRadius: 5 }] },
+        options: { ...BASE_OPTS, indexAxis: 'y', scales: { x: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'M' } }, y: X_NO_GRID } },
+      });
+      new Chart(document.getElementById('cWeekly'), {
+        type: 'line',
+        data: { labels: ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14'], datasets: [{ data: [8,12,9,15,11,18,14,22,16,19,21,25,20,24], borderColor: TEAL, borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: TEAL, tension: .4, fill: true, backgroundColor: TEAL+'18' }] },
+        options: { ...BASE_OPTS, scales: { y: AXIS_OPTS, x: X_NO_GRID } },
+      });
+    }
+
+    if (id === 'sDash') {
+      new Chart(document.getElementById('cSellerRev'), {
+        type: 'bar',
+        data: { labels: ['T1','T2','T3','T4'], datasets: [{ data: [1200,2800,1900,4200], backgroundColor: BLUE+'44', borderColor: BLUE, borderWidth: 2, borderRadius: 6 }] },
+        options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'K' } }, x: X_NO_GRID } },
+      });
+      new Chart(document.getElementById('cSellerCat'), {
+        type: 'doughnut',
+        data: { labels: ['Electronics','Books','Other'], datasets: [{ data: [45,35,20], backgroundColor: [BLUE, GREEN, AMBER], borderWidth: 0 }] },
+        options: { ...BASE_OPTS, cutout: '68%' },
+      });
+    }
+
+    if (id === 'sRevenue') {
+      new Chart(document.getElementById('cRevTrend'), {
+        type: 'line',
+        data: { labels: ['T1','T2','T3','T4'], datasets: [{ data: [1200,2800,1900,4200], borderColor: GREEN, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: GREEN, tension: .4, fill: true, backgroundColor: GREEN+'18' }] },
+        options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'K' } }, x: X_NO_GRID } },
+      });
+    }
+  }
+
+  /* ── Boot ── */
+  // Defer boot until DOM is ready so canvases exist when charts are created
+  function _bootDashboard() {
+    const initial = (window.INITIAL_SECTION || '').trim();
+    if (initial) {
+      if (typeof showSection === 'function') showSection(initial);
+      initCharts(initial || 'aDash');
+    } else {
+      initCharts('aDash');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bootDashboard);
+  } else {
+    _bootDashboard();
+  }
+</script>

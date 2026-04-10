@@ -24,11 +24,12 @@
 </head>
 <body>
   <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
 
   <%
     const p         = product;
     const seller    = p.seller || {};
-    const isOwner   = user && (String(p.seller && p.seller._id ? p.seller._id : p.seller) === String(user._id));
+    const isOwner   = user && (String(p.seller && p.seller._id ? p.seller._id : p.seller) === String(user && user._id));
     const isSold    = p.status === 'sold';
     const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
     const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
@@ -59,7 +60,9 @@
         <% if (p.images && p.images[0]) { %>
           <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>">
         <% } else { %>
-          <span style="font-size:80px;"><%= CAT_EMOJI[p.category] || '📦' %></span>
+          <div style="font-size:80px; display:flex; align-items:center; justify-content:center; color:#1B5EFF;">
+            <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>
+          </div>
         <% } %>
       </div>
       <% if (p.images && p.images.length > 1) { %>
@@ -88,9 +91,9 @@
           <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price) %>
         </div>
         <div class="product-meta" style="margin-bottom:16px;">
-          <span>👁 <%= p.views || 0 %> views</span>
-          <span>❤️ <span id="interested-count"><%= p.interested || 0 %></span> interested</span>
-          <span>🕐 <%= timeAgo(p.createdAt) %></span>
+          <span><%= p.views || 0 %> views</span>
+          <span><span id="interested-count"><%= p.interested || 0 %></span> interested</span>
+          <span><%= timeAgo(p.createdAt) %></span>
         </div>
 
         <% if (isSold) { %>
@@ -174,7 +177,9 @@
               <% if (rp.images && rp.images[0]) { %>
                 <img src="<%= rp.images[0] %>" style="width:100%;height:100%;object-fit:cover;">
               <% } else { %>
-                <%= CAT_EMOJI[rp.category] || '📦' %>
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#1B5EFF;">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>
+                </div>
               <% } %>
             </div>
             <div class="product-body">
@@ -208,7 +213,7 @@
   <style>
     body { padding-bottom: 80px; }
     .buy-bar {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      position: fixed; bottom: 0; left: var(--sb-w); right: 0; z-index: 200;
       background: #fff; border-top: 1px solid #E4E7F2;
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 24px; box-shadow: 0 -4px 24px rgba(13,15,26,0.10); gap: 16px;
@@ -231,6 +236,17 @@
     }
     .buy-bar-buy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,94,255,0.45); }
     .buy-bar-buy:active { transform: translateY(0); }
+  </style>
+  <style>
+    /* Ensure buy bar doesn't overlap the left sidebar on wide screens */
+    @media (min-width: 901px) {
+      .buy-bar { width: calc(100% - var(--sb-w)); }
+    }
+    /* On small screens where sidebar is hidden, full-width buy bar */
+    @media (max-width: 900px) {
+      .buy-bar { left: 0; width: 100%; }
+      body { padding-bottom: 80px; }
+    }
   </style>
   <% } %>
 

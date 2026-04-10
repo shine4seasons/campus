@@ -152,6 +152,7 @@
 </head>
 <body>
   <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
 
   <% const ep = editProduct; %>
 
@@ -354,8 +355,8 @@
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
+    <!-- Sidebar (right column) -->
+    <aside class="side-col">
       <div class="card">
         <div class="card-head">
          <!-- <div class="card-head-icon"><i data-lucide="eye"></i></div>-->
@@ -406,7 +407,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   </div>
 
   <div id="toast-wrap"></div>

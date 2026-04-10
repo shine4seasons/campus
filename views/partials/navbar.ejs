@@ -1,252 +1,35 @@
-<header class="navbar">
-      <nav class="nav-inner">
-        <a href="/" class="nav-brand">
-          <span class="logo">CAMPUS</span>
-        </a>
+<header class="topbar">
+	<div class="topbar-left">
+		<a href="/" class="nav-brand">
+			<div class="nav-logo">Campus</div>
+			<div style="display:none;">Campus Marketplace</div>
+		</a>
+	</div>
 
-        <div class="nav-center">
-          <div class="nav-links-buyer">
+	<div class="topbar-center">
+		<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+			<div class="pg-title" id="pgTitle"></div>
+			<div class="pg-sub" id="pgSub"></div>
+		</div>
+		<div class="tb-search">
+			<svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+			<input type="text" placeholder="Search...">
+		</div>
+	</div>
 
-            <a href="/#categories" class="nav-link buyer-only">Categories</a>
-            <a href="/#featured" class="nav-link buyer-only">Featured</a>
-          </div>
+	<div class="topbar-right">
+		<button class="tb-icon-btn" onclick="showToast('No notifications','info')" aria-label="Notifications">
+			<svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+			<div class="tb-notif-dot"></div>
+		</button>
 
-          <% if (user) { %>
-          <div class="nav-links-seller" style="display:none;">
-            <a href="/my-products" class="nav-link">My listings</a>
-            <a href="/sell" class="nav-link nav-link-sell">Post product</a>
-            <% if (user.role === 'admin' || user.role === 'seller') { %>
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <% } %>
-          </div>
-          <% } %>
-        </div>
+		<a href="/messages" id="nav-chat-btn" class="nav-chat-btn" title="Messages" aria-label="Messages">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+			<span class="nav-chat-badge" id="nav-chat-badge" style="display:none;">0</span>
+		</a>
 
-        <div class="nav-actions">
-          <% if (user) { %>
-            <a href="/messages" class="nav-chat-btn" id="nav-chat-btn" title="Messages">
-              <svg width="25" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              </svg>
-              <span class="nav-chat-badge" id="nav-chat-badge" style="display:none;">0</span>
-            </a>
-
-            <div class="nav-user-wrap" id="nav-user-wrap">
-              <div class="nav-user-btn">
-                <img src="<%= user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=E8F0FE&color=2563EB' %>"
-                  alt="<%= user.name %>" class="nav-avatar">
-                <span class="nav-hello">Hello, <strong><%= user.name.split(' ').pop() %></strong></span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-              <div class="nav-dropdown" id="nav-dropdown">
-                <div class="dropdown-header">
-                  <img src="<%= user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=E8F0FE&color=2563EB' %>"
-                    alt="<%= user.name %>" class="dropdown-avatar">
-                  <div>
-                    <div class="dropdown-name"><%= user.name %></div>
-                    <div class="dropdown-email"><%= user.email %></div>
-                  </div>
-                </div>
-                <div class="dropdown-menu">
-                  <a href="/profile" class="dropdown-item">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                    My profile
-                  </a>
-
-                  <div class="dropdown-item dropdown-mode-toggle" onclick="event.stopPropagation()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    <span style="flex:1;">Mode</span>
-                    <div class="mode-toggle-pill">
-                      <button class="mode-pill-btn" id="mode-buyer-btn" onclick="setMode('buyer')">Buyer</button>
-                      <button class="mode-pill-btn" id="mode-seller-btn" onclick="setMode('seller')">Seller</button>
-                    </div>
-                  </div>
-
-                  <% if (user.role === 'admin') { %>
-                  <a href="/dashboard" class="dropdown-item">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-                    Dashboard Admin
-                  </a>
-                  <% } %>
-                  <a href="/dashboard" class="dropdown-item seller-dashboard" style="display:none;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-                    Dashboard
-                  </a>
-                  <div class="dropdown-divider"></div>
-                  <button class="dropdown-item danger" id="logout-btn">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-          <% } else { %>
-            <% if (typeof isLoginPage === 'undefined' || !isLoginPage) { %>
-            <a href="/login" class="btn btn-login">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              Login
-            </a>
-            <% } %>
-          <% } %>
-        </div>
-      </nav>
-      <% if (user) { %>
+		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
+	</div>
+</header>
 
 
-    <script>
-    (function () {
-      const STORAGE_KEY = 'campus_mode';
-
-      function applyMode(mode) {
-        document.body.classList.remove('mode-buyer', 'mode-seller');
-        document.body.classList.add('mode-' + mode);
-        const buyerBtn  = document.getElementById('mode-buyer-btn');
-        const sellerBtn = document.getElementById('mode-seller-btn');
-        if (buyerBtn)  buyerBtn.classList.toggle('active', mode === 'buyer');
-        if (sellerBtn) sellerBtn.classList.toggle('active', mode === 'seller');
-      }
-
-      window.setMode = function (mode) {
-        localStorage.setItem(STORAGE_KEY, mode);
-        applyMode(mode);
-        const path = window.location.pathname;
-        if (mode === 'buyer' && (path.startsWith('/sell') || path.startsWith('/my-products'))) {
-          window.location.href = '/';
-        }
-        if (mode === 'seller' && path === '/') {
-          window.location.href = '/my-products';
-        }
-      };
-
-      // Áp dụng ngay trước khi render để tránh flash
-      applyMode(localStorage.getItem(STORAGE_KEY) || 'buyer');
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const wrap     = document.getElementById('nav-user-wrap');
-        const dropdown = document.getElementById('nav-dropdown');
-        if (wrap && dropdown) {
-          wrap.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('open'); });
-          document.addEventListener('click', () => dropdown.classList.remove('open'));
-        }
-
-        // Show/hide seller links based on current mode (also keep buyer links hidden when seller)
-        (function updateNavByMode() {
-          const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-          const buyerGroup = document.querySelector('.nav-links-buyer');
-          const sellerGroup = document.querySelector('.nav-links-seller');
-          if (!buyerGroup) return;
-          if (mode === 'seller') {
-            buyerGroup.style.display = 'none';
-            if (sellerGroup) sellerGroup.style.display = 'flex';
-          } else {
-            buyerGroup.style.display = 'flex';
-            if (sellerGroup) sellerGroup.style.display = 'none';
-          }
-          // Toggle dashboard link visibility in the user dropdown when in seller mode
-          const sellerDropdown = document.querySelector('.dropdown-item.seller-dashboard');
-          if (sellerDropdown) sellerDropdown.style.display = (mode === 'seller') ? 'flex' : 'none';
-        })();
-
-        // Modal element for switching to buyer mode
-        let switchModalBackdrop = document.getElementById('switch-modal-backdrop');
-        if (!switchModalBackdrop) {
-          switchModalBackdrop = document.createElement('div');
-          switchModalBackdrop.id = 'switch-modal-backdrop';
-          switchModalBackdrop.className = 'switch-modal-backdrop';
-          switchModalBackdrop.innerHTML = `
-            <div class="switch-modal" role="dialog" aria-modal="true">
-              <h3>Buyer-only page</h3>
-              <p>This page is available for buyers. Switch to buyer mode to continue.</p>
-              <div class="actions">
-                <button class="btn ghost" id="switch-cancel">Stay</button>
-                <button class="btn primary" id="switch-confirm">Switch to buyer</button>
-              </div>
-            </div>`;
-          document.body.appendChild(switchModalBackdrop);
-        }
-
-        function showSwitchModal(targetHref) {
-          switchModalBackdrop.style.display = 'flex';
-          const cancel = document.getElementById('switch-cancel');
-          const confirm = document.getElementById('switch-confirm');
-          function hide() { switchModalBackdrop.style.display = 'none'; cancel.removeEventListener('click', onCancel); confirm.removeEventListener('click', onConfirm); }
-          function onCancel() { hide(); }
-          function onConfirm() { hide(); window.setMode('buyer'); if (targetHref) window.location.href = targetHref; }
-          cancel.addEventListener('click', onCancel);
-          confirm.addEventListener('click', onConfirm);
-        }
-
-        // Intercept clicks on buyer-only nav links when in seller mode
-        document.querySelectorAll('.nav-center .nav-link.buyer-only').forEach(a => {
-          a.addEventListener('click', (e) => {
-            const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-            const href = a.getAttribute('href');
-            if (mode === 'seller') {
-              e.preventDefault();
-              // index / -> go to my-products
-              if (href === '/') {
-                window.location.href = '/my-products';
-                return;
-              }
-              showSwitchModal(href);
-            }
-          });
-        });
-
-        // Helper to detect buyer-only paths (expand as needed)
-        function isBuyerPath(path) {
-          if (!path) return false;
-          return path === '/' || path.startsWith('/product') || path.startsWith('/orders');
-        }
-
-        // Intercept all anchor clicks site-wide to guard buyer-only pages when in seller mode
-        document.addEventListener('click', (e) => {
-          const a = e.target.closest && e.target.closest('a');
-          if (!a) return;
-          const hrefAttr = a.getAttribute('href');
-          if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
-          let url;
-          try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
-          const path = url.pathname;
-          const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-          if (mode === 'seller' && isBuyerPath(path)) {
-            e.preventDefault();
-            if (path === '/') {
-              window.location.href = '/my-products';
-            } else {
-              showSwitchModal(hrefAttr);
-            }
-          }
-        }, true);
-
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', async () => {
-            try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
-            localStorage.removeItem('campus_token');
-            localStorage.removeItem('campus_user');
-            localStorage.removeItem(STORAGE_KEY);
-            window.location.href = '/login';
-          });
-        }
-
-        async function updateChatBadge() {
-          try {
-            const res  = await fetch('/api/chat', { credentials: 'include' });
-            const json = await res.json();
-            if (!json.success) return;
-            const total = json.data.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-            const badge = document.getElementById('nav-chat-badge');
-            if (!badge) return;
-            badge.textContent = total > 99 ? '99+' : total;
-            badge.style.display = total > 0 ? 'flex' : 'none';
-          } catch {}
-        }
-        updateChatBadge();
-        if (!window.location.pathname.startsWith('/messages')) {
-          setInterval(updateChatBadge, 15000);
-        }
-      });
-    })();
-    </script>
-    <% } %>

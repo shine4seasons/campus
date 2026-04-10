@@ -158,11 +158,26 @@ router.get('/messages', requireAuth, (req, res) => {
 
 // ── GET /dashboard ─────────────────────────────────────
 router.get('/dashboard', requireAuth, (req, res) => {
-  if (res.locals.user.role !== 'admin') return res.redirect('/');
-  res.render('dashboard', { 
-    title: 'Admin Dashboard — Campus Marketplace',
-    isLoginPage: false
-  });
+  const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
+  if (role === 'admin') {
+    return res.render('dashboard-admin', { title: 'Admin Dashboard — Campus Marketplace', isLoginPage: false });
+  }
+  // Serve seller dashboard to sellers. For regular users, serve a seller preview/dashboard
+  // so toggling to seller mode from the UI leads to the expected page.
+  if (role === 'seller') {
+    return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: true });
+  }
+  // Non-seller users: render seller dashboard in preview mode (no destructive actions).
+  return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: false });
+});
+
+// ── GET /dashboard-seller (explicit route) ─────────────────
+router.get('/dashboard-seller', requireAuth, (req, res) => {
+  const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
+  if (role === 'seller') {
+    return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: true });
+  }
+  return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: false });
 });
 
 module.exports = router;

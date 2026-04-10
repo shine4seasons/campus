@@ -1,5 +1,4 @@
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --font: 'Be Vietnam Pro', sans-serif;
@@ -58,232 +57,36 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
 
-    /* ─────────────────────────── SIDEBAR ─────────────────────────── */
-    .sidebar {
-      width: var(--sb-w);
-      background: var(--sb-bg);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      position: fixed;
-      top: 0; bottom: 0; left: 0;
-      z-index: 100;
-      overflow-y: auto;
-    }
-
-    .sb-brand {
-      padding: 22px 18px 14px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .sb-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sb-logo-icon {
-      width: 32px; height: 32px;
-      background: var(--accent);
-      border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .sb-logo-icon svg { width: 16px; height: 16px; stroke: #fff; fill: none; }
-    .sb-logo-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
-    .sb-logo-tag  { font-size: 10px; color: rgba(255,255,255,.35); margin-top: 1px; }
-
-    .role-toggle {
-      display: flex;
-      margin: 14px 14px 6px;
-      background: rgba(255,255,255,.07);
-      border-radius: 9px;
-      padding: 3px;
-      gap: 3px;
-    }
-    .role-btn {
-      flex: 1;
-      padding: 7px 4px;
-      font-size: 11px;
-      font-weight: 600;
-      border: none;
-      border-radius: 7px;
-      cursor: pointer;
-      color: rgba(255,255,255,.45);
-      background: transparent;
-      transition: all .18s;
-      font-family: var(--font);
-      letter-spacing: .01em;
-    }
-    .role-btn.active {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(37,99,235,.4);
-    }
-
-    .sb-section { padding: 6px 0 2px; }
-    .sb-group-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: rgba(255,255,255,.22);
-      padding: 10px 20px 4px;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 20px;
-      font-size: 12.5px;
-      font-weight: 500;
-      color: rgba(255,255,255,.5);
-      cursor: pointer;
-      border-left: 2px solid transparent;
-      transition: all .15s;
-      user-select: none;
-    }
-    .nav-item svg {
-      width: 15px; height: 15px;
-      stroke: currentColor; fill: none;
-      flex-shrink: 0;
-      stroke-width: 1.8;
-    }
-    .nav-item:hover { color: rgba(255,255,255,.82); background: rgba(255,255,255,.05); }
-    .nav-item.active {
-      color: #fff;
-      border-left-color: var(--accent);
-      background: rgba(37,99,235,.15);
-    }
-    .nav-badge {
-      margin-left: auto;
-      background: #ef4444;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 10px;
-      line-height: 1.6;
-    }
-
-    .sb-footer {
-      margin-top: auto;
-      padding: 14px 18px;
-      border-top: 1px solid rgba(255,255,255,.07);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sb-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: #fff;
-      flex-shrink: 0;
-    }
-    .sb-uname { font-size: 12.5px; font-weight: 600; color: #fff; }
-    .sb-urole { font-size: 10.5px; color: rgba(255,255,255,.38); }
-    .sb-logout {
-      margin-left: auto;
-      width: 28px; height: 28px;
-      border: none; background: none; cursor: pointer;
-      color: rgba(255,255,255,.35);
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 7px;
-      transition: all .15s;
-    }
-    .sb-logout:hover { color: rgba(255,255,255,.8); background: rgba(255,255,255,.07); }
-    .sb-logout svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
-
-    /* ─────────────────────────── MAIN ─────────────────────────── */
-    .main {
-      margin-left: var(--sb-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* ── Topbar ── */
+    /* ── Topbar: fixed full-width above sidebar ── */
     .topbar {
-      position: sticky; top: 0; z-index: 50;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
-      height: 62px;
-      gap: 16px;
+      position: fixed !important;
+      top: 0; left: 0; right: 0;
+      width: 100%;
+      z-index: 400;
     }
-    .pg-title { font-size: 16px; font-weight: 800; color: var(--t1); letter-spacing: -.02em; }
-    .pg-sub   { font-size: 12px; color: var(--t2); margin-top: 1px; }
-    .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .tb-search {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0 12px;
-      height: 36px;
+
+    /* ── Main: offset below fixed topbar ── */
+    .main {
+      margin-top: 62px;
     }
-    .tb-search svg { width: 14px; height: 14px; stroke: var(--t3); fill: none; flex-shrink: 0; }
-    .tb-search input {
-      border: none; background: none;
-      font-size: 13px; color: var(--t1);
-      font-family: var(--font);
-      outline: none; width: 160px;
-    }
-    .tb-search input::placeholder { color: var(--t3); }
-    .tb-icon-btn {
-      width: 36px; height: 36px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--card);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--t2);
-      transition: all .15s;
-      position: relative;
-    }
-    .tb-icon-btn:hover { background: var(--surface); color: var(--t1); }
-    .tb-icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
-    .tb-notif-dot {
-      position: absolute; top: 7px; right: 8px;
-      width: 6px; height: 6px;
-      background: #ef4444; border-radius: 50%;
-      border: 1.5px solid var(--card);
-    }
-    .btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 16px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      font-size: 13px; font-weight: 600;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: all .18s;
-      border: 1px solid transparent;
-      text-decoration: none;
-    }
-    .btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
-    .btn-outline {
-      background: var(--card);
-      border-color: var(--border2);
-      color: var(--t2);
-    }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(37,99,235,.28);
-    }
-    .btn-primary:hover { background: var(--accent-dk); box-shadow: 0 4px 14px rgba(37,99,235,.38); }
 
     /* ── Content wrapper ── */
     .content {
       flex: 1;
       padding: 24px 28px 40px;
     }
+
+/* Ensure dashboard pages use the full available width inside the .main wrapper
+   (avoid centering/max-width rules from global CSS that create a large blank gap) */
+body.has-sidebar .main .content,
+.main .content {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;          /* ← đổi từ calc(100% - var(--sb-w)) */
+  box-sizing: border-box;
+  padding-left: 28px;
+  padding-right: 28px;
+}
     .section { display: none; }
     .section.active { display: block; }
 

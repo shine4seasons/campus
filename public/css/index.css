@@ -25,6 +25,19 @@
       max-width:760px; margin:0 auto;
       text-align:center; padding:0 24px;
     }
+
+    /* When a left sidebar is present, shift hero content right by half the sidebar
+       width so the headline appears centered within the main content area. Also
+       reduce the top gap between the topbar and hero. Disable on small screens. */
+    body.has-sidebar .hero-content {
+      transform: translateX(calc(var(--sb-w) / 2));
+    }
+    @media (max-width: 768px) {
+      body.has-sidebar .hero-content { transform: none; }
+    }
+
+    /* Reduce extra spacing between topbar and hero */
+    .topbar + .hero { padding-top: 24px; }
     .hero-badge {
       display: inline-flex; align-items:center; gap:7px;
       background: rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3);

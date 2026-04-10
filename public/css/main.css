@@ -9,6 +9,96 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+/* ===== Seller dashboard overrides/styles ===== */
+.seller-dashboard { /* container marker if needed */ }
+
+.content { padding: 20px 28px 40px; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.stat-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.stat-label { font-size:13px; color:var(--text-2); font-weight:700; }
+.stat-val { font-size:20px; font-weight:800; margin-top:10px; }
+.stat-delta { font-size:12px; color:var(--text-3); margin-top:6px; }
+
+.charts-row { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow-sm); }
+.card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card-title { font-weight:800; font-size:15px; }
+
+.quick-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 18px; }
+.quick-card { background:var(--surface); border-radius:12px; padding:12px; display:flex; gap:12px; align-items:center; cursor:pointer; border:1px solid var(--border); }
+.qc-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; }
+.qc-label { font-weight:700; }
+.qc-sub { font-size:13px; color:var(--text-3); }
+
+.alert-box { display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:10px; border:1px solid var(--border); background:#F7FBFF; }
+.alert-box svg { width:34px; height:34px; flex-shrink:0; }
+
+.two-col { display:grid; grid-template-columns: 1fr 360px; gap: 18px; }
+.tbl-wrap { background:var(--surface); border-radius:12px; padding:12px; border:1px solid var(--border); }
+.tbl-wrap table { width:100%; border-collapse: collapse; }
+.tbl-wrap table th, .tbl-wrap table td { padding:10px 8px; text-align:left; border-bottom:1px solid #F2F4F8; }
+
+.filter-pills { display:flex; gap:8px; }
+.f-pill {
+  padding:6px 10px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); color:var(--text-2); font-weight:700; cursor:pointer; font-size:13px;
+}
+.f-pill.on { background:var(--primary); color:#fff; border-color:transparent; }
+.tbl-count { font-size:13px; color:var(--text-2); margin-top:4px; }
+
+@media (max-width: 1100px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .topbar .tb-search { display: none; }
+  .content { padding: 12px; }
+}
+
+@media (max-width: 420px) {
+  .stat-val { font-size:18px; }
+  .qc-icon { width:40px; height:40px; }
+}
+
+/* Preview mode: disable pointer events for destructive actions */
+.preview-mode .act-btn.danger, .preview-mode .act-btn.success {
+  opacity: 0.6; pointer-events: none;
+}
+
+/* Responsive seller listings table → stacked cards on small screens */
+@media (max-width: 900px) {
+  .tbl-wrap table { display: block; }
+  .tbl-wrap thead { display: none; }
+  .tbl-wrap tbody { display: block; }
+  .tbl-wrap tr { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 12px; margin-bottom: 12px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
+  .tbl-wrap td { display: block; padding: 4px 0; border: none; }
+  .tbl-wrap td[data-label]::before { content: attr(data-label) ": "; display: inline-block; font-weight:700; color:var(--text-2); margin-right:6px; }
+  .tbl-wrap .tbl-actions { grid-column: 1 / -1; display:flex; gap:8px; justify-self:end; }
+}
+
+/* Tighten desktop table spacing */
+@media (min-width: 901px) {
+  .tbl-wrap table th, .tbl-wrap table td { padding: 12px 10px; }
+}
+
 a { text-decoration:none; color:inherit; }
 img { max-width:100%; display:block; }
 button { cursor:pointer; font-family:inherit; border:none; background:none; }
@@ -188,6 +278,108 @@ font-size : 2rem;
 .nav-hello { font-size:15px; color:var(--text-2); }
 .nav-hello strong { color:var(--text); }
 .nav-user-btn svg { color:var(--text-3); transition:transform 0.2s; }
+/* ─────────────────────────── SIDEBAR (shared) ─────────────────────────── */
+:root {
+  --sb-bg:     #0f1117;
+  --sb-bg2:    #181c27;
+  --sb-w:      228px;
+  --accent:    #2563eb;
+  --accent-lt: #dbeafe;
+}
+
+.sidebar {
+  width: var(--sb-w);
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 62px; left: 0; bottom: 0;
+  height: calc(100% - 62px);
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sb-brand { padding: 22px 18px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.sb-logo { display:flex; align-items:center; gap:10px; }
+.sb-logo-icon { width:32px; height:32px; background:var(--accent); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sb-logo-icon svg { width:16px; height:16px; stroke:#fff; fill:none; }
+.sb-logo-name { font-size:14px; font-weight:700; color:#fff; letter-spacing:-.01em; }
+.sb-logo-tag { font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
+
+.role-toggle { display:flex; margin:14px 14px 6px; background:rgba(255,255,255,.07); border-radius:9px; padding:3px; gap:3px; }
+.role-btn { flex:1; padding:7px 4px; font-size:11px; font-weight:600; border:none; border-radius:7px; cursor:pointer; color:rgba(255,255,255,.45); background:transparent; transition: all .18s; font-family:inherit; }
+.role-btn.active { background:var(--accent); color:#fff; box-shadow: 0 2px 8px rgba(37,99,235,.4); }
+
+.sb-section { padding:6px 0 2px; }
+.sb-group-label { font-size:10px; font-weight:700; color:rgba(255,255,255,.22); padding:10px 20px 4px; text-transform:uppercase; letter-spacing:.09em; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:12.5px; font-weight:500; color:rgba(255,255,255,.5); cursor:pointer; border-left:2px solid transparent; transition: all .15s; user-select:none; }
+.nav-item svg { width:15px; height:15px; stroke:currentColor; fill:none; flex-shrink:0; stroke-width:1.8; }
+.nav-item:hover { color:rgba(255,255,255,.82); background:rgba(255,255,255,.05); }
+.nav-item.active { color:#fff; border-left-color:var(--accent); background:rgba(37,99,235,.15); }
+.nav-badge { margin-left:auto; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; line-height:1.6; }
+
+/* Styles for compact sidebar links used on public pages (buyer/seller shortcuts) */
+.sb-top-links { padding: 18px 0 10px; }
+.sb-links-buyer, .sb-links-seller { display:flex; flex-direction:column; gap:8px; padding: 8px 10px; }
+.sb-link {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 20px; font-size:14px; font-weight:600;
+  color: rgba(255,255,255,.88); text-decoration:none;
+  border-left:2px solid transparent; border-radius:10px;
+  transition: all .15s; user-select:none;
+}
+.sb-link:hover { color: #fff; background: rgba(255,255,255,.04); }
+.sb-link.active { color:#fff; border-left-color:var(--accent); background: rgba(37,99,235,.14); }
+
+/* Make seller links visually distinct when visible */
+.nav-links-seller .sb-link { color: #fff; }
+
+.sb-footer { margin-top:auto; padding:18px 16px; border-top:1px solid rgba(255,255,255,.07); display:flex; align-items:center; gap:12px; }
+.sb-avatar { width:44px; height:44px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; }
+.sb-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+.sb-uname { font-size:15px; font-weight:700; color:#fff; display:block; }
+.sb-uname:hover { text-decoration:underline; }
+.sb-urole { font-size:13px; color:rgba(255,255,255,.46); margin-top:2px; }
+.sb-logout { margin-left:auto; width:34px; height:34px; border:none; background:none; cursor:pointer; color:rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; border-radius:8px; transition: all .15s; }
+.sb-logout:hover { color:rgba(255,255,255,.95); background:rgba(255,255,255,.06); }
+.sb-logout svg { width:16px; height:16px; stroke:currentColor; fill:none; }
+
+.main { margin-left: var(--sb-w); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+}
+
+/* Fallback for pages not using <main class="main"> wrapper: keep no extra padding (we use .main margin) */
+body.has-sidebar { padding-left: 0; }
+@media (max-width: 900px) { body.has-sidebar { padding-left: 0; } }
+
+/* Ensure pages that don't use <main class="main"> are still offset from the sidebar */
+@media (min-width: 901px) {
+  /* Apply sidebar offset to top-level containers only (avoid double-shifting elements inside .main) */
+  body.has-sidebar > .container,
+  body.has-sidebar > .content,
+  body.has-sidebar > .page,
+  body.has-sidebar > #root,
+  body.has-sidebar > .wrap,
+  body.has-sidebar > .detail-layout,
+  body.has-sidebar > .page-wrap,
+  body.has-sidebar > .form-layout,
+  body.has-sidebar > .profile-wrap,
+  body.has-sidebar > .page-top {
+    margin-left: var(--sb-w);
+  }
+
+  /* Ensure top-level sections on pages like the homepage are offset from the fixed sidebar */
+  body.has-sidebar > section > .container,
+  body.has-sidebar > section > .container > .container,
+  body.has-sidebar > .hero .hero-content,
+  body.has-sidebar > footer > .container {
+    margin-left: var(--sb-w);
+  }
+}
 
 .nav-dropdown {
   position: absolute; right:0; top:calc(100% + 8px);
@@ -222,6 +414,71 @@ font-size : 2rem;
 .dropdown-item.danger:hover { background:var(--red-light); }
 .dropdown-divider { height:1px; background:var(--border); margin:4px 0; }
 
+/* Topbar styles (global) — copied from dashboard topbar */
+.topbar {
+  position: sticky; top: 0; z-index: 300;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 62px;
+  gap: 16px;
+}
+.topbar-left, .topbar-center, .topbar-right { display:flex; align-items:center; }
+.topbar-left { flex: 0 0 auto; }
+.topbar-center { flex: 1 1 auto; justify-content: center; }
+.topbar-right { flex: 0 0 auto; gap: 10px; }
+.topbar-center .tb-search { width: 520px; max-width: 60%; }
+.topbar-center .tb-search input { width: 100%; }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--text); }
+.nav-logo { font-size:18px; font-weight:800; color:var(--text); }
+.pg-title { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+.pg-sub   { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.tb-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  height: 36px;
+}
+.tb-search svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; flex-shrink: 0; }
+.tb-search input {
+  border: none; background: none;
+  font-size: 13px; color: var(--text);
+  font-family: inherit;
+  outline: none; width: 160px;
+}
+.tb-search input::placeholder { color: var(--text-3); }
+.tb-icon-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: all .15s;
+  position: relative;
+}
+.tb-icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.tb-icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+.tb-notif-dot {
+  position: absolute; top: 7px; right: 8px;
+  width: 6px; height: 6px;
+  background: #ef4444; border-radius: 50%;
+  border: 1.5px solid var(--surface);
+}
+
+/* Ensure content spacing for pages using the topbar */
+.content { flex: 1; padding: 24px 28px 40px; }
+
+.logo { font-size: 1.5rem; }
+
+
 /* ── Forms ─────────────────────────────── */
 .form-group { margin-bottom:16px; }
 .form-label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
@@ -254,6 +511,64 @@ font-size : 2rem;
   font-size: 0.9rem; font-weight:500; color:var(--text-2);
   transition: all 0.15s;
 }
+
+/* ── Topbar (moved from dashboard.css) ── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 62px;
+  gap: 16px;
+}
+.pg-title { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+.pg-sub   { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.tb-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  height: 36px;
+}
+.tb-search svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; flex-shrink: 0; }
+.tb-search input {
+  border: none; background: none;
+  font-size: 13px; color: var(--text);
+  font-family: inherit;
+  outline: none; width: 160px;
+}
+.tb-search input::placeholder { color: var(--text-3); }
+.tb-icon-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: all .15s;
+  position: relative;
+}
+.tb-icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.tb-icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+.tb-notif-dot {
+  position: absolute; top: 7px; right: 8px;
+  width: 6px; height: 6px;
+  background: #ef4444; border-radius: 50%;
+  border: 1.5px solid var(--surface);
+}
+.btn { /* reuse existing .btn rules above */ }
+.btn-outline { /* reuse existing .btn-outline */ }
+.btn-primary { /* reuse existing .btn-primary */ }
+
+/* Ensure content spacing for pages using the topbar */
+.content { flex: 1; padding: 24px 28px 40px; }
+
 .logo {
   font-size: 1.5rem;
 }
@@ -269,4 +584,60 @@ font-size : 2rem;
   display: none;
 }
 .nav-hello { font-size:13px; color:var(--text-2); }
+
+/* Mobile adjustments for topbar search and layout */
+.topbar-center { justify-content: flex-start; padding: 0 8px; }
+.topbar-center .tb-search { width: 100%; max-width: none; }
+.topbar-center .tb-search input { width: 100%; }
+.topbar-left { padding-left: 8px; }
+.topbar-right { gap: 6px; }
+
+/* Very small screens: hide search input, show compact icon (if desired) */
+@media (max-width: 420px) {
+  .topbar-center .tb-search input { display: none; }
+  .topbar-center .tb-search { padding: 0 8px; }
+}
+
+/* Mobile sidebar toggle (<=760px) */
+/* Default: sidebar hidden. Toggle button opens overlay sidebar. */
+.sb-mobile-toggle {
+  display: none !important;
+  position: fixed;
+  /* place the toggle just under the topbar */
+  top: 74px; /* topbar height (62px) + small offset */
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  z-index: 2300;
+  box-shadow: 0 8px 24px rgba(13,15,26,0.18);
+  border: none;
+}
+.sb-mobile-toggle svg { width:20px; height:20px; stroke:#fff; }
+.sb-backdrop { display:none; }
+
+@media (max-width: 760px) {
+  .sb-mobile-toggle { display:flex !important; }
+
+  /* Keep sidebar out of view by default on small screens */
+  .sidebar { transform: translateX(-110%); transition: transform 0.28s ease; display:flex; }
+
+  /* When body has .sb-open, show the sidebar as an overlay */
+  body.sb-open { overflow: hidden; }
+  body.sb-open .sidebar { transform: translateX(0); position: fixed; left: 0; top: 62px; bottom: 0; height: calc(100% - 62px); z-index: 2350; }
+
+  /* backdrop */
+  .sb-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 2290; background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.18s ease;
+    pointer-events: none;
+  }
+  body.sb-open .sb-backdrop { opacity: 1; pointer-events: auto; }
+
+  /* On mobile, don't shift main content with sidebar margin */
+  body.has-sidebar .main, body.has-sidebar .container, body.has-sidebar .page-wrap, body.has-sidebar .detail-layout, body.has-sidebar .form-layout { margin-left: 0; }
+}
 }
