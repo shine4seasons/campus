@@ -26,12 +26,17 @@
       text-align:center; padding:0 24px;
     }
 
-    /* When a left sidebar is present, shift hero content right by half the sidebar
-       width so the headline appears centered within the main content area. Also
-       reduce the top gap between the topbar and hero. Disable on small screens. */
-    body.has-sidebar .hero-content {
-      transform: translateX(calc(var(--sb-w) / 2));
+    /* When a left sidebar is present, offset homepage hero content so it is
+       centered inside the main content area to the right of the sidebar. */
+    @media (min-width: 901px) {
+      body.has-sidebar > .hero {
+        padding-left: var(--sb-w);
+      }
+      body.has-sidebar > .hero .hero-content {
+        transform: none;
+      }
     }
+
     @media (max-width: 768px) {
       body.has-sidebar .hero-content { transform: none; }
     }
