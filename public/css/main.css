@@ -345,7 +345,7 @@ font-size : 2rem;
 .sb-logout:hover { color:rgba(255,255,255,.95); background:rgba(255,255,255,.06); }
 .sb-logout svg { width:16px; height:16px; stroke:currentColor; fill:none; }
 
-.main { margin-left: var(--sb-w); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+.main { margin-left: var(--sb-w); flex:1; display:flex; flex-direction:column; min-height:100vh; padding-top: 72px; box-sizing: border-box; }
 
 @media (max-width: 900px) {
   .sidebar { display: none; }

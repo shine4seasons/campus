@@ -138,6 +138,26 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
+// GET /api/orders/stats?role=buyer|seller
+exports.getOrderStats = async (req, res) => {
+  try {
+    const userId = mongoose.Types.ObjectId(req.user._id);
+    const role = req.query.role || 'buyer';
+    const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
+
+    const agg = await Order.aggregate([
+      { $match: filter },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    const out = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+    agg.forEach(a => { out[a._id] = a.count; });
+    res.json({ success: true, data: out });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // Get order by id
 exports.getOrderById = async (req, res) => {
   try {
@@ -177,22 +197,40 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     const role    = isSeller ? 'seller' : 'buyer';
-    const allowed = TRANSITIONS[role]?.[order.status] || [];
 
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ success: false, message: `Không thể chuyển từ "${order.status}" sang "${status}"` });
+    // Allow broader transitions for sellers/admins (both directions).
+    const isAdminOrSeller = isSeller || req.user.role === 'admin';
+
+    if (!isAdminOrSeller) {
+      // For buyers, keep strict transitions from constants
+      const allowed = TRANSITIONS[role]?.[order.status] || [];
+      if (!allowed.includes(status)) {
+        return res.status(400).json({ success: false, message: `Không thể chuyển từ "${order.status}" sang "${status}"` });
+      }
     }
 
+    const prevStatus = order.status;
     order.status = status;
-    if (status === 'confirmed') order.confirmedAt = new Date();
-    if (status === 'completed') order.completedAt = new Date();
-    if (status === 'cancelled') {
-      order.cancelledAt = new Date();
 
-      await Product.findByIdAndUpdate(order.product, { status: 'active', buyer: null, soldAt: null });
+    // Manage timestamps according to new status
+    if (status === 'confirmed') order.confirmedAt = new Date(); else order.confirmedAt = null;
+    if (status === 'completed') order.completedAt = new Date(); else order.completedAt = null;
+    if (status === 'cancelled') order.cancelledAt = new Date(); else order.cancelledAt = null;
 
-      User.findByIdAndUpdate(order.seller, { $inc: { totalSales: -1 } }).catch(() => {});
-      User.findByIdAndUpdate(order.buyer,  { $inc: { totalOrders: -1 } }).catch(() => {});
+    // Handle product and user counters when cancelling or restoring
+    try {
+      if (status === 'cancelled' && prevStatus !== 'cancelled') {
+        await Product.findByIdAndUpdate(order.product, { status: 'active', buyer: null, soldAt: null });
+        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: -1 } }).catch(() => {});
+        User.findByIdAndUpdate(order.buyer,  { $inc: { totalOrders: -1 } }).catch(() => {});
+      } else if (prevStatus === 'cancelled' && status !== 'cancelled') {
+        // restore counts when moving out of cancelled
+        await Product.findByIdAndUpdate(order.product, { status: 'sold', buyer: order.buyer, soldAt: new Date() });
+        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: 1 } }).catch(() => {});
+        User.findByIdAndUpdate(order.buyer,  { $inc: { totalOrders: 1 } }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('[orders] product/user update error:', e.message);
     }
 
     await order.save();

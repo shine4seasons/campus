@@ -1,22 +1,7 @@
 <script>
-  /* ── Page metadata ── */
-  // Ensure a global PAGE_META object exists and merge these entries without redeclaring a global const
-  window.PAGE_META = window.PAGE_META || {};
-  Object.assign(window.PAGE_META, {
-    aDash:      { title:'Dashboard overview',    sub:'Thứ Hai, 6 tháng 4, 2026',   cta:'Tạo báo cáo' },
-    aAnalytics: { title:'Analytics',             sub:'Dữ liệu theo thời gian thực', cta:'Export CSV' },
-    aUsers:     { title:'Quản lý người dùng',    sub:'1,284 tài khoản',             cta:'Mời user' },
-    aProducts:  { title:'Quản lý sản phẩm',      sub:'347 listing',                 cta:'Xem báo cáo' },
-    aOrders:    { title:'Quản lý đơn hàng',      sub:'106 đơn hàng',                cta:'Export đơn' },
-    aReports:   { title:'Kiểm duyệt & báo cáo', sub:'3 mục chờ xử lý',             cta:'Mark all read' },
-    aSettings:  { title:'Cài đặt hệ thống',      sub:'Admin console',               cta:'Lưu cài đặt' },
-    sDash:      { title:'Seller dashboard',      sub:'Chào buổi sáng, Trần Ngọc 👋', cta:'Đăng sản phẩm' },
-    sListings:  { title:'Sản phẩm của tôi',      sub:'20 listing',                  cta:'+ Đăng sản phẩm' },
-    sOrders:    { title:'Đơn hàng nhận được',    sub:'30 đơn tổng',                  cta:'Export' },
-    sRevenue:   { title:'Doanh thu',             sub:'Tổng: 28.4M ₫',               cta:'Export CSV' },
-    sMessages:  { title:'Tin nhắn',              sub:'4 chưa đọc',                  cta:'Mở hộp thư' },
-    sProfile:   { title:'Hồ sơ của tôi',         sub:'Chỉnh sửa thông tin',         cta:'Xem trang public' },
-  });
+  /* NOTE: PAGE_META removed — titles/subs/cta are read from
+     section `data-*` attributes when available, with a small
+     fallback map for known section ids. */
 
   /* ── Navigation ── */
   function nav(el, id) {
@@ -31,15 +16,28 @@
     const sec = document.getElementById(id);
     if (sec) sec.classList.add('active');
 
-    const meta = window.PAGE_META[id] || {};
     const pgTitleEl = document.getElementById('pgTitle');
     const pgSubEl = document.getElementById('pgSub');
     const primaryLabelEl = document.getElementById('tbPrimaryLabel');
-    if (pgTitleEl) pgTitleEl.textContent = meta.title || id;
-    if (pgSubEl)   pgSubEl.textContent   = meta.sub   || '';
-    if (primaryLabelEl) primaryLabelEl.textContent = meta.cta || 'Action';
+
+    // Prefer explicit data attributes on the section element
+    let title = '';
+    let sub = '';
+    let cta = '';
+    if (sec) {
+      title = sec.dataset && sec.dataset.title ? sec.dataset.title : (sec.getAttribute && sec.getAttribute('data-title')) || '';
+      sub   = sec.dataset && sec.dataset.sub   ? sec.dataset.sub   : (sec.getAttribute && sec.getAttribute('data-sub'))   || '';
+      cta   = sec.dataset && sec.dataset.cta   ? sec.dataset.cta   : (sec.getAttribute && sec.getAttribute('data-cta'))   || '';
+    }
+
+    // Small fallback map for known sections when no data-* provided
+   
+    if (pgTitleEl) pgTitleEl.textContent = title;
+    if (pgSubEl)   pgSubEl.textContent   = sub;
+    if (primaryLabelEl) primaryLabelEl.textContent = cta || 'Action';
 
     initCharts(id);
+    initAdminData(id);
   }
 
   /* ── Role switcher ── */
@@ -128,22 +126,42 @@
     chartInited[id] = true;
 
     if (id === 'aDash') {
-      new Chart(document.getElementById('cAdminGMV'), {
-        type: 'bar',
-        data: {
-          labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
-          datasets: [
-            { label: 'GMV', data: [18,24,21,42,0,0,0,0,0,0,0,0], backgroundColor: BLUE+'33', borderColor: BLUE, borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
-            { type: 'line', label: 'Orders', data: [32,45,38,98,0,0,0,0,0,0,0,0], borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
-          ],
-        },
-        options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'M' } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display:false } }, x: X_NO_GRID } },
-      });
-      new Chart(document.getElementById('cAdminCat'), {
-        type: 'doughnut',
-        data: { labels: ['Electronics','Books','Clothing','Other'], datasets: [{ data: [28,24,19,29], backgroundColor: [BLUE, GREEN, AMBER, PURPLE], borderWidth: 0, hoverOffset: 6 }] },
-        options: { ...BASE_OPTS, cutout: '70%' },
-      });
+      (async () => {
+        try {
+          const [gmvRes, catRes] = await Promise.all([
+            fetch('/api/admin/gmv-months'),
+            fetch('/api/admin/categories')
+          ]);
+          const gmvJson = gmvRes.ok ? await gmvRes.json() : null;
+          const catJson = catRes.ok ? await catRes.json() : null;
+
+          const labels = (gmvJson && gmvJson.data && gmvJson.data.labels) || ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+          const gmvData = (gmvJson && gmvJson.data && gmvJson.data.gmvData) || [18,24,21,42,0,0,0,0,0,0,0,0];
+          const ordersData = (gmvJson && gmvJson.data && gmvJson.data.ordersData) || [32,45,38,98,0,0,0,0,0,0,0,0];
+
+          new Chart(document.getElementById('cAdminGMV'), {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [
+                { label: 'GMV', data: gmvData, backgroundColor: BLUE+'33', borderColor: BLUE, borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
+                { type: 'line', label: 'Orders', data: ordersData, borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
+              ],
+            },
+            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display:false } }, x: X_NO_GRID } },
+          });
+
+          const catLabels = (catJson && catJson.data && catJson.data.labels) || ['Electronics','Books','Clothing','Other'];
+          const catData = (catJson && catJson.data && catJson.data.data) || [28,24,19,29];
+          new Chart(document.getElementById('cAdminCat'), {
+            type: 'doughnut',
+            data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: [BLUE, GREEN, AMBER, PURPLE], borderWidth: 0, hoverOffset: 6 }] },
+            options: { ...BASE_OPTS, cutout: '70%' },
+          });
+        } catch (e) {
+          console.error('Failed to load admin charts', e);
+        }
+      })();
     }
 
     if (id === 'aAnalytics') {
@@ -202,6 +220,190 @@
         options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'K' } }, x: X_NO_GRID } },
       });
     }
+  }
+
+  /* ── Admin data loaders (users / products / orders) ── */
+  function initAdminData(id) {
+    if (id === 'aUsers') fetchAdminUsers();
+    if (id === 'aProducts') fetchAdminProducts();
+    if (id === 'aOrders') { fetchAdminOrders(); fetchAdminOrderCounts(); }
+    if (id === 'aDash') fetchAdminStats();
+    if (id === 'sDash') fetchSellerStats();
+    if (id === 'sOrders') fetchSellerStats();
+  }
+
+  async function fetchAdminOrderCounts() {
+    try {
+      const res = await fetch('/api/admin/stats');
+      if (!res.ok) return;
+      const json = await res.json();
+      const by = (json.data && json.data.ordersByStatus) || {};
+      // update admin order status cards
+      document.querySelectorAll('#aOrders .status-count-card').forEach(card => {
+        const label = card.querySelector('.sc-label')?.textContent?.toLowerCase() || '';
+        const valEl = card.querySelector('.sc-val');
+        if (!valEl) return;
+        if (label.includes('pending')) valEl.textContent = (by.pending||0);
+        if (label.includes('confirmed')) valEl.textContent = (by.confirmed||0);
+        if (label.includes('completed')) valEl.textContent = (by.completed||0);
+        if (label.includes('cancelled')) valEl.textContent = (by.cancelled||0);
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  async function fetchAdminStats() {
+    try {
+      const res = await fetch('/api/admin/stats');
+      if (!res.ok) return console.error('Failed to load stats');
+      const json = await res.json();
+      const d = json.data || {};
+      // Update stat cards by label
+      document.querySelectorAll('.stat-card').forEach(card => {
+        const label = card.querySelector('.stat-label')?.textContent?.trim();
+        const valEl = card.querySelector('.stat-val');
+        if (!label || !valEl) return;
+        if (label.includes('Total users')) valEl.textContent = (d.totalUsers||0).toLocaleString();
+        if (label.includes('Active listings')) valEl.textContent = (d.activeListings||0).toLocaleString();
+        if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth||0).toLocaleString();
+        if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  async function fetchAdminUsers() {
+    try {
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) return console.error('Failed to load users');
+      const json = await res.json();
+      const users = (json.data || []);
+      const tbody = document.querySelector('#aUsers table tbody');
+      if (!tbody) return;
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><div class="user-cell"><div class="uc-avatar" style="background:#dbeafe;color:#1d4ed8">${(u.name||'')[0]||''}${(u.name||'')[1]||''}</div><div><div class="uc-name">${u.displayName||u.name}</div><div class="uc-sub">@${u.nickname||u.email?.split('@')[0]||''}</div></div></div></td>
+          <td style="color:var(--t2)">${u.email||''}</td>
+          <td style="color:var(--t2)">${u.university||''}</td>
+          <td style="color:var(--t2)">${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td><strong>${u.totalSales||0}</strong></td>
+          <td>${u.totalOrders||0}</td>
+          <td>${u.rating?('⭐ '+u.rating.toFixed(1)):'—'}</td>
+          <td><span class="badge ${u.banned? 'badge-cancelled':'badge-active'}">${u.banned? 'Banned':'User'}</span></td>
+          <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('View profile ${u.displayName||u.name}','info')">View</button><button class="act-btn ${u.banned? 'success':'danger'}" onclick="toggleBan('${u._id}', ${u.banned})">${u.banned? 'Unban':'Ban'}</button></div></td>
+        </tr>
+      `).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function toggleBan(id, current) {
+    try {
+      const res = await fetch('/api/admin/users/'+id+'/ban', { method: 'PATCH', headers: { 'content-type':'application/json' }, body: JSON.stringify({ banned: !current }) });
+      if (!res.ok) return showToast('Action failed','err');
+      showToast('Updated','ok');
+      fetchAdminUsers();
+      fetchAdminStats();
+    } catch (e) { console.error(e); showToast('Action failed','err'); }
+  }
+
+  async function fetchAdminProducts() {
+    try {
+      const res = await fetch('/api/admin/products');
+      if (!res.ok) return console.error('Failed to load products');
+      const json = await res.json();
+      const products = (json.data || []);
+      const tbody = document.querySelector('#aProducts table tbody');
+      if (!tbody) return;
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td><strong>${p.title}</strong></td>
+          <td style="color:var(--t2)">${p.seller?.name||p.seller?.nickname||''}</td>
+          <td style="color:var(--t2)">${p.category||''}</td>
+          <td>${new Intl.NumberFormat('vi-VN').format(p.price)} ₫</td>
+          <td>${p.views||0}</td>
+          <td>${p.interested||0}</td>
+          <td><span class="badge ${p.status==='active'?'badge-active': p.status==='sold'?'badge-sold':'badge-hidden'}">${p.status}</span></td>
+          <td style="color:var(--t2);font-size:12px">${new Date(p.createdAt).toLocaleDateString()}</td>
+          <td><div class="tbl-actions"><a class="act-btn primary" href="/products/${p._id}">View</a>
+            ${p.status==='active' ? `<button class="act-btn danger" onclick="adminProductAction('${p._id}','hide')">Hide</button>` : `<button class="act-btn success" onclick="adminProductAction('${p._id}','restore')">Restore</button>`}
+            <button class="act-btn" onclick="adminProductAction('${p._id}','delete')">Delete</button>
+          </div></td>
+        </tr>
+      `).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function adminProductAction(id, action) {
+    try {
+      let res;
+      if (action === 'hide') res = await fetch('/api/admin/products/'+id+'/hide', { method: 'PATCH' });
+      else if (action === 'restore') res = await fetch('/api/admin/products/'+id+'/restore', { method: 'PATCH' });
+      else if (action === 'delete') res = await fetch('/api/admin/products/'+id, { method: 'DELETE' });
+      else return;
+
+      if (!res.ok) {
+        const j = await res.json().catch(()=>({}));
+        return showToast(j.message || 'Action failed','err');
+      }
+      showToast('Done','ok');
+      fetchAdminProducts();
+      fetchAdminStats();
+    } catch (e) { console.error(e); showToast('Action failed','err'); }
+  }
+
+  async function fetchAdminOrders() {
+    try {
+      const res = await fetch('/api/admin/orders');
+      if (!res.ok) return console.error('Failed to load orders');
+      const json = await res.json();
+      const orders = (json.data || []);
+      const tbody = document.querySelector('#aOrders table tbody');
+      if (!tbody) return;
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-${String(o._id).slice(-4).toUpperCase()}</td>
+          <td>${o.product?.title||''}</td>
+          <td style="color:var(--t2)">${o.buyer?.name||o.buyer?.nickname||''}</td>
+          <td style="color:var(--t2)">${o.seller?.name||o.seller?.nickname||''}</td>
+          <td>${new Intl.NumberFormat('vi-VN').format(o.priceSnapshot)} ₫</td>
+          <td style="color:var(--t2)">${o.deliveryMode}</td>
+          <td style="color:var(--t2)">${o.paymentMode}</td>
+          <td><span class="badge badge-${o.status}">${o.status}</span></td>
+        </tr>
+      `).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  // Seller-specific stats (counts by status for seller)
+  async function fetchSellerStats() {
+    try {
+      const res = await fetch('/api/orders/stats?role=seller');
+      if (!res.ok) return;
+      const json = await res.json();
+      const d = json.data || {};
+      // update seller stat-card "Orders awaiting confirmation"
+      document.querySelectorAll('.stat-card').forEach(card => {
+        const label = card.querySelector('.stat-label')?.textContent || '';
+        const valEl = card.querySelector('.stat-val');
+        if (!label || !valEl) return;
+        if (label.includes('Orders awaiting confirmation')) {
+          valEl.textContent = d.pending || 0;
+          valEl.style.color = d.pending ? '#d97706' : '';
+        }
+      });
+
+      // update quick-card text that mentions awaiting confirmation
+      document.querySelectorAll('.quick-card .qc-sub').forEach(el => {
+        if (!el.textContent.includes('awaiting confirmation')) return;
+        const pending = d.pending || 0;
+        el.textContent = `${pending} orders awaiting confirmation`;
+      });
+
+      // update alert box text if present on seller dashboard
+      document.querySelectorAll('.alert-box.alert-info .alert-box-text').forEach(el => {
+        if (!el.textContent.includes('awaiting confirmation')) return;
+        const pending = d.pending || 0;
+        el.textContent = `You have ${pending} orders awaiting confirmation. Please confirm within 24 hours to avoid automatic cancellation.`;
+      });
+    } catch (e) { console.error(e); }
   }
 
   /* ── Boot ── */

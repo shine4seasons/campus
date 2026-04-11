@@ -3,6 +3,8 @@ const Product = require('../models/Product');
 
 const requireAuth = require('../middleware/pageAuth');
 const authController = require('../controllers/auth');
+const Order = require('../models/Order');
+const mongoose = require('mongoose');
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', (req, res) => {
@@ -178,6 +180,59 @@ router.get('/dashboard-seller', requireAuth, (req, res) => {
     return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: true });
   }
   return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: false });
+});
+
+// ── GET /dashboard-orders ───────────────────────────────────
+router.get('/orders-seller', requireAuth, async (req, res) => {
+  try {
+    const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
+
+
+    const orders = await Order.find({ seller: res.locals.user._id })
+      .sort('-createdAt')
+      .populate('product', 'title images price category condition location')
+      .populate('buyer', 'name nickname avatar phone')
+      .populate('seller', 'name nickname avatar phone')
+      .lean();
+
+    // Aggregate product order counts for this seller
+    const agg = await Order.aggregate([
+      { $match: { seller: res.locals.user._id } },
+      { $group: { _id: '$product', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const productIds = agg.map(a => a._id);
+    let productsWithCounts = [];
+    if (productIds.length) {
+      const prods = await Product.find({ _id: { $in: productIds } })
+        .select('title images price')
+        .lean();
+      // Map counts onto products preserving aggregation order
+      const prodMap = new Map(prods.map(p => [String(p._id), p]));
+      productsWithCounts = agg.map(a => ({
+        product: prodMap.get(String(a._id)) || { _id: a._id, title: 'Deleted product' },
+        count: a.count
+      }));
+    }
+
+    return res.render('orders-seller', { title: 'Orders — Campus Marketplace', orders, productsWithCounts, isLoginPage: false });
+  } catch (err) {
+    console.error('[pageRoutes] dashboard-orders:', err.message);
+    return res.status(500).render('404', { title: 'Error', isLoginPage: false });
+  }
+});
+
+// ── GET /revenue ───────────────────────────────────────────
+router.get('/revenue', requireAuth, async (req, res) => {
+  try {
+    // For now render the seller revenue view. If the user is a seller, we could
+    // compute aggregated stats here in the future.
+    return res.render('revenue', { title: 'Revenue — Campus Marketplace', isLoginPage: false });
+  } catch (err) {
+    console.error('[pageRoutes] revenue:', err.message);
+    return res.status(500).render('404', { title: 'Error', isLoginPage: false });
+  }
 });
 
 module.exports = router;

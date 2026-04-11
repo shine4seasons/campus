@@ -14,6 +14,8 @@ const aiRoutes      = require('./routes/aiRoutes');
 const pageRoutes    = require('./routes/pageRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 const adminRoutes   = require('./routes/adminRoutes');
+const adminApiRoutes = require('./routes/adminApi');
+const orderRoutes   = require('./routes/orderRoutes');
 
 const app = express();
 
@@ -34,9 +36,11 @@ app.use('/api/products', productRoutes);
 app.use('/api/upload',   uploadRoutes);
 app.use('/api/ai',       aiRoutes);
 app.use('/api/chat',     require('./routes/chatRoutes'));
+app.use('/api/orders',   orderRoutes.api);
 app.use('/',             pageRoutes);
 app.use('/checkout',     checkoutRoutes);
 app.use('/admin',        adminRoutes);
+app.use('/api/admin',    adminApiRoutes);
 
 app.use((req, res) => {
   res.status(404).render('404', { title: '404 — Not Found' });

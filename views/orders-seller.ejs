@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+<%- include('partials/navbar') %>
+<%- include('partials/sidebar') %>
+
+<main class="main">
+  <div class="content">
+
+    <!-- ── SECTION: Orders ── -->
+    <section class="section active" id="sOrders" data-title="Orders" data-sub="Orders received" data-cta="Export report">
+      <div class="status-counters">
+        <div class="status-count-card" style="border-top-color:#d97706"><div class="sc-label">Pending</div><div class="sc-val" style="color:#d97706">2</div></div>
+        <div class="status-count-card" style="border-top-color:#2563eb"><div class="sc-label">Confirmed</div><div class="sc-val" style="color:#2563eb">3</div></div>
+        <div class="status-count-card" style="border-top-color:#16a34a"><div class="sc-label">Completed</div><div class="sc-val" style="color:#16a34a">23</div></div>
+        <div class="status-count-card" style="border-top-color:#dc2626"><div class="sc-label">Cancelled</div><div class="sc-val" style="color:#dc2626">2</div></div>
+      </div>
+      <!-- Products that have orders (owned by the current seller) -->
+      <% if (typeof productsWithCounts !== 'undefined' && productsWithCounts && productsWithCounts.length) { %>
+        <div class="card" style="margin:12px 0 18px;padding:12px 16px">
+          <div class="card-head" style="margin-bottom:8px">
+            <div>
+              <div class="card-title">Products with orders</div>
+              <div class="card-sub">Your listings that have been ordered</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <% productsWithCounts.forEach(function(item){ %>
+              <a href="/products/<%=item.product._id%>" class="quick-card" style="width:240px;text-decoration:none;color:inherit">
+                <div style="display:flex;gap:12px;align-items:center">
+                  <div class="li-avatar" style="width:48px;height:48px;border-radius:8px;background:#f3f4f6;color:#475569;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+                    <% if (item.product.images && item.product.images.length) { %>
+                      <img src="<%=item.product.images[0]%>" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:6px"/>
+                    <% } else { %>
+                      <div style="font-weight:700;font-size:13px">P</div>
+                    <% } %>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;color:var(--t1);font-size:13px"><%=item.product.title%></div>
+                    <div style="font-size:12px;color:var(--t2);margin-top:6px"><%=item.count%> orders</div>
+                  </div>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <div><div class="tbl-title">Orders received</div><div class="tbl-count">30 total orders</div></div>
+          <div class="filter-pills">
+            <button class="f-pill on">All</button>
+            <button class="f-pill">Needs action</button>
+            <button class="f-pill">In progress</button>
+            <button class="f-pill">Completed</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Order ID</th><th>Product</th><th>Buyer</th><th>Price</th><th>Delivery</th><th>Payment</th><th>Note</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <% if (!orders || !orders.length) { %>
+              <tr><td colspan="9" class="empty">No orders yet.</td></tr>
+            <% } else { %>
+              <% orders.forEach(function(order){ %>
+                <tr>
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--t2)"><%= order._id %></td>
+                  <td><%= order.product && order.product.title ? order.product.title : '—' %></td>
+                  <td style="color:var(--t2)"><%= order.buyer && (order.buyer.nickname || order.buyer.name) ? (order.buyer.nickname || order.buyer.name) : '—' %></td>
+                  <td><%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %></td>
+                  <td style="color:var(--t2)"><%= order.deliveryMode === 'ship' ? 'Ship' : 'Pickup' %></td>
+                  <td style="color:var(--t2)"><%= order.paymentMode === 'card' ? 'Card' : 'Cash' %></td>
+                  <td style="color:var(--t3);font-size:12px"><%= order.note ? order.note : '—' %></td>
+                  <td><span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>"><%= order.status %></span></td>
+                  <td>
+                    <div class="tbl-actions">
+                      <select class="order-status-select" data-order-id="<%= order._id %>">
+                        <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>pending</option>
+                        <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>confirmed</option>
+                        <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>completed</option>
+                        <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>cancelled</option>
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /.content -->
+</main>
+
+<div id="toast-wrap"></div>
+
+<script>window.INITIAL_SECTION = 'sOrders';</script>
+<script>
+// Order status dropdown handling — calls PATCH /api/orders/:id/status
+;(function(){
+  const statusToClass = {
+    pending: 'badge-pending',
+    confirmed: 'badge-confirmed',
+    completed: 'badge-completed',
+    cancelled: 'badge-cancelled'
+  };
+
+  function showToast(msg, type){
+    if(window.showToast) return window.showToast(msg, type);
+    alert(msg);
+  }
+
+  async function updateStatus(orderId, status, selectEl){
+    const original = selectEl.dataset.prev || selectEl.value;
+    selectEl.disabled = true;
+    try{
+      const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({status})
+      });
+      if(!res.ok) throw new Error('Request failed');
+      // update badge in the same row
+      const row = selectEl.closest('tr');
+      const badge = row.querySelector('.badge');
+      if(badge){
+        badge.className = 'badge ' + (statusToClass[status] || 'badge-pending');
+        badge.textContent = status;
+      }
+      showToast('Order ' + orderId + ' updated to ' + status, 'ok');
+      selectEl.dataset.prev = status;
+    }catch(err){
+      selectEl.value = original;
+      showToast('Failed to update order ' + orderId, 'err');
+    }finally{
+      selectEl.disabled = false;
+    }
+  }
+
+  document.addEventListener('change', function(e){
+    const sel = e.target.closest('.order-status-select');
+    if(!sel) return;
+    const orderId = sel.dataset.orderId;
+    const status = sel.value;
+    updateStatus(orderId, status, sel);
+  });
+})();
+</script>
+<%- include('partials/dashboard-scripts') %>
+</body>
+</html>

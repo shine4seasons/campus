@@ -73,17 +73,25 @@
         </a>
       </div>
       <div class="sb-links-seller nav-links-seller" style="display:none;">
-        <a href="/dashboard" class="sb-link nav-link seller-only" onclick="setMode('seller')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><path d="M16 3l-4 4-4-4"/></svg>
-          Dashboard
+        <div class="sb-group-label">Overview</div>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'dashboard') ? ' active' : '' %>" href="/dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13h8V3H3v10z"/><path d="M13 21h8V11h-8v10z"/></svg>
+          <span style="margin-left:8px;">Dashboard</span>
         </a>
-        <a href="/my-products" class="sb-link nav-link seller-only">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><path d="M16 3l-4 4-4-4"/></svg>
-          My listings
+
+        <div class="sb-group-label" style="margin-top:14px">My Store</div>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'listings') ? ' active' : '' %>" href="/my-products">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          <span style="margin-left:8px">Listings</span>
         </a>
-        <a href="/sell" class="sb-link nav-link seller-only">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          New listing
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'orders') ? ' active' : '' %>" href="/orders-seller">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3h18v4H3z"/><path d="M3 11h18v10H3z"/></svg>
+          <span style="margin-left:8px">Orders</span>
+          <span class="nav-badge" style="margin-left:auto;">2</span>
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'revenue') ? ' active' : '' %>" href="/revenue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
+          <span style="margin-left:8px">Revenue</span>
         </a>
       </div>
     </div>
@@ -109,6 +117,35 @@
 
 <script>
 (function () {
+  // Ensure a global `nav()` exists for pages that don't include the
+  // full dashboard script. If `nav` is already defined elsewhere,
+  // do not overwrite it.
+  if (typeof window.nav !== 'function') {
+    window.nav = function (el, id) {
+      try {
+        // If a dashboard `nav`/`showSection` exists, prefer it.
+        if (typeof window.showSection === 'function') {
+          if (el && el.classList) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+          }
+          return window.showSection(id);
+        }
+      } catch (e) {}
+
+      // Fallback: map known section ids to full-page routes
+      const PATHS = {
+        aDash: '/admin', aAnalytics: '/admin/analytics', aUsers: '/admin/users', aProducts: '/admin/products', aOrders: '/admin/orders', aReports: '/admin/reports', aSettings: '/admin/settings',
+        sDash: '/dashboard', sListings: '/my-products', sOrders: '/orders-seller', sRevenue: '/revenue', sMessages: '/messages', sProfile: '/profile'
+      };
+      if (el && el.classList) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+      const p = PATHS[id] || '/';
+      window.location.href = p;
+    };
+  }
   const STORAGE_KEY = 'campus_mode';
 
   // Helper to navigate admin dashboard in-page when possible
@@ -147,7 +184,7 @@
       window.location.href = '/';
     }
     if (mode === 'seller' && path === '/') {
-      window.location.href = '/my-products';
+      window.location.href = '/dashboard';
     }
   };
 
@@ -224,10 +261,10 @@
       try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
       const path = url.pathname;
       const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-      if (mode === 'seller' && (path === '/' || path.startsWith('/product') || path.startsWith('/orders'))) {
+      if (mode === 'seller' && (path === '/' || path.startsWith('/product') || (/^\/orders(\/|$)/).test(path))) {
         e.preventDefault();
         if (path === '/') {
-          window.location.href = '/my-products';
+          window.location.href = '/dashboard';
         } else {
           showSwitchModal(hrefAttr);
         }

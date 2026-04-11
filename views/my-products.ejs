@@ -3,204 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Listings — Campus Marketplace</title>
+  <title>Listings — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/my-products.css">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <style>
-    .empty-icon svg { width: 48px; height: 48px; stroke: #C4CADF; }
-    .row-meta svg   { width: 14px; height: 14px; display: inline-block; vertical-align: middle; }
-    .row-thumb svg  { width: 24px; height: 24px; stroke: #8890B0; }
-  </style>
+  <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body>
-  <%- include('partials/navbar') %>
-  <%- include('partials/sidebar') %>
+<%- include('partials/navbar') %>
+<%- include('partials/sidebar') %>
 
-  <div class="page-wrap">
-    <div class="page-top">
-      <h1>My Listings</h1>
-    </div>
+<main class="main">
+  <div class="content">
 
-    <%
-      const _active = products.filter(p => p.status === 'active').length;
-      const _sold   = products.filter(p => p.status === 'sold').length;
-      const _views  = products.reduce((s, p) => s + (p.views || 0), 0);
-
-      const CAT_ICON = {
-        books:        'book-open',
-        electronics:  'monitor',
-        clothing:     'shirt',
-        furniture:    'sofa',
-        'daily-needs':'shopping-bag',
-        sports:       'dumbbell',
-        gaming:       'gamepad-2',
-        other:        'package',
-      };
-    %>
-
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-num"><%= products.length %></div>
-        <div class="stat-lbl">Total listings</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num"><%= _active %></div>
-        <div class="stat-lbl">Active</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num"><%= _sold %></div>
-        <div class="stat-lbl">Sold</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num"><%= _views.toLocaleString('en-US') %></div>
-        <div class="stat-lbl">Views</div>
-      </div>
-    </div>
-
-    <div class="status-tabs" style="margin-bottom:20px;display:inline-flex;">
-      <button class="status-tab active" data-status="all"    onclick="filterStatus('all',this)">All</button>
-      <button class="status-tab"        data-status="active" onclick="filterStatus('active',this)">Active</button>
-      <button class="status-tab"        data-status="sold"   onclick="filterStatus('sold',this)">Sold</button>
-      <button class="status-tab"        data-status="hidden" onclick="filterStatus('hidden',this)">Draft</button>
-    </div>
-
-    <div class="products-list" id="products-list">
-      <% if (products.length === 0) { %>
-        <div class="empty-state">
-          <div class="empty-icon">
-            <i data-lucide="package" style="width:48px;height:48px;stroke:#C4CADF;"></i>
+    <!-- ── SECTION: Listings ── -->
+    <section class="section active" id="sListings" data-title="Listings" data-sub="Quản lý sản phẩm của bạn" data-cta="Đăng sản phẩm">
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <div><div class="tbl-title">My products</div><div class="tbl-count">20 listings total</div></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="filter-pills">
+              <button class="f-pill on">All</button>
+              <button class="f-pill">Active</button>
+              <button class="f-pill">Sold</button>
+              <button class="f-pill">Hidden</button>
+            </div>
+            <button class="btn btn-primary" onclick="window.location.href='/sell'">
+              <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Post product
+            </button>
           </div>
-          <div class="empty-title">You don't have any listings yet.</div>
-          <div class="empty-sub">Post your first listing right now!</div>
-          <a href="/sell" class="btn-new">+ Post a listing</a>
         </div>
-      <% } else { %>
-        <% products.forEach(p => { %>
-          <div class="product-row" data-status="<%= p.status %>">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>Category</th><th>Price</th><th>Views</th><th>Interest</th><th>Posted</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="my-products-tbody">
+            <tr><td colspan="8" class="empty">Loading your products...</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pg-info">Showing 1–5 / 20</span>
+          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">3</button>
+          <button class="pg-btn">4</button>
+          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </section>
 
-            <div class="row-thumb">
-              <% if (p.images && p.images[0]) { %>
-                <img src="<%= p.images[0] %>" alt="<%= p.title %>"
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"
-                  style="display:none;width:24px;height:24px;stroke:#8890B0;"></i>
-              <% } else { %>
-                <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"
-                  style="width:24px;height:24px;stroke:#8890B0;"></i>
-              <% } %>
-            </div>
+  </div><!-- /.content -->
+</main>
 
-            <div>
-              <div class="row-title"><%= p.title %></div>
-              <div class="row-meta">
-                <span class="row-status <%= p.status === 'active' ? 's-active' : p.status === 'sold' ? 's-sold' : 's-hidden' %>">
-                  <%= p.status === 'active' ? 'Active' : p.status === 'sold' ? 'Sold' : 'Draft' %>
-                </span>
-                <span style="display:inline-flex;align-items:center;gap:3px;">
-                  <i data-lucide="eye"></i> <%= p.views || 0 %> views
-                </span>
-                <span style="display:inline-flex;align-items:center;gap:3px;">
-                  <i data-lucide="heart"></i> <%= p.interested || 0 %> interested
-                </span>
-                <span style="display:inline-flex;align-items:center;gap:3px;">
-                  <i data-lucide="calendar"></i>
-                  <%= new Date(p.createdAt).toLocaleDateString('en-US') %>
-                </span>
-              </div>
-              <div class="row-price">
-                <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price) %>
-              </div>
-            </div>
+<div id="toast-wrap"></div>
 
-            <div class="row-actions">
-              <button class="row-btn row-btn-edit"
-                onclick="window.location.href='/sell?id=<%= p._id %>'">Edit</button>
-              <button class="row-btn row-btn-del"
-                onclick="deleteProduct('<%= p._id %>', this)">Delete</button>
-            </div>
-          </div>
-        <% }) %>
-      <% } %>
-    </div>
-  </div>
-
-  <div id="toast-wrap"></div>
-
-  <script>
-    // Init Lucide static icons
-    lucide.createIcons();
-
-    // ── Filter by status ───────────────────────────────────
-    window.filterStatus = function (status, btn) {
-      document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-
-      const rows = document.querySelectorAll('.product-row');
-      rows.forEach(row => {
-        row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
-      });
-
-      const anyVisible = [...rows].some(r => r.style.display !== 'none');
-      const list = document.getElementById('products-list');
-      let empty = list.querySelector('.filter-empty');
-      if (!anyVisible) {
-        if (!empty) {
-          empty = document.createElement('div');
-          empty.className = 'empty-state filter-empty';
-          const msgs = {
-            active: 'No active listings.',
-            sold:   "You haven't sold anything yet.",
-            hidden: 'No draft listings.',
-          };
-          // Inline SVG for dynamically injected empty state
-          const inboxSVG =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C4CADF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-            '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>' +
-            '<path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' +
-            '</svg>';
-          empty.innerHTML =
-            '<div class="empty-icon">' + inboxSVG + '</div>' +
-            '<div class="empty-title">' + (msgs[status] || 'No listings.') + '</div>';
-          list.appendChild(empty);
-        }
-      } else if (empty) {
-        empty.remove();
-      }
-    };
-
-    // ── Delete via API ─────────────────────────────────────
-    window.deleteProduct = async function (pid, btn) {
-      if (!confirm('Delete this listing? This action cannot be undone.')) return;
-      btn.disabled = true;
-      try {
-        const res  = await fetch('/api/products/' + pid, { method: 'DELETE', credentials: 'include' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Delete failed');
-        btn.closest('.product-row').remove();
-        toast('Listing deleted', 'ok');
-      } catch (err) {
-        btn.disabled = false;
-        toast(err.message, 'err');
-      }
-    };
-
-    // ── Toast ──────────────────────────────────────────────
-    function toast(msg, type) {
-      const c = document.getElementById('toast-wrap');
-      const t = document.createElement('div');
-      t.className = 'toast ' + (type || 'ok');
-      const icon = type === 'err'
-        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
-      t.style.cssText = 'display:flex;align-items:center;gap:8px;';
-      t.innerHTML = icon + msg;
-      c.appendChild(t);
-      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+<script>window.INITIAL_SECTION = 'sListings';</script>
+<%- include('partials/dashboard-scripts') %>
+<script>
+// Fetch seller's products and render into table
+;(async function(){
+  try{
+    const res = await fetch('/api/products/my', { credentials: 'include' });
+    const json = await res.json();
+    const tbody = document.getElementById('my-products-tbody');
+    if (!json.success) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">Failed to load products.</td></tr>';
+      return;
     }
-  </script>
+    const products = json.data || [];
+    if (!products.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">You have no products yet.</td></tr>';
+      return;
+    }
+    const rows = products.map(p => {
+      const price = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price || 0);
+      const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit' });
+      const status = p.status || 'active';
+      const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
+      return `
+        <tr>
+          <td><strong>${escapeHtml(p.title)}</strong></td>
+          <td style="color:var(--t2)">${escapeHtml(p.category || '')}</td>
+          <td>${price}</td>
+          <td>${p.views || 0}</td>
+          <td>${p.interested || 0}</td>
+          <td style="color:var(--t2);font-size:12px">${posted}</td>
+          <td><span class="badge ${badgeClass}">${status}</span></td>
+          <td><div class="tbl-actions"><button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button><button class="act-btn danger" onclick="toggleHide('${p._id}', '${status==='hidden' ? 'active' : 'hidden'}')">${status==='hidden'?'Unhide':'Hide'}</button></div></td>
+        </tr>`;
+    }).join('');
+    tbody.innerHTML = rows;
+    // update count
+    const countEl = document.querySelector('.tbl-count');
+    if (countEl) countEl.textContent = `${products.length} listings total`;
+  }catch(err){
+    const tbody = document.getElementById('my-products-tbody');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Failed to load products.</td></tr>';
+    console.error('Failed to fetch my products:', err);
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+  window.toggleHide = async function(productId, newStatus){
+    try{
+      const res = await fetch('/api/products/' + encodeURIComponent(productId), {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus })
+      });
+      const j = await res.json();
+      if (j.success) location.reload();
+      else alert(j.message || 'Failed');
+    }catch(e){ alert('Failed'); }
+  };
+})();
+</script>
 </body>
 </html>

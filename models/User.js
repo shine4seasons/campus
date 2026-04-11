@@ -26,6 +26,9 @@ const UserSchema = new mongoose.Schema(
     // true khi vừa tạo tài khoản — callback đọc để redirect step 2
     isNewUser: { type: Boolean, default: true },
 
+    // Admin controls
+    banned: { type: Boolean, default: false, index: true },
+
     // ── Stats ──────────────────────────────────────────
     rating:      { type: Number, default: 5.0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0 },

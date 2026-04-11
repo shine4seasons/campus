@@ -19,6 +19,9 @@ router.post('/',                   orderController.createOrder);
 // GET    /api/orders            — xem đơn của mình (buyer/seller)
 router.get('/',                    orderController.getMyOrders);
 
+// GET    /api/orders/stats      — counts by status for current user
+router.get('/stats',               orderController.getOrderStats);
+
 // GET    /api/orders/:id        — xem chi tiết 1 đơn
 router.get('/:id',                 orderController.getOrderById);
 

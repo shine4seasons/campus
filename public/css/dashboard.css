@@ -330,6 +330,28 @@ body.has-sidebar .main .content,
     .act-btn.danger  { border-color: #fca5a5; color: var(--red); background: var(--red-lt); }
     .act-btn.danger:hover  { background: var(--red); color: #fff; border-color: var(--red); }
 
+    /* Order status select (dropdown) */
+    .order-status-select {
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 6px 10px;
+      padding-right: 28px; /* room for arrow */
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%2364748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>') no-repeat right 8px center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2);
+      cursor: pointer;
+      height: 34px;
+      min-width: 120px;
+      transition: border-color .12s, box-shadow .12s, color .12s;
+      font-family: var(--font);
+    }
+    .order-status-select:hover { border-color: var(--accent); color: var(--accent); }
+    .order-status-select:disabled { opacity: .6; cursor: not-allowed; }
+    .order-status-select option { font-weight: 600; }
+
     /* List items */
     .list-item {
       display: flex; align-items: center; gap: 12px;
