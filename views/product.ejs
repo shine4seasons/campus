@@ -13,6 +13,9 @@
     .similar-title { font-size:20px; font-weight:800; color:#0D0F1A; margin-bottom:20px; }
     .products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:20px; }
     .product-card { background:#fff; border-radius:16px; border:1px solid #E4E7F2; overflow:hidden; transition:all 0.25s; cursor:pointer; text-decoration:none; color:inherit; display:block; }
+    @media (min-width: 901px) {
+      body.has-sidebar > .similar-section { margin-left: var(--sb-w); }
+    }
     .product-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(13,15,26,0.08); border-color:#1B5EFF; }
     .product-img-placeholder { width:100%; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; font-size:48px; background:linear-gradient(135deg,#EBF0FF,#E4E7F2); }
     .product-body { padding:16px; }
