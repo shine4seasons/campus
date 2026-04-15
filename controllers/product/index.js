@@ -33,7 +33,7 @@ const getProducts = async (req, res) => {
     const products = await query
       .skip(skip)
       .limit(Number(limit))
-      .populate('seller', 'name nickname avatar university rating')
+      .populate('seller', 'name nickname avatar university rating ratingCount totalSales')
       .lean();
 
     res.json({
@@ -91,7 +91,10 @@ const updateProduct = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Không có quyền' });
     }
 
+    const oldPrice = product.price;
     ALLOWED_UPDATE_FIELDS.forEach(k => { if (req.body[k] !== undefined) product[k] = req.body[k]; });
+
+    const priceDropped = req.body.price !== undefined && req.body.price < oldPrice;
 
     if (req.body.status === 'sold' && product.status !== 'sold') {
       product.soldAt = new Date();
@@ -100,6 +103,29 @@ const updateProduct = async (req, res) => {
     }
 
     await product.save();
+
+    // If price dropped, notify all users who favorited this product
+    if (priceDropped) {
+      try {
+        const Favorite = require('../../models/Favorite');
+        const { sendNotification } = require('../../utils/notifService');
+        const favorites = await Favorite.find({ product: product._id });
+        
+        for (const fav of favorites) {
+          await sendNotification({
+            recipient: fav.user,
+            sender:    product.seller,
+            type:      'info',
+            title:     'Price Drop! 🔥',
+            message:   `The price of "${product.title}" has dropped to ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}!`,
+            link:      `/products/${product._id}`
+          });
+        }
+      } catch (notifErr) {
+        console.error('Price drop notification error:', notifErr);
+      }
+    }
+
     await product.populate('seller', 'name nickname avatar university');
     res.json({ success: true, data: product });
   } catch (err) {
@@ -138,8 +164,19 @@ const getMyProducts = async (req, res) => {
 
 const toggleInterested = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, { $inc: { interested: 1 } }, { new: true });
-    res.json({ success: true, interested: product.interested });
+    const Favorite = require('../../models/Favorite');
+    const existing = await Favorite.findOne({ user: req.user._id, product: req.params.id });
+    
+    let product;
+    if (existing) {
+      await Favorite.deleteOne({ _id: existing._id });
+      product = await Product.findByIdAndUpdate(req.params.id, { $inc: { interested: -1 } }, { new: true });
+    } else {
+      await Favorite.create({ user: req.user._id, product: req.params.id });
+      product = await Product.findByIdAndUpdate(req.params.id, { $inc: { interested: 1 } }, { new: true });
+    }
+    
+    res.json({ success: true, interested: product.interested, isFavorited: !existing });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -17,7 +17,6 @@
   <div class="content">
 
     <!-- ── SECTION: Orders ── -->
-    <section class="section active" id="sOrders" data-title="Orders" data-sub="Orders received" data-cta="Export report">
       <div class="status-counters">
         <div class="status-count-card" style="border-top-color:#d97706"><div class="sc-label">Pending</div><div class="sc-val" style="color:#d97706">2</div></div>
         <div class="status-count-card" style="border-top-color:#2563eb"><div class="sc-label">Confirmed</div><div class="sc-val" style="color:#2563eb">3</div></div>
@@ -76,7 +75,7 @@
                 <tr>
                   <td style="font-family:var(--mono);font-size:11px;color:var(--t2)"><%= order._id %></td>
                   <td><%= order.product && order.product.title ? order.product.title : '—' %></td>
-                  <td style="color:var(--t2)"><%= order.buyer && (order.buyer.nickname || order.buyer.name) ? (order.buyer.nickname || order.buyer.name) : '—' %></td>
+                  <td><a href="/user/<%= order.buyer._id %>" style="color:#1B5EFF;text-decoration:none;"><%= order.buyer && (order.buyer.nickname || order.buyer.name) ? (order.buyer.nickname || order.buyer.name) : '—' %></a></td>
                   <td><%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %></td>
                   <td style="color:var(--t2)"><%= order.deliveryMode === 'ship' ? 'Ship' : 'Pickup' %></td>
                   <td style="color:var(--t2)"><%= order.paymentMode === 'card' ? 'Card' : 'Cash' %></td>
@@ -98,7 +97,7 @@
           </tbody>
         </table>
       </div>
-    </section>
+
 
   </div><!-- /.content -->
 </main>
@@ -155,6 +154,35 @@
     const orderId = sel.dataset.orderId;
     const status = sel.value;
     updateStatus(orderId, status, sel);
+  });
+
+  // Filter pills handling
+  const pills = document.querySelectorAll('.f-pill');
+  const rows = document.querySelectorAll('tbody tr:not(.empty)');
+  
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      // Toggle 'on' class
+      pills.forEach(p => p.classList.remove('on'));
+      pill.classList.add('on');
+
+      const filterType = pill.textContent.trim();
+      rows.forEach(row => {
+        const badge = row.querySelector('.badge');
+        if (!badge) return;
+        const status = badge.textContent.trim().toLowerCase();
+
+        if (filterType === 'All') {
+          row.style.display = '';
+        } else if (filterType === 'Needs action') {
+          row.style.display = (status === 'pending') ? '' : 'none';
+        } else if (filterType === 'In progress') {
+          row.style.display = (status === 'confirmed') ? '' : 'none';
+        } else if (filterType === 'Completed') {
+          row.style.display = (status === 'completed') ? '' : 'none';
+        }
+      });
+    });
   });
 })();
 </script>

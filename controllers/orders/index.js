@@ -17,6 +17,7 @@ exports.createOrder = async (req, res) => {
       paymentMode,
       note            = '',
       shippingAddress = null,
+      pickupLocation  = null,
     } = req.body;
 
     if (!productId) return res.status(400).json({ success: false, message: 'Thiếu productId' });
@@ -47,6 +48,7 @@ exports.createOrder = async (req, res) => {
       paymentMode,
       note:            note.trim().substring(0, 500),
       shippingAddress: deliveryMode === 'ship' ? shippingAddress : null,
+      pickupLocation:  deliveryMode === 'pickup' ? pickupLocation : null,
       status:          'pending',
     });
 
@@ -63,18 +65,18 @@ exports.createOrder = async (req, res) => {
       conv = await findOrCreateConversation(buyerId, sellerId, productId);
 
       const deliveryText = deliveryMode === 'ship'
-        ? `📬 Giao đến: ${shippingAddress?.street || ''}, ${shippingAddress?.city || ''}`
-        : '🏪 Hình thức: Tự đến nhận hàng';
+        ? `Delivery to: ${shippingAddress?.street || ''}, ${shippingAddress?.city || ''}`
+        : 'Method: Pickup';
 
-      const payText = paymentMode === 'cash' ? '💵 Thanh toán: Tiền mặt' : '💳 Thanh toán: Thẻ ngân hàng';
+      const payText = paymentMode === 'cash' ? 'Payment: Cash' : 'Payment: Card';
 
       const autoMsg =
-        `🛒 *Đơn hàng mới từ ${req.user.nickname || req.user.name}*\n` +
-        `📦 Sản phẩm: ${product.title}\n` +
-        `💰 Giá: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}\n` +
+        `[ORDER] *New order from ${req.user.nickname || req.user.name}*\n` +
+        `Product: ${product.title}\n` +
+        `Price: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}\n` +
         deliveryText + '\n' +
         payText +
-        (note.trim() ? `\n📝 Ghi chú: ${note.trim()}` : '');
+        (note.trim() ? `\nNote: ${note.trim()}` : '');
 
       const msg = await Message.create({
         conversationId: conv._id,
@@ -100,6 +102,17 @@ exports.createOrder = async (req, res) => {
       await conv.save();
 
       await Order.findByIdAndUpdate(order._id, { conversation: conv._id });
+
+      // Create real-time notification for seller
+      const { sendNotification } = require('../../utils/notifService');
+      await sendNotification({
+        recipient: sellerId,
+        sender:    buyerId,
+        type:      'order',
+        title:     'New Order 🛒',
+        message:   `${req.user.nickname || req.user.name} placed an order for "${product.title}"`,
+        link:      `/orders-seller`
+      });
     } catch (chatErr) {
       console.error('[checkout] Auto-message error:', chatErr);
     }
@@ -141,7 +154,7 @@ exports.getMyOrders = async (req, res) => {
 // GET /api/orders/stats?role=buyer|seller
 exports.getOrderStats = async (req, res) => {
   try {
-    const userId = mongoose.Types.ObjectId(req.user._id);
+    const userId = req.user._id;
     const role = req.query.role || 'buyer';
     const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
 
@@ -235,7 +248,93 @@ exports.updateOrderStatus = async (req, res) => {
 
     await order.save();
 
+    // Notify the other party about status change in real-time
+    try {
+      const { sendNotification } = require('../../utils/notifService');
+      const recipientId = isSeller ? order.buyer : order.seller;
+      const statusText = status === 'confirmed' ? 'has been confirmed' : (status === 'completed' ? 'has been completed' : (status === 'cancelled' ? 'has been cancelled' : `moved to "${status}"`));
+      const prod = await Product.findById(order.product);
+      
+      let msg = `Your order for "${prod.title}" ${statusText}`;
+      if (status === 'completed') {
+          msg += ". Please leave a review for your partner! ⭐";
+      }
+
+      await sendNotification({
+        recipient: recipientId,
+        sender:    uid,
+        type:      status === 'completed' ? 'rating' : 'order',
+        title:     status === 'completed' ? 'Rate your trade! ⭐' : 'Order Update 📦',
+        message:   msg,
+        link:      isSeller ? `/orders/tracking/${order._id}` : '/orders-seller'
+      });
+    } catch (notifErr) {
+      console.error('Status change notification error:', notifErr);
+    }
+
     res.json({ success: true, data: order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/orders/analytics
+exports.getAnalytics = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+    const role = req.query.role || 'seller';
+    const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
+    
+    // 1. Revenue by month (last 4 months)
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    
+    const revAgg = await Order.aggregate([
+      { $match: { ...filter, createdAt: { $gte: start }, status: { $ne: 'cancelled' } } },
+      { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, total: { $sum: '$priceSnapshot' } } },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+    
+    const revLabels = [];
+    const revMap = {};
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      revLabels.push('T' + (d.getMonth() + 1));
+      revMap[`${d.getFullYear()}-${d.getMonth() + 1}`] = 0;
+    }
+    revAgg.forEach(r => { revMap[`${r._id.year}-${r._id.month}`] = r.total; });
+    const revData = Object.values(revMap).map(v => Number((v / 1000).toFixed(0))); // in thousands
+    
+    // 2. Categories distribution
+    const catAgg = await Order.aggregate([
+      { $match: { ...filter, status: { $ne: 'cancelled' } } },
+      { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'prod' } },
+      { $unwind: '$prod' },
+      { $group: { _id: { $ifNull: ['$prod.category', 'Other'] }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    
+    const catLabels = catAgg.map(c => c._id);
+    const catData = catAgg.map(c => c.count);
+
+    // 3. KPI Stats
+    const kpiAgg = await Order.aggregate([
+      { $match: { ...filter, status: 'completed' } },
+      { $group: { _id: null, totalRev: { $sum: '$priceSnapshot' }, totalSold: { $sum: 1 } } }
+    ]);
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const mAgg = await Order.aggregate([
+      { $match: { ...filter, status: 'completed', createdAt: { $gte: thisMonthStart } } },
+      { $group: { _id: null, monthRev: { $sum: '$priceSnapshot' } } }
+    ]);
+    const kpi = {
+        totalRevenue: kpiAgg[0]?.totalRev || 0,
+        totalSold: kpiAgg[0]?.totalSold || 0,
+        monthRevenue: mAgg[0]?.monthRev || 0
+    };
+    kpi.avgOrder = kpi.totalSold > 0 ? (kpi.totalRevenue / kpi.totalSold) : 0;
+
+    res.json({ success: true, data: { revenue: { labels: revLabels, data: revData }, categories: { labels: catLabels, data: catData }, kpi } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

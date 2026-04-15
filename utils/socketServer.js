@@ -5,6 +5,11 @@ function init(server) {
   io = new Server(server, { cors: { origin: '*' } });
 
   io.on('connection', (socket) => {
+    socket.on('joinUser', (userId) => {
+      if (!userId) return;
+      socket.join(`user_${userId}`);
+    });
+
     socket.on('joinConv', (convId) => {
       if (!convId) return;
       socket.join(`conv_${convId}`);

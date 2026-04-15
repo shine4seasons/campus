@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,26 +17,25 @@
   <div class="content">
 
     <!-- ── SECTION: Listings ── -->
-    <section class="section active" id="sListings" data-title="Listings" data-sub="Quản lý sản phẩm của bạn" data-cta="Đăng sản phẩm">
       <div class="tbl-wrap">
         <div class="tbl-toolbar">
-          <div><div class="tbl-title">Sản phẩm của tôi</div><div class="tbl-count">20 listing tổng cộng</div></div>
+          <div><div class="tbl-title">My products</div><div class="tbl-count">20 listings total</div></div>
           <div style="display:flex;align-items:center;gap:10px">
             <div class="filter-pills">
-              <button class="f-pill on">Tất cả</button>
-              <button class="f-pill">Đang bán</button>
-              <button class="f-pill">Đã bán</button>
-              <button class="f-pill">Bị ẩn</button>
+              <button class="f-pill on">All</button>
+              <button class="f-pill">Active</button>
+              <button class="f-pill">Sold</button>
+              <button class="f-pill">Hidden</button>
             </div>
-            <button class="btn btn-primary" onclick="showToast('Đến trang đăng sản phẩm','info')">
+            <button class="btn btn-primary" onclick="showToast('Go to New product page','info')">
               <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Đăng sản phẩm
+             New product
             </button>
           </div>
         </div>
         <table>
           <thead>
-            <tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Lượt xem</th><th>Quan tâm</th><th>Đăng</th><th>Trạng thái</th><th>Thao tác</th></tr>
+            <tr><th>Product</th><th>Category</th><th>Price</th><th>Views</th><th>Interest</th><th>Posted</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -44,45 +43,45 @@
               <td style="color:var(--t2)">Electronics</td>
               <td>320,000 ₫</td><td>124</td><td>8</td>
               <td style="color:var(--t2);font-size:12px">02/04</td>
-              <td><span class="badge badge-active">Đang bán</span></td>
-              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Chỉnh sửa sản phẩm','info')">Sửa</button><button class="act-btn danger" onclick="showToast('Đã ẩn sản phẩm','ok')">Ẩn</button></div></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Edit product','info')">Edit</button><button class="act-btn danger" onclick="showToast('Product hidden','ok')">Hide</button></div></td>
             </tr>
             <tr>
               <td><strong>Giáo trình Toán cao cấp T1</strong></td>
               <td style="color:var(--t2)">Books</td>
               <td>60,000 ₫</td><td>55</td><td>4</td>
               <td style="color:var(--t2);font-size:12px">28/03</td>
-              <td><span class="badge badge-active">Đang bán</span></td>
-              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Chỉnh sửa sản phẩm','info')">Sửa</button><button class="act-btn danger" onclick="showToast('Đã ẩn sản phẩm','ok')">Ẩn</button></div></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Edit product','info')">Edit</button><button class="act-btn danger" onclick="showToast('Product hidden','ok')">Hide</button></div></td>
             </tr>
             <tr>
               <td><strong>Tai nghe Sony WH-1000XM4</strong></td>
               <td style="color:var(--t2)">Electronics</td>
               <td>3,200,000 ₫</td><td>341</td><td>22</td>
               <td style="color:var(--t2);font-size:12px">15/03</td>
-              <td><span class="badge badge-sold">Đã bán</span></td>
-              <td><div class="tbl-actions"><button class="act-btn" onclick="showToast('Xem chi tiết','info')">Xem</button></div></td>
+              <td><span class="badge badge-sold">Sold</span></td>
+              <td><div class="tbl-actions"><button class="act-btn" onclick="showToast('View details','info')">View</button></div></td>
             </tr>
             <tr>
               <td><strong>Balo laptop 15.6"</strong></td>
-              <td style="color:var(--t2)">Khác</td>
+              <td style="color:var(--t2)">Other</td>
               <td>280,000 ₫</td><td>78</td><td>6</td>
               <td style="color:var(--t2);font-size:12px">10/03</td>
-              <td><span class="badge badge-active">Đang bán</span></td>
-              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Chỉnh sửa sản phẩm','info')">Sửa</button><button class="act-btn danger" onclick="showToast('Đã ẩn sản phẩm','ok')">Ẩn</button></div></td>
+              <td><span class="badge badge-active">Active</span></td>
+              <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('Edit product','info')">Edit</button><button class="act-btn danger" onclick="showToast('Product hidden','ok')">Hide</button></div></td>
             </tr>
             <tr>
               <td><strong>Đèn bàn LED điều chỉnh</strong></td>
-              <td style="color:var(--t2)">Nội thất</td>
+              <td style="color:var(--t2)">Furniture</td>
               <td>150,000 ₫</td><td>33</td><td>2</td>
               <td style="color:var(--t2);font-size:12px">05/03</td>
-              <td><span class="badge badge-hidden">Bị ẩn</span></td>
-              <td><div class="tbl-actions"><button class="act-btn success" onclick="showToast('Đã kích hoạt lại sản phẩm','ok')">Hiển thị</button></div></td>
+              <td><span class="badge badge-hidden">Hidden</span></td>
+              <td><div class="tbl-actions"><button class="act-btn success" onclick="showToast('Product restored','ok')">Restore</button></div></td>
             </tr>
           </tbody>
         </table>
         <div class="pagination">
-          <span class="pg-info">Hiển thị 1–5 / 20</span>
+          <span class="pg-info">Showing 1–5 / 20</span>
           <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
           <button class="pg-btn active">1</button>
           <button class="pg-btn">2</button>

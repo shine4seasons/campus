@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Tracking — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/rating.css">
+  <!-- Leaflet CSS for maps -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    .tracking-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .tracking-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 24px;
+    }
+    @media (max-width: 1024px) {
+      .tracking-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .tracking-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .tracking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .tracking-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--t1);
+    }
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .map-legend {
+      font-size: 12px;
+      color: var(--t2);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .buyer-dot {
+      background: #1B5EFF;
+    }
+    .seller-dot {
+      background: #16a34a;
+    }
+    .route-line {
+      background: #fbbf24;
+    }
+    .info-box {
+      background: var(--bg2);
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .info-box-title {
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 4px;
+    }
+    .info-box-content {
+      color: var(--t2);
+    }
+    .status-timeline {
+      margin-top: 16px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 30px;
+      width: 2px;
+      height: 32px;
+      background: var(--border);
+    }
+    .timeline-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .timeline-dot.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .timeline-dot.completed {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .timeline-content {
+      flex: 1;
+    }
+    .timeline-title {
+      font-weight: 600;
+      color: var(--t1);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .timeline-date {
+      font-size: 12px;
+      color: var(--t3);
+    }
+    .order-details {
+      background: var(--bg2);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .order-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .order-detail-row:last-child {
+      border-bottom: none;
+    }
+    .order-detail-label {
+      color: var(--t2);
+      font-weight: 500;
+    }
+    .order-detail-value {
+      color: var(--t1);
+      font-weight: 600;
+    }
+    .person-card {
+      background: var(--bg2);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .person-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .person-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .person-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .person-name {
+      font-weight: 600;
+      color: var(--t1);
+      font-size: 13px;
+    }
+    .person-role {
+      font-size: 12px;
+      color: var(--t2);
+      margin-top: 2px;
+    }
+    .person-contact {
+      font-size: 12px;
+      color: var(--primary);
+      margin-top: 2px;
+      text-decoration: none;
+    }
+    .btn-message {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn-message:hover {
+      background: var(--primary-dark);
+    }
+    .section-label {
+      font-size: 12px;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      margin-top: 16px;
+    }
+    .section-label:first-child {
+      margin-top: 0;
+    }
+    .distance-info {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .distance-info-title {
+      font-weight: 700;
+      color: var(--t1);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .distance-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .distance-time {
+      font-size: 12px;
+      color: var(--t2);
+    }
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 16px;
+      transition: all 0.2s ease;
+    }
+    .back-button:hover {
+      gap: 10px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-pending {
+      background: rgba(217, 119, 6, 0.1);
+      color: #d97706;
+    }
+    .badge-confirmed {
+      background: rgba(37, 99, 235, 0.1);
+      color: #2563eb;
+    }
+    .badge-completed {
+      background: rgba(22, 163, 74, 0.1);
+      color: #16a34a;
+    }
+    .badge-cancelled {
+      background: rgba(220, 38, 38, 0.1);
+      color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/navbar') %>
+<%- include('partials/sidebar') %>
+
+<main class="main">
+  <div class="content">
+    <div class="tracking-container">
+      <a href="/orders" class="back-button">← Back to Orders</a>
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px">
+        <div>
+          <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px">
+            Track Your Order
+          </h1>
+          <p style="color: var(--t2); font-size: 14px">
+            Order #<%= String(order._id).substring(0, 8).toUpperCase() %>
+          </p>
+        </div>
+        <span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>">
+          <%= order.status %>
+        </span>
+      </div>
+
+      <div class="tracking-grid">
+        <!-- Left column: Map and distance -->
+        <div>
+          <div class="tracking-card">
+            <div class="tracking-header">
+              <div class="tracking-title">Delivery Route</div>
+            </div>
+            
+            <div id="map"></div>
+            
+            <div class="map-legend">
+              <div class="legend-item">
+                <span class="legend-dot buyer-dot" style="display:inline-flex;align-items:center;justify-content:center;color:white;font-size:8px;">B</span>
+                <span>Your Location</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot seller-dot" style="display:inline-flex;align-items:center;justify-content:center;color:white;font-size:8px;">S</span>
+                <span>Seller Location</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot route-line"></span>
+                <span>Route Distance</span>
+              </div>
+            </div>
+
+            <!-- Distance information -->
+            <div class="distance-info">
+              <div class="distance-info-title">Estimated Distance</div>
+              <div class="distance-value" id="distanceValue">Calculating...</div>
+              <div class="distance-time" id="estimatedTime"></div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-box-title" style="display:flex;align-items:center;gap:6px;">
+                <i data-lucide="map-pin" style="width:16px;height:16px;"></i> Delivery Method
+              </div>
+              <div class="info-box-content">
+                <% if (order.deliveryMode === 'ship') { %>
+                  <strong>Shipping to:</strong><br/>
+                  <%= order.shippingAddress?.name %><br/>
+                  <%= order.shippingAddress?.street %><br/>
+                  <%= order.shippingAddress?.district %>, <%= order.shippingAddress?.city %>
+                <% } else { %>
+                  <strong>Pickup</strong><br/>
+                  You will pick up this item from the seller's location
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Order details and status -->
+        <div>
+          <!-- Order Details -->
+          <div class="tracking-card">
+            <div class="tracking-header">
+              <div class="tracking-title">Order Details</div>
+            </div>
+
+            <div class="order-details">
+              <div class="order-detail-row">
+                <span class="order-detail-label">Product</span>
+                <span class="order-detail-value">
+                  <% if (order.product) { %>
+                    <a href="/products/<%= order.product._id %>" style="color: var(--primary); text-decoration: none;">
+                      <%= order.product.title %>
+                    </a>
+                  <% } %>
+                </span>
+              </div>
+              <div class="order-detail-row">
+                <span class="order-detail-label">Price</span>
+                <span class="order-detail-value">
+                  <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot) %>
+                </span>
+              </div>
+              <div class="order-detail-row">
+                <span class="order-detail-label">Payment Method</span>
+                <span class="order-detail-value">
+                  <%= order.paymentMode === 'card' ? 'Card' : 'Cash' %>
+                </span>
+              </div>
+              <div class="order-detail-row">
+                <span class="order-detail-label">Ordered on</span>
+                <span class="order-detail-value">
+                  <%= new Date(order.createdAt).toLocaleDateString('vi-VN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                </span>
+              </div>
+              <% if (order.note) { %>
+                <div class="order-detail-row">
+                  <span class="order-detail-label">Note</span>
+                  <span class="order-detail-value"><%= order.note %></span>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="status-timeline">
+              <div class="section-label">Status Timeline</div>
+              
+              <div class="timeline-item">
+                <div class="timeline-dot <%= order.status !== 'pending' ? 'completed' : 'active' %>" style="display:flex;align-items:center;justify-content:center;">
+                   <i data-lucide="check" style="width:12px;height:12px;"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Order Placed</div>
+                  <div class="timeline-date"><%= new Date(order.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot <%= order.status === 'confirmed' || (order.status !== 'pending' && order.status !== 'cancelled') ? 'completed' : '' %>" style="display:flex;align-items:center;justify-content:center;">
+                  <% if (order.status === 'confirmed' || (order.status !== 'pending' && order.status !== 'cancelled')) { %>
+                    <i data-lucide="check" style="width:12px;height:12px;"></i>
+                  <% } %>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Order Confirmed</div>
+                  <div class="timeline-date">
+                    <% if (order.confirmedAt) { %>
+                      <%= new Date(order.confirmedAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    <% } else { %>
+                      Awaiting seller confirmation
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot <%= order.status === 'completed' ? 'completed' : '' %>" style="display:flex;align-items:center;justify-content:center;">
+                  <% if (order.status === 'completed') { %>
+                    <i data-lucide="check" style="width:12px;height:12px;"></i>
+                  <% } %>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Order Completed</div>
+                  <div class="timeline-date">
+                    <% if (order.completedAt) { %>
+                      <%= new Date(order.completedAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    <% } else { %>
+                      In progress
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <% if (order.status === 'cancelled') { %>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background: #dc2626; border-color: #dc2626; color: white; display:flex;align-items:center;justify-content:center;">
+                    <i data-lucide="x" style="width:12px;height:12px;"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-title" style="color: #dc2626">Order Cancelled</div>
+                    <div class="timeline-date">
+                      <%= new Date(order.cancelledAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Seller Information -->
+          <div class="tracking-card" style="margin-top: 20px">
+            <div class="tracking-header">
+              <div class="tracking-title">Seller Information</div>
+            </div>
+
+            <div class="person-card">
+              <div class="person-avatar">
+                <% if (order.seller.avatar) { %>
+                  <img src="<%= order.seller.avatar %>" alt="<%= order.seller.name %>" />
+                <% } else { %>
+                  <%= (order.seller.name || 'Seller').charAt(0).toUpperCase() %>
+                <% } %>
+              </div>
+              <div class="person-info">
+                <a href="/user/<%= order.seller._id %>" style="text-decoration: none; color: inherit">
+                  <div class="person-name"><%= order.seller.nickname || order.seller.name %></div>
+                  <div class="person-role">Campus Seller</div>
+                  <div style="font-size: 12px; margin-top: 6px; color: #fbbf24;">
+                    ⭐ <%= (order.seller.rating || 5).toFixed(1) %> 
+                    <span style="color: var(--t2);">(<%= order.seller.ratingCount || 0 %> reviews)</span>
+                  </div>
+                </a>
+                <% if (order.seller.phone) { %>
+                  <a href="tel:<%= order.seller.phone %>" class="person-contact" style="display:flex;align-items:center;gap:4px;">
+                    <i data-lucide="phone" style="width:12px;height:12px;"></i> <%= order.seller.phone %>
+                  </a>
+                <% } %>
+              </div>
+            </div>
+
+            <a href="/messages?id=<%= order.conversation || '' %>" class="btn-message" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+              <i data-lucide="message-square" style="width:16px;height:16px;"></i> Message Seller
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Leaflet JS for maps -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Leaflet Routing Machine for routes -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+<script>
+  // Initialize map
+  const map = L.map('map').setView([21.0285, 105.8542], 13); // Default to Hanoi
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Order data
+  const order = <%- JSON.stringify(order) %>;
+
+  // Extract coordinates with fallback logic
+  let buyerPos = null;
+  let sellerPos = null;
+
+  // 1. Determine Buyer/Destination Position
+  if (order.deliveryMode === 'ship' && order.shippingAddress && order.shippingAddress.lat) {
+    buyerPos = [order.shippingAddress.lat, order.shippingAddress.lng];
+  } else if (order.buyer && order.buyer.location && order.buyer.location.lat) {
+    buyerPos = [order.buyer.location.lat, order.buyer.location.lng];
+  }
+
+  // 2. Determine Seller/Origin Position
+  if (order.deliveryMode === 'pickup' && order.pickupLocation && order.pickupLocation.lat) {
+    sellerPos = [order.pickupLocation.lat, order.pickupLocation.lng];
+  } else if (order.product && order.product.location && order.product.location.lat) {
+    sellerPos = [order.product.location.lat, order.product.location.lng];
+  } else if (order.seller && order.seller.location && order.seller.location.lat) {
+    sellerPos = [order.seller.location.lat, order.seller.location.lng];
+  }
+
+  // Fallbacks for demo if data is missing
+  if (!buyerPos) buyerPos = [21.0285, 105.8542]; // Hanoi center
+  if (!sellerPos) sellerPos = [21.0435, 105.8542]; // Slightly North
+
+  // Add markers
+  const buyerMarker = L.marker(buyerPos, {
+    icon: L.icon({
+      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzFCNUVGRiIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
+      iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+    })
+  }).addTo(map).bindPopup('<strong>Destination</strong><br>Buyer Location');
+
+  const sellerMarker = L.marker(sellerPos, {
+    icon: L.icon({
+      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzE2YTM0YSIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
+      iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+    })
+  }).addTo(map).bindPopup('<strong>Origin</strong><br>Seller Location');
+
+  // Fit bounds
+  const bounds = L.latLngBounds([buyerPos, sellerPos]);
+  map.fitBounds(bounds.pad(0.3));
+
+  // Distance Calculation (Haversine)
+  function calcDist(p1, p2) {
+    const R = 6371;
+    const dLat = (p2[0]-p1[0])*Math.PI/180;
+    const dLon = (p2[1]-p1[1])*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(p1[0]*Math.PI/180)*Math.cos(p2[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  const dist = calcDist(buyerPos, sellerPos);
+  document.getElementById('distanceValue').textContent = dist.toFixed(1) + ' km';
+  document.getElementById('estimatedTime').textContent = `Est. delivery time: ${Math.round(dist * 6)} mins`;
+
+  // Draw Route
+  L.polyline([buyerPos, sellerPos], { color: '#fbbf24', dashArray: '8, 8' }).addTo(map);
+
+  // Optional: Routing Machine
+  try {
+    L.Routing.control({
+      waypoints: [L.latLng(sellerPos), L.latLng(buyerPos)],
+      routeWhileDragging: false,
+      addWaypoints: false,
+      show: false
+    }).addTo(map);
+  } catch (e) {}
+</script>
+</script>
+
+</body>
+</html>

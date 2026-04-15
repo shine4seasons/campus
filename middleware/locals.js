@@ -7,6 +7,25 @@ const User = require('../models/User');
  */
 const injectUser = async (req, res, next) => {
   res.locals.user = null;
+  
+  // Helper to render stars in EJS
+  res.locals.renderStars = (score, size = 16) => {
+    const s = parseFloat(score || 0);
+    const fullStars = Math.floor(s);
+    const hasHalf = s % 1 >= 0.5;
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        html += `<span class="star star-filled" style="font-size:${size}px">★</span>`;
+      } else if (i === fullStars + 1 && hasHalf) {
+        html += `<span class="star star-half" style="font-size:${size}px">★</span>`;
+      } else {
+        html += `<span class="star star-empty" style="font-size:${size}px">★</span>`;
+      }
+    }
+    return html;
+  };
+
   const token = req.cookies?.token;
   if (!token) return next();
 

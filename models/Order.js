@@ -6,6 +6,8 @@ const ShippingAddressSchema = new mongoose.Schema({
   street:   { type: String, default: '' },
   district: { type: String, default: '' },
   city:     { type: String, default: '' },
+  lat:      { type: Number, default: null },
+  lng:      { type: Number, default: null },
 }, { _id: false });
 
 const OrderSchema = new mongoose.Schema(
@@ -49,6 +51,12 @@ const OrderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Conversation',
       default: null,
+    },
+
+    pickupLocation: {
+      address: { type: String, default: '' },
+      lat:     { type: Number, default: null },
+      lng:     { type: Number, default: null },
     },
 
     // Timestamps phụ

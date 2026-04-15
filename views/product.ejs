@@ -5,25 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= product.title %> — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/product.css">
-  <style>
-    .similar-section { max-width:1100px; margin:0 auto; padding:0 24px 60px; }
-    .similar-title { font-size:20px; font-weight:800; color:#0D0F1A; margin-bottom:20px; }
-    .products-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:20px; }
-    .product-card { background:#fff; border-radius:16px; border:1px solid #E4E7F2; overflow:hidden; transition:all 0.25s; cursor:pointer; text-decoration:none; color:inherit; display:block; }
-    @media (min-width: 901px) {
-      body.has-sidebar > .similar-section { margin-left: var(--sb-w); }
-    }
-    .product-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(13,15,26,0.08); border-color:#1B5EFF; }
-    .product-img-placeholder { width:100%; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; font-size:48px; background:linear-gradient(135deg,#EBF0FF,#E4E7F2); }
-    .product-body { padding:16px; }
-    .product-category { font-size:11px; font-weight:600; color:#1B5EFF; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
-    .product-name { font-size:15px; font-weight:700; color:#0D0F1A; margin-bottom:6px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .product-footer { display:flex; align-items:center; justify-content:space-between; }
-    .product-price { font-size:18px; font-weight:800; color:#1B5EFF; }
-  </style>
+  <link rel="stylesheet" href="/css/rating.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -35,9 +23,9 @@
     const isOwner   = user && (String(p.seller && p.seller._id ? p.seller._id : p.seller) === String(user && user._id));
     const isSold    = p.status === 'sold';
     const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
-    const CAT_EMOJI = { books:'📚', electronics:'💻', clothing:'👕', furniture:'🛋️', 'daily-needs':'🧴', sports:'⚽', gaming:'🎮', other:'📦' };
-    const COND_INFO = { new:['✨','New','badge-new'], 'like-new':['💎','Like new','badge-like-new'], good:['👍','Good','badge-good'], fair:['🔧','Fair','badge-fair'] };
-    const cond      = COND_INFO[p.condition] || ['📦', p.condition, 'badge-new'];
+    const CAT_EMOJI = { books:'', electronics:'', clothing:'', furniture:'', 'daily-needs':'', sports:'', gaming:'🎮', other:'' };
+    const COND_INFO = { new:['','New','badge-new'], 'like-new':['','Like new','badge-like-new'], good:['','Good','badge-good'], fair:['','Fair','badge-fair'] };
+    const cond      = COND_INFO[p.condition] || ['', p.condition, 'badge-new'];
     const sellerName = seller.nickname || seller.name || 'Anonymous';
     const joinDate  = seller.createdAt ? new Date(seller.createdAt).toLocaleDateString('en-US', { month:'long', year:'numeric' }) : '';
 
@@ -61,10 +49,10 @@
     <div class="gallery">
       <div class="gallery-main">
         <% if (p.images && p.images[0]) { %>
-          <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>">
+          <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>" onclick="openImageModal(this.src)">
         <% } else { %>
           <div style="font-size:80px; display:flex; align-items:center; justify-content:center; color:#1B5EFF;">
-            <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>
+            <svg width="67" height="67" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>
           </div>
         <% } %>
       </div>
@@ -72,7 +60,7 @@
         <div class="gallery-thumbs">
           <% p.images.forEach(function(url, i) { %>
             <div class="gallery-thumb <%= i === 0 ? 'active' : '' %>" onclick="setImg(<%= i %>)">
-              <img src="<%= url %>" alt="image <%= i+1 %>">
+              <img src="<%= url %>" alt="image <%= i+1 %>" onclick="event.stopPropagation(); openImageModal(this.src)">
             </div>
           <% }) %>
         </div>
@@ -109,9 +97,12 @@
           </div>
         <% } else { %>
           <% if (user) { %>
-            <button class="btn-contact" id="btn-msg-seller" onclick="initChat()">
+            <button class="btn-contact" id="btn-msg-seller" onclick="initChat()" style="margin-bottom:8px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               Message seller
+            </button>
+            <button class="btn-report-product" onclick="showReportModal('product', '<%= p._id %>')" style="width:100%;padding:10px;border:1px solid #fca5a5;background:#fff5f5;color:#dc2626;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:inherit;">
+               Report this listing
             </button>
           <% } else { %>
             <a href="/login" class="btn-contact">
@@ -119,14 +110,17 @@
               Sign in to message seller
             </a>
           <% } %>
-          <button class="btn-interested" id="btn-interested" onclick="toggleInterested()">
-            <span id="heart-icon">🤍</span>
+          <button class="btn-interested" id="btn-interested" onclick="toggleInterested()" style="display:flex;align-items:center;gap:6px;justify-content:center;">
+            <i data-lucide="heart" id="heart-icon" style="width:18px;height:18px;"></i>
             Interested <span id="int-count">(<%= p.interested || 0 %>)</span>
           </button>
         <% } %>
       </div>
 
-      <!-- Description -->
+  
+
+    </div>
+        <!-- Description -->
       <div>
         <div class="section-title">Product description</div>
         <p class="product-desc"><%= p.description %></p>
@@ -134,16 +128,23 @@
 
       <!-- Location -->
       <% if (p.location && p.location.address) { %>
-        <div>
+        <div class="product-location-section">
           <div class="section-title">Pickup location</div>
-          <div class="location-chip">📍 <%= p.location.address %></div>
+          <div class="location-details" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <div class="location-chip" style="margin:0;display:flex;align-items:center;gap:6px;">
+              <i data-lucide="map-pin" style="width:16px;height:16px;color:#1B5EFF;"></i>
+              <%= p.location.address %>
+            </div>
+          </div>
+          
+          <div id="product-map" style="height: 250px; width: 100%; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; z-index: 1; margin-bottom: 24px;"></div>
         </div>
       <% } %>
 
       <!-- Seller -->
       <div>
         <div class="section-title">Seller</div>
-        <div class="seller-card">
+        <a href="/user/<%= seller._id %>" class="seller-card" style="text-decoration:none;color:inherit;display:block;">
           <div class="seller-row">
             <div class="seller-avatar">
               <% if (seller.avatar) { %>
@@ -153,18 +154,72 @@
               <% } %>
             </div>
             <div>
-              <div class="seller-name"><%= sellerName %></div>
+              <div class="seller-name" style="color:#1B5EFF;"><%= sellerName %></div>
               <div class="seller-uni">
                 <%= seller.university || '' %><%= joinDate ? ' · Joined ' + joinDate : '' %>
               </div>
             </div>
           </div>
           <div class="seller-stats">
-            <div class="stat-item"><div class="stat-num">⭐ <%= (seller.rating || 5).toFixed(1) %></div><div class="stat-lbl">Rating</div></div>
+            <div class="stat-item">
+              <div class="stat-num" style="display:flex;align-items:center;gap:4px;justify-content:center;">
+                <%- renderStars(seller.rating || 5, 14) %>
+                <span style="font-size:13px;font-weight:700;margin-left:2px"><%= (seller.rating || 5).toFixed(1) %></span>
+              </div>
+              <div class="stat-lbl">Rating</div>
+            </div>
             <div class="stat-item"><div class="stat-num"><%= seller.totalSales || 0 %></div><div class="stat-lbl">Sold</div></div>
             <div class="stat-item"><div class="stat-num"><%= seller.ratingCount || 0 %></div><div class="stat-lbl">Reviews</div></div>
           </div>
+        </a>
+        <% if (user) { %>
+          <button class="btn-report-seller" onclick="showReportModal('user', '<%= seller._id %>')" style="margin-top:12px;width:100%;padding:11px;border:1px solid #f87171;background:#fff7ed;color:#dc2626;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:inherit;">
+           Report this seller
+          </button>
+        <% } %>
+      </div>
+  </div>
+  <!-- Product Rating Section -->
+  <div class="product-review-section" style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #E4E7F2; max-width: 1100px; margin-left: auto; margin-right: auto; padding-left: 24px; padding-right: 24px; padding-bottom: 40px;">
+    <div style="max-width: 700px;">
+
+      <!-- Product Rating Overview -->
+      <div id="product-rating-stats" style="margin-bottom: 24px;">
+        <div style="font-size: 20px; font-weight: 800; margin-bottom: 16px; color: #0D0F1A;">Product Reviews</div>
+        <div id="product-rating-stats-content" style="color: #3D4258;">Loading...</div>
+      </div>
+
+      <!-- Rating Distribution -->
+      <div style="margin-bottom: 24px; padding: 16px; background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 12px;">
+        <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">Rating Distribution</div>
+        <div id="product-rating-dist-content" style="color: #3D4258;">Loading...</div>
+      </div>
+
+      <!-- Submit Rating Form -->
+      <% if (user && !isOwner) { %>
+        <div style="background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">Leave a Review</div>
+          <div id="rating-form-container">
+            <textarea id="rating-comment" class="rating-form-textarea" placeholder="Share your thoughts about this product" maxlength="500" style="background:#fff; color:#0D0F1A; border-color:#E4E7F2;"></textarea>
+            <div class="rating-input" id="rating-stars" style="margin: 12px 0;">
+              <span class="star star-empty" data-score="1" onmouseenter="updateRatingHover(this, 1)" onmouseleave="clearRatingHover()" onclick="selectRating(this, 1)" style="font-size:24px;cursor:pointer;">★</span>
+              <span class="star star-empty" data-score="2" onmouseenter="updateRatingHover(this, 2)" onmouseleave="clearRatingHover()" onclick="selectRating(this, 2)" style="font-size:24px;cursor:pointer;">★</span>
+              <span class="star star-empty" data-score="3" onmouseenter="updateRatingHover(this, 3)" onmouseleave="clearRatingHover()" onclick="selectRating(this, 3)" style="font-size:24px;cursor:pointer;">★</span>
+              <span class="star star-empty" data-score="4" onmouseenter="updateRatingHover(this, 4)" onmouseleave="clearRatingHover()" onclick="selectRating(this, 4)" style="font-size:24px;cursor:pointer;">★</span>
+              <span class="star star-empty" data-score="5" onmouseenter="updateRatingHover(this, 5)" onmouseleave="clearRatingHover()" onclick="selectRating(this, 5)" style="font-size:24px;cursor:pointer;">★</span>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+              <button class="btn-cancel-rating" onclick="document.getElementById('rating-comment').value = ''; document.querySelectorAll('#rating-stars .star').forEach(s => { s.classList.add('star-empty'); s.classList.remove('star-filled'); });">Cancel</button>
+              <button class="btn-submit-rating" onclick="submitProductRating()">Submit Review</button>
+            </div>
+          </div>
         </div>
+      <% } %>
+
+      <!-- Reviews List -->
+      <div id="product-ratings-list">
+        <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">All Reviews</div>
+        <div id="product-ratings-list-content" style="color: #3D4258;">Loading reviews...</div>
       </div>
 
     </div>
@@ -198,7 +253,50 @@
     </div>
   <% } %>
 
+  <div id="image-modal" class="image-modal" onclick="closeImageModal(event)">
+    <div class="image-modal-content" onclick="event.stopPropagation()">
+      <button type="button" class="image-modal-close" onclick="closeImageModal(event)">×</button>
+      <img id="image-modal-img" src="" alt="Expanded product image">
+    </div>
+  </div>
+
   <div id="toast-wrap"></div>
+
+  <!-- Report Modal -->
+  <div id="report-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;flex-direction:column;">
+    <div style="background:#fff;border-radius:16px;padding:24px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Report this <%= user ? 'item' : '' %></div>
+      <div style="color:#666;font-size:14px;margin-bottom:20px;">Help us keep Campus safe by reporting inappropriate content.</div>
+      
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Reason *</label>
+        <select id="report-reason" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;">
+          <option value="">Select a reason...</option>
+          <option value="inappropriate-content">Inappropriate content</option>
+          <option value="offensive-language">Offensive language</option>
+          <option value="fraud-scam">Fraud/Scam</option>
+          <option value="counterfeit-item">Counterfeit item</option>
+          <option value="damaged-item">Damaged/Missing item</option>
+          <option value="misleading-description">Misleading description</option>
+          <option value="fake-account">Fake account</option>
+          <option value="suspicious-behavior">Suspicious behavior</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Description</label>
+        <textarea id="report-content" maxlength="500" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;" placeholder="Provide details (optional)..."></textarea>
+        <div style="font-size:12px;color:#999;margin-top:4px;text-align:right;"><span id="report-char-count">0</span>/500</div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeReportModal()" style="flex:1;padding:11px;border:1px solid #ddd;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Cancel</button>
+        <button onclick="submitReport()" style="flex:1;padding:11px;border:none;background:#dc2626;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ── Fixed bottom buy bar ── -->
   <% if (!isSold && !isOwner) { %>
@@ -275,14 +373,35 @@
       document.querySelectorAll('.gallery-thumb').forEach((t, j) => t.classList.toggle('active', j === i));
     };
 
+    window.openImageModal = function (src) {
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('image-modal-img');
+      if (!modal || !modalImg || !src) return;
+      modalImg.src = src;
+      modal.classList.add('open');
+    };
+
+    window.closeImageModal = function (event) {
+      event.stopPropagation();
+      const modal = document.getElementById('image-modal');
+      if (!modal) return;
+      modal.classList.remove('open');
+      const modalImg = document.getElementById('image-modal-img');
+      if (modalImg) modalImg.src = '';
+    };
+
     // ── Interested ───────────────────────────────────────────────────────
     window.toggleInterested = async function () {
-      if (!IS_AUTH) { toast('Please sign in to mark interest', 'err'); return; }
+      if (!IS_AUTH) { showToast('Please sign in to mark interest', 'err'); return; }
       interestedState = !interestedState;
       try {
         const res  = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
         const data = await res.json();
-        document.getElementById('heart-icon').textContent = interestedState ? '❤️' : '🤍';
+        const icon = document.getElementById('heart-icon');
+        if (icon) {
+          icon.style.fill = interestedState ? '#f87171' : 'none';
+          icon.style.stroke = interestedState ? '#f87171' : 'currentColor';
+        }
         document.getElementById('int-count').textContent  = '(' + data.interested + ')';
         document.getElementById('btn-interested').classList.toggle('active', interestedState);
       } catch { interestedState = !interestedState; }
@@ -304,18 +423,23 @@
           window.location.href = '/messages?id=' + json.conversationId
             + '&product=' + encodeURIComponent(JSON.stringify(PRODUCT_META));
         } else {
-          toast(json.message, 'err');
+          showToast(json.message, 'err');
           if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
         }
       } catch (err) {
-        toast(err.message, 'err');
+        showToast(err.message, 'err');
         if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
       }
     };
 
     // ── Owner: mark sold ─────────────────────────────────────────────────
     window.markSold = async function () {
-      if (!confirm('Mark this item as sold?')) return;
+      const confirmed = await showConfirm({
+        title: 'Mark as Sold',
+        message: 'Are you sure you want to mark this item as sold?',
+        confirmText: 'Mark as Sold'
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch('/api/products/' + PRODUCT_ID, {
           method: 'PATCH', credentials: 'include',
@@ -323,36 +447,163 @@
           body: JSON.stringify({ status: 'sold' })
         });
         if (!res.ok) throw new Error((await res.json()).message);
-        toast('Status updated!', 'ok');
+        showToast('Status updated!', 'ok');
         setTimeout(() => location.reload(), 1000);
-      } catch (err) { toast(err.message, 'err'); }
+      } catch (err) { showToast(err.message, 'err'); }
     };
 
     // ── Owner: delete ────────────────────────────────────────────────────
     window.deleteProduct = async function () {
-      if (!confirm('Delete this listing? This action cannot be undone.')) return;
+      const confirmed = await showConfirm({
+        title: 'Delete Listing',
+        message: 'Are you sure you want to delete this listing? This action cannot be undone.',
+        confirmText: 'Delete',
+        type: 'danger'
+      });
+      if (!confirmed) return;
       try {
         const res = await fetch('/api/products/' + PRODUCT_ID, { method: 'DELETE', credentials: 'include' });
         if (!res.ok) throw new Error((await res.json()).message);
-        toast('Listing deleted', 'ok');
+        showToast('Listing deleted', 'ok');
         setTimeout(() => window.location.href = '/', 1200);
-      } catch (err) { toast(err.message, 'err'); }
+      } catch (err) { showToast(err.message, 'err'); }
     };
 
 
     // ── Buy Now — go to checkout ─────────────────────────────────────────
     window.goCheckout = function () {
-      if (!IS_AUTH) { toast('Please sign in to purchase', 'err'); return; }
+      if (!IS_AUTH) { showToast('Please sign in to purchase', 'err'); return; }
       window.location.href = '/checkout/' + PRODUCT_ID;
     };
-    function toast(msg, type) {
-      const c = document.getElementById('toast-wrap');
-      const t = document.createElement('div');
-      t.className = 'toast ' + (type || 'ok');
-      t.innerHTML = (type === 'err' ? '✕' : '✓') + ' ' + msg;
-      c.appendChild(t);
-      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
-    }
+
+    // ── Submit Product Rating ─────────────────────────────────────────────
+    window.submitProductRating = async function () {
+      const stars = document.querySelectorAll('#rating-stars .star.selected');
+      const score = stars.length > 0 ? stars[stars.length - 1].dataset.score : 0;
+      const comment = document.getElementById('rating-comment').value.trim();
+
+      if (!score || score < 1 || score > 5) {
+        showToast('Please select a rating', 'err');
+        return;
+      }
+
+      try {
+        const success = await submitRating('product', PRODUCT_ID, score, comment);
+        if (success) {
+          // Reset form
+          document.getElementById('rating-comment').value = '';
+          document.querySelectorAll('#rating-stars .star').forEach(s => {
+            s.classList.add('star-empty');
+            s.classList.remove('star-filled', 'selected');
+          });
+
+          // Reload ratings
+          setTimeout(() => {
+            loadRatings('product', PRODUCT_ID, 'product-ratings-list-content');
+            loadRatingStats('product', PRODUCT_ID, 'product-rating-stats-content');
+            loadRatingStats('product', PRODUCT_ID, 'product-rating-dist-content');
+          }, 500);
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'err');
+      }
+    };
+
+    // ── Report Modal ──────────────────────────────────────────────────────
+    let reportTargetType = '';
+    let reportTargetId = '';
+
+    window.showReportModal = function (targetType, targetId) {
+      reportTargetType = targetType;
+      reportTargetId = targetId;
+      document.getElementById('report-modal').style.display = 'flex';
+      document.getElementById('report-reason').value = '';
+      document.getElementById('report-content').value = '';
+      document.getElementById('report-char-count').textContent = '0';
+    };
+
+    window.closeReportModal = function () {
+      document.getElementById('report-modal').style.display = 'none';
+    };
+
+    window.submitReport = async function () {
+      const reason = document.getElementById('report-reason').value;
+      const content = document.getElementById('report-content').value;
+
+      if (!reason) {
+        showToast('Please select a reason', 'err');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/report', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetType: reportTargetType,
+            targetId: reportTargetId,
+            reason,
+            content
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to submit report');
+
+        showToast('Report submitted. Thank you!', 'ok');
+        closeReportModal();
+      } catch (err) {
+        showToast(err.message, 'err');
+      }
+    };
+
+    // Character counter for report textarea
+    document.addEventListener('DOMContentLoaded', () => {
+      const textarea = document.getElementById('report-content');
+      if (textarea) {
+        textarea.addEventListener('input', () => {
+          document.getElementById('report-char-count').textContent = textarea.value.length;
+        });
+      }
+    });
+  </script>
+  <script src="/js/rating.js"></script>
+  <script>
+    // Initialize product rating on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const productId = '<%= product._id %>';
+
+      // Load product rating stats (overview)
+      if (productId) {
+        loadRatingStats('product', productId, 'product-rating-stats-content');
+        loadRatingStats('product', productId, 'product-rating-dist-content');
+      }
+
+      // Load product ratings list
+      if (productId) {
+        loadRatings('product', productId, 'product-ratings-list-content');
+      }
+
+      // Initialize Map
+      const lat = <%= p.location && p.location.lat ? p.location.lat : 'null' %>;
+      const lng = <%= p.location && p.location.lng ? p.location.lng : 'null' %>;
+      const address = '<%= p.location && p.location.address ? p.location.address.replace(/'/g, "\\'") : "" %>';
+
+      if (lat && lng && document.getElementById('product-map')) {
+        const map = L.map('product-map').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map)
+          .bindPopup(address || 'Pickup Location')
+          .openPopup();
+      } else if (document.getElementById('product-map')) {
+        // Fallback or hide if no coordinates
+        document.getElementById('product-map').style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>

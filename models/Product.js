@@ -33,11 +33,21 @@ const ProductSchema = new mongoose.Schema(
       index: true,
     },
 
+    reported: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     // AI generated description (Feature 4)
     aiDescription: { type: String, default: '' },
 
     views:     { type: Number, default: 0 },
     interested: { type: Number, default: 0 },  // số người bấm "quan tâm"
+
+    // Rating information
+    ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount:   { type: Number, default: 0 },
 
     // Location tùy chọn (Map feature)
     location: {

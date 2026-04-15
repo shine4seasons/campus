@@ -18,27 +18,27 @@
   <div class="content">
 
     <!-- ── SECTION: Revenue ── -->
-    <section class="section active" id="sRevenue" data-title="Revenue" data-sub="Your revenue statistics" data-cta="Export report">
+
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Total revenue</div></div></div>
-          <div class="stat-val">28.4M ₫</div>
+          <div class="stat-val" id="revTotal">-- ₫</div>
           <div class="stat-delta delta-neu">All time</div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">This month</div></div></div>
-          <div class="stat-val">4.2M ₫</div>
-          <div class="stat-delta delta-up">↑ +18%</div>
+          <div class="stat-val" id="revMonth">-- ₫</div>
+          <div class="stat-delta delta-up">↑ +0%</div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Total sold</div></div></div>
-          <div class="stat-val">28 items</div>
-          <div class="stat-delta delta-neu">Over 20 listings</div>
+          <div class="stat-val" id="revSold">-- items</div>
+          <div class="stat-delta delta-neu">All time</div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Avg. value / order</div></div></div>
-          <div class="stat-val">1.01M ₫</div>
-          <div class="stat-delta delta-up">↑ +5%</div>
+          <div class="stat-val" id="revAvg">-- ₫</div>
+          <div class="stat-delta delta-neu">--</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:22px">
@@ -52,11 +52,8 @@
         <table>
         
           <thead><tr><th>Product</th><th>Buyer</th><th>Date</th><th>Price</th><th>Method</th></tr></thead>
-          <tbody>
-            <tr><td>Sony WH-1000XM4</td><td style="color:var(--t2)">Lan Chi</td><td style="color:var(--t2)">28/03/2026</td><td style="font-weight:700;color:#16a34a">3,200,000 ₫</td><td style="color:var(--t2)">Ship</td></tr>
-            <tr><td>Casio FX-580</td><td style="color:var(--t2)">Tú Anh</td><td style="color:var(--t2)">20/03/2026</td><td style="font-weight:700;color:#16a34a">320,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
-            <tr><td>Giáo trình Toán</td><td style="color:var(--t2)">Hải Yến</td><td style="color:var(--t2)">15/03/2026</td><td style="font-weight:700;color:#16a34a">60,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
-            <tr><td>Balo laptop</td><td style="color:var(--t2)">Hùng Anh</td><td style="color:var(--t2)">05/03/2026</td><td style="font-weight:700;color:#16a34a">280,000 ₫</td><td style="color:var(--t2)">Pickup</td></tr>
+          <tbody id="revHistoryTbody">
+            <tr><td colspan="5" style="text-align:center;padding:15px;color:var(--t2)">Đang tải...</td></tr>
           </tbody>
         </table>
       </div>

@@ -1,0 +1,273 @@
+/* Orders styling */
+
+.order-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: var(--bg1);
+  transition: all 0.2s ease;
+}
+
+.order-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(27, 94, 255, 0.1);
+}
+
+.order-card-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.order-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.order-card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--t1);
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-card-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 4px;
+}
+
+.order-card-details {
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.order-detail-item {
+  font-size: 13px;
+  color: var(--t2);
+}
+
+.order-detail-label {
+  color: var(--t3);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.order-detail-value {
+  font-weight: 600;
+  color: var(--t1);
+  font-size: 13px;
+}
+
+.order-seller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.order-seller-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.order-seller-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.order-seller-name {
+  color: var(--t1);
+  font-weight: 600;
+}
+
+.order-card-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.btn-track {
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-track:hover {
+  background: #1547cc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(27, 94, 255, 0.3);
+}
+
+.btn-cancel {
+  padding: 8px 16px;
+  background: var(--bg2);
+  color: var(--t1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.status-count-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-top: 3px solid;
+  border-radius: 8px;
+  background: var(--bg1);
+  text-align: center;
+}
+
+.sc-label {
+  font-size: 12px;
+  color: var(--t2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.sc-val {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.f-pill {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--t2);
+  transition: all 0.2s ease;
+}
+
+.f-pill:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.f-pill.on {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--t2);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .order-card {
+    flex-direction: column;
+  }
+
+  .order-card-details {
+    gap: 12px;
+  }
+
+  .order-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .btn-track, .btn-cancel {
+    flex: 1;
+  }
+
+  .status-counters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

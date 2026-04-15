@@ -1,30 +1,32 @@
-const router  = require('express').Router();
-const Product = require('../models/Product');
-
-const requireAuth = require('../middleware/pageAuth');
+const router = require('express').Router();
+const pageController = require('../controllers/pageController');
 const authController = require('../controllers/auth');
-const Order = require('../models/Order');
-const mongoose = require('mongoose');
+const requireAuth = require('../middleware/pageAuth');
+const requireAdminPage = require('../middleware/adminPageAuth');
+const { VIEWS, APP_NAME, TITLE_SEPARATOR } = require('../config/pageConstants');
+const { CATEGORIES } = require('../public/js/categories');
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', (req, res) => {
-  res.render('index', { 
-    title: 'Campus Marketplace',
-    isLoginPage: false
+  res.render(VIEWS.INDEX, {
+    title: APP_NAME,
+    isLoginPage: false,
+    CATEGORIES
   });
 });
 
 // ── GET /login ─────────────────────────────────────────
 router.get('/login', (req, res) => {
-  // Nếu đã login đầy đủ → về home (tránh vòng lặp redirect)
+  // Redirect if already logged in with complete profile
   if (res.locals.user && res.locals.user.profileComplete) {
     return res.redirect('/');
   }
-  res.render('login', {
-    title : 'Login — Campus Marketplace',
-    error : req.query.error || null,
-    step  : req.query.step  || null,
-    isLoginPage: true,
+
+  res.render(VIEWS.LOGIN, {
+    title: `Login${TITLE_SEPARATOR}${APP_NAME}`,
+    error: req.query.error || null,
+    step: req.query.step || null,
+    isLoginPage: true
   });
 });
 
@@ -32,207 +34,54 @@ router.get('/login', (req, res) => {
 router.get('/logout', authController.logoutRedirect);
 
 // ── GET /callback ──────────────────────────────────────
-// Fallback page sau khi Google OAuth (server đã set cookie)
 router.get('/callback', (req, res) => {
-  res.render('callback', { title: 'Authenticating...' });
+  res.render(VIEWS.CALLBACK, { title: 'Authenticating...' });
 });
 
 // ── GET /products/:id ──────────────────────────────────
-router.get('/products/:id', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id)
-      .populate('seller', 'name nickname avatar university rating ratingCount totalSales createdAt')
-      .lean();
-
-    if (!product || product.status === 'hidden') {
-      return res.status(404).render('404', { 
-        title: '404 — Not Found',
-        isLoginPage: false
-      });
-    }
-
-    // Tăng view count (fire-and-forget)
-    const { incrementViews } = require('../utils/viewCounter');
-    incrementViews(req.params.id);
-
-    // Fetch related products (same category, active, not the current one)
-    const relatedProducts = await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-      status: 'active'
-    })
-      .sort('-views') // Sort by popularity
-      .limit(4)
-      .lean();
-
-    res.render('product', {
-      title  : product.title + ' — Campus Marketplace',
-      product,
-      relatedProducts, // Pass related products to view
-      isLoginPage: false
-    });
-  } catch {
-    res.status(404).render('404', { 
-      title: '404 — Not Found',
-      isLoginPage: false
-    });
-  }
-});
+router.get('/products/:id', pageController.getProduct);
 
 // ── GET /my-products ───────────────────────────────────
-router.get('/my-products', requireAuth, async (req, res) => {
-  try {
-    const products = await Product.find({ seller: res.locals.user._id })
-      .sort('-createdAt')
-      .lean();
-
-    res.render('my-products', {
-      title: 'My Listings — Campus Marketplace',
-      products,
-      isLoginPage: false
-    });
-  } catch {
-    res.status(500).render('404', { 
-      title: 'Error',
-      isLoginPage: false
-    });
-  }
-});
+router.get('/my-products', requireAuth, pageController.getMyProducts);
 
 // ── GET /sell ──────────────────────────────────────────
-router.get('/sell', requireAuth, async (req, res) => {
-  const editId = req.query.id || null;
-  let editProduct = null;
-
-  if (editId) {
-    try {
-      const p = await Product.findById(editId).lean();
-      if (p && String(p.seller) === String(res.locals.user._id)) {
-        editProduct = p;
-      }
-    } catch {}
-  }
-
-  res.render('sell', {
-    title      : editProduct ? 'Edit Listing — Campus Marketplace' : 'Post a Listing — Campus Marketplace',
-    editProduct,
-    isLoginPage: false
-  });
-});
+router.get('/sell', requireAuth, pageController.getSellPage);
 
 // ── GET /profile ───────────────────────────────────────
-router.get('/profile', requireAuth, async (req, res) => {
-  try {
-    const products = await Product.find({ seller: res.locals.user._id })
-      .sort('-createdAt')
-      .lean();
-    res.render('profile', {
-      title: 'My Profile — Campus Marketplace',
-      products,
-      isLoginPage: false
-    });
-  } catch {
-    res.render('profile', { 
-      title: 'My Profile — Campus Marketplace', 
-      products: [],
-      isLoginPage: false
-    });
-  }
-});
+router.get('/profile', requireAuth, pageController.getProfile);
+
+// ── GET /user/:userId ──────────────────────────────────
+router.get('/user/:userId', pageController.getUserProfile);
 
 // ── GET /orders ────────────────────────────────────────
-router.get('/orders', requireAuth, (req, res) => {
-  res.render('orders', { 
-    title: 'My Orders — Campus Marketplace',
-    isLoginPage: false
-  });
-});
+// Buyer's orders page
+router.get('/orders', requireAuth, pageController.getBuyerOrders);
+
+// ── GET /orders/tracking/:orderId ───────────────────────────────────
+// Order tracking page with map
+router.get('/orders/tracking/:orderId', requireAuth, pageController.getOrderTracking);
 
 // ── GET /messages ──────────────────────────────────────
 router.get('/messages', requireAuth, (req, res) => {
-  // Pass down standard variables; the JS polling handles the data fetching
-  res.render('messages', {
-    title: 'Messages — Campus Marketplace',
-    conversationId: req.query.id || null, // Optional: auto-select a specific conversation
+  res.render(VIEWS.MESSAGES, {
+    title: `Messages${TITLE_SEPARATOR}${APP_NAME}`,
+    conversationId: req.query.id || null,
     isLoginPage: false
   });
 });
 
-// ── GET /dashboard ─────────────────────────────────────
-router.get('/dashboard', requireAuth, (req, res) => {
-  const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
-  if (role === 'admin') {
-    return res.render('dashboard-admin', { title: 'Admin Dashboard — Campus Marketplace', isLoginPage: false });
-  }
-  // Serve seller dashboard to sellers. For regular users, serve a seller preview/dashboard
-  // so toggling to seller mode from the UI leads to the expected page.
-  if (role === 'seller') {
-    return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: true });
-  }
-  // Non-seller users: render seller dashboard in preview mode (no destructive actions).
-  return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: false });
-});
+// ── GET /dashboard ───────────────────────────────────────────── 
+// Admin-only dashboard
+router.get('/dashboard', requireAuth, requireAdminPage, pageController.getDashboard);
 
-// ── GET /dashboard-seller (explicit route) ─────────────────
-router.get('/dashboard-seller', requireAuth, (req, res) => {
-  const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
-  if (role === 'seller') {
-    return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: true });
-  }
-  return res.render('dashboard-seller', { title: 'Seller Dashboard — Campus Marketplace', isLoginPage: false, isSeller: false });
-});
+// ── GET /dashboard-seller ────────────────────────────────────────
+// Seller/user dashboard - accessible to all authenticated users
+router.get('/dashboard-seller', requireAuth, pageController.getDashboard);
 
-// ── GET /dashboard-orders ───────────────────────────────────
-router.get('/orders-seller', requireAuth, async (req, res) => {
-  try {
-    const role = res.locals.user && res.locals.user.role ? res.locals.user.role : null;
-
-
-    const orders = await Order.find({ seller: res.locals.user._id })
-      .sort('-createdAt')
-      .populate('product', 'title images price category condition location')
-      .populate('buyer', 'name nickname avatar phone')
-      .populate('seller', 'name nickname avatar phone')
-      .lean();
-
-    // Aggregate product order counts for this seller
-    const agg = await Order.aggregate([
-      { $match: { seller: res.locals.user._id } },
-      { $group: { _id: '$product', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    const productIds = agg.map(a => a._id);
-    let productsWithCounts = [];
-    if (productIds.length) {
-      const prods = await Product.find({ _id: { $in: productIds } })
-        .select('title images price')
-        .lean();
-      // Map counts onto products preserving aggregation order
-      const prodMap = new Map(prods.map(p => [String(p._id), p]));
-      productsWithCounts = agg.map(a => ({
-        product: prodMap.get(String(a._id)) || { _id: a._id, title: 'Deleted product' },
-        count: a.count
-      }));
-    }
-
-    return res.render('orders-seller', { title: 'Orders — Campus Marketplace', orders, productsWithCounts, isLoginPage: false });
-  } catch (err) {
-    console.error('[pageRoutes] dashboard-orders:', err.message);
-    return res.status(500).render('404', { title: 'Error', isLoginPage: false });
-  }
-});
+// ── GET /orders-seller ───────────────────────────────────
+router.get('/orders-seller', requireAuth, pageController.getSellerOrders);
 
 // ── GET /revenue ───────────────────────────────────────────
-router.get('/revenue', requireAuth, async (req, res) => {
-  try {
-    // For now render the seller revenue view. If the user is a seller, we could
-    // compute aggregated stats here in the future.
-    return res.render('revenue', { title: 'Revenue — Campus Marketplace', isLoginPage: false });
-  } catch (err) {
-    console.error('[pageRoutes] revenue:', err.message);
-    return res.status(500).render('404', { title: 'Error', isLoginPage: false });
-  }
-});
+router.get('/revenue', requireAuth, pageController.getRevenue);
 
 module.exports = router;

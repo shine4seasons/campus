@@ -11,10 +11,15 @@ router.patch('/users/:id/ban', adminCtrl.toggleBan);
 
 router.get('/orders', adminCtrl.getOrders);
 
+router.get('/reports', adminCtrl.getReports);
+router.patch('/reports/:id', adminCtrl.updateReport);
+
 router.get('/products', adminCtrl.getProducts);
 
 // Stats
 router.get('/stats', adminCtrl.getStats);
+router.get('/analytics', adminCtrl.getAnalytics);
+router.get('/reports', adminCtrl.getReportsData);
 router.get('/gmv-months', adminCtrl.getGMVMonths);
 router.get('/categories', adminCtrl.getCategoryDistribution);
 
@@ -22,5 +27,9 @@ router.get('/categories', adminCtrl.getCategoryDistribution);
 router.patch('/products/:id/hide', adminCtrl.hideProduct);
 router.patch('/products/:id/restore', adminCtrl.restoreProduct);
 router.delete('/products/:id', adminCtrl.deleteProductAdmin);
+
+// Ratings Sync
+const ratingCtrl = require('../controllers/rating');
+router.post('/sync-ratings', ratingCtrl.syncAllRatings);
 
 module.exports = router;

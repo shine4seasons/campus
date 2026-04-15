@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — Campus Marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/orders.css">
+  <link rel="stylesheet" href="/css/rating.css">
+  <style>
+    .order-card {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: var(--bg1);
+      transition: all 0.2s ease;
+    }
+    .order-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(27, 94, 255, 0.1);
+    }
+    .order-card-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--bg2);
+      flex-shrink: 0;
+    }
+    .order-card-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .order-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .order-card-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--t1);
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .order-card-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--t3);
+      margin-top: 4px;
+    }
+    .order-card-details {
+      display: flex;
+      gap: 24px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .order-detail-item {
+      font-size: 13px;
+      color: var(--t2);
+    }
+    .order-detail-label {
+      color: var(--t3);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .order-detail-value {
+      font-weight: 600;
+      color: var(--t1);
+      font-size: 13px;
+    }
+    .order-seller {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .order-seller-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .order-seller-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .order-seller-name {
+      color: var(--t1);
+      font-weight: 600;
+    }
+    .order-card-footer {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .order-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+    .btn-track {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-track:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(27, 94, 255, 0.3);
+    }
+    .btn-cancel {
+      padding: 8px 16px;
+      background: var(--bg2);
+      color: var(--t1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-cancel:hover {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+    .btn-cancel:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-pending {
+      background: rgba(217, 119, 6, 0.1);
+      color: #d97706;
+    }
+    .badge-confirmed {
+      background: rgba(37, 99, 235, 0.1);
+      color: #2563eb;
+    }
+    .badge-completed {
+      background: rgba(22, 163, 74, 0.1);
+      color: #16a34a;
+    }
+    .badge-cancelled {
+      background: rgba(220, 38, 38, 0.1);
+      color: #dc2626;
+    }
+    .status-counters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .status-count-card {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-top: 3px solid;
+      border-radius: 8px;
+      background: var(--bg1);
+      text-align: center;
+    }
+    .sc-label {
+      font-size: 12px;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .sc-val {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .f-pill {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      background: transparent;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--t2);
+      transition: all 0.2s ease;
+    }
+    .f-pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .f-pill.on {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--t2);
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/navbar') %>
+<%- include('partials/sidebar') %>
+
+<main class="main">
+  <div class="content">
+    <!-- ── SECTION: Buyer Orders ── -->
+    <div style="margin-bottom: 24px">
+      <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px">My Orders</h1>
+      <p style="color: var(--t2); font-size: 14px">Track and manage your purchases</p>
+    </div>
+
+    <!-- Status counters -->
+    <div class="status-counters">
+      <div class="status-count-card" style="border-top-color:#d97706">
+        <div class="sc-label">Pending</div>
+        <div class="sc-val" style="color:#d97706"><%= typeof statusCounts !== 'undefined' ? statusCounts.pending : 0 %></div>
+      </div>
+      <div class="status-count-card" style="border-top-color:#2563eb">
+        <div class="sc-label">Confirmed</div>
+        <div class="sc-val" style="color:#2563eb"><%= typeof statusCounts !== 'undefined' ? statusCounts.confirmed : 0 %></div>
+      </div>
+      <div class="status-count-card" style="border-top-color:#16a34a">
+        <div class="sc-label">Completed</div>
+        <div class="sc-val" style="color:#16a34a"><%= typeof statusCounts !== 'undefined' ? statusCounts.completed : 0 %></div>
+      </div>
+      <div class="status-count-card" style="border-top-color:#dc2626">
+        <div class="sc-label">Cancelled</div>
+        <div class="sc-val" style="color:#dc2626"><%= typeof statusCounts !== 'undefined' ? statusCounts.cancelled : 0 %></div>
+      </div>
+    </div>
+
+    <!-- Filter pills -->
+    <div class="filter-pills" id="filterPills">
+      <button class="f-pill on" data-status="all">All Orders</button>
+      <button class="f-pill" data-status="pending">Pending</button>
+      <button class="f-pill" data-status="confirmed">Confirmed</button>
+      <button class="f-pill" data-status="completed">Completed</button>
+      <button class="f-pill" data-status="cancelled">Cancelled</button>
+    </div>
+
+    <!-- Orders list -->
+    <div style="margin-top: 24px">
+      <% if (!orders || !orders.length) { %>
+        <div class="card" style="padding: 32px">
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="package" style="width:48px;height:48px;margin:0 auto;stroke:#8890B0;"></i></div>
+            <div class="empty-state-title">No orders yet</div>
+            <p>Start exploring products and place your first order!</p>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 600; margin-top: 16px; display: inline-block">Browse Products →</a>
+          </div>
+        </div>
+      <% } else { %>
+        <div id="ordersList">
+          <% orders.forEach(function(order){ %>
+            <div class="order-card" data-order-id="<%= order._id %>" data-status="<%= order.status %>">
+              <div>
+                <% if (order.product && order.product.images && order.product.images.length) { %>
+                  <img src="<%= order.product.images[0] %>" alt="Product" class="order-card-image" />
+                <% } else { %>
+                  <div class="order-card-image" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--t2);font-weight:700">P</div>
+                <% } %>
+              </div>
+              
+              <div class="order-card-content">
+                <div class="order-card-header">
+                  <div>
+                    <div class="order-card-title"><%= order.product && order.product.title ? order.product.title : 'Product' %></div>
+                    <div class="order-card-id">Order #<%= String(order._id).substring(0, 8).toUpperCase() %></div>
+                  </div>
+                  <span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>">
+                    <%= order.status %>
+                  </span>
+                </div>
+
+                <div class="order-card-details">
+                  <div class="order-detail-item">
+                    <div class="order-detail-label">Seller</div>
+                    <div class="order-seller">
+                      <div class="order-seller-avatar">
+                        <% if (order.seller && order.seller.avatar) { %>
+                          <img src="<%= order.seller.avatar %>" alt="<%= order.seller.name %>" />
+                        <% } else { %>
+                          <%= (order.seller && order.seller.name) ? order.seller.name.charAt(0).toUpperCase() : 'S' %>
+                        <% } %>
+                      </div>
+                      <span class="order-seller-name">
+                        <%= order.seller && order.seller.nickname ? order.seller.nickname : (order.seller && order.seller.name ? order.seller.name : 'Unknown') %>
+                      </span>
+                      <div style="display:flex;align-items:center;gap:2px;margin-top:2px">
+                        <%- renderStars(order.seller.rating || 5, 10) %>
+                        <span style="font-size:11px;font-weight:600"><%= (order.seller.rating || 5).toFixed(1) %></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="order-detail-item">
+                    <div class="order-detail-label">Price</div>
+                    <div class="order-detail-value">
+                      <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %>
+                    </div>
+                  </div>
+
+                  <div class="order-detail-item">
+                    <div class="order-detail-label">Delivery</div>
+                    <div class="order-detail-value">
+                      <%= order.deliveryMode === 'ship' ? 'Shipping' : 'Pickup' %>
+                    </div>
+                  </div>
+
+                  <div class="order-detail-item">
+                    <div class="order-detail-label">Payment</div>
+                    <div class="order-detail-value">
+                      <%= order.paymentMode === 'card' ? 'Card' : 'Cash' %>
+                    </div>
+                  </div>
+
+                  <div class="order-detail-item">
+                    <div class="order-detail-label">Ordered</div>
+                    <div class="order-detail-value">
+                      <%= new Date(order.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="order-card-footer">
+                  <div class="order-actions">
+                    <a href="/orders/tracking/<%= order._id %>" class="btn-track">
+                      <i data-lucide="map-pin" style="width:14px;height:14px;"></i> Track Order
+                    </a>
+                    <% if (order.status === 'pending') { %>
+                      <button class="btn-cancel" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // Filter functionality
+  document.querySelectorAll('.f-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      const status = this.dataset.status;
+      
+      // Update active pill
+      document.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
+      this.classList.add('on');
+
+      // Filter orders
+      const ordersList = document.getElementById('ordersList');
+      if (!ordersList) return;
+
+      const cards = ordersList.querySelectorAll('.order-card');
+      cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Cancel order function
+  async function cancelOrder(orderId) {
+    const confirmed = await showConfirm({
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order?',
+      confirmText: 'Yes, Cancel',
+      type: 'danger'
+    });
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Order cancelled successfully', 'ok');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(data.message || 'Failed to cancel order', 'err');
+      }
+    } catch (error) {
+      console.error('Cancel order error:', error);
+      showToast(error.message, 'err');
+    }
+  }
+</script>
+
+</body>
+</html>

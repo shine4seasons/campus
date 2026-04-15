@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/rating.css">
 </head>
 <body>
 <%- include('partials/navbar') %>
@@ -17,7 +18,6 @@
   <div class="content">
 
     <!-- ── SECTION: Listings ── -->
-    <section class="section active" id="sListings" data-title="Listings" data-sub="Quản lý sản phẩm của bạn" data-cta="Đăng sản phẩm">
       <div class="tbl-wrap">
         <div class="tbl-toolbar">
           <div><div class="tbl-title">My products</div><div class="tbl-count">20 listings total</div></div>
@@ -36,7 +36,7 @@
         </div>
         <table>
           <thead>
-            <tr><th>Product</th><th>Category</th><th>Price</th><th>Views</th><th>Interest</th><th>Posted</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Product</th><th>Category</th><th>Price</th><th>Views</th><th>Interest</th><th>Rating</th><th>Posted</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody id="my-products-tbody">
             <tr><td colspan="8" class="empty">Loading your products...</td></tr>
@@ -82,6 +82,7 @@
       const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit' });
       const status = p.status || 'active';
       const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
+      const ratingDisplay = p.ratingCount > 0 ? `⭐ ${parseFloat(p.ratingAverage || 0).toFixed(1)} (${p.ratingCount})` : 'No ratings';
       return `
         <tr>
           <td><strong>${escapeHtml(p.title)}</strong></td>
@@ -89,6 +90,7 @@
           <td>${price}</td>
           <td>${p.views || 0}</td>
           <td>${p.interested || 0}</td>
+          <td style="font-size:12px;color:var(--t2)">${ratingDisplay}</td>
           <td style="color:var(--t2);font-size:12px">${posted}</td>
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td><div class="tbl-actions"><button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button><button class="act-btn danger" onclick="toggleHide('${p._id}', '${status==='hidden' ? 'active' : 'hidden'}')">${status==='hidden'?'Unhide':'Hide'}</button></div></td>

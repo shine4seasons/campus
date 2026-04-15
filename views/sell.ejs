@@ -211,21 +211,9 @@
               <label class="fl">Category <span class="req">*</span></label>
               <select class="fs" id="f-cat" onchange="updatePreview()">
                 <option value="">-- Select a category --</option>
-                <%
-                  const CATS = [
-                    ['books',       'Books & Textbooks'],
-                    ['electronics', 'Electronics & Computers'],
-                    ['clothing',    'Clothing & Fashion'],
-                    ['furniture',   'Furniture & Dorm'],
-                    ['daily-needs', 'Daily Essentials'],
-                    ['sports',      'Sports & Gym'],
-                    ['gaming',      'Hobbies & Entertainment'],
-                    ['other',       'Other'],
-                  ];
-                  CATS.forEach(function(opt) {
-                %>
-                  <option value="<%= opt[0] %>" <%= ep && ep.category === opt[0] ? 'selected' : '' %>>
-                    <%= opt[1] %>
+                <% CATEGORIES.forEach(function(cat) { %>
+                  <option value="<%= cat.slug %>" <%= ep && ep.category === cat.slug ? 'selected' : '' %>>
+                    <%= cat.name %>
                   </option>
                 <% }) %>
               </select>

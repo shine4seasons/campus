@@ -7,15 +7,18 @@ const connectDB    = require('./config/database');
 const passport     = require('./config/passport');
 const injectUser   = require('./middleware/locals');
 
-const authRoutes    = require('./routes/authRoutes');
+const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/products');
-const uploadRoutes  = require('./routes/uploadRoutes');
-const aiRoutes      = require('./routes/aiRoutes');
-const pageRoutes    = require('./routes/pageRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const pageRoutes = require('./routes/pageRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
-const adminRoutes   = require('./routes/adminRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const adminApiRoutes = require('./routes/adminApi');
-const orderRoutes   = require('./routes/orderRoutes');
+const orderApiRoutes = require('./routes/orderApiRoutes');
+const orderPageRoutes = require('./routes/orderPageRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const ratingRoutes = require('./routes/ratingRoutes');
 
 const app = express();
 
@@ -31,13 +34,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(injectUser);
 
-app.use('/api/auth',     authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/upload',   uploadRoutes);
-app.use('/api/ai',       aiRoutes);
-app.use('/api/chat',     require('./routes/chatRoutes'));
-app.use('/api/orders',   orderRoutes.api);
-app.use('/',             pageRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/orders', orderApiRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/report', reportRoutes);
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/checkout', orderPageRoutes);
+app.use('/', pageRoutes);
 app.use('/checkout',     checkoutRoutes);
 app.use('/admin',        adminRoutes);
 app.use('/api/admin',    adminApiRoutes);
