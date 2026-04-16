@@ -42,15 +42,7 @@
             <tr><td colspan="8" class="empty">Loading your products...</td></tr>
           </tbody>
         </table>
-        <div class="pagination">
-          <span class="pg-info">Showing 1–5 / 20</span>
-          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <button class="pg-btn active">1</button>
-          <button class="pg-btn">2</button>
-          <button class="pg-btn">3</button>
-          <button class="pg-btn">4</button>
-          <button class="pg-btn"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
-        </div>
+        <div class="pagination"></div>
       </div>
     </section>
 
@@ -62,27 +54,37 @@
 <script>window.INITIAL_SECTION = 'sListings';</script>
 <%- include('partials/dashboard-scripts') %>
 <script>
-// Fetch seller's products and render into table
-;(async function(){
-  try{
-    const res = await fetch('/api/products/my', { credentials: 'include' });
+let currentFilter = '';
+
+async function loadProducts(page = 1) {
+  const tbody = document.getElementById('my-products-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading your products...</td></tr>';
+
+  try {
+    const params = new URLSearchParams({ page, limit: 10 });
+    if (currentFilter) params.append('status', currentFilter);
+    
+    const res = await fetch(`/api/products/my?${params}`, { credentials: 'include' });
     const json = await res.json();
-    const tbody = document.getElementById('my-products-tbody');
+    
     if (!json.success) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty">Failed to load products.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
       return;
     }
     const products = json.data || [];
     if (!products.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty">You have no products yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">No products found.</td></tr>';
       return;
     }
-    const rows = products.map(p => {
+    
+    tbody.innerHTML = products.map(p => {
       const price = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price || 0);
       const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit' });
       const status = p.status || 'active';
       const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
       const ratingDisplay = p.ratingCount > 0 ? `⭐ ${parseFloat(p.ratingAverage || 0).toFixed(1)} (${p.ratingCount})` : 'No ratings';
+      
       return `
         <tr>
           <td><strong>${escapeHtml(p.title)}</strong></td>
@@ -93,35 +95,54 @@
           <td style="font-size:12px;color:var(--t2)">${ratingDisplay}</td>
           <td style="color:var(--t2);font-size:12px">${posted}</td>
           <td><span class="badge ${badgeClass}">${status}</span></td>
-          <td><div class="tbl-actions"><button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button><button class="act-btn danger" onclick="toggleHide('${p._id}', '${status==='hidden' ? 'active' : 'hidden'}')">${status==='hidden'?'Unhide':'Hide'}</button></div></td>
+          <td><div class="tbl-actions">
+            <button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button>
+            <button class="act-btn danger" onclick="toggleHide('${p._id}', '${status==='hidden' ? 'active' : 'hidden'}')">${status==='hidden'?'Unhide':'Hide'}</button>
+          </div></td>
         </tr>`;
     }).join('');
-    tbody.innerHTML = rows;
-    // update count
+    
+    if (typeof renderPagination === 'function') {
+      renderPagination('.tbl-wrap .pagination', json.pagination, 'loadProducts');
+    }
+    
     const countEl = document.querySelector('.tbl-count');
-    if (countEl) countEl.textContent = `${products.length} listings total`;
-  }catch(err){
-    const tbody = document.getElementById('my-products-tbody');
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Failed to load products.</td></tr>';
+    if (countEl) countEl.textContent = `${json.pagination?.total || products.length} listings total`;
+  } catch(err) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
     console.error('Failed to fetch my products:', err);
   }
+}
 
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
-  window.toggleHide = async function(productId, newStatus){
-    try{
-      const res = await fetch('/api/products/' + encodeURIComponent(productId), {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        credentials: 'include',
-        body: JSON.stringify({ status: newStatus })
-      });
-      const j = await res.json();
-      if (j.success) location.reload();
-      else alert(j.message || 'Failed');
-    }catch(e){ alert('Failed'); }
-  };
-})();
+window.toggleHide = async function(productId, newStatus){
+  try{
+    const res = await fetch('/api/products/' + encodeURIComponent(productId), {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus })
+    });
+    const j = await res.json();
+    if (j.success) loadProducts();
+    else showToast(j.message || 'Failed', 'err');
+  }catch(e){ showToast('Failed', 'err'); }
+};
+
+// Wire up filter pills
+document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));
+    pill.classList.add('on');
+    const txt = pill.textContent.trim().toLowerCase();
+    currentFilter = txt === 'all' ? '' : txt;
+    loadProducts(1);
+  });
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => loadProducts(1));
 </script>
 </body>
 </html>

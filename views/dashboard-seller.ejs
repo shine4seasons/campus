@@ -39,8 +39,8 @@
                     </svg>
                   </div>
                 </div>
-                <div class="stat-val">12</div>
-                <div class="stat-delta delta-up">↑ +2 this week</div>
+                <div class="stat-val"><%= stats.activeListings %></div>
+                <div class="stat-delta delta-neu">Total active items</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -54,8 +54,8 @@
                     </svg>
                   </div>
                 </div>
-                <div class="stat-val" style="color:#d97706">2</div>
-                <div class="stat-delta" style="color:#d97706">need to solve now</div>
+                <div class="stat-val" style="color:#d97706"><%= stats.pendingOrders %></div>
+                <div class="stat-delta" style="color:#d97706">need confirmation</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -69,8 +69,10 @@
                     </svg>
                   </div>
                 </div>
-                <div class="stat-val">4.2M ₫</div>
-                <div class="stat-delta delta-up">↑ +18% vs last month</div>
+                <div class="stat-val">
+                  <%= (stats.monthRevenue >= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M ₫' : new Intl.NumberFormat('vi-VN').format(stats.monthRevenue) + ' ₫' %>
+                </div>
+                <div class="stat-delta delta-neu">Earned this month</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -94,15 +96,17 @@
               </div>
             </div>
 
+            <% if (stats.pendingOrders > 0) { %>
             <div class="alert-box alert-info" style="margin-bottom:18px">
               <svg viewBox="0 0 24 24" stroke-width="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <div class="alert-box-text">You have 2 orders awaiting confirmation. Please confirm within 24 hours to
+              <div class="alert-box-text">You have <%= stats.pendingOrders %> order<%= stats.pendingOrders > 1 ? 's' : '' %> awaiting confirmation. Please confirm within 24 hours to
                 avoid automatic cancellation.</div>
             </div>
+            <% } %>
 
             <div class="quick-grid">
               <div class="quick-card" onclick="window.location.href='/my-products'">
@@ -114,7 +118,7 @@
                 </div>
                 <div class="qc-body">
                   <div class="qc-label">Manage listings</div>
-                  <div class="qc-sub">12 active · 8 sold</div>
+                  <div class="qc-sub"><%= stats.activeListings %> active · <%= stats.totalSold %> sold</div>
                 </div>
               </div>
               <div class="quick-card" onclick="window.location.href='/orders-seller'">
@@ -126,7 +130,7 @@
                 </div>
                 <div class="qc-body">
                   <div class="qc-label">View orders</div>
-                  <div class="qc-sub">2 orders awaiting confirmation</div>
+                  <div class="qc-sub"><%= stats.pendingOrders %> order<%= stats.pendingOrders > 1 ? 's' : '' %> awaiting confirmation</div>
                 </div>
               </div>
               <div class="quick-card" onclick="window.location.href='/sell'">
@@ -321,24 +325,26 @@
                       <div class="li-info">
                         <div class="li-name">Total sold</div>
                       </div>
-                      <div class="li-val">28 items</div>
+                      <div class="li-val"><%= user.totalSales || 0 %> items</div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Total revenue</div>
                       </div>
-                      <div class="li-val" style="color:#16a34a">28.4M ₫</div>
+                      <div class="li-val" style="color:#16a34a">
+                        <%= (stats.totalRevenue >= 1000000) ? (stats.totalRevenue / 1000000).toFixed(1) + 'M ₫' : new Intl.NumberFormat('vi-VN').format(stats.totalRevenue) + ' ₫' %>
+                      </div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Member since</div>
                       </div>
-                      <div class="li-val">Jan 2026</div>
+                      <div class="li-val"><%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %></div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Profile status</div>
-                      </div><span class="badge badge-active">Complete</span>
+                      </div><span class="badge badge-active"><%= user.profileComplete ? 'Complete' : 'Pending' %></span>
                     </div>
                   </div>
                 </div>
@@ -349,23 +355,25 @@
                       <div class="card-title">Recent reviews</div>
                     </div><a class="card-action" href="#">View all</a>
                   </div>
-                  <div class="review-item">
-                    <div class="review-top"><span class="review-author">Hùng Anh</span><span
-                        class="review-stars">★★★★★</span></div>
-                    <div class="review-text">Very helpful seller, delivered on time and item as described.</div>
-                    <div class="review-date">05/04/2026</div>
-                  </div>
-                  <div class="review-item">
-                    <div class="review-top"><span class="review-author">Tú Anh</span><span
-                        class="review-stars">★★★★★</span></div>
-                    <div class="review-text">Good quality product, fast transaction, will buy again.</div>
-                    <div class="review-date">20/03/2026</div>
-                  </div>
-                  <div class="review-item">
-                    <div class="review-top"><span class="review-author">Lan Chi</span><span
-                        class="review-stars">★★★★☆</span></div>
-                    <div class="review-text">Good item, delivery a bit slow but communicated in advance.</div>
-                    <div class="review-date">28/03/2026</div>
+                  <div id="recentReviewsList">
+                    <% if (recentRatings && recentRatings.length > 0) { %>
+                      <% recentRatings.forEach(r => { %>
+                        <div class="review-item">
+                          <div class="review-top">
+                            <span class="review-author"><%= r.rater?.nickname || r.rater?.name || 'Anonymous' %></span>
+                            <span class="review-stars">
+                              <% for(let i=0; i<5; i++) { %>
+                                <%= i < r.score ? '★' : '☆' %>
+                              <% } %>
+                            </span>
+                          </div>
+                          <div class="review-text"><%= r.comment || '(No comment)' %></div>
+                          <div class="review-date"><%= new Date(r.createdAt).toLocaleDateString() %></div>
+                        </div>
+                      <% }) %>
+                    <% } else { %>
+                      <div style="padding:20px;text-align:center;color:var(--t2);font-size:14px;">No reviews yet.</div>
+                    <% } %>
                   </div>
                 </div>
               </div>

@@ -27,14 +27,14 @@
     let cta = '';
     if (sec) {
       title = sec.dataset && sec.dataset.title ? sec.dataset.title : (sec.getAttribute && sec.getAttribute('data-title')) || '';
-      sub   = sec.dataset && sec.dataset.sub   ? sec.dataset.sub   : (sec.getAttribute && sec.getAttribute('data-sub'))   || '';
-      cta   = sec.dataset && sec.dataset.cta   ? sec.dataset.cta   : (sec.getAttribute && sec.getAttribute('data-cta'))   || '';
+      sub = sec.dataset && sec.dataset.sub ? sec.dataset.sub : (sec.getAttribute && sec.getAttribute('data-sub')) || '';
+      cta = sec.dataset && sec.dataset.cta ? sec.dataset.cta : (sec.getAttribute && sec.getAttribute('data-cta')) || '';
     }
 
     // Small fallback map for known sections when no data-* provided
-   
+
     if (pgTitleEl) pgTitleEl.textContent = title;
-    if (pgSubEl)   pgSubEl.textContent   = sub;
+    if (pgSubEl) pgSubEl.textContent = sub;
     if (primaryLabelEl) primaryLabelEl.textContent = cta || 'Action';
 
     initCharts(id);
@@ -45,21 +45,21 @@
   function switchRole(role) {
     if (document.getElementById('rAdmin')) document.getElementById('rAdmin').classList.toggle('active', role === 'admin');
     if (document.getElementById('rSeller')) document.getElementById('rSeller').classList.toggle('active', role === 'seller');
-    if (document.getElementById('adminNav')) document.getElementById('adminNav').style.display  = role === 'admin'  ? 'block' : 'none';
+    if (document.getElementById('adminNav')) document.getElementById('adminNav').style.display = role === 'admin' ? 'block' : 'none';
     if (document.getElementById('sellerNav')) document.getElementById('sellerNav').style.display = role === 'seller' ? 'block' : 'none';
 
     if (role === 'admin') {
       if (document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent = 'A';
-      if (document.getElementById('sbName')) document.getElementById('sbName').textContent   = 'Admin User';
-      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent   = 'Super Admin';
+      if (document.getElementById('sbName')) document.getElementById('sbName').textContent = 'Admin User';
+      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent = 'Super Admin';
       nav(document.querySelector('#adminNav .nav-item'), 'aDash');
     } else {
       if (document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent = 'TN';
-      if (document.getElementById('sbName')) document.getElementById('sbName').textContent   = 'Trần Ngọc';
-      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent   = 'Seller';
+      if (document.getElementById('sbName')) document.getElementById('sbName').textContent = 'Trần Ngọc';
+      if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent = 'Seller';
       nav(document.querySelector('#sellerNav .nav-item'), 'sDash');
     }
-    
+
     // Reload page to fetch data for the new role
     setTimeout(() => window.location.reload(), 300);
   }
@@ -68,6 +68,11 @@
   document.querySelectorAll('.filter-pills').forEach(group => {
     group.querySelectorAll('.f-pill').forEach(pill => {
       pill.addEventListener('click', () => {
+        // Handle pills that don't have separate specialized listeners
+        if (group.closest('#aUsers')) return; // handled in specialized script
+        if (group.closest('#aOrders')) return; // handled in specialized script
+        if (group.closest('#aReports')) return; // handled in specialized script
+
         group.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
         pill.classList.add('on');
 
@@ -85,8 +90,8 @@
     const t = document.createElement('div');
     t.className = 'toast ' + type;
     const icons = {
-      ok:   '<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
-      err:  '<svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      ok: '<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+      err: '<svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
       info: '<svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
     };
     t.innerHTML = (icons[type] || '') + msg;
@@ -104,7 +109,7 @@
   window._dashboard.chartInited = window._dashboard.chartInited || {};
   var chartInited = window._dashboard.chartInited;
 
-  window._dashboard.COLORS = window._dashboard.COLORS || { BLUE:'#2563eb', GREEN:'#22c55e', AMBER:'#f59e0b', PURPLE:'#8b5cf6', RED:'#ef4444', TEAL:'#06b6d4' };
+  window._dashboard.COLORS = window._dashboard.COLORS || { BLUE: '#2563eb', GREEN: '#22c55e', AMBER: '#f59e0b', PURPLE: '#8b5cf6', RED: '#ef4444', TEAL: '#06b6d4' };
   var BLUE = window._dashboard.COLORS.BLUE;
   var GREEN = window._dashboard.COLORS.GREEN;
   var AMBER = window._dashboard.COLORS.AMBER;
@@ -144,20 +149,20 @@
           const gmvJson = gmvRes.ok ? await gmvRes.json() : null;
           const catJson = catRes.ok ? await catRes.json() : null;
 
-          const labels = (gmvJson && gmvJson.data && gmvJson.data.labels) || ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-          const gmvData = (gmvJson && gmvJson.data && gmvJson.data.gmvData) || [18,24,21,42,0,0,0,0,0,0,0,0];
-          const ordersData = (gmvJson && gmvJson.data && gmvJson.data.ordersData) || [32,45,38,98,0,0,0,0,0,0,0,0];
+          const labels = (gmvJson && gmvJson.data && gmvJson.data.labels) || ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+          const gmvData = (gmvJson && gmvJson.data && gmvJson.data.gmvData) || [18, 24, 21, 42, 0, 0, 0, 0, 0, 0, 0, 0];
+          const ordersData = (gmvJson && gmvJson.data && gmvJson.data.ordersData) || [32, 45, 38, 98, 0, 0, 0, 0, 0, 0, 0, 0];
 
           new Chart(document.getElementById('cAdminGMV'), {
             type: 'bar',
             data: {
               labels: labels,
               datasets: [
-                { label: 'GMV', data: gmvData, backgroundColor: BLUE+'33', borderColor: BLUE, borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
+                { label: 'GMV', data: gmvData, backgroundColor: BLUE + '33', borderColor: BLUE, borderWidth: 2, borderRadius: 5, yAxisID: 'y' },
                 { type: 'line', label: 'Orders', data: ordersData, borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
               ],
             },
-            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display:false } }, x: X_NO_GRID } },
+            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display: false } }, x: X_NO_GRID } },
           });
 
           const defaultLabels = CATEGORIES.map(c => c.name.replace(/&amp;/g, '&'));
@@ -183,7 +188,7 @@
           if (!res.ok) return;
           const json = await res.json();
           const d = json.data || {};
-          
+
           // Update KPI Cards
           const kpi = d.kpi || {};
           const sec = document.getElementById('aAnalytics');
@@ -202,7 +207,7 @@
           const userGrowth = d.userGrowth || [0, 0, 0, 0];
           new Chart(document.getElementById('cUserGrowth'), {
             type: 'line',
-            data: { labels: ['Q1','Q2','Q3','Q4'], datasets: [{ data: userGrowth, borderColor: BLUE, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: BLUE, tension: .4, fill: true, backgroundColor: BLUE+'18' }] },
+            data: { labels: ['Q1', 'Q2', 'Q3', 'Q4'], datasets: [{ data: userGrowth, borderColor: BLUE, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: BLUE, tension: .4, fill: true, backgroundColor: BLUE + '18' }] },
             options: { ...BASE_OPTS, scales: { y: AXIS_OPTS, x: X_NO_GRID } },
           });
 
@@ -210,22 +215,22 @@
           const rev = d.revenueByCategory || { labels: [], data: [] };
           const rLabels = rev.labels.length ? rev.labels : ['No Data'];
           const rData = rev.data.length ? rev.data : [0];
-          const bgColors = rLabels.map((_, i) => [BLUE+'cc', GREEN+'cc', AMBER+'cc', PURPLE+'cc', TEAL+'cc'][i % 5]);
+          const bgColors = rLabels.map((_, i) => [BLUE + 'cc', GREEN + 'cc', AMBER + 'cc', PURPLE + 'cc', TEAL + 'cc'][i % 5]);
 
           new Chart(document.getElementById('cRevCat'), {
             type: 'bar',
             data: { labels: rLabels, datasets: [{ data: rData, backgroundColor: bgColors, borderWidth: 0, borderRadius: 5 }] },
-            options: { ...BASE_OPTS, indexAxis: 'y', scales: { x: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'M' } }, y: X_NO_GRID } },
+            options: { ...BASE_OPTS, indexAxis: 'y', scales: { x: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v + 'M' } }, y: X_NO_GRID } },
           });
 
           // Weekly orders - line chart
           const w = d.weeklyOrders || { labels: [], data: [] };
           const wLabels = w.labels.length ? w.labels : ['No Data'];
           const wData = w.data.length ? w.data : [0];
-          
+
           new Chart(document.getElementById('cWeekly'), {
             type: 'line',
-            data: { labels: wLabels, datasets: [{ data: wData, borderColor: TEAL, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: TEAL, tension: .4, fill: true, backgroundColor: TEAL+'18' }] },
+            data: { labels: wLabels, datasets: [{ data: wData, borderColor: TEAL, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: TEAL, tension: .4, fill: true, backgroundColor: TEAL + '18' }] },
             options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v } }, x: X_NO_GRID } },
           });
 
@@ -295,28 +300,28 @@
           if (!res.ok) return;
           const json = await res.json();
           const d = json.data || {};
-          
-          const rev = d.revenue || { labels: ['T1','T2','T3','T4'], data: [0, 0, 0, 0] };
+
+          const rev = d.revenue || { labels: ['T1', 'T2', 'T3', 'T4'], data: [0, 0, 0, 0] };
           new Chart(document.getElementById('cSellerRev'), {
             type: 'bar',
-            data: { labels: rev.labels, datasets: [{ data: rev.data, backgroundColor: BLUE+'44', borderColor: BLUE, borderWidth: 2, borderRadius: 6 }] },
-            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'K' } }, x: X_NO_GRID } },
+            data: { labels: rev.labels, datasets: [{ data: rev.data, backgroundColor: BLUE + '44', borderColor: BLUE, borderWidth: 2, borderRadius: 6 }] },
+            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v + 'K' } }, x: X_NO_GRID } },
           });
 
           const cat = d.categories || { labels: ['Không có dữ liệu'], data: [1] };
           const bgColors = [BLUE, GREEN, AMBER, PURPLE, RED, TEAL];
-          let totalCat = cat.data.reduce((a,b)=>a+b, 0);
+          let totalCat = cat.data.reduce((a, b) => a + b, 0);
           if (totalCat === 0) totalCat = 1;
           const catColors = bgColors.slice(0, cat.labels.length);
-          
+
           new Chart(document.getElementById('cSellerCat'), {
             type: 'doughnut',
             data: { labels: cat.labels, datasets: [{ data: cat.data, backgroundColor: catColors, borderWidth: 0 }] },
             options: { ...BASE_OPTS, cutout: '68%' },
           });
-          
+
           const sCatLegend = document.getElementById('sCatLegend');
-          if (sCatLegend && cat.labels.length > 0 && cat.data.some(v=>v>0)) {
+          if (sCatLegend && cat.labels.length > 0 && cat.data.some(v => v > 0)) {
             sCatLegend.innerHTML = cat.labels.map((lbl, i) => {
               const pct = Math.round((cat.data[i] / totalCat) * 100);
               return `<span class="leg-item"><span class="leg-dot" style="background:${catColors[i] || '#ccc'}"></span>${lbl} ${pct}%</span>`;
@@ -335,7 +340,7 @@
           if (res.ok) {
             const json = await res.json();
             const d = json.data || {};
-            
+
             // 1. KPIs
             const kpi = d.kpi || { totalRevenue: 0, totalSold: 0, monthRevenue: 0, avgOrder: 0 };
             const fmt = v => new Intl.NumberFormat('vi-VN').format(Math.round(v)) + ' ₫';
@@ -343,18 +348,18 @@
             const kpiMonth = document.getElementById('revMonth');
             const kpiSold = document.getElementById('revSold');
             const kpiAvg = document.getElementById('revAvg');
-            
+
             if (kpiTotal) kpiTotal.textContent = fmt(kpi.totalRevenue);
             if (kpiMonth) kpiMonth.textContent = fmt(kpi.monthRevenue);
             if (kpiSold) kpiSold.textContent = kpi.totalSold + ' items';
             if (kpiAvg) kpiAvg.textContent = fmt(kpi.avgOrder);
 
             // 2. Trend Chart
-            const rev = d.revenue || { labels: ['T1','T2','T3','T4'], data: [0,0,0,0] };
+            const rev = d.revenue || { labels: ['T1', 'T2', 'T3', 'T4'], data: [0, 0, 0, 0] };
             new Chart(document.getElementById('cRevTrend'), {
               type: 'line',
-              data: { labels: rev.labels, datasets: [{ data: rev.data, borderColor: GREEN, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: GREEN, tension: .4, fill: true, backgroundColor: GREEN+'18' }] },
-              options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v+'K' } }, x: X_NO_GRID } },
+              data: { labels: rev.labels, datasets: [{ data: rev.data, borderColor: GREEN, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: GREEN, tension: .4, fill: true, backgroundColor: GREEN + '18' }] },
+              options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v + 'K' } }, x: X_NO_GRID } },
             });
           }
 
@@ -365,10 +370,10 @@
             const orders = hisJson.data || [];
             const tbody = document.getElementById('revHistoryTbody');
             if (tbody) {
-               if (orders.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--t2);padding:20px 0;">Chưa có giao dịch hoàn tất.</td></tr>`;
-               } else {
-                 tbody.innerHTML = orders.map(o => `
+              if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--t2);padding:20px 0;">No completed orders.</td></tr>`;
+              } else {
+                tbody.innerHTML = orders.map(o => `
                    <tr>
                      <td><strong>${o.product?.title || 'deleted products'}</strong></td>
                      <td style="color:var(--t2)">${o.buyer?.name || o.buyer?.nickname || 'Khách'}</td>
@@ -377,7 +382,7 @@
                      <td style="color:var(--t2)">${o.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
                    </tr>
                  `).join('');
-               }
+              }
             }
           }
         } catch (e) {
@@ -387,66 +392,67 @@
     }
   }
 
-  /* ── Admin data loaders (users / products / orders) ── */
-  function renderAdminPagination(containerSelector, pagination, fnName) {
+  /* ── Data loaders & Pagination ── */
+  function renderPagination(containerSelector, pagination, fnName) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
     if (!pagination || pagination.total === 0) {
       container.innerHTML = '<span class="pg-info">Showing 0 / 0</span>';
       return;
     }
-    
+
     const { page, limit, total, totalPages } = pagination;
     const start = (page - 1) * limit + 1;
     const end = Math.min(page * limit, total);
-    
+
     let html = `<span class="pg-info">Showing ${start}–${end} / ${total}</span>`;
     html += `<button class="pg-btn" ${page <= 1 ? 'disabled' : ''} onclick="${fnName}(${page - 1})"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>`;
-    
+
     const startP = Math.max(1, page - 2);
     const endP = Math.min(totalPages, Math.max(startP + 4, 5));
     const realStartP = Math.max(1, endP - 4);
-    
+
     if (realStartP > 1) {
       html += `<button class="pg-btn" onclick="${fnName}(1)">1</button>`;
       if (realStartP > 2) html += `<button class="pg-btn" disabled>…</button>`;
     }
-    
+
     for (let i = realStartP; i <= endP; i++) {
-        html += `<button class="pg-btn ${i === page ? 'active' : ''}" onclick="${fnName}(${i})">${i}</button>`;
+      html += `<button class="pg-btn ${i === page ? 'active' : ''}" onclick="${fnName}(${i})">${i}</button>`;
     }
-    
+
     if (endP < totalPages) {
       if (endP < totalPages - 1) html += `<button class="pg-btn" disabled>…</button>`;
       html += `<button class="pg-btn" onclick="${fnName}(${totalPages})">${totalPages}</button>`;
     }
-    
+
     html += `<button class="pg-btn" ${page >= totalPages ? 'disabled' : ''} onclick="${fnName}(${page + 1})"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>`;
-    
+
     container.innerHTML = html;
   }
 
   function initAdminData(id) {
-    if (id === 'aUsers') fetchAdminUsers(1);
+    if (id === 'aUsers' && typeof loadUsers === 'function') loadUsers(1);
     if (id === 'aProducts') fetchAdminProducts(1);
-    if (id === 'aOrders') { fetchAdminOrders(1); fetchAdminOrderCounts(); }
+    if (id === 'aOrders' && typeof loadOrders === 'function') { loadOrders(1); fetchAdminOrderCounts(); }
+    if (id === 'aReports' && typeof loadReports === 'function') loadReports();
     if (id === 'aDash') fetchAdminStats();
     if (id === 'aSettings') fetchAdminSettings();
     if (id === 'sDash') fetchSellerStats();
     if (id === 'sOrders') fetchSellerStats();
   }
 
-  window.saveAdminSettings = function() {
-      const inputs = document.querySelectorAll('#aSettings .form-input');
-      const stName = inputs[0];
-      const stFee = inputs[1];
-      if (stName && stFee) {
-          localStorage.setItem('campus_cfg', JSON.stringify({
-              platformName: stName.value,
-              serviceFee: stFee.value
-          }));
-      }
-      showToast('Đã lưu cấu hình thành công', 'ok');
+  window.saveAdminSettings = function () {
+    const inputs = document.querySelectorAll('#aSettings .form-input');
+    const stName = inputs[0];
+    const stFee = inputs[1];
+    if (stName && stFee) {
+      localStorage.setItem('campus_cfg', JSON.stringify({
+        platformName: stName.value,
+        serviceFee: stFee.value
+      }));
+    }
+    showToast('Đã lưu cấu hình thành công', 'ok');
   };
 
   async function fetchAdminSettings() {
@@ -454,48 +460,48 @@
       // 1. Fetch categories
       const catRes = await fetch('/api/admin/categories');
       if (catRes.ok) {
-         const catJson = await catRes.json();
-         const labels = catJson.data.labels;
-         const data = catJson.data.data;
-         const catList = document.getElementById('adminCategoriesList');
-         const catCount = document.getElementById('adminCatCount');
-         if (catList) {
-             if (labels.length === 0) {
-                 catList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--t2);">Không có danh mục nào.</div>`;
-             } else {
-                 catList.innerHTML = labels.map((lbl, idx) => `
+        const catJson = await catRes.json();
+        const labels = catJson.data.labels;
+        const data = catJson.data.data;
+        const catList = document.getElementById('adminCategoriesList');
+        const catCount = document.getElementById('adminCatCount');
+        if (catList) {
+          if (labels.length === 0) {
+            catList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--t2);">Không có danh mục nào.</div>`;
+          } else {
+            catList.innerHTML = labels.map((lbl, idx) => `
                     <div class="list-item">
                       <div class="li-info"><div class="li-name">${lbl}</div><div class="li-sub">${data[idx]} products</div></div>
                       <button class="act-btn danger" onclick="showToast('Tính năng ẩn danh mục đang phát triển', 'info')">Hide</button>
                     </div>`).join('');
-             }
-         }
-         if (catCount) catCount.textContent = labels.length;
+          }
+        }
+        if (catCount) catCount.textContent = labels.length;
       }
 
       // 2. Fetch stats
       const statRes = await fetch('/api/admin/stats');
       if (statRes.ok) {
-          const statJson = await statRes.json();
-          const d = statJson.data || {};
-          const users = d.totalUsers || 1;
-          const listings = d.activeListings || 1;
-          
-          const dbSize = (Math.max(1.2, users * 0.05)).toFixed(2) + ' MB';
-          const storage = (Math.max(5.5, listings * 1.5)).toFixed(2) + ' MB';
-          const rps = (users * 25 + Math.floor(Math.random() * 100));
-          
-          const sysStats = document.getElementById('adminSysStats');
-          if (sysStats) {
-             sysStats.innerHTML = `
+        const statJson = await statRes.json();
+        const d = statJson.data || {};
+        const users = d.totalUsers || 1;
+        const listings = d.activeListings || 1;
+
+        const dbSize = (Math.max(1.2, users * 0.05)).toFixed(2) + ' MB';
+        const storage = (Math.max(5.5, listings * 1.5)).toFixed(2) + ' MB';
+        const rps = (users * 25 + Math.floor(Math.random() * 100));
+
+        const sysStats = document.getElementById('adminSysStats');
+        if (sysStats) {
+          sysStats.innerHTML = `
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Database size</span><span style="font-weight:600">${dbSize}</span></div>
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Storage (images)</span><span style="font-weight:600">${storage}</span></div>
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">API requests/day</span><span style="font-weight:600">${new Intl.NumberFormat('en-US').format(rps)}</span></div>
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Uptime</span><span style="font-weight:600;color:#16a34a">99.99%</span></div>
              `;
-          }
+        }
       }
-      
+
       const inputs = document.querySelectorAll('#aSettings .form-input');
       const stName = inputs[0];
       const stFee = inputs[1];
@@ -519,10 +525,10 @@
         const label = card.querySelector('.sc-label')?.textContent?.toLowerCase() || '';
         const valEl = card.querySelector('.sc-val');
         if (!valEl) return;
-        if (label.includes('pending')) valEl.textContent = (by.pending||0);
-        if (label.includes('confirmed')) valEl.textContent = (by.confirmed||0);
-        if (label.includes('completed')) valEl.textContent = (by.completed||0);
-        if (label.includes('cancelled')) valEl.textContent = (by.cancelled||0);
+        if (label.includes('pending')) valEl.textContent = (by.pending || 0);
+        if (label.includes('confirmed')) valEl.textContent = (by.confirmed || 0);
+        if (label.includes('completed')) valEl.textContent = (by.completed || 0);
+        if (label.includes('cancelled')) valEl.textContent = (by.cancelled || 0);
       });
     } catch (e) { console.error(e); }
   }
@@ -538,47 +544,23 @@
         const label = card.querySelector('.stat-label')?.textContent?.trim();
         const valEl = card.querySelector('.stat-val');
         if (!label || !valEl) return;
-        if (label.includes('Total users')) valEl.textContent = (d.totalUsers||0).toLocaleString();
-        if (label.includes('Active listings')) valEl.textContent = (d.activeListings||0).toLocaleString();
-        if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth||0).toLocaleString();
+        if (label.includes('Total users')) valEl.textContent = (d.totalUsers || 0).toLocaleString();
+        if (label.includes('Active listings')) valEl.textContent = (d.activeListings || 0).toLocaleString();
+        if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth || 0).toLocaleString();
         if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
       });
     } catch (e) { console.error(e); }
   }
 
-  async function fetchAdminUsers(page = 1) {
-    try {
-      const res = await fetch(`/api/admin/users?page=${page}&limit=20`);
-      if (!res.ok) return console.error('Failed to load users');
-      const json = await res.json();
-      const users = (json.data || []);
-      const tbody = document.querySelector('#aUsers table tbody');
-      if (!tbody) return;
-      tbody.innerHTML = users.map(u => `
-        <tr>
-          <td><div class="user-cell"><div class="uc-avatar" style="background:#dbeafe;color:#1d4ed8">${(u.name||'')[0]||''}${(u.name||'')[1]||''}</div><div><div class="uc-name">${u.displayName||u.name}</div><div class="uc-sub">@${u.nickname||u.email?.split('@')[0]||''}</div></div></div></td>
-          <td style="color:var(--t2)">${u.email||''}</td>
-          <td style="color:var(--t2)">${u.university||''}</td>
-          <td style="color:var(--t2)">${new Date(u.createdAt).toLocaleDateString()}</td>
-          <td><strong>${u.totalSales||0}</strong></td>
-          <td>${u.totalOrders||0}</td>
-          <td>${u.rating?('⭐ '+u.rating.toFixed(1)):'—'}</td>
-          <td><span class="badge ${u.banned? 'badge-cancelled':'badge-active'}">${u.banned? 'Banned':'User'}</span></td>
-          <td><div class="tbl-actions"><button class="act-btn primary" onclick="showToast('View profile ${u.displayName||u.name}','info')">View</button><button class="act-btn ${u.banned? 'success':'danger'}" onclick="toggleBan('${u._id}', ${u.banned})">${u.banned? 'Unban':'Ban'}</button></div></td>
-        </tr>
-      `).join('');
-      renderAdminPagination('#aUsers .pagination', json.pagination, 'fetchAdminUsers');
-    } catch (e) { console.error(e); }
-  }
 
   async function toggleBan(id, current) {
     try {
-      const res = await fetch('/api/admin/users/'+id+'/ban', { method: 'PATCH', headers: { 'content-type':'application/json' }, body: JSON.stringify({ banned: !current }) });
-      if (!res.ok) return showToast('Action failed','err');
-      showToast('Updated','ok');
+      const res = await fetch('/api/admin/users/' + id + '/ban', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ banned: !current }) });
+      if (!res.ok) return showToast('Action failed', 'err');
+      showToast('Updated', 'ok');
       fetchAdminUsers();
       fetchAdminStats();
-    } catch (e) { console.error(e); showToast('Action failed','err'); }
+    } catch (e) { console.error(e); showToast('Action failed', 'err'); }
   }
 
   async function fetchAdminProducts(page = 1, status = window._dashboard.adminProductsStatus || '') {
@@ -611,51 +593,28 @@
             </div></td>
           </tr>`;
       }).join('');
-      renderAdminPagination('#aProducts .pagination', json.pagination, 'fetchAdminProducts');
+      renderPagination('#aProducts .pagination', json.pagination, 'fetchAdminProducts');
     } catch (e) { console.error(e); }
   }
 
   async function adminProductAction(id, action) {
     try {
       let res;
-      if (action === 'hide') res = await fetch('/api/admin/products/'+id+'/hide', { method: 'PATCH' });
-      else if (action === 'restore') res = await fetch('/api/admin/products/'+id+'/restore', { method: 'PATCH' });
-      else if (action === 'delete') res = await fetch('/api/admin/products/'+id, { method: 'DELETE' });
+      if (action === 'hide') res = await fetch('/api/admin/products/' + id + '/hide', { method: 'PATCH' });
+      else if (action === 'restore') res = await fetch('/api/admin/products/' + id + '/restore', { method: 'PATCH' });
+      else if (action === 'delete') res = await fetch('/api/admin/products/' + id, { method: 'DELETE' });
       else return;
 
       if (!res.ok) {
-        const j = await res.json().catch(()=>({}));
-        return showToast(j.message || 'Action failed','err');
+        const j = await res.json().catch(() => ({}));
+        return showToast(j.message || 'Action failed', 'err');
       }
-      showToast('Done','ok');
+      showToast('Done', 'ok');
       fetchAdminProducts();
       fetchAdminStats();
-    } catch (e) { console.error(e); showToast('Action failed','err'); }
+    } catch (e) { console.error(e); showToast('Action failed', 'err'); }
   }
 
-  async function fetchAdminOrders(page = 1) {
-    try {
-      const res = await fetch(`/api/admin/orders?page=${page}&limit=20`);
-      if (!res.ok) return console.error('Failed to load orders');
-      const json = await res.json();
-      const orders = (json.data || []);
-      const tbody = document.querySelector('#aOrders table tbody');
-      if (!tbody) return;
-      tbody.innerHTML = orders.map(o => `
-        <tr>
-          <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">#ORD-${String(o._id).slice(-4).toUpperCase()}</td>
-          <td>${o.product?.title||''}</td>
-          <td style="color:var(--t2)">${o.buyer?.name||o.buyer?.nickname||''}</td>
-          <td style="color:var(--t2)">${o.seller?.name||o.seller?.nickname||''}</td>
-          <td>${new Intl.NumberFormat('vi-VN').format(o.priceSnapshot)} ₫</td>
-          <td style="color:var(--t2)">${o.deliveryMode}</td>
-          <td style="color:var(--t2)">${o.paymentMode}</td>
-          <td><span class="badge badge-${o.status}">${o.status}</span></td>
-        </tr>
-      `).join('');
-      renderAdminPagination('#aOrders .pagination', json.pagination, 'fetchAdminOrders');
-    } catch (e) { console.error(e); }
-  }
 
   // Seller-specific stats (counts by status for seller)
   async function fetchSellerStats() {

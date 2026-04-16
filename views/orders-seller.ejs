@@ -67,35 +67,11 @@
           <thead>
             <tr><th>Order ID</th><th>Product</th><th>Buyer</th><th>Price</th><th>Delivery</th><th>Payment</th><th>Note</th><th>Status</th><th>Actions</th></tr>
           </thead>
-          <tbody>
-            <% if (!orders || !orders.length) { %>
-              <tr><td colspan="9" class="empty">No orders yet.</td></tr>
-            <% } else { %>
-              <% orders.forEach(function(order){ %>
-                <tr>
-                  <td style="font-family:var(--mono);font-size:11px;color:var(--t2)"><%= order._id %></td>
-                  <td><%= order.product && order.product.title ? order.product.title : '—' %></td>
-                  <td><a href="/user/<%= order.buyer._id %>" style="color:#1B5EFF;text-decoration:none;"><%= order.buyer && (order.buyer.nickname || order.buyer.name) ? (order.buyer.nickname || order.buyer.name) : '—' %></a></td>
-                  <td><%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %></td>
-                  <td style="color:var(--t2)"><%= order.deliveryMode === 'ship' ? 'Ship' : 'Pickup' %></td>
-                  <td style="color:var(--t2)"><%= order.paymentMode === 'card' ? 'Card' : 'Cash' %></td>
-                  <td style="color:var(--t3);font-size:12px"><%= order.note ? order.note : '—' %></td>
-                  <td><span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>"><%= order.status %></span></td>
-                  <td>
-                    <div class="tbl-actions">
-                      <select class="order-status-select" data-order-id="<%= order._id %>">
-                        <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>pending</option>
-                        <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>confirmed</option>
-                        <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>completed</option>
-                        <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>cancelled</option>
-                      </select>
-                    </div>
-                  </td>
-                </tr>
-              <% }) %>
-            <% } %>
+          <tbody id="ordersTableBody">
+            <tr><td colspan="9" class="empty">Loading orders...</td></tr>
           </tbody>
         </table>
+        <div class="pagination"></div>
       </div>
 
 
@@ -106,85 +82,125 @@
 
 <script>window.INITIAL_SECTION = 'sOrders';</script>
 <script>
-// Order status dropdown handling — calls PATCH /api/orders/:id/status
-;(function(){
-  const statusToClass = {
-    pending: 'badge-pending',
-    confirmed: 'badge-confirmed',
-    completed: 'badge-completed',
-    cancelled: 'badge-cancelled'
-  };
+let currentFilter = '';
 
-  function showToast(msg, type){
-    if(window.showToast) return window.showToast(msg, type);
-    alert(msg);
-  }
+async function loadSellerOrders(page = 1) {
+  const tbody = document.getElementById('ordersTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading orders...</td></tr>';
 
-  async function updateStatus(orderId, status, selectEl){
-    const original = selectEl.dataset.prev || selectEl.value;
-    selectEl.disabled = true;
-    try{
-      const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify({status})
-      });
-      if(!res.ok) throw new Error('Request failed');
-      // update badge in the same row
-      const row = selectEl.closest('tr');
-      const badge = row.querySelector('.badge');
-      if(badge){
-        badge.className = 'badge ' + (statusToClass[status] || 'badge-pending');
-        badge.textContent = status;
-      }
-      showToast('Order ' + orderId + ' updated to ' + status, 'ok');
-      selectEl.dataset.prev = status;
-    }catch(err){
-      selectEl.value = original;
-      showToast('Failed to update order ' + orderId, 'err');
-    }finally{
-      selectEl.disabled = false;
+  try {
+    const params = new URLSearchParams({ page, limit: 10, role: 'seller' });
+    if (currentFilter) params.append('status', currentFilter);
+    
+    const res = await fetch(`/api/orders?${params}`, { credentials: 'same-origin' });
+    const json = await res.json();
+    
+    if (!json.success) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load orders.</td></tr>';
+      return;
     }
+    const orders = json.data || [];
+    if (!orders.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">No orders found.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = orders.map(order => {
+      const price = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(order.priceSnapshot || 0);
+      const statusClass = 'badge-' + (order.status || 'pending');
+      return `
+        <tr>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">${order._id.toString().slice(-8).toUpperCase()}</td>
+          <td>${order.product?.title || '—'}</td>
+          <td><a href="/user/${order.buyer?._id}" style="color:#1B5EFF;text-decoration:none;">${order.buyer?.nickname || order.buyer?.name || '—'}</a></td>
+          <td>${price}</td>
+          <td style="color:var(--t2)">${order.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
+          <td style="color:var(--t2)">${order.paymentMode === 'card' ? 'Card' : 'Cash'}</td>
+          <td style="color:var(--t3);font-size:12px">${order.note || '—'}</td>
+          <td><span class="badge ${statusClass}">${order.status}</span></td>
+          <td>
+            <div class="tbl-actions">
+              <select class="order-status-select" data-order-id="${order._id}" data-prev="${order.status}">
+                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>pending</option>
+                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>confirmed</option>
+                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>completed</option>
+                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
+              </select>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    
+    if (typeof renderPagination === 'function') {
+      renderPagination('.tbl-wrap .pagination', json.pagination, 'loadSellerOrders');
+    }
+    
+    const countEl = document.querySelector('.tbl-count');
+    if (countEl) countEl.textContent = `${json.pagination?.total || orders.length} orders total`;
+  } catch(err) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load orders.</td></tr>';
+    console.error('Failed to fetch seller orders:', err);
   }
+}
 
-  document.addEventListener('change', function(e){
-    const sel = e.target.closest('.order-status-select');
-    if(!sel) return;
-    const orderId = sel.dataset.orderId;
-    const status = sel.value;
-    updateStatus(orderId, status, sel);
-  });
+// Order status dropdown handling
+const statusToClass = {
+  pending: 'badge-pending',
+  confirmed: 'badge-confirmed',
+  completed: 'badge-completed',
+  cancelled: 'badge-cancelled'
+};
 
-  // Filter pills handling
-  const pills = document.querySelectorAll('.f-pill');
-  const rows = document.querySelectorAll('tbody tr:not(.empty)');
-  
-  pills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      // Toggle 'on' class
-      pills.forEach(p => p.classList.remove('on'));
-      pill.classList.add('on');
-
-      const filterType = pill.textContent.trim();
-      rows.forEach(row => {
-        const badge = row.querySelector('.badge');
-        if (!badge) return;
-        const status = badge.textContent.trim().toLowerCase();
-
-        if (filterType === 'All') {
-          row.style.display = '';
-        } else if (filterType === 'Needs action') {
-          row.style.display = (status === 'pending') ? '' : 'none';
-        } else if (filterType === 'In progress') {
-          row.style.display = (status === 'confirmed') ? '' : 'none';
-        } else if (filterType === 'Completed') {
-          row.style.display = (status === 'completed') ? '' : 'none';
-        }
-      });
+async function updateStatus(orderId, status, selectEl){
+  const original = selectEl.dataset.prev || selectEl.value;
+  selectEl.disabled = true;
+  try{
+    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({status})
     });
+    if(!res.ok) throw new Error('Request failed');
+    const row = selectEl.closest('tr');
+    const badge = row.querySelector('.badge');
+    if(badge){
+      badge.className = 'badge ' + (statusToClass[status] || 'badge-pending');
+      badge.textContent = status;
+    }
+    if (typeof showToast === 'function') showToast('Order updated to ' + status, 'ok');
+    selectEl.dataset.prev = status;
+  }catch(err){
+    selectEl.value = original;
+    if (typeof showToast === 'function') showToast('Failed to update order', 'err');
+  }finally{
+    selectEl.disabled = false;
+  }
+}
+
+document.addEventListener('change', function(e){
+  const sel = e.target.closest('.order-status-select');
+  if(!sel) return;
+  updateStatus(sel.dataset.orderId, sel.value, sel);
+});
+
+// Filter pills
+document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));
+    pill.classList.add('on');
+    const txt = pill.textContent.trim().toLowerCase();
+    if (txt === 'all') currentFilter = '';
+    else if (txt === 'needs action') currentFilter = 'pending';
+    else if (txt === 'in progress') currentFilter = 'confirmed';
+    else if (txt === 'completed') currentFilter = 'completed';
+    else currentFilter = txt;
+    loadSellerOrders(1);
   });
-})();
+});
+
+document.addEventListener('DOMContentLoaded', () => loadSellerOrders(1));
 </script>
 <%- include('partials/dashboard-scripts') %>
 </body>

@@ -1,6 +1,8 @@
 const User = require('../../models/User');
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
+const { ORDER_STATUS, PRODUCT_STATUS, USER_ROLES, NOTIFICATION_TYPES } = require('../../config/appConstants');
+
 
 // GET /api/admin/users
 const getUsers = async (req, res) => {
@@ -39,7 +41,7 @@ const toggleBan = async (req, res) => {
       await sendNotification({
         recipient: uid,
         sender:    req.user._id,
-        type:      'system',
+        type:      NOTIFICATION_TYPES.SYSTEM,
         title:     banned ? 'Account Banned 🛡️' : 'Account Reinstated 🛡️',
         message:   banned ? 'Your account has been banned due to policy violations.' : 'Your account has been restored. Please follow our community guidelines.',
         link:      '#'
@@ -84,7 +86,7 @@ const getProducts = async (req, res) => {
     const filter = {};
     if (status === 'reported') {
       filter.reported = true;
-    } else if (['active', 'sold', 'hidden'].includes(status)) {
+    } else if (Object.values(PRODUCT_STATUS).includes(status)) {
       filter.status = status;
     }
     if (q) filter.$text = { $search: q };
@@ -107,7 +109,7 @@ const getProducts = async (req, res) => {
 const getStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({});
-    const activeListings = await Product.countDocuments({ status: 'active' });
+    const activeListings = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
 
     // Orders this month and GMV this month
     const start = new Date();
@@ -119,7 +121,7 @@ const getStats = async (req, res) => {
     const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: start, $lt: end } });
 
     const gmvAgg = await Order.aggregate([
-      { $match: { createdAt: { $gte: start, $lt: end }, status: { $ne: 'cancelled' } } },
+      { $match: { createdAt: { $gte: start, $lt: end }, status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $group: { _id: null, total: { $sum: '$priceSnapshot' } } },
     ]);
     const gmvThisMonth = (gmvAgg[0] && gmvAgg[0].total) || 0;
@@ -128,7 +130,12 @@ const getStats = async (req, res) => {
     const statusAgg = await Order.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
-    const ordersByStatus = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+    const ordersByStatus = { 
+      [ORDER_STATUS.PENDING]: 0, 
+      [ORDER_STATUS.CONFIRMED]: 0, 
+      [ORDER_STATUS.COMPLETED]: 0, 
+      [ORDER_STATUS.CANCELLED]: 0 
+    };
     statusAgg.forEach(s => { ordersByStatus[s._id] = s.count; });
 
     res.json({ success: true, data: { totalUsers, activeListings, ordersThisMonth, gmvThisMonth, ordersByStatus } });
@@ -144,7 +151,7 @@ const getGMVMonths = async (req, res) => {
     const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
     const agg = await Order.aggregate([
-      { $match: { createdAt: { $gte: start }, status: { $ne: 'cancelled' } } },
+      { $match: { createdAt: { $gte: start }, status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, total: { $sum: '$priceSnapshot' }, orders: { $sum: 1 } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
@@ -195,7 +202,7 @@ const getCategoryDistribution = async (req, res) => {
 const hideProduct = async (req, res) => {
   try {
     const pid = req.params.id;
-    const p = await Product.findByIdAndUpdate(pid, { $set: { status: 'hidden' } }, { new: true }).lean();
+    const p = await Product.findByIdAndUpdate(pid, { $set: { status: PRODUCT_STATUS.HIDDEN } }, { new: true }).lean();
     if (!p) return res.status(404).json({ success: false, message: 'Product not found' });
 
     // Notify seller
@@ -204,7 +211,7 @@ const hideProduct = async (req, res) => {
       await sendNotification({
         recipient: p.seller,
         sender:    req.user._id,
-        type:      'system',
+        type:      NOTIFICATION_TYPES.SYSTEM,
         title:     'Listing Hidden ⚠️',
         message:   `Your listing "${p.title}" has been hidden by moderation. Please check your product details.`,
         link:      `/products/${p._id}`
@@ -221,7 +228,7 @@ const hideProduct = async (req, res) => {
 const restoreProduct = async (req, res) => {
   try {
     const pid = req.params.id;
-    const p = await Product.findByIdAndUpdate(pid, { $set: { status: 'active' } }, { new: true }).lean();
+    const p = await Product.findByIdAndUpdate(pid, { $set: { status: PRODUCT_STATUS.ACTIVE } }, { new: true }).lean();
     if (!p) return res.status(404).json({ success: false, message: 'Product not found' });
 
     // Notify seller
@@ -230,7 +237,7 @@ const restoreProduct = async (req, res) => {
       await sendNotification({
         recipient: p.seller,
         sender:    req.user._id,
-        type:      'system',
+        type:      NOTIFICATION_TYPES.SYSTEM,
         title:     'Listing Live 🎉',
         message:   `Your listing "${p.title}" is now visible to everyone!`,
         link:      `/products/${p._id}`
@@ -274,7 +281,7 @@ const getAnalytics = async (req, res) => {
 
     // 3. Average Order Value (Giá trị đơn trung bình)
     const validOrdersAgg = await Order.aggregate([
-      { $match: { status: { $ne: 'cancelled' } } },
+      { $match: { status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $group: { _id: null, totalSales: { $sum: '$priceSnapshot' }, count: { $sum: 1 } } }
     ]);
     const avgOrderValue = validOrdersAgg.length > 0 && validOrdersAgg[0].count > 0 
@@ -334,14 +341,19 @@ const getAnalytics = async (req, res) => {
     const statusAgg = await Order.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
-    const statusMap = { completed: 0, confirmed: 0, pending: 0, cancelled: 0 };
+    const statusMap = { 
+      [ORDER_STATUS.COMPLETED]: 0, 
+      [ORDER_STATUS.CONFIRMED]: 0, 
+      [ORDER_STATUS.PENDING]: 0, 
+      [ORDER_STATUS.CANCELLED]: 0 
+    };
     statusAgg.forEach(s => {
       if (s._id) statusMap[String(s._id).toLowerCase()] = s.count;
     });
 
     // 9. Revenue by category (lấy orders, lấy product category, nhóm theo category)
     const revenueByCategory = await Order.aggregate([
-      { $match: { status: { $ne: 'cancelled' } } },
+      { $match: { status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'productInfo' } },
       { $unwind: '$productInfo' },
       { $group: { _id: '$productInfo.category', total: { $sum: '$priceSnapshot' }, count: { $sum: 1 } } },
@@ -426,7 +438,7 @@ const getReportsData = async (req, res) => {
   try {
     // 1. Revenue by category
     const revAgg = await Order.aggregate([
-      { $match: { status: { $ne: 'cancelled' } } },
+      { $match: { status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'prod' } },
       { $unwind: '$prod' },
       { $group: { _id: { $ifNull: ['$prod.category', 'Other'] }, total: { $sum: '$priceSnapshot' } } },
@@ -547,7 +559,7 @@ const updateReport = async (req, res) => {
       await sendNotification({
         recipient: report.reporter,
         sender:    req.user._id,
-        type:      'system',
+        type:      NOTIFICATION_TYPES.SYSTEM,
         title:     `Report Update 🛡️`,
         message:   `Your report has been ${statusLabel.toLowerCase()} by an administrator.`,
         link:      '#'

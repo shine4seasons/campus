@@ -1,11 +1,11 @@
-const mongoose   = require('mongoose');
-const Order      = require('../../models/Order');
-const Product    = require('../../models/Product');
-const User       = require('../../models/User');
-const Message    = require('../../models/Message');
+const mongoose = require('mongoose');
+const Order = require('../../models/Order');
+const Product = require('../../models/Product');
+const User = require('../../models/User');
+const Message = require('../../models/Message');
 
 const { findOrCreateConversation } = require('../chat/conversation');
-const { validDelivery, validPayment, TRANSITIONS } = require('./constants');
+const { ORDER_STATUS, PRODUCT_STATUS, DELIVERY_MODES, PAYMENT_MODES, TRANSITIONS, ORDER_ROLES, NOTIFICATION_TYPES } = require('../../config/appConstants');
 
 // Create Order
 exports.createOrder = async (req, res) => {
@@ -15,15 +15,15 @@ exports.createOrder = async (req, res) => {
       productId,
       deliveryMode,
       paymentMode,
-      note            = '',
+      note = '',
       shippingAddress = null,
-      pickupLocation  = null,
+      pickupLocation = null,
     } = req.body;
 
     if (!productId) return res.status(400).json({ success: false, message: 'Thiếu productId' });
 
-    if (!validDelivery.includes(deliveryMode)) return res.status(400).json({ success: false, message: 'deliveryMode không hợp lệ' });
-    if (!validPayment.includes(paymentMode)) return res.status(400).json({ success: false, message: 'paymentMode không hợp lệ' });
+    if (!DELIVERY_MODES.includes(deliveryMode)) return res.status(400).json({ success: false, message: 'deliveryMode không hợp lệ' });
+    if (!PAYMENT_MODES.includes(paymentMode)) return res.status(400).json({ success: false, message: 'paymentMode không hợp lệ' });
 
     if (deliveryMode === 'ship') {
       const a = shippingAddress || {};
@@ -34,31 +34,31 @@ exports.createOrder = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
-    if (product.status !== 'active') return res.status(400).json({ success: false, message: 'Sản phẩm này đã được bán hoặc bị ẩn' });
+    if (product.status !== PRODUCT_STATUS.ACTIVE) return res.status(400).json({ success: false, message: 'Sản phẩm này đã được bán hoặc bị ẩn' });
     if (String(product.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'Bạn không thể mua sản phẩm của chính mình' });
 
     const sellerId = product.seller;
 
     const order = await Order.create({
-      product:         productId,
-      buyer:           buyerId,
-      seller:          sellerId,
-      priceSnapshot:   product.price,
+      product: productId,
+      buyer: buyerId,
+      seller: sellerId,
+      priceSnapshot: product.price,
       deliveryMode,
       paymentMode,
-      note:            note.trim().substring(0, 500),
+      note: note.trim().substring(0, 500),
       shippingAddress: deliveryMode === 'ship' ? shippingAddress : null,
-      pickupLocation:  deliveryMode === 'pickup' ? pickupLocation : null,
-      status:          'pending',
+      pickupLocation: deliveryMode === 'pickup' ? pickupLocation : null,
+      status: ORDER_STATUS.PENDING,
     });
 
-    product.status = 'sold';
-    product.buyer  = buyerId;
+    product.status = PRODUCT_STATUS.SOLD;
+    product.buyer = buyerId;
     product.soldAt = new Date();
     await product.save();
 
     User.findByIdAndUpdate(sellerId, { $inc: { totalSales: 1 } }).catch(console.error);
-    User.findByIdAndUpdate(buyerId,  { $inc: { totalOrders: 1 } }).catch(console.error);
+    User.findByIdAndUpdate(buyerId, { $inc: { totalOrders: 1 } }).catch(console.error);
 
     let conv = null;
     try {
@@ -80,9 +80,9 @@ exports.createOrder = async (req, res) => {
 
       const msg = await Message.create({
         conversationId: conv._id,
-        sender:         buyerId,
-        text:           autoMsg,
-        isRead:         false,
+        sender: buyerId,
+        text: autoMsg,
+        isRead: false,
       });
 
       // Emit realtime event for new auto-message
@@ -98,7 +98,7 @@ exports.createOrder = async (req, res) => {
       }
 
       conv.lastMessage = `🛒 Đơn hàng mới — ${product.title}`;
-      conv.updatedAt   = new Date();
+      conv.updatedAt = new Date();
       await conv.save();
 
       await Order.findByIdAndUpdate(order._id, { conversation: conv._id });
@@ -107,21 +107,21 @@ exports.createOrder = async (req, res) => {
       const { sendNotification } = require('../../utils/notifService');
       await sendNotification({
         recipient: sellerId,
-        sender:    buyerId,
-        type:      'order',
-        title:     'New Order 🛒',
-        message:   `${req.user.nickname || req.user.name} placed an order for "${product.title}"`,
-        link:      `/orders-seller`
+        sender: buyerId,
+        type: NOTIFICATION_TYPES.ORDER,
+        title: 'New Order 🛒',
+        message: `${req.user.nickname || req.user.name} placed an order for "${product.title}"`,
+        link: `/orders-seller`
       });
     } catch (chatErr) {
       console.error('[checkout] Auto-message error:', chatErr);
     }
 
     return res.status(201).json({
-      success:        true,
-      orderId:        order._id,
+      success: true,
+      orderId: order._id,
       conversationId: conv?._id || null,
-      message:        'Đặt hàng thành công',
+      message: 'Đặt hàng thành công',
     });
   } catch (err) {
     console.error('[checkout] createOrder:', err);
@@ -133,19 +133,33 @@ exports.createOrder = async (req, res) => {
 exports.getMyOrders = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { role = 'buyer', status } = req.query;
+    const { role = ORDER_ROLES.BUYER, status, page = 1, limit = 10 } = req.query;
 
-    const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
-    if (status) filter.status = status;
+    const filter = role === ORDER_ROLES.SELLER ? { seller: userId } : { buyer: userId };
+    if (status && status !== 'all') filter.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await Order.countDocuments(filter);
 
     const orders = await Order.find(filter)
       .sort('-createdAt')
+      .skip(skip)
+      .limit(Number(limit))
       .populate('product', 'title images price category')
-      .populate('buyer',   'name nickname avatar')
-      .populate('seller',  'name nickname avatar')
+      .populate('buyer', 'name nickname avatar')
+      .populate('seller', 'name nickname avatar')
       .lean();
 
-    res.json({ success: true, data: orders });
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -155,15 +169,20 @@ exports.getMyOrders = async (req, res) => {
 exports.getOrderStats = async (req, res) => {
   try {
     const userId = req.user._id;
-    const role = req.query.role || 'buyer';
-    const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
+    const role = req.query.role || ORDER_ROLES.BUYER;
+    const filter = role === ORDER_ROLES.SELLER ? { seller: userId } : { buyer: userId };
 
     const agg = await Order.aggregate([
       { $match: filter },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
-    const out = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+    const out = {
+      [ORDER_STATUS.PENDING]: 0,
+      [ORDER_STATUS.CONFIRMED]: 0,
+      [ORDER_STATUS.COMPLETED]: 0,
+      [ORDER_STATUS.CANCELLED]: 0
+    };
     agg.forEach(a => { out[a._id] = a.count; });
     res.json({ success: true, data: out });
   } catch (err) {
@@ -176,8 +195,8 @@ exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('product', 'title images price category condition location')
-      .populate('buyer',   'name nickname avatar phone')
-      .populate('seller',  'name nickname avatar phone')
+      .populate('buyer', 'name nickname avatar phone')
+      .populate('seller', 'name nickname avatar phone')
       .lean();
 
     if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
@@ -197,19 +216,19 @@ exports.getOrderById = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const uid        = String(req.user._id);
-    const order      = await Order.findById(req.params.id);
+    const uid = String(req.user._id);
+    const order = await Order.findById(req.params.id);
 
     if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
 
     const isSeller = String(order.seller) === uid;
-    const isBuyer  = String(order.buyer)  === uid;
+    const isBuyer = String(order.buyer) === uid;
 
     if (!isSeller && !isBuyer && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Không có quyền' });
     }
 
-    const role    = isSeller ? 'seller' : 'buyer';
+    const role = isSeller ? ORDER_ROLES.SELLER : ORDER_ROLES.BUYER;
 
     // Allow broader transitions for sellers/admins (both directions).
     const isAdminOrSeller = isSeller || req.user.role === 'admin';
@@ -226,21 +245,21 @@ exports.updateOrderStatus = async (req, res) => {
     order.status = status;
 
     // Manage timestamps according to new status
-    if (status === 'confirmed') order.confirmedAt = new Date(); else order.confirmedAt = null;
-    if (status === 'completed') order.completedAt = new Date(); else order.completedAt = null;
-    if (status === 'cancelled') order.cancelledAt = new Date(); else order.cancelledAt = null;
+    if (status === ORDER_STATUS.CONFIRMED) order.confirmedAt = new Date(); else order.confirmedAt = null;
+    if (status === ORDER_STATUS.COMPLETED) order.completedAt = new Date(); else order.completedAt = null;
+    if (status === ORDER_STATUS.CANCELLED) order.cancelledAt = new Date(); else order.cancelledAt = null;
 
     // Handle product and user counters when cancelling or restoring
     try {
-      if (status === 'cancelled' && prevStatus !== 'cancelled') {
-        await Product.findByIdAndUpdate(order.product, { status: 'active', buyer: null, soldAt: null });
-        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: -1 } }).catch(() => {});
-        User.findByIdAndUpdate(order.buyer,  { $inc: { totalOrders: -1 } }).catch(() => {});
-      } else if (prevStatus === 'cancelled' && status !== 'cancelled') {
+      if (status === ORDER_STATUS.CANCELLED && prevStatus !== ORDER_STATUS.CANCELLED) {
+        await Product.findByIdAndUpdate(order.product, { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null });
+        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: -1 } }).catch(() => { });
+        User.findByIdAndUpdate(order.buyer, { $inc: { totalOrders: -1 } }).catch(() => { });
+      } else if (prevStatus === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.CANCELLED) {
         // restore counts when moving out of cancelled
-        await Product.findByIdAndUpdate(order.product, { status: 'sold', buyer: order.buyer, soldAt: new Date() });
-        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: 1 } }).catch(() => {});
-        User.findByIdAndUpdate(order.buyer,  { $inc: { totalOrders: 1 } }).catch(() => {});
+        await Product.findByIdAndUpdate(order.product, { status: PRODUCT_STATUS.SOLD, buyer: order.buyer, soldAt: new Date() });
+        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: 1 } }).catch(() => { });
+        User.findByIdAndUpdate(order.buyer, { $inc: { totalOrders: 1 } }).catch(() => { });
       }
     } catch (e) {
       console.error('[orders] product/user update error:', e.message);
@@ -252,21 +271,21 @@ exports.updateOrderStatus = async (req, res) => {
     try {
       const { sendNotification } = require('../../utils/notifService');
       const recipientId = isSeller ? order.buyer : order.seller;
-      const statusText = status === 'confirmed' ? 'has been confirmed' : (status === 'completed' ? 'has been completed' : (status === 'cancelled' ? 'has been cancelled' : `moved to "${status}"`));
+      const statusText = status === ORDER_STATUS.CONFIRMED ? 'has been confirmed' : (status === ORDER_STATUS.COMPLETED ? 'has been completed' : (status === ORDER_STATUS.CANCELLED ? 'has been cancelled' : `moved to "${status}"`));
       const prod = await Product.findById(order.product);
-      
+
       let msg = `Your order for "${prod.title}" ${statusText}`;
-      if (status === 'completed') {
-          msg += ". Please leave a review for your partner! ⭐";
+      if (status === ORDER_STATUS.COMPLETED) {
+        msg += ". Please leave a review for your partner! ⭐";
       }
 
       await sendNotification({
         recipient: recipientId,
-        sender:    uid,
-        type:      status === 'completed' ? 'rating' : 'order',
-        title:     status === 'completed' ? 'Rate your trade! ⭐' : 'Order Update 📦',
-        message:   msg,
-        link:      isSeller ? `/orders/tracking/${order._id}` : '/orders-seller'
+        sender: uid,
+        type: status === ORDER_STATUS.COMPLETED ? NOTIFICATION_TYPES.RATING : NOTIFICATION_TYPES.ORDER,
+        title: status === ORDER_STATUS.COMPLETED ? 'Rate your trade! ' : 'Order Update ',
+        message: msg,
+        link: isSeller ? `/orders/tracking/${order._id}` : '/orders-seller'
       });
     } catch (notifErr) {
       console.error('Status change notification error:', notifErr);
@@ -282,19 +301,19 @@ exports.updateOrderStatus = async (req, res) => {
 exports.getAnalytics = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user._id);
-    const role = req.query.role || 'seller';
-    const filter = role === 'seller' ? { seller: userId } : { buyer: userId };
-    
+    const role = req.query.role || ORDER_ROLES.SELLER;
+    const filter = role === ORDER_ROLES.SELLER ? { seller: userId } : { buyer: userId };
+
     // 1. Revenue by month (last 4 months)
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-    
+
     const revAgg = await Order.aggregate([
-      { $match: { ...filter, createdAt: { $gte: start }, status: { $ne: 'cancelled' } } },
+      { $match: { ...filter, createdAt: { $gte: start }, status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, total: { $sum: '$priceSnapshot' } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
-    
+
     const revLabels = [];
     const revMap = {};
     for (let i = 3; i >= 0; i--) {
@@ -304,33 +323,33 @@ exports.getAnalytics = async (req, res) => {
     }
     revAgg.forEach(r => { revMap[`${r._id.year}-${r._id.month}`] = r.total; });
     const revData = Object.values(revMap).map(v => Number((v / 1000).toFixed(0))); // in thousands
-    
+
     // 2. Categories distribution
     const catAgg = await Order.aggregate([
-      { $match: { ...filter, status: { $ne: 'cancelled' } } },
+      { $match: { ...filter, status: { $ne: ORDER_STATUS.CANCELLED } } },
       { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'prod' } },
       { $unwind: '$prod' },
       { $group: { _id: { $ifNull: ['$prod.category', 'Other'] }, count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
-    
+
     const catLabels = catAgg.map(c => c._id);
     const catData = catAgg.map(c => c.count);
 
     // 3. KPI Stats
     const kpiAgg = await Order.aggregate([
-      { $match: { ...filter, status: 'completed' } },
+      { $match: { ...filter, status: ORDER_STATUS.COMPLETED } },
       { $group: { _id: null, totalRev: { $sum: '$priceSnapshot' }, totalSold: { $sum: 1 } } }
     ]);
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const mAgg = await Order.aggregate([
-      { $match: { ...filter, status: 'completed', createdAt: { $gte: thisMonthStart } } },
+      { $match: { ...filter, status: ORDER_STATUS.COMPLETED, createdAt: { $gte: thisMonthStart } } },
       { $group: { _id: null, monthRev: { $sum: '$priceSnapshot' } } }
     ]);
     const kpi = {
-        totalRevenue: kpiAgg[0]?.totalRev || 0,
-        totalSold: kpiAgg[0]?.totalSold || 0,
-        monthRevenue: mAgg[0]?.monthRev || 0
+      totalRevenue: kpiAgg[0]?.totalRev || 0,
+      totalSold: kpiAgg[0]?.totalSold || 0,
+      monthRevenue: mAgg[0]?.monthRev || 0
     };
     kpi.avgOrder = kpi.totalSold > 0 ? (kpi.totalRevenue / kpi.totalSold) : 0;
 

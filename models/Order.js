@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { ORDER_STATUS, DELIVERY_MODES, PAYMENT_MODES } = require('../config/appConstants');
+
 
 const ShippingAddressSchema = new mongoose.Schema({
   name:     { type: String, default: '' },
@@ -22,13 +24,13 @@ const OrderSchema = new mongoose.Schema(
 
     deliveryMode: {
       type: String,
-      enum: ['pickup', 'ship'],
+      enum: DELIVERY_MODES,
       required: true,
     },
 
     paymentMode: {
       type: String,
-      enum: ['cash', 'card'],
+      enum: PAYMENT_MODES,
       required: true,
     },
 
@@ -41,8 +43,8 @@ const OrderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'completed', 'cancelled'],
-      default: 'pending',
+      enum: Object.values(ORDER_STATUS),
+      default: ORDER_STATUS.PENDING,
       index: true,
     },
 

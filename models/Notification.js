@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { NOTIFICATION_TYPES } = require('../config/appConstants');
+
 
 const NotificationSchema = new mongoose.Schema(
   {
@@ -6,8 +8,8 @@ const NotificationSchema = new mongoose.Schema(
     sender:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     type:      { 
       type: String, 
-      enum: ['order', 'message', 'rating', 'system', 'info'], 
-      default: 'info' 
+      enum: Object.values(NOTIFICATION_TYPES), 
+      default: NOTIFICATION_TYPES.INFO 
     },
     title:     { type: String, required: true },
     message:   { type: String, required: true },

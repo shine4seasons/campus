@@ -45,6 +45,16 @@
 
   --radius: 14px;
   --radius-sm: 8px;
+
+  /* Standard Typography Scale */
+  --fs-xs: 0.75rem;    /* 12px */
+  --fs-sm: 0.875rem;   /* 14px */
+  --fs-base: 1rem;     /* 16px */
+  --fs-lg: 1.125rem;   /* 18px */
+  --fs-xl: 1.25rem;    /* 20px */
+  --fs-2xl: 1.5rem;    /* 24px */
+  --fs-3xl: 1.875rem;  /* 30px */
+  --fs-4xl: 2.25rem;   /* 36px */
 }
 
 html,
@@ -61,7 +71,7 @@ body {
   color: var(--t1);
   display: flex;
   min-height: 100vh;
-  font-size: 18px;
+  font-size: var(--fs-base);
 }
 
 /* ── Scrollbar ── */
@@ -173,20 +183,20 @@ body.has-sidebar .main .content,
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--t2);
   font-weight: 500;
 }
 
 .stat-val {
-  font-size: 28px;
+  font-size: var(--fs-3xl);
   font-weight: 800;
   letter-spacing: -.02em;
   color: var(--t1);
 }
 
 .stat-delta {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   margin-top: 4px;
   font-weight: 500;
 }
@@ -241,19 +251,19 @@ body.has-sidebar .main .content,
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: var(--fs-base);
   font-weight: 700;
   color: var(--t1);
 }
 
 .card-sub {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--t2);
   margin-top: 2px;
 }
 
 .card-action {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
@@ -279,7 +289,7 @@ body.has-sidebar .main .content,
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--fs-xs);
   color: var(--t2);
   font-weight: 500;
 }
@@ -336,7 +346,9 @@ body.has-sidebar .main .content,
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  overflow-x: auto; /* Ensure horizontal scroll when table is too wide */
   margin-bottom: 22px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tbl-toolbar {
@@ -350,13 +362,13 @@ body.has-sidebar .main .content,
 }
 
 .tbl-title {
-  font-size: 16px;
+  font-size: var(--fs-base);
   font-weight: 700;
   color: var(--t1);
 }
 
 .tbl-count {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--t2);
   margin-top: 1px;
 }
@@ -371,7 +383,7 @@ body.has-sidebar .main .content,
   padding: 5px 12px;
   border: 1px solid var(--border);
   border-radius: 20px;
-  font-size: 14px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--t2);
   cursor: pointer;
@@ -411,7 +423,7 @@ body.has-sidebar .main .content,
 .tbl-search input {
   border: none;
   background: none;
-  font-size: 15px;
+  font-size: var(--fs-base);
   color: var(--t1);
   font-family: var(--font);
   outline: none;
@@ -425,13 +437,13 @@ body.has-sidebar .main .content,
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: var(--fs-sm);
 }
 
 thead th {
   padding: 10px 20px;
   text-align: left;
-  font-size: 13px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--t2);
   text-transform: uppercase;
@@ -492,11 +504,11 @@ tbody a:hover {
 
 .uc-name {
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 
 .uc-sub {
-  font-size: 13px;
+  font-size: var(--fs-xs);
   color: var(--t2);
 }
 
@@ -506,7 +518,7 @@ tbody a:hover {
   align-items: center;
   padding: 3px 9px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -612,7 +624,7 @@ tbody a:hover {
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--card);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   color: var(--t2);
@@ -680,7 +692,7 @@ tbody a:hover {
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--card) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%2364748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>') no-repeat right 8px center;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--t2);
   cursor: pointer;
@@ -726,7 +738,7 @@ tbody a:hover {
 .li-rank {
   width: 22px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--t3);
   flex-shrink: 0;
@@ -772,14 +784,14 @@ tbody a:hover {
 }
 
 .li-name {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--t1);
   transition: color 0.2s ease;
 }
 
 .li-sub {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--t2);
   margin-top: 2px;
 }
@@ -1020,50 +1032,63 @@ tbody a:hover {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 16px 24px;
   border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .pg-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
   background: var(--card);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   color: var(--t2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all .15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: var(--font);
+  user-select: none;
 }
 
-.pg-btn:hover {
+.pg-btn:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-lt);
+  transform: translateY(-1px);
 }
 
 .pg-btn.active {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(29, 106, 229, 0.25);
+}
+
+.pg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg);
 }
 
 .pg-btn svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   stroke: currentColor;
   fill: none;
+  stroke-width: 2.5;
 }
 
 .pg-info {
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--t2);
-  margin: 0 8px;
+  margin-right: auto; /* Push buttons to the right */
 }
 
 /* Empty state */

@@ -1,5 +1,9 @@
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Rating = require('../models/Rating');
+const User = require('../models/User');
+const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
+
 const { incrementViews } = require('../utils/viewCounter');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR, LIMITS, ERROR_MESSAGES } = require('../config/pageConstants');
 const { CATEGORIES } = require('../public/js/categories');
@@ -22,8 +26,8 @@ exports.getProduct = async (req, res) => {
     const product = await Product.findById(productId)
       .populate('seller', 'name nickname avatar university rating ratingCount totalSales createdAt')
       .lean();
-
-    if (!product || product.status === 'hidden') {
+ 
+    if (!product || product.status === PRODUCT_STATUS.HIDDEN) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',
         isLoginPage: false
@@ -137,7 +141,6 @@ exports.getProfile = async (req, res) => {
  */
 exports.getUserProfile = async (req, res) => {
   try {
-    const User = require('../models/User');
     const userId = req.params.userId;
     const currentUser = res.locals.user;
     const isAdmin = currentUser && currentUser.role === 'admin';
@@ -175,7 +178,7 @@ exports.getUserProfile = async (req, res) => {
     // Admin can see all products (including hidden/sold), regular users only see active
     const productFilter = isAdmin
       ? { seller: userId }
-      : { seller: userId, status: 'active' };
+      : { seller: userId, status: PRODUCT_STATUS.ACTIVE };
 
     const products = await Product.find(productFilter)
       .sort('-createdAt')
@@ -203,25 +206,152 @@ exports.getUserProfile = async (req, res) => {
  * /dashboard: Admin-only (protected by requireAdminPage middleware)
  * /dashboard-seller: For all authenticated users
  */
-exports.getDashboard = (req, res) => {
+exports.getDashboard = async (req, res) => {
+  const user = res.locals.user;
+  if (!user) return res.redirect('/login');
+
   // If accessed via /dashboard (not /dashboard-seller), show admin dashboard
   // The /dashboard route has requireAdminPage middleware, so only admins reach here
   if (req.path === '/dashboard' || req.baseUrl === '/dashboard') {
-    return res.render(VIEWS.DASHBOARD_ADMIN, {
-      title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-      isLoginPage: false,
-      CATEGORIES
-    });
+    try {
+      // Fetch data for admin dashboard (consistent with adminRoutes.js)
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // 1. Stats
+      const totalUsers = await User.countDocuments({ banned: { $ne: true } });
+      const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfMonth }, banned: { $ne: true } });
+      const newUsersLastMonth = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }, banned: { $ne: true } });
+      const totalUsersDelta = newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(0) : 0;
+ 
+      const activeListings = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
+      const activeListingsYesterday = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE, createdAt: { $lt: yesterday } });
+      const activeListingsDelta = activeListings - activeListingsYesterday;
+
+      const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: startOfMonth } });
+      const ordersLastMonth = await Order.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } });
+      const ordersDelta = ordersLastMonth > 0 ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth * 100).toFixed(0) : 0;
+
+      const gmvThisMonthResult = await Order.aggregate([
+        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
+      ]);
+      const gmvThisMonth = gmvThisMonthResult[0]?.total || 0;
+
+      const gmvLastMonthResult = await Order.aggregate([
+        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
+      ]);
+      const gmvLastMonth = gmvLastMonthResult[0]?.total || 0;
+      const gmvDelta = gmvLastMonth > 0 ? ((gmvThisMonth - gmvLastMonth) / gmvLastMonth * 100).toFixed(0) : 0;
+
+      const stats = {
+        totalUsers: { value: totalUsers, delta: totalUsersDelta },
+        totalListings: { value: await Product.countDocuments({}) },
+        activeListings: { value: activeListings, delta: activeListingsDelta },
+        ordersThisMonth: { value: ordersThisMonth, delta: ordersDelta },
+        gmvThisMonth: { value: gmvThisMonth, delta: gmvDelta }
+      };
+
+      // 2. Top sellers
+      const topSellers = await Order.aggregate([
+        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfMonth } } },
+        { $group: { _id: '$seller', totalRevenue: { $sum: '$priceSnapshot' }, totalOrders: { $sum: 1 } } },
+        { $sort: { totalRevenue: -1 } },
+        { $limit: 5 },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'sellerInfo' } },
+        { $unwind: '$sellerInfo' },
+        { $project: { _id: 0, sellerId: '$_id', name: { $ifNull: ['$sellerInfo.nickname', '$sellerInfo.name'] }, university: '$sellerInfo.university', rating: '$sellerInfo.rating', totalRevenue: 1, totalOrders: 1 } }
+      ]);
+
+      return res.render(VIEWS.DASHBOARD_ADMIN, {
+        title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
+        isLoginPage: false,
+        CATEGORIES,
+        isSuperAdmin: user.role === 'admin',
+        stats,
+        topSellers,
+        initialSection: 'aDash'
+      });
+    } catch (err) {
+      console.error('Admin dashboard error:', err.message);
+      return res.render(VIEWS.DASHBOARD_ADMIN, {
+        title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
+        isLoginPage: false,
+        CATEGORIES,
+        isSuperAdmin: user.role === 'admin',
+        stats: { totalUsers: { value: 0, delta: 0 }, activeListings: { value: 0, delta: 0 }, ordersThisMonth: { value: 0, delta: 0 }, gmvThisMonth: { value: 0, delta: 0 } },
+        topSellers: [],
+        initialSection: 'aDash'
+      });
+    }
   }
 
-  // For /dashboard-seller and other paths, show seller dashboard
-  const role = res.locals.user?.role;
-  const isSeller = role === 'seller';
-  return res.render(VIEWS.DASHBOARD_SELLER, {
-    title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-    isLoginPage: false,
-    isSeller
-  });
+  // Seller dashboard logic: Fetch stats for initial render
+  try {
+    const sellerId = user._id;
+
+    // 1. Active listings
+    const activeCount = await Product.countDocuments({ seller: sellerId, status: PRODUCT_STATUS.ACTIVE });
+
+    // 2. Orders awaiting confirmation
+    const pendingCount = await Order.countDocuments({ seller: sellerId, status: ORDER_STATUS.PENDING });
+
+    // 3. Revenue
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Monthly revenue
+    const revenueRes = await Order.aggregate([
+      { $match: { seller: sellerId, status: ORDER_STATUS.COMPLETED, completedAt: { $gte: startOfMonth } } },
+      { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
+    ]);
+    const monthRevenue = revenueRes[0]?.total || 0;
+
+    // Total revenue
+    const totalRevRes = await Order.aggregate([
+      { $match: { seller: sellerId, status: ORDER_STATUS.COMPLETED } },
+      { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
+    ]);
+    const totalRevenue = totalRevRes[0]?.total || 0;
+
+    // 5. Sold counts
+    const soldCount = await Product.countDocuments({ seller: sellerId, status: PRODUCT_STATUS.SOLD });
+
+    // 6. Recent ratings
+    const recentRatings = await Rating.find({ ratedEntity: 'user', entityId: sellerId })
+      .sort('-createdAt')
+      .limit(5)
+      .populate('rater', 'name nickname')
+      .lean();
+
+    return res.render(VIEWS.DASHBOARD_SELLER, {
+      title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
+      isLoginPage: false,
+      isSeller: user.role === 'seller',
+      stats: {
+        activeListings: activeCount,
+        pendingOrders: pendingCount,
+        monthRevenue: monthRevenue,
+        totalRevenue: totalRevenue,
+        totalSold: soldCount
+      },
+      recentRatings
+    });
+
+  } catch (error) {
+    console.error('Seller dashboard error:', error.message);
+    return res.render(VIEWS.DASHBOARD_SELLER, {
+      title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
+      isLoginPage: false,
+      isSeller: user.role === 'seller',
+      stats: { activeListings: 0, pendingOrders: 0, monthRevenue: 0, totalSold: 0 },
+      recentRatings: []
+    });
+  }
 };
 
 /**
@@ -291,10 +421,10 @@ exports.getBuyerOrders = async (req, res) => {
 
     // Count orders by status
     const statusCounts = {
-      pending: 0,
-      confirmed: 0,
-      completed: 0,
-      cancelled: 0
+      [ORDER_STATUS.PENDING]: 0,
+      [ORDER_STATUS.CONFIRMED]: 0,
+      [ORDER_STATUS.COMPLETED]: 0,
+      [ORDER_STATUS.CANCELLED]: 0
     };
 
     orders.forEach(order => {
@@ -384,7 +514,7 @@ async function getRelatedProducts(product, limit) {
     return await Product.find({
       category: product.category,
       _id: { $ne: product._id },
-      status: 'active'
+      status: PRODUCT_STATUS.ACTIVE
     })
       .sort('-views')
       .limit(limit)

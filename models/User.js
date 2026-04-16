@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { USER_ROLES } = require('../config/appConstants');
+
 
 const UserSchema = new mongoose.Schema(
   {
@@ -11,8 +13,8 @@ const UserSchema = new mongoose.Schema(
     // Một tài khoản vừa mua vừa bán — chỉ có 'user' và 'admin'
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
+      enum: Object.values(USER_ROLES),
+      default: USER_ROLES.USER,
     },
 
     // ── Onboarding (step 2 sau khi đăng nhập lần đầu) ─

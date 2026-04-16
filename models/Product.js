@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { PRODUCT_STATUS, PRODUCT_CATEGORIES, PRODUCT_CONDITIONS } = require('../config/appConstants');
+
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -9,13 +11,15 @@ const ProductSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['books', 'electronics', 'clothing', 'furniture', 'daily-needs', 'sports', 'gaming', 'other'],
+      enum: PRODUCT_CATEGORIES,
     },
+
     condition: {
       type: String,
       required: true,
-      enum: ['new', 'like-new', 'good', 'fair'],
+      enum: PRODUCT_CONDITIONS,
     },
+
 
     // Ảnh — tối đa 5, lưu URL (Cloudinary sẽ xử lý ở Feature 4)
     images: {
@@ -28,10 +32,11 @@ const ProductSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['active', 'sold', 'hidden'],
-      default: 'active',
+      enum: Object.values(PRODUCT_STATUS),
+      default: PRODUCT_STATUS.ACTIVE,
       index: true,
     },
+
 
     reported: {
       type: Boolean,
