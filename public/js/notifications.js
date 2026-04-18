@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Listen for real-time notifications (In-app only)
         socket.on('newNotification', (notif) => {
             console.log('New notification received:', notif);
-            notifDot.style.display = 'block';
+            
+            // Update unread count/dot in real-time
+            checkUnreadCount();
             
             // If dropdown is open, prepend the new notification
             if (notifDropdown.classList.contains('show')) {

@@ -30,7 +30,7 @@
               <div class="stat-card">
                 <div class="stat-top">
                   <div>
-                    <div class="stat-label">Active listings</div>
+                    <div class="stat-label">Active products</div>
                   </div>
                   <div class="stat-icon" style="background:#dcfce7;color:#16a34a">
                     <svg viewBox="0 0 24 24">
@@ -39,7 +39,9 @@
                     </svg>
                   </div>
                 </div>
-                <div class="stat-val"><%= stats.activeListings %></div>
+                <div class="stat-val">
+                  <%= stats.activeListings %>
+                </div>
                 <div class="stat-delta delta-neu">Total active items</div>
               </div>
               <div class="stat-card">
@@ -54,7 +56,9 @@
                     </svg>
                   </div>
                 </div>
-                <div class="stat-val" style="color:#d97706"><%= stats.pendingOrders %></div>
+                <div class="stat-val" style="color:#d97706">
+                  <%= stats.pendingOrders %>
+                </div>
                 <div class="stat-delta" style="color:#d97706">need confirmation</div>
               </div>
               <div class="stat-card">
@@ -70,7 +74,8 @@
                   </div>
                 </div>
                 <div class="stat-val">
-                  <%= (stats.monthRevenue >= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M ₫' : new Intl.NumberFormat('vi-VN').format(stats.monthRevenue) + ' ₫' %>
+                  <%= (stats.monthRevenue>= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M VND' : new
+                    Intl.NumberFormat('en-US').format(stats.monthRevenue) + ' VND' %>
                 </div>
                 <div class="stat-delta delta-neu">Earned this month</div>
               </div>
@@ -96,80 +101,86 @@
               </div>
             </div>
 
-            <% if (stats.pendingOrders > 0) { %>
-            <div class="alert-box alert-info" style="margin-bottom:18px">
-              <svg viewBox="0 0 24 24" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <div class="alert-box-text">You have <%= stats.pendingOrders %> order<%= stats.pendingOrders > 1 ? 's' : '' %> awaiting confirmation. Please confirm within 24 hours to
-                avoid automatic cancellation.</div>
-            </div>
-            <% } %>
+            <% if (stats.pendingOrders> 0) { %>
+              <div class="alert-box alert-info" style="margin-bottom:18px">
+                <svg viewBox="0 0 24 24" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div class="alert-box-text">You have <%= stats.pendingOrders %> order<%= stats.pendingOrders> 1 ? 's' :
+                      '' %> awaiting confirmation. Please confirm within 24 hours to
+                      avoid automatic cancellation.</div>
+              </div>
+              <% } %>
 
-            <div class="quick-grid">
-              <div class="quick-card" onclick="window.location.href='/my-products'">
-                <div class="qc-icon" style="background:#dbeafe;color:#2563eb">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                  </svg>
-                </div>
-                <div class="qc-body">
-                  <div class="qc-label">Manage listings</div>
-                  <div class="qc-sub"><%= stats.activeListings %> active · <%= stats.totalSold %> sold</div>
-                </div>
-              </div>
-              <div class="quick-card" onclick="window.location.href='/orders-seller'">
-                <div class="qc-icon" style="background:#fef3c7;color:#d97706">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
-                <div class="qc-body">
-                  <div class="qc-label">View orders</div>
-                  <div class="qc-sub"><%= stats.pendingOrders %> order<%= stats.pendingOrders > 1 ? 's' : '' %> awaiting confirmation</div>
-                </div>
-              </div>
-              <div class="quick-card" onclick="window.location.href='/sell'">
-                <div class="qc-icon" style="background:#dcfce7;color:#16a34a">
-                  <svg viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </div>
-                <div class="qc-body">
-                  <div class="qc-label">Post a new listing</div>
-                  <div class="qc-sub">Create a new listing</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="charts-row">
-              <div class="card">
-                <div class="card-head">
-                  <div>
-                    <div class="card-title">My revenue — 2026</div>
-                    <div class="card-sub">By month (₫ thousands)</div>
+                <div class="quick-grid">
+                  <div class="quick-card" onclick="window.location.href='/my-products'">
+                    <div class="qc-icon" style="background:#dbeafe;color:#2563eb">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                      </svg>
+                    </div>
+                    <div class="qc-body">
+                      <div class="qc-label">Manage products</div>
+                      <div class="qc-sub">
+                        <%= stats.activeListings %> active · <%= stats.totalSold %> sold
+                      </div>
+                    </div>
+                  </div>
+                  <div class="quick-card" onclick="window.location.href='/orders-seller'">
+                    <div class="qc-icon" style="background:#fef3c7;color:#d97706">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </div>
+                    <div class="qc-body">
+                      <div class="qc-label">View orders</div>
+                      <div class="qc-sub">
+                        <%= stats.pendingOrders %> order<%= stats.pendingOrders> 1 ? 's' : '' %> awaiting confirmation
+                      </div>
+                    </div>
+                  </div>
+                  <div class="quick-card" onclick="window.location.href='/sell'">
+                    <div class="qc-icon" style="background:#dcfce7;color:#16a34a">
+                      <svg viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </div>
+                    <div class="qc-body">
+                      <div class="qc-label">Post a new product</div>
+                      <div class="qc-sub">Create a new product</div>
+                    </div>
                   </div>
                 </div>
-                <div style="position:relative;height:200px"><canvas id="cSellerRev"></canvas></div>
-              </div>
-              <div class="card">
-                <div class="card-head">
-                  <div>
-                    <div class="card-title">Categories sold</div>
-                    <div class="card-sub">Distribution</div>
+
+                <div class="charts-row">
+                  <div class="card">
+                    <div class="card-head">
+                      <div>
+                        <div class="card-title">My revenue — 2026</div>
+                        <div class="card-sub">By month (VND thousands)</div>
+                      </div>
+                    </div>
+                    <div style="position:relative;height:200px"><canvas id="cSellerRev"></canvas></div>
+                  </div>
+                  <div class="card">
+                    <div class="card-head">
+                      <div>
+                        <div class="card-title">Categories sold</div>
+                        <div class="card-sub">Distribution</div>
+                      </div>
+                    </div>
+                    <div style="position:relative;height:160px;margin-bottom:12px"><canvas id="cSellerCat"></canvas>
+                    </div>
+                    <div class="legend" style="flex-direction:column;gap:7px" id="sCatLegend">
+                      <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>No data</span>
+                    </div>
                   </div>
                 </div>
-                <div style="position:relative;height:160px;margin-bottom:12px"><canvas id="cSellerCat"></canvas></div>
-                <div class="legend" style="flex-direction:column;gap:7px" id="sCatLegend">
-                  <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>No data</span>
-                </div>
-              </div>
-            </div>
           </section>
 
           <!-- ── SECTION: Orders, Listings, Revenue are split into separate pages ── -->
@@ -195,36 +206,36 @@
                   <div class="list-item">
                     <div class="li-avatar" style="background:#dbeafe;color:#1d4ed8">HA</div>
                     <div class="li-info">
-                      <div class="li-name">Hùng Anh<span
-                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 phút trước</span>
+                      <div class="li-name">Hung Anh<span
+                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 mins ago</span>
                       </div>
-                      <div class="li-sub">Casio FX-580 — Anh ơi mai giao được không?</div>
+                      <div class="li-sub">Casio FX-580 — Can you deliver tomorrow?</div>
                     </div><span class="nav-badge" style="font-size:10px">2</span>
                   </div>
                   <div class="list-item">
                     <div class="li-avatar" style="background:#dcfce7;color:#15803d">LC</div>
                     <div class="li-info">
                       <div class="li-name">Lan Chi<span
-                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">1 giờ trước</span>
+                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">1 hour ago</span>
                       </div>
-                      <div class="li-sub">Balo — Địa chỉ giao hàng của em là...</div>
+                      <div class="li-sub">Backpack — My delivery address is...</div>
                     </div><span class="nav-badge" style="font-size:10px">1</span>
                   </div>
                   <div class="list-item">
                     <div class="li-avatar" style="background:#fef3c7;color:#b45309">TA</div>
                     <div class="li-info">
-                      <div class="li-name">Tú Anh<span
-                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">Hôm qua</span></div>
-                      <div class="li-sub">Đã nhận hàng rồi, cảm ơn anh</div>
+                      <div class="li-name">Tu Anh<span
+                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">Yesterday</span></div>
+                      <div class="li-sub">Received the item, thank you!</div>
                     </div>
                   </div>
                   <div class="list-item">
                     <div class="li-avatar" style="background:#ede9fe;color:#6d28d9">HY</div>
                     <div class="li-info">
-                      <div class="li-name">Hải Yến<span
-                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 ngày trước</span>
+                      <div class="li-name">Hai Yen<span
+                          style="font-size:11px;color:var(--t2);font-weight:400;margin-left:8px">2 days ago</span>
                       </div>
-                      <div class="li-sub">Giáo trình — Ok anh, em nhận hàng rồi</div>
+                      <div class="li-sub">Textbook — OK, I received it</div>
                     </div><span class="nav-badge" style="font-size:10px">1</span>
                   </div>
                 </div>
@@ -279,7 +290,7 @@
                 <div class="form-grid">
                   <div class="form-row">
                     <div class="form-group"><label class="form-label">Full name</label><input class="form-input"
-                        value="Trần Ngọc"></div>
+                        value="Alex Johnson"></div>
                     <div class="form-group"><label class="form-label">Nickname</label><input class="form-input"
                         value="ngoc.t"></div>
                   </div>
@@ -325,26 +336,34 @@
                       <div class="li-info">
                         <div class="li-name">Total sold</div>
                       </div>
-                      <div class="li-val"><%= user.totalSales || 0 %> items</div>
+                      <div class="li-val">
+                        <%= user.totalSales || 0 %> items
+                      </div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Total revenue</div>
                       </div>
                       <div class="li-val" style="color:#16a34a">
-                        <%= (stats.totalRevenue >= 1000000) ? (stats.totalRevenue / 1000000).toFixed(1) + 'M ₫' : new Intl.NumberFormat('vi-VN').format(stats.totalRevenue) + ' ₫' %>
+                        <%= (stats.totalRevenue>= 1000000) ? (stats.totalRevenue / 1000000).toFixed(1) + 'M VND' : new
+                          Intl.NumberFormat('en-US').format(stats.totalRevenue) + ' VND' %>
                       </div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Member since</div>
                       </div>
-                      <div class="li-val"><%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %></div>
+                      <div class="li-val">
+                        <%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short' , year: 'numeric' })
+                          %>
+                      </div>
                     </div>
                     <div class="list-item">
                       <div class="li-info">
                         <div class="li-name">Profile status</div>
-                      </div><span class="badge badge-active"><%= user.profileComplete ? 'Complete' : 'Pending' %></span>
+                      </div><span class="badge badge-active">
+                        <%= user.profileComplete ? 'Complete' : 'Pending' %>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -356,24 +375,31 @@
                     </div><a class="card-action" href="#">View all</a>
                   </div>
                   <div id="recentReviewsList">
-                    <% if (recentRatings && recentRatings.length > 0) { %>
-                      <% recentRatings.forEach(r => { %>
+                    <% if (recentRatings && recentRatings.length> 0) { %>
+                      <% recentRatings.forEach(r=> { %>
                         <div class="review-item">
                           <div class="review-top">
-                            <span class="review-author"><%= r.rater?.nickname || r.rater?.name || 'Anonymous' %></span>
+                            <span class="review-author">
+                              <%= r.rater?.nickname || r.rater?.name || 'Anonymous' %>
+                            </span>
                             <span class="review-stars">
                               <% for(let i=0; i<5; i++) { %>
                                 <%= i < r.score ? '★' : '☆' %>
-                              <% } %>
+                                  <% } %>
                             </span>
                           </div>
-                          <div class="review-text"><%= r.comment || '(No comment)' %></div>
-                          <div class="review-date"><%= new Date(r.createdAt).toLocaleDateString() %></div>
+                          <div class="review-text">
+                            <%= r.comment || '(No comment)' %>
+                          </div>
+                          <div class="review-date">
+                            <%= new Date(r.createdAt).toLocaleDateString() %>
+                          </div>
                         </div>
-                      <% }) %>
-                    <% } else { %>
-                      <div style="padding:20px;text-align:center;color:var(--t2);font-size:14px;">No reviews yet.</div>
-                    <% } %>
+                        <% }) %>
+                          <% } else { %>
+                            <div style="padding:20px;text-align:center;color:var(--t2);font-size:14px;">No reviews yet.
+                            </div>
+                            <% } %>
                   </div>
                 </div>
               </div>

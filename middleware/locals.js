@@ -7,6 +7,8 @@ const User = require('../models/User');
  */
 const injectUser = async (req, res, next) => {
   res.locals.user = null;
+  res.locals.mode = req.cookies?.campus_mode || 'buyer';
+  req.mode = res.locals.mode;
   
   // Helper to render stars in EJS
   res.locals.renderStars = (score, size = 16) => {
@@ -32,6 +34,7 @@ const injectUser = async (req, res, next) => {
   try {
     const { sub } = jwt.verify(token, process.env.JWT_SECRET);
     res.locals.user = await User.findById(sub).select('-__v').lean();
+    req.user = res.locals.user;
   } catch {
     // Token hết hạn hoặc không hợp lệ → xóa cookie
     res.clearCookie('token');

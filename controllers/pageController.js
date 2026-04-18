@@ -26,7 +26,7 @@ exports.getProduct = async (req, res) => {
     const product = await Product.findById(productId)
       .populate('seller', 'name nickname avatar university rating ratingCount totalSales createdAt')
       .lean();
- 
+
     if (!product || product.status === PRODUCT_STATUS.HIDDEN) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',
@@ -36,6 +36,24 @@ exports.getProduct = async (req, res) => {
 
     // Increment view count asynchronously
     incrementViews(productId).catch(err => console.error('View increment error:', err));
+
+    // --- Mode-based access control ---
+    const currentUser = res.locals.user;
+    const mode = res.locals.mode; // 'buyer' or 'seller'
+
+    if (currentUser && currentUser.role !== 'admin') {
+      const isOwner = String(product.seller._id) === String(currentUser._id);
+
+      // Seller mode: Can ONLY see own products
+      if (mode === 'seller' && !isOwner) {
+        return res.redirect('/dashboard-seller'); // Redirect to their own dashboard
+      }
+
+      // Buyer mode: Can ONLY see others' products
+      if (mode === 'buyer' && isOwner) {
+        return res.redirect('/my-products'); // Redirect to their own products list
+      }
+    }
 
     // Get related products
     const relatedProducts = await getRelatedProducts(product, LIMITS.RELATED_PRODUCTS);
@@ -65,7 +83,7 @@ exports.getMyProducts = async (req, res) => {
       .lean();
 
     res.render(VIEWS.MY_PRODUCTS, {
-      title: `My Listings${TITLE_SEPARATOR}${APP_NAME}`,
+      title: `My products${TITLE_SEPARATOR}${APP_NAME}`,
       products,
       isLoginPage: false
     });
@@ -97,8 +115,8 @@ exports.getSellPage = async (req, res) => {
   }
 
   const title = editProduct
-    ? `Edit Listing${TITLE_SEPARATOR}${APP_NAME}`
-    : `Post a Listing${TITLE_SEPARATOR}${APP_NAME}`;
+    ? `Edit product${TITLE_SEPARATOR}${APP_NAME}`
+    : `Post a product${TITLE_SEPARATOR}${APP_NAME}`;
 
   res.render(VIEWS.SELL, {
     title,
@@ -226,7 +244,7 @@ exports.getDashboard = async (req, res) => {
       const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfMonth }, banned: { $ne: true } });
       const newUsersLastMonth = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }, banned: { $ne: true } });
       const totalUsersDelta = newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(0) : 0;
- 
+
       const activeListings = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
       const activeListingsYesterday = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE, createdAt: { $lt: yesterday } });
       const activeListingsDelta = activeListings - activeListingsYesterday;
@@ -303,7 +321,7 @@ exports.getDashboard = async (req, res) => {
     // 3. Revenue
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Monthly revenue
     const revenueRes = await Order.aggregate([
       { $match: { seller: sellerId, status: ORDER_STATUS.COMPLETED, completedAt: { $gte: startOfMonth } } },

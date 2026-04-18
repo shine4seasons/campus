@@ -1,91 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Listings — Campus Marketplace</title>
+  <title>products — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/rating.css">
 </head>
+
 <body>
-<%- include('partials/navbar') %>
-<%- include('partials/sidebar') %>
+  <%- include('partials/navbar') %>
+    <%- include('partials/sidebar') %>
 
-<main class="main">
-  <div class="content">
+      <main class="main">
+        <div class="content">
 
-    <!-- ── SECTION: Listings ── -->
-      <div class="tbl-wrap">
-        <div class="tbl-toolbar">
-          <div><div class="tbl-title">My products</div><div class="tbl-count">20 listings total</div></div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="filter-pills">
-              <button class="f-pill on">All</button>
-              <button class="f-pill">Active</button>
-              <button class="f-pill">Sold</button>
-              <button class="f-pill">Hidden</button>
+          <!-- ── SECTION: products ── -->
+          <div class="tbl-wrap">
+            <div class="tbl-toolbar">
+              <div>
+                <div class="tbl-title">My products</div>
+                <div class="tbl-count">20 products total</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="filter-pills">
+                  <button class="f-pill on">All</button>
+                  <button class="f-pill">Active</button>
+                  <button class="f-pill">Sold</button>
+                  <button class="f-pill">Hidden</button>
+                </div>
+                <button class="btn btn-primary" onclick="window.location.href='/sell'">
+                  <svg viewBox="0 0 24 24" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  New product
+                </button>
+              </div>
             </div>
-            <button class="btn btn-primary" onclick="window.location.href='/sell'">
-              <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Post product
-            </button>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Views</th>
+                  <th>Interest</th>
+                  <th>Rating</th>
+                  <th>Posted</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="my-products-tbody">
+                <tr>
+                  <td colspan="8" class="empty">Loading your products...</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pagination"></div>
           </div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Product</th><th>Category</th><th>Price</th><th>Views</th><th>Interest</th><th>Rating</th><th>Posted</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="my-products-tbody">
-            <tr><td colspan="8" class="empty">Loading your products...</td></tr>
-          </tbody>
-        </table>
-        <div class="pagination"></div>
-      </div>
-    </section>
+          </section>
 
-  </div><!-- /.content -->
-</main>
+        </div><!-- /.content -->
+      </main>
 
-<div id="toast-wrap"></div>
+      <div id="toast-wrap"></div>
 
-<script>window.INITIAL_SECTION = 'sListings';</script>
-<%- include('partials/dashboard-scripts') %>
-<script>
-let currentFilter = '';
+      <script>window.INITIAL_SECTION = 'sListings';</script>
+      <%- include('partials/dashboard-scripts') %>
+        <script>
+          let currentFilter = '';
 
-async function loadProducts(page = 1) {
-  const tbody = document.getElementById('my-products-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading your products...</td></tr>';
+          async function loadProducts(page = 1) {
+            const tbody = document.getElementById('my-products-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading your products...</td></tr>';
 
-  try {
-    const params = new URLSearchParams({ page, limit: 10 });
-    if (currentFilter) params.append('status', currentFilter);
-    
-    const res = await fetch(`/api/products/my?${params}`, { credentials: 'include' });
-    const json = await res.json();
-    
-    if (!json.success) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
-      return;
-    }
-    const products = json.data || [];
-    if (!products.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">No products found.</td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = products.map(p => {
-      const price = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price || 0);
-      const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit' });
-      const status = p.status || 'active';
-      const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
-      const ratingDisplay = p.ratingCount > 0 ? `⭐ ${parseFloat(p.ratingAverage || 0).toFixed(1)} (${p.ratingCount})` : 'No ratings';
-      
-      return `
+            try {
+              const params = new URLSearchParams({ page, limit: 10 });
+              if (currentFilter) params.append('status', currentFilter);
+
+              const res = await fetch(`/api/products/my?${params}`, { credentials: 'include' });
+              const json = await res.json();
+
+              if (!json.success) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
+                return;
+              }
+              const products = json.data || [];
+              if (!products.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty">No products found.</td></tr>';
+                return;
+              }
+
+              tbody.innerHTML = products.map(p => {
+                const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(p.price || 0);
+                const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+                const status = p.status || 'active';
+                const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
+                const ratingDisplay = p.ratingCount > 0 ? `<i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;fill:currentColor;"></i> ${parseFloat(p.ratingAverage || 0).toFixed(1)} (${p.ratingCount})` : 'No ratings';
+
+                return `
         <tr>
           <td><strong>${escapeHtml(p.title)}</strong></td>
           <td style="color:var(--t2)">${escapeHtml(p.category || '')}</td>
@@ -97,52 +119,53 @@ async function loadProducts(page = 1) {
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td><div class="tbl-actions">
             <button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button>
-            <button class="act-btn danger" onclick="toggleHide('${p._id}', '${status==='hidden' ? 'active' : 'hidden'}')">${status==='hidden'?'Unhide':'Hide'}</button>
+            <button class="act-btn danger" onclick="toggleHide('${p._id}', '${status === 'hidden' ? 'active' : 'hidden'}')">${status === 'hidden' ? 'Unhide' : 'Hide'}</button>
           </div></td>
         </tr>`;
-    }).join('');
-    
-    if (typeof renderPagination === 'function') {
-      renderPagination('.tbl-wrap .pagination', json.pagination, 'loadProducts');
-    }
-    
-    const countEl = document.querySelector('.tbl-count');
-    if (countEl) countEl.textContent = `${json.pagination?.total || products.length} listings total`;
-  } catch(err) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
-    console.error('Failed to fetch my products:', err);
-  }
-}
+              }).join('');
 
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+              if (typeof renderPagination === 'function') {
+                renderPagination('.tbl-wrap .pagination', json.pagination, 'loadProducts');
+              }
 
-window.toggleHide = async function(productId, newStatus){
-  try{
-    const res = await fetch('/api/products/' + encodeURIComponent(productId), {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      credentials: 'include',
-      body: JSON.stringify({ status: newStatus })
-    });
-    const j = await res.json();
-    if (j.success) loadProducts();
-    else showToast(j.message || 'Failed', 'err');
-  }catch(e){ showToast('Failed', 'err'); }
-};
+              const countEl = document.querySelector('.tbl-count');
+              if (countEl) countEl.textContent = `${json.pagination?.total || products.length} products total`;
+            } catch (err) {
+              tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load products.</td></tr>';
+              console.error('Failed to fetch my products:', err);
+            }
+          }
 
-// Wire up filter pills
-document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));
-    pill.classList.add('on');
-    const txt = pill.textContent.trim().toLowerCase();
-    currentFilter = txt === 'all' ? '' : txt;
-    loadProducts(1);
-  });
-});
+          function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
-// Initial load
-document.addEventListener('DOMContentLoaded', () => loadProducts(1));
-</script>
+          window.toggleHide = async function (productId, newStatus) {
+            try {
+              const res = await fetch('/api/products/' + encodeURIComponent(productId), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: newStatus })
+              });
+              const j = await res.json();
+              if (j.success) loadProducts();
+              else showToast(j.message || 'Failed', 'err');
+            } catch (e) { showToast('Failed', 'err'); }
+          };
+
+          // Wire up filter pills
+          document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+              document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));
+              pill.classList.add('on');
+              const txt = pill.textContent.trim().toLowerCase();
+              currentFilter = txt === 'all' ? '' : txt;
+              loadProducts(1);
+            });
+          });
+
+          // Initial load
+          document.addEventListener('DOMContentLoaded', () => loadProducts(1));
+        </script>
 </body>
+
 </html>

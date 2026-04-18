@@ -104,7 +104,7 @@ exports.submitRating = async (req, res) => {
         recipient: recipientId,
         sender:    raterId,
         type:      'rating',
-        title:     'New Rating Received ⭐',
+        title:     'New Rating Received',
         message:   `${req.user.nickname || req.user.name} gave ${targetName} a ${score}-star rating!`,
         link:      entityType === 'product' ? `/products/${entityId}` : '/profile'
       });

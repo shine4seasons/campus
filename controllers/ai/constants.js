@@ -1,45 +1,45 @@
 const categoryLabels = {
-  books:        'Sách & Giáo trình',
-  electronics:  'Điện tử & Máy tính',
-  clothing:     'Quần áo & Thời trang',
-  furniture:    'Nội thất & Đồ dùng phòng trọ',
-  'daily-needs':'Đồ dùng hàng ngày',
-  sports:       'Thể thao & Gym',
-  gaming:       'Giải trí & Sở thích',
-  other:        'Khác',
+  books:        'Books & Textbooks',
+  electronics:  'Electronics & Computers',
+  clothing:     'Clothing & Fashion',
+  furniture:    'Furniture & Dorm Essentials',
+  'daily-needs':'Daily Needs',
+  sports:       'Sports & Gym',
+  gaming:       'Entertainment & Hobbies',
+  other:        'Other',
 };
 
 const conditionContext = {
-  new:        'mới 100%, chưa qua sử dụng, còn nguyên hộp/tem',
-  'like-new': 'như mới, chỉ dùng 1-2 lần, không có vết xước hay hư hỏng',
-  good:       'đã qua sử dụng nhưng vẫn hoạt động tốt, có thể có vài dấu hiệu sử dụng nhỏ',
-  fair:       'đã dùng nhiều, có thể có vết xước nhỏ nhưng vẫn dùng được bình thường',
+  new:        '100% new, never used, original box/tags',
+  'like-new': 'like new, only used 1-2 times, no scratches or damage',
+  good:       'used but works well, may have minor signs of wear',
+  fair:       'heavily used, may have scratches but works normally',
 };
 
 function buildPrompt({ title, category, condition, priceNote, locationNote, categoryLabels, conditionContext }) {
-  return `Bạn là chuyên gia viết mô tả sản phẩm cho sàn mua bán đồ sinh viên Campus Marketplace.
+  return `You are an expert product description writer for Campus Marketplace, a student-to-student buying and selling platform.
 
-Thông tin sản phẩm:
-- Tên sản phẩm: ${title}
-- Danh mục: ${categoryLabels[category] || category || 'Khác'}
-- Tình trạng: ${conditionContext[condition] || condition || 'Không rõ'}
+Product information:
+- Product name: ${title}
+- Category: ${categoryLabels[category] || category || 'Other'}
+- Condition: ${conditionContext[condition] || condition || 'Unknown'}
 ${priceNote}
 ${locationNote}
 
-Yêu cầu bắt buộc:
-1. Viết bằng tiếng Việt, giọng văn tự nhiên như người thật đang rao bán — KHÔNG cứng nhắc như template
-2. Độ dài: 3-5 câu (80-120 từ) — đủ thông tin, không lan man
-3. Phải đề cập tình trạng thực tế một cách cụ thể (không chỉ nói "tình trạng tốt")
-4. Nêu rõ lý do bán hợp lý (ví dụ: ra trường, đổi máy, không dùng nữa...)
-5. Nhấn mạnh 1-2 điểm nổi bật khiến người mua muốn chốt đơn ngay
-6. Kết thúc bằng lời kêu gọi hành động ngắn gọn (ví dụ: "Ib ngay để được giá tốt nhất!" hoặc "Deal nhanh kẻo hết!")
-7. KHÔNG dùng emoji
-8. KHÔNG viết tiêu đề hay nhãn — chỉ viết phần mô tả thuần túy
+Mandatory requirements:
+1. Write in English, using a natural tone like a real student seller — NOT stiff or template-like.
+2. Length: 3-5 sentences (80-120 words) — informative but concise.
+3. Must mention the actual condition specifically (don't just say "good condition").
+4. State a reasonable reason for selling (e.g., graduated, upgraded, no longer needed...).
+5. Highlight 1-2 key features that make buyers want to buy immediately.
+6. End with a short call to action (e.g., "DM me for the best price!" or "Grab it before it's gone!").
+7. DO NOT use emojis.
+8. DO NOT write a title or labels — write only the plain description text.
 
-Ví dụ mô tả HAY (học theo phong cách này):
-"Mình cần bán lại bộ giáo trình Giải tích 1-2 dùng hồi năm nhất, sách còn rất mới, chỉ gạch chân vài chỗ quan trọng thôi. Mua lại với giá gốc 280k nhưng giờ bán lại 120k vì ra học kỳ mới rồi không cần nữa. Sách đầy đủ cả hai cuốn, không rách trang, chữ in rõ nét. Bạn nào đang học Bách Khoa hoặc Kinh tế ib mình nhé, có thể gặp trao tay ngay tại thư viện trường!"
+Example of a GOOD description (follow this style):
+"I'm selling my Calculus 1 & 2 textbook set from freshman year. The books are in great condition with only minor highlighting on important parts. I bought them for 280k but I'm letting them go for 120k since I've finished the course. Both books are included, no torn pages, and the print is crystal clear. If you're studying engineering or economics, this is a must-have. Can meet up at the university library for exchange!"
 
-Bây giờ hãy viết mô tả cho sản phẩm trên:`;
+Now write the description for the product above:`;
 }
 
 module.exports = { categoryLabels, conditionContext, buildPrompt };

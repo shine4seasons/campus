@@ -1,6 +1,8 @@
 const User = require('../../models/User');
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
+const Report = require('../../models/Report');
+const SystemSettings = require('../../models/SystemSettings');
 const { ORDER_STATUS, PRODUCT_STATUS, USER_ROLES, NOTIFICATION_TYPES } = require('../../config/appConstants');
 
 
@@ -42,7 +44,7 @@ const toggleBan = async (req, res) => {
         recipient: uid,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     banned ? 'Account Banned 🛡️' : 'Account Reinstated 🛡️',
+        title:     banned ? 'Account Banned' : 'Account Reinstated',
         message:   banned ? 'Your account has been banned due to policy violations.' : 'Your account has been restored. Please follow our community guidelines.',
         link:      '#'
       });
@@ -212,7 +214,7 @@ const hideProduct = async (req, res) => {
         recipient: p.seller,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     'Listing Hidden ⚠️',
+        title:     'Listing Hidden',
         message:   `Your listing "${p.title}" has been hidden by moderation. Please check your product details.`,
         link:      `/products/${p._id}`
       });
@@ -238,7 +240,7 @@ const restoreProduct = async (req, res) => {
         recipient: p.seller,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     'Listing Live 🎉',
+        title:     'Listing Live',
         message:   `Your listing "${p.title}" is now visible to everyone!`,
         link:      `/products/${p._id}`
       });
@@ -560,7 +562,7 @@ const updateReport = async (req, res) => {
         recipient: report.reporter,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     `Report Update 🛡️`,
+        title:     `Report Update`,
         message:   `Your report has been ${statusLabel.toLowerCase()} by an administrator.`,
         link:      '#'
       });
@@ -574,4 +576,57 @@ const updateReport = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, toggleBan, getOrders, getProducts, getStats, getGMVMonths, getCategoryDistribution, hideProduct, restoreProduct, deleteProductAdmin, getAnalytics, getReportsData, getReports, updateReport };
+
+// GET /api/admin/settings
+const getSettings = async (req, res) => {
+  try {
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = await SystemSettings.create({});
+    }
+    res.json({ success: true, data: settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// POST /api/admin/settings
+const updateSettings = async (req, res) => {
+  try {
+    const { platformName, serviceFee, productImageLimit, supportEmail, announcement } = req.body;
+    
+    let settings = await SystemSettings.findOne();
+    if (!settings) settings = new SystemSettings();
+
+    if (platformName !== undefined) settings.platformName = platformName;
+    if (serviceFee !== undefined) settings.serviceFee = Number(serviceFee);
+    if (productImageLimit !== undefined) settings.productImageLimit = Number(productImageLimit);
+    if (supportEmail !== undefined) settings.supportEmail = supportEmail;
+    settings.lastUpdatedBy = req.user._id;
+
+    await settings.save();
+
+    // Handle announcement if provided
+    if (announcement && announcement.trim()) {
+      const { sendNotification } = require('../../utils/notifService');
+      const allUsers = await User.find({ banned: { $ne: true } }).select('_id');
+      
+      for (const u of allUsers) {
+        await sendNotification({
+          recipient: u._id,
+          sender: req.user._id,
+          type: NOTIFICATION_TYPES.SYSTEM,
+          title: 'System Announcement',
+          message: announcement.trim(),
+          link: '#'
+        });
+      }
+    }
+
+    res.json({ success: true, data: settings, message: 'Settings updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { getUsers, toggleBan, getOrders, getProducts, getStats, getGMVMonths, getCategoryDistribution, hideProduct, restoreProduct, deleteProductAdmin, getAnalytics, getReportsData, getReports, updateReport, getSettings, updateSettings };

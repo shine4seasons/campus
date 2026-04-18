@@ -20,22 +20,22 @@ exports.createOrder = async (req, res) => {
       pickupLocation = null,
     } = req.body;
 
-    if (!productId) return res.status(400).json({ success: false, message: 'Thiếu productId' });
+    if (!productId) return res.status(400).json({ success: false, message: 'Missing productId' });
 
-    if (!DELIVERY_MODES.includes(deliveryMode)) return res.status(400).json({ success: false, message: 'deliveryMode không hợp lệ' });
-    if (!PAYMENT_MODES.includes(paymentMode)) return res.status(400).json({ success: false, message: 'paymentMode không hợp lệ' });
+    if (!DELIVERY_MODES.includes(deliveryMode)) return res.status(400).json({ success: false, message: 'Invalid deliveryMode' });
+    if (!PAYMENT_MODES.includes(paymentMode)) return res.status(400).json({ success: false, message: 'Invalid paymentMode' });
 
     if (deliveryMode === 'ship') {
       const a = shippingAddress || {};
       if (!a.name || !a.phone || !a.street || !a.city) {
-        return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ địa chỉ giao hàng' });
+        return res.status(400).json({ success: false, message: 'Please fill in all shipping address fields' });
       }
     }
 
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
-    if (product.status !== PRODUCT_STATUS.ACTIVE) return res.status(400).json({ success: false, message: 'Sản phẩm này đã được bán hoặc bị ẩn' });
-    if (String(product.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'Bạn không thể mua sản phẩm của chính mình' });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    if (product.status !== PRODUCT_STATUS.ACTIVE) return res.status(400).json({ success: false, message: 'This product is already sold or hidden' });
+    if (String(product.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'You cannot purchase your own product' });
 
     const sellerId = product.seller;
 
@@ -73,7 +73,7 @@ exports.createOrder = async (req, res) => {
       const autoMsg =
         `[ORDER] *New order from ${req.user.nickname || req.user.name}*\n` +
         `Product: ${product.title}\n` +
-        `Price: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}\n` +
+        `Price: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(product.price)}\n` +
         deliveryText + '\n' +
         payText +
         (note.trim() ? `\nNote: ${note.trim()}` : '');
@@ -97,7 +97,7 @@ exports.createOrder = async (req, res) => {
         console.error('Socket emit error (autoMsg):', e.message);
       }
 
-      conv.lastMessage = `🛒 Đơn hàng mới — ${product.title}`;
+      conv.lastMessage = `New order - ${product.title}`;
       conv.updatedAt = new Date();
       await conv.save();
 
@@ -109,7 +109,7 @@ exports.createOrder = async (req, res) => {
         recipient: sellerId,
         sender: buyerId,
         type: NOTIFICATION_TYPES.ORDER,
-        title: 'New Order 🛒',
+        title: 'New Order',
         message: `${req.user.nickname || req.user.name} placed an order for "${product.title}"`,
         link: `/orders-seller`
       });
@@ -121,7 +121,7 @@ exports.createOrder = async (req, res) => {
       success: true,
       orderId: order._id,
       conversationId: conv?._id || null,
-      message: 'Đặt hàng thành công',
+      message: 'Order placed successfully',
     });
   } catch (err) {
     console.error('[checkout] createOrder:', err);
@@ -199,11 +199,11 @@ exports.getOrderById = async (req, res) => {
       .populate('seller', 'name nickname avatar phone')
       .lean();
 
-    if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
     const uid = String(req.user._id);
     if (String(order.buyer._id) !== uid && String(order.seller._id) !== uid && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Không có quyền xem đơn hàng này' });
+      return res.status(403).json({ success: false, message: 'You do not have permission to view this order' });
     }
 
     res.json({ success: true, data: order });
@@ -219,13 +219,13 @@ exports.updateOrderStatus = async (req, res) => {
     const uid = String(req.user._id);
     const order = await Order.findById(req.params.id);
 
-    if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
     const isSeller = String(order.seller) === uid;
     const isBuyer = String(order.buyer) === uid;
 
     if (!isSeller && !isBuyer && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Không có quyền' });
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
     const role = isSeller ? ORDER_ROLES.SELLER : ORDER_ROLES.BUYER;
@@ -237,7 +237,7 @@ exports.updateOrderStatus = async (req, res) => {
       // For buyers, keep strict transitions from constants
       const allowed = TRANSITIONS[role]?.[order.status] || [];
       if (!allowed.includes(status)) {
-        return res.status(400).json({ success: false, message: `Không thể chuyển từ "${order.status}" sang "${status}"` });
+        return res.status(400).json({ success: false, message: `Cannot transition from "${order.status}" to "${status}"` });
       }
     }
 
@@ -276,14 +276,14 @@ exports.updateOrderStatus = async (req, res) => {
 
       let msg = `Your order for "${prod.title}" ${statusText}`;
       if (status === ORDER_STATUS.COMPLETED) {
-        msg += ". Please leave a review for your partner! ⭐";
+        msg += ". Please leave a review for your partner!";
       }
 
       await sendNotification({
         recipient: recipientId,
         sender: uid,
         type: status === ORDER_STATUS.COMPLETED ? NOTIFICATION_TYPES.RATING : NOTIFICATION_TYPES.ORDER,
-        title: status === ORDER_STATUS.COMPLETED ? 'Rate your trade! ' : 'Order Update ',
+        title: status === ORDER_STATUS.COMPLETED ? 'Rate your trade!' : 'Order Update',
         message: msg,
         link: isSeller ? `/orders/tracking/${order._id}` : '/orders-seller'
       });
@@ -318,7 +318,7 @@ exports.getAnalytics = async (req, res) => {
     const revMap = {};
     for (let i = 3; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      revLabels.push('T' + (d.getMonth() + 1));
+      revLabels.push('M' + (d.getMonth() + 1));
       revMap[`${d.getFullYear()}-${d.getMonth() + 1}`] = 0;
     }
     revAgg.forEach(r => { revMap[`${r._id.year}-${r._id.month}`] = r.total; });

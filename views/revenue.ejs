@@ -22,13 +22,13 @@
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Total revenue</div></div></div>
-          <div class="stat-val" id="revTotal">-- ₫</div>
+          <div class="stat-val" id="revTotal">-- VND</div>
           <div class="stat-delta delta-neu">All time</div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">This month</div></div></div>
-          <div class="stat-val" id="revMonth">-- ₫</div>
-          <div class="stat-delta delta-up">↑ +0%</div>
+          <div class="stat-val" id="revMonth">-- VND</div>
+          <div class="stat-delta delta-up"><i data-lucide="trending-up" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> +0%</div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Total sold</div></div></div>
@@ -37,13 +37,13 @@
         </div>
         <div class="stat-card">
           <div class="stat-top"><div><div class="stat-label">Avg. value / order</div></div></div>
-          <div class="stat-val" id="revAvg">-- ₫</div>
+          <div class="stat-val" id="revAvg">-- VND</div>
           <div class="stat-delta delta-neu">--</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:22px">
         <div class="card-head">
-          <div><div class="card-title">Revenue trend</div><div class="card-sub">By month (₫ thousands)</div></div>
+          <div><div class="card-title">Revenue trend</div><div class="card-sub">By month (VND thousands)</div></div>
         </div>
         <div style="position:relative;height:220px"><canvas id="cRevTrend"></canvas></div>
       </div>
@@ -53,7 +53,7 @@
         
           <thead><tr><th>Product</th><th>Buyer</th><th>Date</th><th>Price</th><th>Method</th></tr></thead>
           <tbody id="revHistoryTbody">
-            <tr><td colspan="5" style="text-align:center;padding:15px;color:var(--t2)">Đang tải...</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:15px;color:var(--t2)">Loading...</td></tr>
           </tbody>
         </table>
       </div>

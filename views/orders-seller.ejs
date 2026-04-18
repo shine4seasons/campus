@@ -107,7 +107,7 @@ async function loadSellerOrders(page = 1) {
     }
     
     tbody.innerHTML = orders.map(order => {
-      const price = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(order.priceSnapshot || 0);
+      const price = new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(order.priceSnapshot || 0);
       const statusClass = 'badge-' + (order.status || 'pending');
       return `
         <tr>

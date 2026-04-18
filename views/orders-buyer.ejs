@@ -351,7 +351,7 @@
                   <div class="order-detail-item">
                     <div class="order-detail-label">Price</div>
                     <div class="order-detail-value">
-                      <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %>
+                      <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %>
                     </div>
                   </div>
 
@@ -372,7 +372,7 @@
                   <div class="order-detail-item">
                     <div class="order-detail-label">Ordered</div>
                     <div class="order-detail-value">
-                      <%= new Date(order.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                      <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
                     </div>
                   </div>
                 </div>

@@ -160,7 +160,7 @@
     <div class="page-header-inner">
       <div><div class="page-title"><%= ep ? 'Edit Listing' : 'Post a Listing' %></div></div>
       <div class="breadcrumb">
-        <a href="/">Home</a><span class="breadcrumb-sep">›</span>
+        <a href="/">Home</a><span class="breadcrumb-sep"><i data-lucide="chevron-right" style="width:12px;height:12px;"></i></span>
         <span><%= ep ? 'Edit' : 'Sell' %></span>
       </div>
     </div>
@@ -228,7 +228,7 @@
               </div>
               <div class="price-display" id="price-display">
                 <% if (ep && ep.price) { %>
-                  <%= new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(ep.price) %>
+                  <%= new Intl.NumberFormat('en-US',{style:'currency',currency:'VND'}).format(ep.price) %>
                 <% } %>
               </div>
             </div>
@@ -442,7 +442,7 @@
     function onPriceInput() {
       const val = Number(document.getElementById('f-price').value);
       document.getElementById('price-display').textContent = val > 0
-        ? new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(val) : '';
+        ? new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(val) : '';
       updatePreview();
     }
 
@@ -466,7 +466,7 @@
         '<div class="preview-cat">' + (CAT_LABEL[cat] || 'Item') + '</div>' +
         '<div class="preview-title">' + (title || 'Item title') + '</div>' +
         '<div class="preview-price">' + (price > 0
-          ? new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(price)
+          ? new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(price)
           : '---') + '</div></div></div>';
     }
 

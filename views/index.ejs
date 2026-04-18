@@ -56,7 +56,7 @@
               <div class="stat-label">Deals</div>
             </div>
             <div class="stat">
-              <div class="stat-num">4.9★</div>
+              <div class="stat-num">4.9<i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;fill:currentColor;"></i></div>
               <div class="stat-label">Rating</div>
             </div>
           </div>
@@ -299,7 +299,7 @@
         };
 
         function formatPrice(p) {
-          return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(p);
         }
 
         function conditionLabel(c) {
@@ -329,7 +329,6 @@
             '<div class="product-category">' + (CATEGORY_LABELS[p.category] || p.category) + '</div>' +
             conditionLabel(p.condition) +
             '<div class="product-name">' + p.title + '</div>' +
-            '<div class="product-desc">' + p.desc + '</div>' +
             '<div class="product-rating-row" style="display:flex;align-items:center;gap:6px;margin:8px 0;">' +
             renderStars(p.ratingAverage, 14) +
             (p.ratingCount > 0 ? '<span class="rating-count" style="margin-left:2px">(' + p.ratingCount + ')</span>' : '<span class="rating-count" style="margin-left:2px">(No reviews)</span>') +
@@ -357,7 +356,7 @@
           window.location.href = '/products/' + id;
         };
 
-        // Khởi tạo Lucide icons cho tất cả thẻ static trong HTML
+        // Initialize Lucide icons for all static tags in HTML
         lucide.createIcons();
       </script>
 </body>

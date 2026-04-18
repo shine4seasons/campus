@@ -129,7 +129,7 @@
                               <%= p.title %>
                             </div>
                             <div class="product-price">
-                              <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price)
+                              <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price)
                                 %>
                             </div>
                             <% if (p.status==='sold' ) { %>
@@ -239,7 +239,7 @@
                               </div>
                             </div>
                             <div class="mini-price">
-                              <%= new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(p.price)
+                              <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price)
                                 %>
                             </div>
                           </a>
@@ -272,7 +272,7 @@
                   Edit Profile
                 </div>
 
-                <!-- Read-only: từ Google -->
+                <!-- Read-only: from Google -->
                 <div class="form-row">
                   <div class="form-group">
                     <label>Full name <span style="color:#B0B6CC;font-weight:400;">(from Google)</span></label>

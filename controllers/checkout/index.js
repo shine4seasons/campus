@@ -7,7 +7,7 @@ const getCheckoutPage = async (req, res) => {
       .populate('seller', 'name nickname avatar university phone');
 
     if (!product) {
-      return res.status(404).render('error', { message: 'Không tìm thấy sản phẩm', user: req.user });
+      return res.status(404).render('error', { message: 'Product not found', user: req.user });
     }
 
     // Prevent owner from buying own product
@@ -21,7 +21,7 @@ const getCheckoutPage = async (req, res) => {
     }
 
     res.render('checkout', {
-      title: 'Đặt hàng — ' + product.title,
+      title: 'Checkout — ' + product.title,
       product,
       user: req.user,
     });

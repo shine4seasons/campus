@@ -8,6 +8,14 @@ const { CATEGORIES } = require('../public/js/categories');
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', (req, res) => {
+  if (res.locals.user) {
+    if (res.locals.user.role === 'admin') {
+      return res.redirect('/dashboard');
+    } else if (res.locals.mode === 'seller') {
+      return res.redirect('/dashboard-seller');
+    }
+  }
+
   res.render(VIEWS.INDEX, {
     title: APP_NAME,
     isLoginPage: false,

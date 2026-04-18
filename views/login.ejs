@@ -6,6 +6,7 @@
   <title>Login — Campus Marketplace</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/login.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <%- include('partials/navbar') %>
@@ -29,18 +30,18 @@
 
     <div class="feature-list" id="feature-list" style="<%= step === 'setup' ? 'display:none' : '' %>">
       <div class="feature-item">
-        <div class="feature-icon">🔒</div>
+        <div class="feature-icon"><i data-lucide="shield-check"></i></div>
         <div class="feature-text"><strong>Safe &amp; Trusted</strong></div>
       </div>
       <div class="feature-item">
-        <div class="feature-icon">🤖</div>
+        <div class="feature-icon"><i data-lucide="bot"></i></div>
         <div class="feature-text">
           <strong>AI-generated product descriptions</strong>
           <span>Upload a photo and AI writes a compelling description for you</span>
         </div>
       </div>
       <div class="feature-item">
-        <div class="feature-icon">🛒</div>
+        <div class="feature-icon"><i data-lucide="shopping-cart"></i></div>
         <div class="feature-text">
           <strong>Buy &amp; sell with one account</strong>
           <span>No separate accounts needed — list and shop from one place</span>
@@ -50,16 +51,25 @@
 
     <div class="left-perks" id="left-perks" style="<%= step === 'setup' ? 'display:flex' : 'display:none' %>">
       <div class="perk-item">
-        <strong>📦 Buy &amp; sell on the same account</strong>
-        No role separation — anyone can list products for sale and buy from others.
+        <div class="perk-icon"><i data-lucide="repeat"></i></div>
+        <div class="perk-text">
+          <strong>Buy &amp; sell on the same account</strong>
+          No role separation — anyone can list products for sale and buy from others.
+        </div>
       </div>
       <div class="perk-item">
-        <strong>⭐ Reputation grows with each deal</strong>
-        Your rating increases after every transaction — more stars means more trust.
+        <div class="perk-icon"><i data-lucide="star"></i></div>
+        <div class="perk-text">
+          <strong>Reputation grows with each deal</strong>
+          Your rating increases after every transaction — more stars means more trust.
+        </div>
       </div>
       <div class="perk-item">
-        <strong>📍 Connect with your campus</strong>
-        Your university helps match deals with students from the same campus.
+        <div class="perk-icon"><i data-lucide="map-pin"></i></div>
+        <div class="perk-text">
+          <strong>Connect with your campus</strong>
+          Your university helps match deals with students from the same campus.
+        </div>
       </div>
     </div>
   </div>
@@ -107,7 +117,7 @@
         </button>
 
         <div class="card-footer">
-          <a href="/">← Back to homepage</a>
+          <a href="/"><i data-lucide="arrow-left" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Back to homepage</a>
         </div>
       </div>
     </div>
@@ -116,14 +126,14 @@
     <div class="card-step <%= step === 'setup' ? 'visible' : 'hidden-right' %>" id="step2">
       <div class="login-card" style="width:100%;max-width:440px;">
         <div class="steps-indicator">
-          <div class="step-dot done">✓</div>
+          <div class="step-dot done"><i data-lucide="check" style="width:14px;height:14px;"></i></div>
           <div class="step-line done"></div>
           <div class="step-dot active">2</div>
         </div>
 
         <div class="card-eyebrow">Step 2 / 2 — Complete your profile</div>
         <h1 class="card-title" style="font-size:24px;">
-          Hi, <span id="welcome-name"><%= user ? user.name.split(' ').pop() : 'there' %></span>! 👋
+          Hi, <span id="welcome-name"><%= user ? user.name.split(' ').pop() : 'there' %></span>!
         </h1>
         <p class="card-sub">Add a little info so buyers and sellers can trust you more.</p>
 
@@ -133,7 +143,7 @@
               <img src="<%= user.avatar %>" alt="<%= user.name %>">
             <% } else if (user) { %>
               <%= user.name[0].toUpperCase() %>
-            <% } else { %>?<% } %>
+            <% } else { %><i data-lucide="help-circle" style="width:20px;height:20px;color:#8890B0;"></i><% } %>
           </div>
           <div class="avatar-meta">
             <strong><%= user ? user.name : '' %></strong>
@@ -190,7 +200,7 @@
           Finish &amp; Go to homepage
         </button>
 
-        <span class="skip-link" onclick="skipProfile()">Skip, I'll fill this in later →</span>
+        <span class="skip-link" onclick="skipProfile()">Skip, I'll fill this in later <i data-lucide="arrow-right" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;"></i></span>
       </div>
     </div>
 
@@ -200,7 +210,7 @@
 <!-- Success flash -->
 <div class="success-flash" id="success-flash">
   <div class="success-card">
-    <div class="success-icon">🎉</div>
+    <div class="success-icon"><i data-lucide="party-popper"></i></div>
     <h3>Welcome to Campus!</h3>
     <p id="success-msg">Profile saved. Redirecting to homepage...</p>
   </div>
@@ -214,7 +224,7 @@
   });
 
   // ── Submit profile (Step 2) ────────────────────────
-  // Cookie httpOnly được gửi tự động — không cần token
+  // httpOnly cookie sent automatically — no token needed
   window.submitProfile = async function () {
     const nickname   = document.getElementById('f-nickname').value.trim();
     const university = document.getElementById('f-university').value.trim();
@@ -271,6 +281,9 @@
     document.getElementById('success-flash').classList.add('show');
     setTimeout(() => { window.location.href = '/'; }, 1600);
   }
+
+  // Initialize all icons on page
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
 
 </body>

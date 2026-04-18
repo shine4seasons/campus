@@ -55,7 +55,7 @@
       nav(document.querySelector('#adminNav .nav-item'), 'aDash');
     } else {
       if (document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent = 'TN';
-      if (document.getElementById('sbName')) document.getElementById('sbName').textContent = 'Trần Ngọc';
+      if (document.getElementById('sbName')) document.getElementById('sbName').textContent = 'Alex Johnson';
       if (document.getElementById('sbRole')) document.getElementById('sbRole').textContent = 'Seller';
       nav(document.querySelector('#sellerNav .nav-item'), 'sDash');
     }
@@ -162,7 +162,7 @@
                 { type: 'line', label: 'Orders', data: ordersData, borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
               ],
             },
-            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display: false } }, x: X_NO_GRID } },
+            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display: false } }, x: X_NO_GRID } },
           });
 
           const defaultLabels = CATEGORIES.map(c => c.name.replace(/&amp;/g, '&'));
@@ -199,7 +199,7 @@
               if (!label || !valEl) return;
               if (label.includes('New users')) valEl.textContent = kpi.newUsers7d || 0;
               if (label.includes('Return rate')) valEl.textContent = (kpi.returnRate || 0) + '%';
-              if (label.includes('Avg order value')) valEl.textContent = kpi.avgOrderValue ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(kpi.avgOrderValue) : '0 ₫';
+              if (label.includes('Avg order value')) valEl.textContent = kpi.avgOrderValue ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(kpi.avgOrderValue) : '0 VND';
               if (label.includes('New listings')) valEl.textContent = kpi.newListingsPerDay || 0;
             });
           }
@@ -308,7 +308,7 @@
             options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => v + 'K' } }, x: X_NO_GRID } },
           });
 
-          const cat = d.categories || { labels: ['Không có dữ liệu'], data: [1] };
+          const cat = d.categories || { labels: ['No data'], data: [1] };
           const bgColors = [BLUE, GREEN, AMBER, PURPLE, RED, TEAL];
           let totalCat = cat.data.reduce((a, b) => a + b, 0);
           if (totalCat === 0) totalCat = 1;
@@ -343,7 +343,7 @@
 
             // 1. KPIs
             const kpi = d.kpi || { totalRevenue: 0, totalSold: 0, monthRevenue: 0, avgOrder: 0 };
-            const fmt = v => new Intl.NumberFormat('vi-VN').format(Math.round(v)) + ' ₫';
+            const fmt = v => new Intl.NumberFormat('en-US').format(Math.round(v)) + ' VND';
             const kpiTotal = document.getElementById('revTotal');
             const kpiMonth = document.getElementById('revMonth');
             const kpiSold = document.getElementById('revSold');
@@ -376,9 +376,9 @@
                 tbody.innerHTML = orders.map(o => `
                    <tr>
                      <td><strong>${o.product?.title || 'deleted products'}</strong></td>
-                     <td style="color:var(--t2)">${o.buyer?.name || o.buyer?.nickname || 'Khách'}</td>
+                     <td style="color:var(--t2)">${o.buyer?.name || o.buyer?.nickname || 'Guest'}</td>
                      <td style="color:var(--t2)">${new Date(o.createdAt).toLocaleDateString()}</td>
-                     <td style="font-weight:700;color:#16a34a">${new Intl.NumberFormat('vi-VN').format(o.priceSnapshot)} ₫</td>
+                     <td style="font-weight:700;color:#16a34a">${new Intl.NumberFormat('en-US').format(o.priceSnapshot)} VND</td>
                      <td style="color:var(--t2)">${o.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
                    </tr>
                  `).join('');
@@ -442,22 +442,58 @@
     if (id === 'sOrders') fetchSellerStats();
   }
 
-  window.saveAdminSettings = function () {
-    const inputs = document.querySelectorAll('#aSettings .form-input');
-    const stName = inputs[0];
-    const stFee = inputs[1];
-    if (stName && stFee) {
-      localStorage.setItem('campus_cfg', JSON.stringify({
-        platformName: stName.value,
-        serviceFee: stFee.value
-      }));
+  window.saveAdminSettings = async function () {
+    const btn = document.getElementById('btn-save-settings');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const payload = {
+      platformName: document.getElementById('set-platformName').value,
+      serviceFee: document.getElementById('set-serviceFee').value,
+      productImageLimit: document.getElementById('set-imgLimit').value,
+      supportEmail: document.getElementById('set-supportEmail').value,
+      announcement: document.getElementById('set-announcement').value
+    };
+
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast('Settings updated successfully', 'ok');
+        document.getElementById('set-announcement').value = ''; // clear announcement after sending
+      } else {
+        showToast(json.message || 'Error saving settings', 'err');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Network error', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
-    showToast('Đã lưu cấu hình thành công', 'ok');
   };
 
   async function fetchAdminSettings() {
     try {
-      // 1. Fetch categories
+      // 1. Fetch platform settings
+      const settingsRes = await fetch('/api/admin/settings');
+      if (settingsRes.ok) {
+        const settingsJson = await settingsRes.json();
+        const s = settingsJson.data;
+        if (s) {
+          if (document.getElementById('set-platformName')) document.getElementById('set-platformName').value = s.platformName || '';
+          if (document.getElementById('set-serviceFee')) document.getElementById('set-serviceFee').value = s.serviceFee || 0;
+          if (document.getElementById('set-imgLimit')) document.getElementById('set-imgLimit').value = s.productImageLimit || 5;
+          if (document.getElementById('set-supportEmail')) document.getElementById('set-supportEmail').value = s.supportEmail || '';
+        }
+      }
+
+      // 2. Fetch categories
       const catRes = await fetch('/api/admin/categories');
       if (catRes.ok) {
         const catJson = await catRes.json();
@@ -467,19 +503,19 @@
         const catCount = document.getElementById('adminCatCount');
         if (catList) {
           if (labels.length === 0) {
-            catList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--t2);">Không có danh mục nào.</div>`;
+            catList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--t2);">No categories found.</div>`;
           } else {
             catList.innerHTML = labels.map((lbl, idx) => `
                     <div class="list-item">
                       <div class="li-info"><div class="li-name">${lbl}</div><div class="li-sub">${data[idx]} products</div></div>
-                      <button class="act-btn danger" onclick="showToast('Tính năng ẩn danh mục đang phát triển', 'info')">Hide</button>
+                      <button class="act-btn danger" onclick="showToast('Category editing is currently disabled', 'info')">Hide</button>
                     </div>`).join('');
           }
         }
         if (catCount) catCount.textContent = labels.length;
       }
 
-      // 2. Fetch stats
+      // 3. Fetch stats
       const statRes = await fetch('/api/admin/stats');
       if (statRes.ok) {
         const statJson = await statRes.json();
@@ -498,17 +534,14 @@
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Storage (images)</span><span style="font-weight:600">${storage}</span></div>
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">API requests/day</span><span style="font-weight:600">${new Intl.NumberFormat('en-US').format(rps)}</span></div>
               <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Uptime</span><span style="font-weight:600;color:#16a34a">99.99%</span></div>
-             `;
+              <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:12px;" onclick="syncSellerRatings()">
+                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.3 0 6.2 2 7.4 4.9M22 12c0 4.4-3.6 8-8 8-3.3 0-6.2-2-7.4-4.9"/></svg>
+                  Sync Seller Ratings
+                </button>
+              </div>`;
         }
       }
-
-      const inputs = document.querySelectorAll('#aSettings .form-input');
-      const stName = inputs[0];
-      const stFee = inputs[1];
-      const localCfg = JSON.parse(localStorage.getItem('campus_cfg') || '{}');
-      if (localCfg.platformName && stName) stName.value = localCfg.platformName;
-      if (localCfg.serviceFee && stFee) stFee.value = localCfg.serviceFee;
-
     } catch (e) {
       console.error(e);
     }
@@ -547,7 +580,7 @@
         if (label.includes('Total users')) valEl.textContent = (d.totalUsers || 0).toLocaleString();
         if (label.includes('Active listings')) valEl.textContent = (d.activeListings || 0).toLocaleString();
         if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth || 0).toLocaleString();
-        if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
+        if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
       });
     } catch (e) { console.error(e); }
   }
@@ -582,7 +615,7 @@
             <td><strong>${p.title}</strong></td>
             <td style="color:var(--t2)">${p.seller?.name || p.seller?.nickname || ''}</td>
             <td style="color:var(--t2)">${p.category || ''}</td>
-            <td>${new Intl.NumberFormat('vi-VN').format(p.price)} ₫</td>
+            <td>${new Intl.NumberFormat('en-US').format(p.price)} VND</td>
             <td>${p.views || 0}</td>
             <td>${p.interested || 0}</td>
             <td><span class="badge ${badgeClass}">${productStatus}</span></td>

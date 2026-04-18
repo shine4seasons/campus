@@ -340,63 +340,91 @@ body {
 /* Owner actions */
 .owner-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-top: 14px;
 }
 
 .btn-edit {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1.5px solid #1B5EFF;
-  color: #1B5EFF;
-  background: #EBF0FF;
-  font-size: var(--fs-xs);
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #1B5EFF, #5B8AFF);
+  color: #fff;
+  font-size: 14px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(27, 94, 255, 0.25);
 }
 
 .btn-edit:hover {
-  background: #D6E4FF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(27, 94, 255, 0.35);
+  filter: brightness(1.05);
+}
+
+.btn-edit:active {
+  transform: translateY(0);
 }
 
 .btn-mark-sold {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1.5px solid #0DAF6E;
-  color: #0DAF6E;
-  background: #E8FBF3;
-  font-size: var(--fs-xs);
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #0DAF6E, #28D78C);
+  color: #fff;
+  font-size: 14px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(13, 175, 110, 0.25);
 }
 
 .btn-mark-sold:hover {
-  background: #D1F5E8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(13, 175, 110, 0.35);
+  filter: brightness(1.05);
+}
+
+.btn-mark-sold:active {
+  transform: translateY(0);
 }
 
 .btn-delete {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1.5px solid #E4E7F2;
-  color: #8890B0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #FEE2E2;
+  color: #E84040;
   background: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-delete:hover {
-  background: #FEE2E2;
+  background: #E84040;
+  color: #fff;
   border-color: #E84040;
-  color: #E84040;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 64, 64, 0.25);
+}
+
+.btn-delete:active {
+  transform: translateY(0);
 }
 
 /* Seller card */

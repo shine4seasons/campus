@@ -82,25 +82,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderConversationList(convs) {
+        const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+        const modeLabel = uiMode === 'seller' ? ' (Seller)' : ' (Buyer)';
+        chatTitle.innerHTML = `Messages <span style="font-size:11px; color:var(--t3); font-weight:500;">${modeLabel}</span>`;
+
         if (!convs || convs.length === 0) {
             chatBody.innerHTML = '<div class="notif-empty">No conversations yet.</div>';
             return;
         }
 
+        // Apply mode filter
+        const filtered = convs.filter(c => {
+            if (uiMode === 'seller') return c.isSellerConversation;
+            return !c.isSellerConversation;
+        });
+
+        if (filtered.length === 0) {
+            chatBody.innerHTML = `<div class="notif-empty">No ${uiMode} messages.</div>`;
+            return;
+        }
+
         chatBody.innerHTML = '';
-        convs.forEach(c => {
+        filtered.forEach(c => {
             const item = document.createElement('div');
             item.className = `chat-item ${c.unreadCount > 0 ? 'unread' : ''}`;
             const partner = c.partner || {};
             const avatar = partner.avatar ? `<img src="${partner.avatar}" alt="">` : (partner.nickname || partner.name || '?')[0];
+            const prodName = c.product ? c.product.title : 'Deleted Product';
             
             item.innerHTML = `
-                <div class="chat-avatar">${avatar}</div>
+                <div class="chat-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;">${avatar}</div>
                 <div class="chat-info">
                     <div class="chat-top">
                         <span class="chat-name">${partner.nickname || partner.name || 'User'}</span>
                         <span class="chat-time">${formatTime(c.updatedAt)}</span>
                     </div>
+                    <div class="chat-prod-name" style="font-size:11px; color:var(--t3); margin: 2px 0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>${prodName}</div>
                     <div class="chat-last">${c.lastMessage || 'No messages yet'}</div>
                 </div>
             `;
@@ -203,7 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUnreadBadge(convs) {
-        const totalUnread = convs.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+        const filtered = convs.filter(c => {
+            if (uiMode === 'seller') return c.isSellerConversation;
+            return !c.isSellerConversation;
+        });
+        const totalUnread = filtered.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
         if (totalUnread > 0) {
             chatDot.style.display = 'block';
             chatDot.textContent = totalUnread > 9 ? '9+' : totalUnread;

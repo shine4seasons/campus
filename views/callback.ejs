@@ -17,17 +17,17 @@
   </style>
 </head>
 <body>
-  <div class="logo">📚 Campus Marketplace</div>
+  <div class="logo">Campus Marketplace</div>
   <div class="spinner" id="spinner"></div>
   <p class="msg" id="msg">Authenticating...</p>
   <div class="err-card" id="err-card">
     <p id="err-text">Login failed. Please try again.</p>
-    <a href="/login">← Try again</a>
+    <a href="/login">Try again</a>
   </div>
 
   <script>
-    // Server đã set httpOnly cookie và redirect về đây
-    // Chỉ cần kiểm tra xem user có hợp lệ không rồi redirect
+    // Server has set the httpOnly cookie and redirected here
+    // Just verify the user is valid and redirect them home
     (async () => {
       try {
         const res  = await fetch('/api/auth/me', { credentials: 'include' });

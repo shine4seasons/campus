@@ -171,7 +171,7 @@
                   (user.role==='seller' ? 'Seller' : user.role)) : '' %>
               </div>
             </div>
-            <button id="logout-btn" class="sb-logout" onclick="showToast('Đã đăng xuất','info')">
+            <button id="logout-btn" class="sb-logout" onclick="showToast('Logged out','info')">
               <svg viewBox="0 0 24 24" stroke-width="2">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
                 <polyline points="16 17 21 12 16 7" />
@@ -244,21 +244,20 @@
 
               window.setMode = function (mode) {
                 localStorage.setItem(STORAGE_KEY, mode);
+                document.cookie = "campus_mode=" + mode + "; path=/; max-age=" + (30 * 24 * 60 * 60);
                 applyMode(mode);
                 const path = window.location.pathname;
                 if (mode === 'buyer') {
                   window.location.href = '/';
-                }
-                if (mode === 'seller') {
-                  window.location.href = '/dashboard';
-                }
-                else {
+                } else if (mode === 'seller') {
+                  window.location.href = '/dashboard-seller';
+                } else {
                   window.location.href = '/';
                 }
 
               };
 
-              // Áp dụng ngay trước khi render để tránh flash
+              // Apply before render to avoid flash
               applyMode(localStorage.getItem(STORAGE_KEY) || 'buyer');
 
               try { document.body.classList.add('has-sidebar'); } catch (e) { }
@@ -331,13 +330,9 @@
                   try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
                   const path = url.pathname;
                   const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-                  if (mode === 'seller' && (path === '/' || path.startsWith('/product') || (/^\/orders(\/|$)/).test(path))) {
+                  if (mode === 'seller' && ((/^\/orders(\/|$)/).test(path) && path !== '/orders-seller')) {
                     e.preventDefault();
-                    if (path === '/') {
-                      window.location.href = '/dashboard';
-                    } else {
-                      showSwitchModal(hrefAttr);
-                    }
+                    showSwitchModal(hrefAttr);
                   }
                 }, true);
 
@@ -357,11 +352,26 @@
                     const res = await fetch('/api/chat', { credentials: 'include' });
                     const json = await res.json();
                     if (!json.success) return;
-                    const total = json.data.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+                    
+                    const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+                    const filtered = json.data.filter(c => {
+                      if (uiMode === 'seller') return c.isSellerConversation;
+                      return !c.isSellerConversation;
+                    });
+                    
+                    const total = filtered.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
                     const badge = document.getElementById('nav-chat-badge');
-                    if (!badge) return;
-                    badge.textContent = total > 99 ? '99+' : total;
-                    badge.style.display = total > 0 ? 'flex' : 'none';
+                    if (badge) {
+                      badge.textContent = total > 99 ? '99+' : total;
+                      badge.style.display = total > 0 ? 'flex' : 'none';
+                    }
+                    
+                    // Also update the navbar chat dot if it exists
+                    const chatDot = document.getElementById('chat-dot');
+                    if (chatDot) {
+                      chatDot.textContent = total > 9 ? '9+' : total;
+                      chatDot.style.display = total > 0 ? 'block' : 'none';
+                    }
                   } catch { }
                 }
                 updateChatBadge();

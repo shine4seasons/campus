@@ -8,8 +8,8 @@ const describeProduct = async (req, res) => {
     if (!title) return res.status(400).json({ success: false, message: 'Title is required' });
     if (!process.env.GEMINI_API_KEY) return res.status(500).json({ success: false, message: 'GEMINI_API_KEY is not configured in .env' });
 
-    const priceNote = price ? `Giá bán: ${new Intl.NumberFormat('vi-VN').format(price)}đ` : '';
-    const locationNote = location ? `Địa điểm trao đổi: ${location}` : '';
+    const priceNote = price ? `Asking price: ${new Intl.NumberFormat('en-US').format(price)} VND` : '';
+    const locationNote = location ? `Exchange location: ${location}` : '';
 
     const parts = [{ text: buildPrompt({ title, category, condition, priceNote, locationNote, categoryLabels, conditionContext }) }];
 
@@ -31,7 +31,7 @@ const describeProduct = async (req, res) => {
     }
 
     const description = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    if (!description) return res.status(500).json({ success: false, message: 'AI không trả về kết quả' });
+    if (!description) return res.status(500).json({ success: false, message: 'AI did not return any result' });
 
     res.json({ success: true, description });
   } catch (err) {

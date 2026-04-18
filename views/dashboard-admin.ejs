@@ -41,7 +41,7 @@
                   <%= stats.totalUsers.value.toLocaleString() %>
                 </div>
                 <div class="stat-delta <%= stats.totalUsers.delta >= 0 ? 'delta-up' : 'delta-dn' %>">
-                  <%= stats.totalUsers.delta>= 0 ? '↑' : '↓' %> <%= Math.abs(stats.totalUsers.delta) %>% vs last month
+                  <i data-lucide="<%= stats.totalUsers.delta >= 0 ? 'trending-up' : 'trending-down' %>" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> <%= Math.abs(stats.totalUsers.delta) %>% vs last month
                 </div>
               </div>
               <div class="stat-card">
@@ -60,7 +60,7 @@
                   <%= stats.activeListings.value %>
                 </div>
                 <div class="stat-delta <%= stats.activeListings.delta >= 0 ? 'delta-up' : 'delta-dn' %>">
-                  <%= stats.activeListings.delta>= 0 ? '↑' : '↓' %> +<%= Math.abs(stats.activeListings.delta) %> today
+                  <i data-lucide="<%= stats.activeListings.delta >= 0 ? 'trending-up' : 'trending-down' %>" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> +<%= Math.abs(stats.activeListings.delta) %> today
                 </div>
               </div>
               <div class="stat-card">
@@ -79,8 +79,7 @@
                   <%= stats.ordersThisMonth.value %>
                 </div>
                 <div class="stat-delta <%= stats.ordersThisMonth.delta >= 0 ? 'delta-up' : 'delta-dn' %>">
-                  <%= stats.ordersThisMonth.delta>= 0 ? '↑' : '↓' %> <%= Math.abs(stats.ordersThisMonth.delta) %>% vs
-                      last month
+                  <i data-lucide="<%= stats.ordersThisMonth.delta >= 0 ? 'trending-up' : 'trending-down' %>" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> <%= Math.abs(stats.ordersThisMonth.delta) %>% vs last month
                 </div>
               </div>
               <div class="stat-card">
@@ -96,12 +95,11 @@
                   </div>
                 </div>
                 <div class="stat-val">
-                  <%= stats.gmvThisMonth.value>= 1000000 ? (stats.gmvThisMonth.value / 1000000).toFixed(1) + 'M ₫' :
-                    stats.gmvThisMonth.value.toLocaleString() + ' ₫' %>
+                  <%= stats.gmvThisMonth.value>= 1000000 ? (stats.gmvThisMonth.value / 1000000).toFixed(1) + 'M VND' :
+                    stats.gmvThisMonth.value.toLocaleString() + ' VND' %>
                 </div>
                 <div class="stat-delta <%= stats.gmvThisMonth.delta >= 0 ? 'delta-up' : 'delta-dn' %>">
-                  <%= stats.gmvThisMonth.delta>= 0 ? '↑' : '↓' %> <%= Math.abs(stats.gmvThisMonth.delta) %>% vs last
-                      month
+                  <i data-lucide="<%= stats.gmvThisMonth.delta >= 0 ? 'trending-up' : 'trending-down' %>" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> <%= Math.abs(stats.gmvThisMonth.delta) %>% vs last month
                 </div>
               </div>
             </div>
@@ -116,7 +114,7 @@
                   <a class="card-action" href="#">View details</a>
                 </div>
                 <div class="legend">
-                  <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>GMV (₫M)</span>
+                  <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>GMV (VND M)</span>
                   <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Orders</span>
                 </div>
                 <div style="position:relative;height:200px"><canvas id="cAdminGMV"></canvas></div>
@@ -155,8 +153,8 @@
                     <% const rank=index + 1; const rankClass=rank===1 ? 'gold' : rank===2 ? 'silver' : rank===3
                       ? 'bronze' : '' ; const
                       initials=seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                const revenueFormatted = seller.totalRevenue >= 1000000 ? (seller.totalRevenue / 1000000).toFixed(1) + ' M ₫' :
-                      seller.totalRevenue.toLocaleString() + ' ₫' ; %>
+                const revenueFormatted = seller.totalRevenue >= 1000000 ? (seller.totalRevenue / 1000000).toFixed(1) + ' M VND' :
+                      seller.totalRevenue.toLocaleString() + ' VND' ; %>
                       <div class="list-item">
                         <div class="li-rank <%= rankClass %>">
                           <%= rank %>
@@ -254,7 +252,7 @@
                     </svg></div>
                 </div>
                 <div class="stat-val">86</div>
-                <div class="stat-delta delta-up">↑ +14%</div>
+                <div class="stat-delta delta-up"><i data-lucide="trending-up" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> +14%</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -268,7 +266,7 @@
                     </svg></div>
                 </div>
                 <div class="stat-val">68%</div>
-                <div class="stat-delta delta-up">↑ +3 pts</div>
+                <div class="stat-delta delta-up"><i data-lucide="trending-up" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> +3 pts</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -280,8 +278,8 @@
                       <path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" />
                     </svg></div>
                 </div>
-                <div class="stat-val">435K ₫</div>
-                <div class="stat-delta delta-dn">↓ -2%</div>
+                <div class="stat-val">435K VND</div>
+                <div class="stat-delta delta-dn"><i data-lucide="trending-down" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> -2%</div>
               </div>
               <div class="stat-card">
                 <div class="stat-top">
@@ -293,7 +291,7 @@
                     </svg></div>
                 </div>
                 <div class="stat-val">11.4</div>
-                <div class="stat-delta delta-up">↑ +6%</div>
+                <div class="stat-delta delta-up"><i data-lucide="trending-up" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> +6%</div>
               </div>
             </div>
 
@@ -312,7 +310,7 @@
                 <div class="card-head">
                   <div>
                     <div class="card-title">Revenue by category</div>
-                    <div class="card-sub">Accumulated GMV (₫M)</div>
+                    <div class="card-sub">Accumulated GMV (VND M)</div>
                   </div>
                 </div>
                 <div style="position:relative;height:210px"><canvas id="cRevCat"></canvas></div>
@@ -466,9 +464,9 @@
                 <tbody>
                   <tr>
                     <td><strong>Casio FX-580VNX</strong></td>
-                    <td style="color:var(--t2)">Trần Ngọc</td>
+                    <td style="color:var(--t2)">John Tran</td>
                     <td style="color:var(--t2)">Electronics</td>
-                    <td>320,000 ₫</td>
+                    <td>320,000 VND</td>
                     <td>124</td>
                     <td>8</td>
                     <td><span class="badge badge-active">Active</span></td>
@@ -480,9 +478,9 @@
                   </tr>
                   <tr>
                     <td><strong>Macroeconomics Textbook</strong></td>
-                    <td style="color:var(--t2)">An Lê</td>
+                    <td style="color:var(--t2)">Ann Le</td>
                     <td style="color:var(--t2)">Books</td>
-                    <td>80,000 ₫</td>
+                    <td>80,000 VND</td>
                     <td>88</td>
                     <td>4</td>
                     <td><span class="badge badge-active">Active</span></td>
@@ -496,7 +494,7 @@
                     <td><strong>HUST Hoodie 2024</strong></td>
                     <td style="color:var(--t2)">Minh Hoa</td>
                     <td style="color:var(--t2)">Clothing</td>
-                    <td>250,000 ₫</td>
+                    <td>250,000 VND</td>
                     <td>210</td>
                     <td>18</td>
                     <td><span class="badge badge-sold">Sold</span></td>
@@ -507,9 +505,9 @@
                   </tr>
                   <tr style="background:#fff7ed">
                     <td><strong>Laptop Dell XPS 13 (2024)</strong></td>
-                    <td style="color:var(--t2)">Phúc Quang</td>
+                    <td style="color:var(--t2)">Phuc Quang</td>
                     <td style="color:var(--t2)">Electronics</td>
-                    <td>18,500,000 ₫</td>
+                    <td>18,500,000 VND</td>
                     <td>543</td>
                     <td>32</td>
                     <td><span class="badge badge-reported">Reported</span></td>
@@ -521,9 +519,9 @@
                   </tr>
                   <tr>
                     <td><strong>Memory Foam Pillow</strong></td>
-                    <td style="color:var(--t2)">Bảo Khánh</td>
+                    <td style="color:var(--t2)">Bao Khanh</td>
                     <td style="color:var(--t2)">Furniture</td>
-                    <td>450,000 ₫</td>
+                    <td>450,000 VND</td>
                     <td>67</td>
                     <td>5</td>
                     <td><span class="badge badge-hidden">Hidden</span></td>
@@ -647,20 +645,20 @@
                   </div>
                 </div>
                 <div class="form-grid">
-                  <div class="form-group"><label class="form-label">Platform name</label><input class="form-input"
+                  <div class="form-group"><label class="form-label">Platform name</label><input class="form-input" id="set-platformName"
                       value="Campus Marketplace"></div>
                   <div class="form-row">
-                    <div class="form-group"><label class="form-label">Service fee (%)</label><input class="form-input"
+                    <div class="form-group"><label class="form-label">Service fee (%)</label><input class="form-input" id="set-serviceFee"
                         type="number" value="0"></div>
-                    <div class="form-group"><label class="form-label">Image/product limit</label><input
+                    <div class="form-group"><label class="form-label">Image/product limit</label><input id="set-imgLimit"
                         class="form-input" type="number" value="5"></div>
                   </div>
-                  <div class="form-group"><label class="form-label">Support email</label><input class="form-input"
+                  <div class="form-group"><label class="form-label">Support email</label><input class="form-input" id="set-supportEmail"
                       type="email" value="support@campusmkt.vn"></div>
-                  <div class="form-group"><label class="form-label">System notifications</label><textarea
+                  <div class="form-group"><label class="form-label">System notifications</label><textarea id="set-announcement"
                       class="form-textarea" placeholder="Send announcement to all users..."></textarea></div>
-                  <button class="btn btn-primary" style="align-self:flex-start"
-                    onclick="if(window.saveAdminSettings) window.saveAdminSettings(); else showToast('Settings saved','ok')">Save
+                  <button class="btn btn-primary" style="align-self:flex-start" id="btn-save-settings"
+                    onclick="saveAdminSettings()">Save
                     changes</button>
                 </div>
               </div>
@@ -891,7 +889,7 @@
                 const product = order.product?.title || '—';
                 const buyer = (order.buyer?.nickname || order.buyer?.name) || '—';
                 const seller = (order.seller?.nickname || order.seller?.name) || '—';
-                const price = order.priceSnapshot ? order.priceSnapshot.toLocaleString() + ' ₫' : '—';
+                const price = order.priceSnapshot ? order.priceSnapshot.toLocaleString() + ' VND' : '—';
                 const delivery = order.deliveryMethod === 'pickup' ? 'Pickup' : order.deliveryMethod === 'ship' ? 'Ship' : '—';
                 const payment = order.paymentMethod === 'cash' ? 'Cash' : order.paymentMethod === 'card' ? 'Card' : '—';
                 return `<tr>

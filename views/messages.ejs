@@ -187,7 +187,7 @@
       // Persist to localStorage so banner shows on reload / direct link
       try { localStorage.setItem('conv_product_' + convId, JSON.stringify(productData)); } catch(e) {}
 
-      const priceStr = new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(productData.price);
+      const priceStr = new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(productData.price);
       const condLabel = COND_LABEL[productData.condition] || productData.condition || '';
       const imgHtml = productData.image
         ? `<img class="product-banner-img" src="${productData.image}" alt="">`

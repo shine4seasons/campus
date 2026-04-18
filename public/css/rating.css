@@ -23,17 +23,26 @@
 
 .star-filled {
   color: #fbbf24;
-  font-size: 16px;
+}
+
+.star-filled svg {
+  fill: currentColor;
 }
 
 .star-empty {
-  color: #d1d5db;
-  font-size: 16px;
+  color: #CBD5E1;
+}
+
+.star-empty svg {
+  fill: none;
 }
 
 .star-half {
   color: #fbbf24;
-  font-size: 16px;
+}
+
+.star-half svg {
+  /* Half-fill is handled via inline SVG logic in rating.js */
 }
 
 .rating-value {
@@ -58,7 +67,6 @@
 .rating-input .star {
   width: 24px;
   height: 24px;
-  font-size: 24px;
   cursor: pointer;
 }
 
@@ -233,7 +241,6 @@
 .rating-form-stars .star {
   width: 32px;
   height: 32px;
-  font-size: 32px;
   cursor: pointer;
 }
 

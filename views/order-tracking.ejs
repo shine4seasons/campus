@@ -318,7 +318,7 @@
 <main class="main">
   <div class="content">
     <div class="tracking-container">
-      <a href="/orders" class="back-button">← Back to Orders</a>
+      <a href="/orders" class="back-button"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Orders</a>
 
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px">
         <div>
@@ -407,7 +407,7 @@
               <div class="order-detail-row">
                 <span class="order-detail-label">Price</span>
                 <span class="order-detail-value">
-                  <%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot) %>
+                  <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot) %>
                 </span>
               </div>
               <div class="order-detail-row">
@@ -419,7 +419,7 @@
               <div class="order-detail-row">
                 <span class="order-detail-label">Ordered on</span>
                 <span class="order-detail-value">
-                  <%= new Date(order.createdAt).toLocaleDateString('vi-VN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                  <%= new Date(order.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                 </span>
               </div>
               <% if (order.note) { %>
@@ -440,7 +440,7 @@
                 </div>
                 <div class="timeline-content">
                   <div class="timeline-title">Order Placed</div>
-                  <div class="timeline-date"><%= new Date(order.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                  <div class="timeline-date"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
                 </div>
               </div>
 
@@ -454,7 +454,7 @@
                   <div class="timeline-title">Order Confirmed</div>
                   <div class="timeline-date">
                     <% if (order.confirmedAt) { %>
-                      <%= new Date(order.confirmedAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                      <%= new Date(order.confirmedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                     <% } else { %>
                       Awaiting seller confirmation
                     <% } %>
@@ -472,7 +472,7 @@
                   <div class="timeline-title">Order Completed</div>
                   <div class="timeline-date">
                     <% if (order.completedAt) { %>
-                      <%= new Date(order.completedAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                      <%= new Date(order.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                     <% } else { %>
                       In progress
                     <% } %>
@@ -488,7 +488,7 @@
                   <div class="timeline-content">
                     <div class="timeline-title" style="color: #dc2626">Order Cancelled</div>
                     <div class="timeline-date">
-                      <%= new Date(order.cancelledAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                      <%= new Date(order.cancelledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                     </div>
                   </div>
                 </div>
@@ -515,7 +515,7 @@
                   <div class="person-name"><%= order.seller.nickname || order.seller.name %></div>
                   <div class="person-role">Campus Seller</div>
                   <div style="font-size: 12px; margin-top: 6px; color: #fbbf24;">
-                    ⭐ <%= (order.seller.rating || 5).toFixed(1) %> 
+                    <i data-lucide="star" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;fill:currentColor;"></i> <%= (order.seller.rating || 5).toFixed(1) %> 
                     <span style="color: var(--t2);">(<%= order.seller.ratingCount || 0 %> reviews)</span>
                   </div>
                 </a>

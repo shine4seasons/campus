@@ -20,6 +20,11 @@ const getProducts = async (req, res) => {
     const { q, page = 1, limit = 12, sort = '-createdAt' } = req.query;
     const filter = buildFilter(req.query);
 
+    // Exclude own products on general feed
+    if (req.user && !req.query.seller) {
+      filter.seller = { $ne: req.user._id };
+    }
+
     let query;
     if (q) {
       query = Product.find({ ...filter, $text: { $search: q } }, { score: { $meta: 'textScore' } })
@@ -52,7 +57,7 @@ const getProduct = async (req, res) => {
       .populate('seller', 'name nickname avatar university rating ratingCount totalSales createdAt')
       .lean();
 
-    if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
       incrementViews(req.params.id);
 
@@ -85,10 +90,10 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy' });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
     if (String(product.seller) !== String(req.user._id) && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Không có quyền' });
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
     const oldPrice = product.price;
@@ -116,8 +121,8 @@ const updateProduct = async (req, res) => {
             recipient: fav.user,
             sender:    product.seller,
             type:      'info',
-            title:     'Price Drop! 🔥',
-            message:   `The price of "${product.title}" has dropped to ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}!`,
+            title:     'Price Drop!',
+            message:   `The price of "${product.title}" has dropped to ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(product.price)}!`,
             link:      `/products/${product._id}`
           });
         }
@@ -136,14 +141,14 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ success: false, message: 'Không tìm thấy' });
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
     if (String(product.seller) !== String(req.user._id) && req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Không có quyền' });
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
     await product.deleteOne();
-    res.json({ success: true, message: 'Đã xóa sản phẩm' });
+    res.json({ success: true, message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
