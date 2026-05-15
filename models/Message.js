@@ -15,8 +15,12 @@ const MessageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      default: '',
       trim: true
+    },
+    imageUrl: {
+      type: String,
+      default: null
     },
     isRead: {
       type: Boolean,
@@ -25,6 +29,14 @@ const MessageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// At least one of text or imageUrl must be present
+MessageSchema.pre('validate', function(next) {
+  if (!this.text && !this.imageUrl) {
+    return next(new Error('Message must contain text or an image'));
+  }
+  next();
+});
 
 // Standard index to sort messages in a conversation
 MessageSchema.index({ conversationId: 1, createdAt: 1 });

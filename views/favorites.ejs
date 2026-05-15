@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .fav-page { padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .fav-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+      padding-bottom: 18px; border-bottom: 1px solid var(--border);
+    }
+    .fav-title { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 800; color: var(--text); margin: 0; }
+    .fav-title svg { width: 28px; height: 28px; stroke: #ef4444; fill: #ef4444; }
+    .fav-count-badge {
+      background: var(--accent-lt); color: var(--accent);
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; line-height: 1.4;
+    }
+    .fav-sub { color: var(--text-3); font-size: 14px; margin-top: 4px; }
+
+    .fav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .fav-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      position: relative; display: flex; flex-direction: column;
+    }
+    .fav-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-2);
+    }
+    .fav-card-img-wrap {
+      position: relative; width: 100%; aspect-ratio: 1 / 1;
+      background: var(--surface-2); overflow: hidden;
+    }
+    .fav-card-img { width: 100%; height: 100%; object-fit: cover; }
+    .fav-card-img-empty {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 32px;
+    }
+    .fav-status-pill {
+      position: absolute; top: 10px; left: 10px;
+      padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .fav-status-pill.sold { background: rgba(220, 38, 38, 0.95); color: #fff; }
+    .fav-status-pill.hidden { background: rgba(107, 114, 128, 0.95); color: #fff; }
+
+    .fav-remove-btn {
+      position: absolute; top: 10px; right: 10px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #ef4444;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .fav-remove-btn:hover { transform: scale(1.08); background: #fff; }
+    .fav-remove-btn svg { width: 18px; height: 18px; fill: #ef4444; stroke: #ef4444; }
+
+    .fav-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .fav-cat { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+    .fav-name {
+      font-size: 14.5px; font-weight: 700; color: var(--text); line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; min-height: 2.6em;
+    }
+    .fav-price { font-size: 17px; font-weight: 800; color: var(--accent); margin-top: auto; padding-top: 6px; }
+    .fav-seller { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+    .fav-seller-avatar {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .fav-seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .fav-empty {
+      grid-column: 1 / -1;
+      text-align: center; padding: 60px 20px;
+      color: var(--text-3);
+    }
+    .fav-empty-icon {
+      width: 64px; height: 64px; margin: 0 auto 16px;
+      color: var(--border-2);
+    }
+    .fav-empty-title { font-size: 18px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+    .fav-empty-sub { font-size: 14px; }
+    .fav-empty .btn-browse {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 18px; padding: 10px 20px; border-radius: 10px;
+      background: var(--accent); color: #fff; font-weight: 600;
+      text-decoration: none; transition: background 0.15s ease;
+    }
+    .fav-empty .btn-browse:hover { background: var(--primary-dark); }
+
+    .fav-loading {
+      grid-column: 1 / -1; text-align: center; padding: 60px;
+      color: var(--text-3);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; animation: spin 0.8s linear infinite; }
+
+    .fav-load-more {
+      display: flex; justify-content: center; margin-top: 24px;
+    }
+    .fav-load-more button {
+      padding: 10px 24px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--border-2);
+      color: var(--text-2); font-weight: 600; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fav-load-more button:hover { background: var(--surface-2); }
+
+    .fav-card.sold { opacity: 0.7; }
+    .fav-card.sold .fav-name { text-decoration: line-through; text-decoration-color: var(--text-3); }
+  </style>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+
+  <main class="main">
+    <div class="fav-page">
+      <header class="fav-header">
+        <div>
+          <h1 class="fav-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Favorites
+            <span class="fav-count-badge" id="fav-count" style="display:none">0</span>
+          </h1>
+          <p class="fav-sub">Products you've saved for later</p>
+        </div>
+      </header>
+
+      <div class="fav-grid" id="fav-grid">
+        <div class="fav-loading">
+          <svg class="spinner" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+        </div>
+      </div>
+
+      <div class="fav-load-more" id="fav-load-more" style="display:none;">
+        <button onclick="loadMore()">Load more</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentPage = 1;
+    let totalCount = 0;
+
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatPrice(n) {
+      return new Intl.NumberFormat('vi-VN').format(n || 0) + ' ₫';
+    }
+
+    function statusPill(status) {
+      if (status === 'sold')   return '<span class="fav-status-pill sold">Sold</span>';
+      if (status === 'hidden') return '<span class="fav-status-pill hidden">Hidden</span>';
+      return '';
+    }
+
+    function renderCard(p) {
+      const img = (p.images && p.images[0]) || '';
+      const seller = p.seller || {};
+      const sellerName = seller.nickname || seller.name || 'Unknown';
+      const sellerInitial = sellerName.charAt(0).toUpperCase();
+      const isSold = p.status === 'sold';
+
+      return `
+        <div class="fav-card ${isSold ? 'sold' : ''}" data-id="${p._id}">
+          <div class="fav-card-img-wrap" onclick="window.location.href='/products/${p._id}'">
+            ${statusPill(p.status)}
+            <button class="fav-remove-btn" onclick="event.stopPropagation(); removeFavorite('${p._id}')" title="Remove from favorites">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+            ${img
+              ? `<img class="fav-card-img" src="${escHtml(img)}" alt="${escHtml(p.title)}">`
+              : `<div class="fav-card-img-empty">📦</div>`}
+          </div>
+          <div class="fav-card-body" onclick="window.location.href='/products/${p._id}'">
+            <div class="fav-cat">${escHtml(p.category || '')}</div>
+            <div class="fav-name">${escHtml(p.title || 'Untitled')}</div>
+            <div class="fav-price">${formatPrice(p.price)}</div>
+            <div class="fav-seller">
+              <div class="fav-seller-avatar">${
+                seller.avatar
+                  ? `<img src="${escHtml(seller.avatar)}" alt="${escHtml(sellerName)}">`
+                  : escHtml(sellerInitial)
+              }</div>
+              <span>${escHtml(sellerName)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEmpty() {
+      return `
+        <div class="fav-empty">
+          <svg class="fav-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <div class="fav-empty-title">No favorites yet</div>
+          <div class="fav-empty-sub">Tap the heart on any product to save it here.</div>
+          <a class="btn-browse" href="/">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Browse products
+          </a>
+        </div>
+      `;
+    }
+
+    async function fetchFavorites(append) {
+      const grid = document.getElementById('fav-grid');
+      try {
+        const res = await fetch('/api/products/favorites?page=' + currentPage + '&limit=12', { credentials: 'include' });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message || 'Failed');
+        const items = json.data || [];
+        const pagination = json.pagination || {};
+
+        totalCount = pagination.total || 0;
+        const badge = document.getElementById('fav-count');
+        if (totalCount > 0) {
+          badge.textContent = totalCount;
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        if (!append) {
+          grid.innerHTML = items.length === 0 ? renderEmpty() : items.map(renderCard).join('');
+        } else {
+          grid.insertAdjacentHTML('beforeend', items.map(renderCard).join(''));
+        }
+
+        document.getElementById('fav-load-more').style.display = pagination.hasMore ? 'flex' : 'none';
+      } catch (err) {
+        console.error('[favorites] error:', err);
+        if (!append) {
+          grid.innerHTML = `<div class="fav-empty"><div class="fav-empty-title">Failed to load</div><div class="fav-empty-sub">${escHtml(err.message)}</div></div>`;
+        }
+      }
+    }
+
+    window.removeFavorite = async function(productId) {
+      const card = document.querySelector(`.fav-card[data-id="${productId}"]`);
+      if (card) card.style.opacity = '0.4';
+
+      try {
+        const res = await fetch('/api/products/' + productId + '/interested', {
+          method: 'POST', credentials: 'include'
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+
+        // If toggle returned isFavorited:false → remove the card
+        if (!json.isFavorited && card) {
+          card.style.transition = 'opacity 0.2s ease';
+          card.style.opacity = '0';
+          setTimeout(() => {
+            card.remove();
+            totalCount = Math.max(0, totalCount - 1);
+            const badge = document.getElementById('fav-count');
+            if (totalCount === 0) {
+              document.getElementById('fav-grid').innerHTML = renderEmpty();
+              badge.style.display = 'none';
+            } else {
+              badge.textContent = totalCount;
+            }
+          }, 200);
+        } else if (card) {
+          card.style.opacity = '';
+        }
+      } catch (err) {
+        if (card) card.style.opacity = '';
+        console.error('[favorites] remove error:', err);
+      }
+    };
+
+    window.loadMore = function() {
+      currentPage++;
+      fetchFavorites(true);
+    };
+
+    fetchFavorites();
+  </script>
+</body>
+</html>

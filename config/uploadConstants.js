@@ -1,7 +1,8 @@
 // Upload configuration constants
 const UPLOAD_FOLDERS = {
   PRODUCTS: 'campus-marketplace/products',
-  AVATARS: 'campus-marketplace/avatars'
+  AVATARS: 'campus-marketplace/avatars',
+  CHAT: 'campus-marketplace/chat'
 };
 
 const UPLOAD_ERROR_MESSAGES = {

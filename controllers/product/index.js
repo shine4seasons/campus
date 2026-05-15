@@ -171,7 +171,7 @@ const toggleInterested = async (req, res) => {
   try {
     const Favorite = require('../../models/Favorite');
     const existing = await Favorite.findOne({ user: req.user._id, product: req.params.id });
-    
+
     let product;
     if (existing) {
       await Favorite.deleteOne({ _id: existing._id });
@@ -180,11 +180,63 @@ const toggleInterested = async (req, res) => {
       await Favorite.create({ user: req.user._id, product: req.params.id });
       product = await Product.findByIdAndUpdate(req.params.id, { $inc: { interested: 1 } }, { new: true });
     }
-    
+
     res.json({ success: true, interested: product.interested, isFavorited: !existing });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-module.exports = { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getMyProducts, toggleInterested };
+// GET /api/products/favorites — list user's favorited products with pagination
+const getFavorites = async (req, res) => {
+  try {
+    const Favorite = require('../../models/Favorite');
+    const page  = Math.max(parseInt(req.query.page,  10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 50);
+    const skip  = (page - 1) * limit;
+
+    const [favorites, total] = await Promise.all([
+      Favorite.find({ user: req.user._id })
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(limit)
+        .populate({
+          path: 'product',
+          select: 'title price images category condition status seller interested ratingAverage ratingCount soldAt',
+          populate: { path: 'seller', select: 'name nickname avatar' }
+        })
+        .lean(),
+      Favorite.countDocuments({ user: req.user._id })
+    ]);
+
+    // Filter out favorites whose product was deleted
+    const items = favorites
+      .filter(f => f.product)
+      .map(f => ({ ...f.product, favoritedAt: f.createdAt }));
+
+    res.json({
+      success: true,
+      data: items,
+      pagination: {
+        page, limit, total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/products/favorites/ids — return array of favorited product IDs for client-side checks
+const getFavoriteIds = async (req, res) => {
+  try {
+    const Favorite = require('../../models/Favorite');
+    const favs = await Favorite.find({ user: req.user._id }).select('product').lean();
+    res.json({ success: true, data: favs.map(f => String(f.product)) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getMyProducts, toggleInterested, getFavorites, getFavoriteIds };

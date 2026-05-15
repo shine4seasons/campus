@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= editProduct ? 'Edit Listing' : 'Post a Listing' %> — Campus Marketplace</title>
+  <title><%= editProduct ? 'Edit Product' : 'Post a Product' %> — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
@@ -156,61 +156,54 @@
 
   <% const ep = editProduct; %>
 
-<!-- <div class="page-header">
-    <div class="page-header-inner">
-      <div><div class="page-title"><%= ep ? 'Edit Listing' : 'Post a Listing' %></div></div>
-      <div class="breadcrumb">
-        <a href="/">Home</a><span class="breadcrumb-sep"><i data-lucide="chevron-right" style="width:12px;height:12px;"></i></span>
-        <span><%= ep ? 'Edit' : 'Sell' %></span>
+  <!-- Page header -->
+  <div class="sell-header">
+    <div class="sell-header-inner">
+      <a href="/" class="sell-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </a>
+      <div>
+        <h1 class="sell-title"><%= ep ? 'Edit listing' : 'Post a listing' %></h1>
+        <p class="sell-sub">Fill in the details below — the more info you add, the faster it sells</p>
       </div>
     </div>
-  </div>--> 
+  </div>
 
-  <div class="form-layout">
-    <div style="display:flex;flex-direction:column;gap:20px;">
+  <div class="sell-layout">
+    <!-- LEFT: Form steps -->
+    <div class="sell-steps">
 
-      <!-- Basic info -->
-      <div class="card">
-        <div class="card-head">
-          
+      <!-- STEP 1: Item details -->
+      <div class="sell-card" id="step-details">
+        <div class="sell-card-header">
+          <div class="sell-step-num">01</div>
           <div>
-            <div class="card-head-title">Item details</div>
-            <div class="card-head-sub">The more detailed your description, the faster it sells</div>
+            <div class="sell-card-title">Item details</div>
+            <div class="sell-card-sub">Name, describe and price your item</div>
           </div>
         </div>
-        <div class="card-body">
-          <div class="fg">
-            <label class="fl">Title <span class="req">*</span></label>
-            <input type="text" class="fi" id="f-title"
-              value="<%= ep ? ep.title : '' %>"
-              placeholder="E.g.: Calculus 1 Textbook — MIT" maxlength="120"
-              oninput="updateCounters();updatePreview()">
-            <div class="char-count" id="title-count">0 / 120</div>
-          </div>
 
-          <div class="fg">
-            <label class="fl">Detailed description <span class="req">*</span></label>
-            <textarea class="ft" id="f-desc" maxlength="2000" rows="5"
-              placeholder="Describe the item's condition, reason for selling..."
-              oninput="updateCounters()"><%= ep ? ep.description : '' %></textarea>
-            <div class="char-count" id="desc-count">0 / 2000</div>
-            <div class="ai-section">
-              <button class="btn-ai" id="btn-ai" type="button" onclick="generateAIDescription()">
-                <i data-lucide="sparkles" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i>
-                Generate with AI
-              </button>
-              <div class="ai-hint">
-                Fill in Title, Category &amp; Condition first,<br>
-                then let AI write a description for you.
-              </div>
+        <div class="sell-card-body">
+          <!-- Title -->
+          <div class="sf">
+            <div class="sf-label-row">
+              <label class="sf-label" for="f-title">Title <span class="sf-req">*</span></label>
+              <span class="sf-counter" id="title-count">0 / 120</span>
             </div>
+            <input class="sf-input fi" id="f-title" type="text"
+              value="<%= ep ? ep.title : '' %>"
+              placeholder="E.g.: Calculus 1 Textbook — MIT"
+              maxlength="120" autocomplete="off"
+              oninput="updateCounters();updatePreview()">
           </div>
 
-          <div class="fg-grid">
-            <div class="fg">
-              <label class="fl">Category <span class="req">*</span></label>
-              <select class="fs" id="f-cat" onchange="updatePreview()">
-                <option value="">-- Select a category --</option>
+          <!-- Category + Price row -->
+          <div class="sf-row">
+            <div class="sf">
+              <label class="sf-label" for="f-cat">Category <span class="sf-req">*</span></label>
+              <select class="sf-select fs" id="f-cat" onchange="updatePreview()">
+                <option value="">Select a category…</option>
                 <% CATEGORIES.forEach(function(cat) { %>
                   <option value="<%= cat.slug %>" <%= ep && ep.category === cat.slug ? 'selected' : '' %>>
                     <%= cat.name %>
@@ -218,46 +211,61 @@
                 <% }) %>
               </select>
             </div>
-            <div class="fg">
-              <label class="fl">Asking price <span class="req">*</span></label>
-              <div class="price-wrap">
-                <input type="number" class="fi" id="f-price"
+            <div class="sf">
+              <label class="sf-label" for="f-price">Asking price <span class="sf-req">*</span></label>
+              <div class="sf-price-wrap">
+                <input class="sf-input sf-price-input fi" id="f-price" type="number"
                   value="<%= ep ? ep.price : '' %>"
-                  placeholder="0" min="0" step="1000" oninput="onPriceInput()">
-                <span class="price-unit">VND</span>
+                  placeholder="0" min="0" step="1000"
+                  oninput="onPriceInput()">
+                <span class="sf-price-unit">VND</span>
               </div>
-              <div class="price-display" id="price-display">
-                <% if (ep && ep.price) { %>
-                  <%= new Intl.NumberFormat('en-US',{style:'currency',currency:'VND'}).format(ep.price) %>
-                <% } %>
-              </div>
+              <div class="sf-price-display" id="price-display"><% if (ep && ep.price) { %><%= new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(ep.price) %><% } %></div>
             </div>
+          </div>
+
+          <!-- Description -->
+          <div class="sf">
+            <div class="sf-label-row">
+              <label class="sf-label" for="f-desc">Description <span class="sf-req">*</span></label>
+              <span class="sf-counter" id="desc-count">0 / 2000</span>
+            </div>
+            <div style="position:relative;">
+              <textarea class="sf-textarea ft" id="f-desc" maxlength="2000" rows="6"
+                placeholder="Describe your item — condition, reason for selling, what's included…"
+                oninput="updateCounters()"><%= ep ? ep.description : '' %></textarea>
+            </div>
+            <button class="sf-ai-btn" id="btn-ai" type="button" onclick="generateAIDescription()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Generate description with AI
+              <span class="sf-ai-hint">— fill title, category &amp; condition first</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Condition -->
-      <div class="card">
-        <div class="card-head">
-         <!-- <div class="card-head-icon"><i data-lucide="star"></i></div>-->
+      <!-- STEP 2: Condition -->
+      <div class="sell-card" id="step-condition">
+        <div class="sell-card-header">
+          <div class="sell-step-num">02</div>
           <div>
-            <div class="card-head-title">
-              Item condition <span style="color:#E84040;font-size:13px;">*</span>
-            </div>
+            <div class="sell-card-title">Item condition <span class="sf-req">*</span></div>
+            <div class="sell-card-sub">Select the option that best describes your item</div>
           </div>
         </div>
-        <div class="card-body">
+        <div class="sell-card-body">
           <div class="cond-grid" id="cond-grid">
             <%
               const CONDITIONS = [
-                ['new',       'tag',        'New',       'Never used'],
-                ['like-new',  'gem',        'Like new',  'Lightly used'],
-                ['good',      'thumbs-up',  'Good',      'Works fine'],
-                ['fair',      'wrench',     'Fair',      'Minor scratches'],
+                ['new',      'sparkles',   'New',       'Never used, sealed'],
+                ['like-new', 'star',       'Like new',  'Used once or twice'],
+                ['good',     'thumbs-up',  'Good',      'Works perfectly'],
+                ['fair',     'wrench',     'Fair',      'Visible wear/scratches'],
               ];
               CONDITIONS.forEach(function(c) {
             %>
-              <div class="cond-opt <%= ep && ep.condition === c[0] ? 'selected' : '' %>" data-val="<%= c[0] %>" onclick="selectCondition(this)">
+              <div class="cond-opt <%= ep && ep.condition === c[0] ? 'selected' : '' %>"
+                data-val="<%= c[0] %>" onclick="selectCondition(this)">
                 <div class="cond-icon"><i data-lucide="<%= c[1] %>"></i></div>
                 <div class="cond-label"><%= c[2] %></div>
                 <div class="cond-sub"><%= c[3] %></div>
@@ -268,135 +276,115 @@
         </div>
       </div>
 
-      <!-- Images -->
-      <div class="card">
-        <div class="card-head">
-         <!--  <div class="card-head-icon"><i data-lucide="image"></i></div>-->
+      <!-- STEP 3: Images -->
+      <div class="sell-card" id="step-images">
+        <div class="sell-card-header">
+          <div class="sell-step-num">03</div>
           <div>
-            <div class="card-head-title">Images</div>
-            <div class="card-head-sub">Up to 5 photos · First photo = cover · Max 5MB each</div>
+            <div class="sell-card-title">Photos</div>
+            <div class="sell-card-sub">Up to 5 photos · First photo is the cover · Max 5 MB each</div>
           </div>
         </div>
-        <div class="card-body">
+        <div class="sell-card-body">
           <input type="file" id="file-input" accept="image/*" multiple style="display:none">
-
           <div class="upload-zone" id="upload-zone">
             <div class="upload-zone-icon">
-              <i data-lucide="image-plus" style="width:36px;height:36px;stroke:#8890B0;"></i>
+              <i data-lucide="image-plus" style="width:40px;height:40px;stroke:#8890B0;"></i>
             </div>
-            <div class="upload-zone-text">Drag &amp; drop photos here</div>
-            <div class="upload-zone-sub">PNG, JPG, WEBP · max 5MB each</div>
+            <p class="upload-zone-text">Drag &amp; drop photos here</p>
+            <p class="upload-zone-sub">PNG, JPG, WEBP · max 5 MB each</p>
             <div class="upload-zone-btn">
-              <i data-lucide="folder-open" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i>
+              <i data-lucide="folder-open" style="width:14px;height:14px;vertical-align:middle;margin-right:5px;display:inline-block;"></i>
               Browse files
             </div>
           </div>
-
           <div class="img-grid" id="img-grid"></div>
         </div>
       </div>
 
-      <!-- Location -->
-      <div class="card">
-        <div class="card-head">
-        <!--  <div class="card-head-icon"><i data-lucide="map-pin"></i></div> -->
+      <!-- STEP 4: Location -->
+      <div class="sell-card" id="step-location">
+        <div class="sell-card-header">
+          <div class="sell-step-num">04</div>
           <div>
-            <div class="card-head-title">Pickup location</div>
-            <div class="card-head-sub">Click on map or search to set meeting point</div>
+            <div class="sell-card-title">Pickup location</div>
+            <div class="sell-card-sub">Where will you meet the buyer?</div>
           </div>
         </div>
-        <div class="card-body">
-          <div style="position:relative;margin-bottom:12px;">
-            <div style="position:relative;">
-              <input type="text" id="location-search"
-                placeholder="Search address or click on map below..."
-                style="width:100%;padding:12px 40px 12px 16px;border:1.5px solid #E4E7F2;border-radius:12px;font-size:14px;font-family:'Be Vietnam Pro',sans-serif;background:white;outline:none;transition:border-color 0.2s;"
-                onfocus="this.style.borderColor='#1B5EFF'"
-                onblur="this.style.borderColor='#E4E7F2'">
-              <div id="location-dropdown"
-                style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #E4E7F2;border-radius:8px;max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-              </div>
-              <button type="button" onclick="geolocateMe()" title="Use my current location"
-                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">
-                <i data-lucide="locate-fixed" style="width:18px;height:18px;stroke:#1B5EFF;"></i>
-              </button>
-            </div>
-            <input type="hidden" id="f-location" value="<%= ep && ep.location ? (ep.location.address || '') : '' %>">
+        <div class="sell-card-body">
+          <div class="sf-loc-search">
+            <input type="text" id="location-search" class="sf-input"
+              placeholder="Search address or click on the map…"
+              autocomplete="off">
+            <div id="location-dropdown" class="sf-loc-dropdown"></div>
+            <button type="button" class="sf-loc-geo" onclick="geolocateMe()" title="Use my location">
+              <i data-lucide="locate-fixed" style="width:16px;height:16px;stroke:#1B5EFF;"></i>
+            </button>
           </div>
+          <input type="hidden" id="f-location" value="<%= ep && ep.location ? (ep.location.address || '') : '' %>">
 
-          <div id="location-map"
-            style="width:100%;height:260px;border-radius:14px;border:1.5px solid #E4E7F2;overflow:hidden;background:#EBF0FF;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;color:#8890B0;">
-              <i data-lucide="map" style="width:40px;height:40px;margin-bottom:8px;stroke:#8890B0;"></i>
-              <div style="font-size:13px;font-weight:600;">Loading map...</div>
+          <div id="location-map" class="sf-map">
+            <div class="sf-map-placeholder">
+              <i data-lucide="map" style="width:40px;height:40px;stroke:#8890B0;margin-bottom:10px;"></i>
+              <div>Loading map…</div>
             </div>
           </div>
-
-          <div style="font-size:12px;color:#8890B0;margin-top:8px;display:flex;align-items:center;gap:5px;">
+          <div class="sf-map-hint">
             <i data-lucide="mouse-pointer-click" style="width:13px;height:13px;"></i>
-            Click anywhere on the map to set pickup point
+            Click anywhere on the map to pin a pickup point
           </div>
-
           <input type="hidden" id="f-lat" value="<%= ep && ep.location ? (ep.location.lat || '') : '' %>">
           <input type="hidden" id="f-lng" value="<%= ep && ep.location ? (ep.location.lng || '') : '' %>">
         </div>
       </div>
-    </div>
 
-    <!-- Sidebar (right column) -->
-    <aside class="side-col">
-      <div class="card">
-        <div class="card-head">
-         <!-- <div class="card-head-icon"><i data-lucide="eye"></i></div>-->
-          <div><div class="card-head-title">Preview</div></div>
-        </div>
-        <div class="card-body" style="padding:12px;">
-          <div id="preview-wrap"><div class="preview-empty">Fill in the details to preview</div></div>
-        </div>
+    </div><!-- /.sell-steps -->
+
+    <!-- RIGHT: Sticky action panel -->
+    <aside class="sell-panel">
+
+      <!-- Submit actions -->
+      <div class="sell-card sell-actions-card">
+        <button class="sell-btn-primary" id="btn-submit" type="button" onclick="submitProduct()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <%= ep ? 'Save changes' : 'Post listing' %>
+        </button>
+        <button class="sell-btn-ghost" type="button" onclick="submitProduct('hidden')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Save as draft
+        </button>
       </div>
 
-      <div class="card">
-        <div class="card-body">
-          <button class="btn-submit" id="btn-submit" type="button" onclick="submitProduct()">
-            <i data-lucide="check" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>
-            <%= ep ? 'Save changes' : 'Post listing' %>
-          </button>
-          <div style="height:10px;"></div>
-          <button class="btn-draft" type="button" onclick="submitProduct('hidden')">
-            <i data-lucide="archive" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i>
-            Save as draft
-          </button>
+      <!-- Live preview -->
+      <div class="sell-card sell-preview-card">
+        <div class="sell-preview-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Live preview
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon"><i data-lucide="lightbulb"></i></div>
-          <div><div class="card-head-title">Sell faster</div></div>
-        </div>
-        <div class="card-body">
-          <div class="tip-list">
-            <div class="tip">
-              <span class="tip-icon"><i data-lucide="camera"></i></span>
-              Clear photos can triple your chances
-            </div>
-            <div class="tip">
-              <span class="tip-icon"><i data-lucide="sparkles"></i></span>
-              Use AI to write a compelling description
-            </div>
-            <div class="tip">
-              <span class="tip-icon"><i data-lucide="tag"></i></span>
-              Price 30–50% below retail to sell quickly
-            </div>
-            <div class="tip">
-              <span class="tip-icon"><i data-lucide="map-pin"></i></span>
-              Specify a clear pickup spot on campus
-            </div>
+        <div id="preview-wrap">
+          <div class="preview-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Fill in details to see preview</span>
           </div>
         </div>
       </div>
+
+      <!-- Tips -->
+      <div class="sell-card sell-tips-card">
+        <div class="sell-tips-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Sell faster
+        </div>
+        <ul class="sell-tips-list">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Clear photos can triple your views</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Use AI to write a compelling description</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Price 30–50% below retail to sell fast</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Specify a clear pickup spot on campus</li>
+        </ul>
+      </div>
+
     </aside>
-  </div>
+  </div><!-- /.sell-layout -->
 
   <div id="toast-wrap"></div>
 
@@ -562,11 +550,26 @@
       if (!condition) { toast('Please select item condition first', 'err'); return; }
 
       const btn = document.getElementById('btn-ai');
+      const textarea = document.getElementById('f-desc');
+      const descWrap = textarea.parentElement;
       btn.disabled = true;
+      textarea.disabled = true;
       btn.innerHTML =
         '<svg width="14" height="14" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:5px;">' +
         '<circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>' +
         '<path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Generating...';
+
+      // Overlay on textarea
+      let overlay = document.getElementById('ai-desc-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'ai-desc-overlay';
+        overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.85);border-radius:12px;font-size:13px;font-weight:600;color:#1B5EFF;pointer-events:none;z-index:5;';
+        overlay.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(27,94,255,0.25)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#1B5EFF" stroke-width="2"/></svg>AI is writing your description...';
+        if (descWrap && getComputedStyle(descWrap).position === 'static') descWrap.style.position = 'relative';
+        descWrap.appendChild(overlay);
+      }
+      overlay.style.display = 'flex';
 
       try {
         const imageUrl = imgUrls.find(u => !u.startsWith('temp-')) || null;
@@ -577,8 +580,9 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'AI request failed');
-        const textarea = document.getElementById('f-desc');
+        overlay.style.display = 'none';
         textarea.value = '';
+        textarea.disabled = false;
         textarea.focus();
         let idx = 0;
         const iv = setInterval(() => {
@@ -588,6 +592,8 @@
           if (idx >= data.description.length) { clearInterval(iv); toast('Description generated!', 'ok'); }
         }, 15);
       } catch (err) {
+        overlay.style.display = 'none';
+        textarea.disabled = false;
         toast(err.message || 'AI unavailable. Please write manually.', 'err');
       } finally {
         btn.disabled = false;
@@ -653,13 +659,13 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Request failed');
-        toast(EDIT_ID ? 'Listing updated!' : 'Listing posted!', 'ok');
+        toast(EDIT_ID ? 'Product updated!' : 'Product posted!', 'ok');
         setTimeout(() => window.location.href = '/products/' + data.data._id, 1200);
       } catch (err) {
         btn.disabled = false;
         btn.innerHTML =
           '<i data-lucide="check" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>' +
-          (EDIT_ID ? 'Save changes' : 'Post listing');
+          (EDIT_ID ? 'Save changes' : 'Post product');
         lucide.createIcons({ nodes: [btn] });
         toast(err.message || 'Failed. Please try again.', 'err');
       }
@@ -667,16 +673,29 @@
 
     // ── Toast ─────────────────────────────────────────────
     function toast(msg, type) {
-      const c  = document.getElementById('toast-wrap');
-      const t  = document.createElement('div');
-      t.className = 'toast ' + (type || 'ok');
-      const icon = type === 'err'
-        ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-        : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>';
-      t.style.cssText = 'display:flex;align-items:center;gap:8px;';
-      t.innerHTML = icon + msg;
+      const c   = document.getElementById('toast-wrap');
+      const isErr = type === 'err';
+      const t   = document.createElement('div');
+      const bg  = isErr ? '#E84040' : '#0D0F1A';
+      const icon = isErr
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
+      t.style.cssText = [
+        'display:flex', 'align-items:center', 'gap:10px',
+        'padding:12px 18px', 'border-radius:12px',
+        'font-size:14px', 'font-weight:600',
+        'color:#fff', 'background:' + bg,
+        'box-shadow:0 8px 32px rgba(13,15,26,0.18)',
+        'max-width:340px', 'min-width:160px',
+        'animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1)'
+      ].join(';');
+      t.innerHTML = icon + '<span>' + msg + '</span>';
       c.appendChild(t);
-      setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3500);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.3s';
+        setTimeout(() => t.remove(), 300);
+      }, 3500);
     }
 
     // ── Init ──────────────────────────────────────────────

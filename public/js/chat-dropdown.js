@@ -201,11 +201,22 @@ document.addEventListener('DOMContentLoaded', () => {
         input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
     }
 
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     function createMessageHTML(m) {
         const isMe = String(m.sender._id || m.sender) === window.SOCKET_USER_ID;
+        const imageHtml = m.imageUrl
+            ? `<img class="chat-bubble-image" src="${escHtml(m.imageUrl)}" alt="Image" onclick="window.open('${escHtml(m.imageUrl)}','_blank')">`
+            : '';
+        const textHtml = m.text
+            ? `<div class="chat-bubble">${escHtml(m.text)}</div>`
+            : '';
         return `
             <div class="chat-msg-row ${isMe ? 'me' : 'them'}">
-                <div class="chat-bubble">${m.text}</div>
+                ${imageHtml}
+                ${textHtml}
             </div>
         `;
     }

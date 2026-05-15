@@ -95,18 +95,29 @@ exports.getMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { text } = req.body;
+    const { text, imageUrl } = req.body;
     const userId = req.user._id;
 
-    if (!text || !text.trim()) return res.status(400).json({ success: false, message: 'Message text cannot be empty' });
+    const trimmedText = (text || '').trim();
+    const cleanImageUrl = (imageUrl || '').trim() || null;
+
+    if (!trimmedText && !cleanImageUrl) {
+      return res.status(400).json({ success: false, message: 'Message must contain text or an image' });
+    }
 
     const conv = await Conversation.findById(id);
     if (!conv) return res.status(404).json({ success: false, message: 'Conversation not found' });
     if (!conv.participants.includes(userId)) return res.status(403).json({ success: false, message: 'Forbidden' });
 
-    const msg = await Message.create({ conversationId: id, sender: userId, text: text.trim(), isRead: false });
+    const msg = await Message.create({
+      conversationId: id,
+      sender: userId,
+      text: trimmedText,
+      imageUrl: cleanImageUrl,
+      isRead: false
+    });
 
-    conv.lastMessage = text.trim();
+    conv.lastMessage = trimmedText || (cleanImageUrl ? '📷 Image' : '');
     conv.updatedAt = new Date();
     await conv.save();
 

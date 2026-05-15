@@ -13,6 +13,17 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/rating.css">
+  <style>
+    .adm-loader {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(27,94,255,0.2);
+      border-top-color: #1B5EFF;
+      border-radius: 50%;
+      animation: admSpin 0.8s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes admSpin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 
 <body>
@@ -415,7 +426,7 @@
                 </thead>
                 <tbody id="usersTableBody">
                   <tr>
-                    <td colspan="9" style="text-align:center;color:var(--t2);padding:24px">Loading...</td>
+                    <td colspan="9" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading users…</td>
                   </tr>
                 </tbody>
               </table>
@@ -584,7 +595,7 @@
                 </thead>
                 <tbody id="ordersTableBody">
                   <tr>
-                    <td colspan="8" style="text-align:center;color:var(--t2);padding:24px">Loading...</td>
+                    <td colspan="8" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading orders…</td>
                   </tr>
                 </tbody>
               </table>
@@ -628,7 +639,7 @@
                 </thead>
                 <tbody id="reportsTableBody">
                   <tr>
-                    <td colspan="7" style="text-align:center;color:var(--t2);padding:24px">Loading...</td>
+                    <td colspan="7" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading reports…</td>
                   </tr>
                 </tbody>
               </table>
@@ -670,8 +681,8 @@
                       <div class="card-sub"><span id="adminCatCount">
                           <%= CATEGORIES.length %>
                         </span> categories available</div>
-                    </div><button class="act-btn primary"
-                      onclick="showToast('Category add feature in development','info')">+ Add</button>
+                    </div><button class="act-btn primary" disabled title="Coming soon"
+                      style="opacity:0.5;cursor:not-allowed;">+ Add <span style="font-size:10px;font-weight:600;background:#FFF6E0;color:#B8860B;padding:2px 6px;border-radius:6px;margin-left:4px;">Soon</span></button>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:2px" id="adminCategoriesList">
                     <% CATEGORIES.forEach((cat, idx)=> { %>
@@ -683,7 +694,7 @@
                           <div class="li-sub">Category ID: <%= cat.slug %>
                           </div>
                         </div>
-                        <button class="act-btn" onclick="showToast('Edit feature in development', 'info')">Edit</button>
+                        <button class="act-btn" disabled title="Coming soon" style="opacity:0.5;cursor:not-allowed;">Edit</button>
                       </div>
                       <% }); %>
                   </div>
@@ -836,7 +847,7 @@
             async function loadUsers(page = 1) {
               const tbody = document.getElementById('usersTableBody');
               if (!tbody) return;
-              tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t2);padding:24px">Loading...</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading…</td></tr>';
 
               const q = searchInput ? searchInput.value.trim() : '';
               const params = new URLSearchParams({ limit: 20, page });
@@ -923,7 +934,7 @@
             async function loadOrders(page = 1) {
               const tbody = document.getElementById('ordersTableBody');
               if (!tbody) return;
-              tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t2);padding:24px">Loading...</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading…</td></tr>';
 
               const params = new URLSearchParams({ limit: 20, page });
               if (currentOrderFilter) params.set('status', currentOrderFilter);
@@ -1054,7 +1065,7 @@
             async function loadReports(page = 1) {
               const tbody = document.getElementById('reportsTableBody');
               if (!tbody) return;
-              tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--t2);padding:24px">Loading...</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--t2);padding:32px"><span class="adm-loader"></span> Loading…</td></tr>';
 
               const params = new URLSearchParams({ limit: 25, page });
               if (currentReportFilter && currentReportFilter !== 'all') params.set('status', currentReportFilter);

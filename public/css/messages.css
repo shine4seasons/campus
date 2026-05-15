@@ -166,6 +166,88 @@ body { background: #F7F8FC; margin: 0; padding: 0; }
 .chat-send-btn:hover { background: #1348D6; transform: translateY(-2px); }
 .chat-send-btn:disabled { background: #C4C8DC; cursor: not-allowed; transform: none; }
 
+.chat-attach-btn {
+  background: transparent;
+  color: #5A6075;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-attach-btn:hover { background: #EBF0FF; color: #1B5EFF; }
+.chat-attach-btn:disabled { color: #C4C8DC; cursor: not-allowed; background: transparent; }
+
+/* ── Image preview before send ── */
+.image-preview {
+  padding: 12px 24px;
+  border-top: 1px solid #E4E7F2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+.image-preview img {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #E4E7F2;
+}
+.image-preview-remove {
+  position: absolute;
+  top: 18px;
+  left: 110px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.image-preview-remove:hover { background: rgba(0, 0, 0, 0.85); }
+.image-preview-overlay {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Image inside message bubble ── */
+.message-image {
+  max-width: 280px;
+  max-height: 320px;
+  border-radius: 14px;
+  cursor: zoom-in;
+  display: block;
+  object-fit: cover;
+  background: #EBF0FF;
+}
+.message-row.me .message-image { align-self: flex-end; }
+.message-row.other .message-image { align-self: flex-start; }
+.message-row .message-bubble + .message-image,
+.message-row .message-image + .message-bubble {
+  margin-top: 4px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 @media (max-width: 768px) {
   .chat-container { flex-direction: column; height: calc(100vh - 80px); margin: 0; border-radius: 0; box-shadow: none; border: none; border-top: 1px solid #E4E7F2; }
   .chat-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #E4E7F2; height: 35vh; }

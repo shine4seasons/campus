@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/notifications-page.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+
+  <main class="notif-page">
+    <header class="notif-header">
+      <div>
+        <h1 class="notif-title">
+          🔔 Notifications
+          <span class="notif-count-badge" id="notif-count-badge"></span>
+        </h1>
+        <p class="notif-sub">Stay updated with orders, messages, and reviews</p>
+      </div>
+      <button class="notif-mark-all" id="mark-all-btn" onclick="markAllRead()" disabled>
+        ✓ Mark all as read
+      </button>
+    </header>
+
+    <div class="notif-tabs" id="notif-tabs">
+      <button class="notif-tab active" data-filter="all">All</button>
+      <button class="notif-tab" data-filter="unread">
+        Unread <span class="notif-tab-badge" id="tab-unread-count">0</span>
+      </button>
+      <button class="notif-tab" data-filter="order">Orders</button>
+      <button class="notif-tab" data-filter="message">Messages</button>
+      <button class="notif-tab" data-filter="rating">Reviews</button>
+      <button class="notif-tab" data-filter="system">System</button>
+    </div>
+
+    <div class="notif-list-wrap">
+      <div class="notif-list" id="notif-page-list">
+        <div style="padding:40px;text-align:center;color:#8890B0;">Loading…</div>
+      </div>
+      <div class="notif-load-more-wrap" id="load-more-wrap" style="display:none;">
+        <button class="notif-load-more-btn" id="load-more-btn" onclick="loadMore()">Load more ▾</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="notif-toast" class="notif-toast"></div>
+
+  <script>
+    let currentFilter = 'all';
+    let currentPage = 1;
+    let totalPages = 1;
+
+    const TYPE_COLORS = {
+      order:   { color: '#1B5EFF', bg: '#EBF0FF', emoji: '📦' },
+      message: { color: '#10B981', bg: '#D1FAE5', emoji: '💬' },
+      rating:  { color: '#F59E0B', bg: '#FEF3C7', emoji: '⭐' },
+      system:  { color: '#7C3AED', bg: '#F3E8FF', emoji: '📢' },
+      info:    { color: '#6B7280', bg: '#F3F4F6', emoji: 'ℹ️' },
+    };
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Just now';
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      const d = Math.floor(h / 24);
+      if (d < 7)  return d + 'd ago';
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderItem(n) {
+      const meta = TYPE_COLORS[n.type] || TYPE_COLORS.info;
+      const isRead = !!n.isRead;
+      const unreadClass = isRead ? '' : 'unread';
+      const link = n.link && n.link !== '#' ? n.link : '';
+      return ''
+        + '<div class="notif-item ' + unreadClass + '" data-id="' + escapeHtml(n._id) + '">'
+        +   (isRead ? '' : '<span class="notif-unread-dot"></span>')
+        +   '<div class="notif-icon" style="background:' + meta.bg + ';color:' + meta.color + ';font-size:18px;">'
+        +     meta.emoji
+        +   '</div>'
+        +   '<div class="notif-body">'
+        +     '<div class="notif-row">'
+        +       '<div class="notif-title-text">' + escapeHtml(n.title) + '</div>'
+        +       '<div class="notif-time">' + timeAgo(n.createdAt) + '</div>'
+        +     '</div>'
+        +     '<div class="notif-message">' + escapeHtml(n.message) + '</div>'
+        +     (link ? '<a href="' + escapeHtml(link) + '" class="notif-link">View details ›</a>' : '')
+        +   '</div>'
+        +   '<button class="notif-delete-btn" data-id="' + escapeHtml(n._id) + '" title="Delete">✕</button>'
+        + '</div>';
+    }
+
+    function renderEmpty(filter) {
+      const titles = {
+        all: 'No notifications yet', unread: 'Nothing unread',
+        order: 'No order notifications', message: 'No message notifications',
+        rating: 'No review notifications', system: 'No system notifications',
+      };
+      return '<div class="notif-empty"><div class="notif-empty-title">'
+           + (titles[filter] || titles.all)
+           + '</div><div class="notif-empty-sub">Updates will appear here.</div></div>';
+    }
+
+    async function fetchNotifications(append) {
+      const list = document.getElementById('notif-page-list');
+      try {
+        const url = '/api/notifications?page=' + currentPage + '&limit=15&filter=' + currentFilter;
+        const res = await fetch(url, { credentials: 'include' });
+        const json = await res.json();
+        console.log('[notifications]', json);
+
+        if (!json.success) throw new Error(json.message || 'Server error');
+        const items = json.notifications || [];
+        const unread = json.unreadCount || 0;
+        const pagination = json.pagination || {};
+
+        // Update counts
+        document.getElementById('tab-unread-count').textContent = unread;
+        const badge = document.getElementById('notif-count-badge');
+        if (unread > 0) {
+          badge.textContent = unread + ' unread';
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+        document.getElementById('mark-all-btn').disabled = unread === 0;
+
+        // Render list
+        if (!append) {
+          if (items.length === 0) {
+            list.innerHTML = renderEmpty(currentFilter);
+          } else {
+            list.innerHTML = items.map(renderItem).join('');
+          }
+        } else {
+          list.insertAdjacentHTML('beforeend', items.map(renderItem).join(''));
+        }
+
+        document.getElementById('load-more-wrap').style.display = pagination.hasMore ? 'flex' : 'none';
+        totalPages = pagination.totalPages || 1;
+      } catch (err) {
+        console.error('[notifications] error:', err);
+        if (!append) {
+          list.innerHTML = '<div class="notif-empty"><div class="notif-empty-title">Failed to load</div><div class="notif-empty-sub">' + escapeHtml(err.message) + '</div></div>';
+        }
+      }
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('notif-toast');
+      t.textContent = msg;
+      t.dataset.type = type || 'info';
+      t.classList.add('show');
+      clearTimeout(t._t);
+      t._t = setTimeout(function() { t.classList.remove('show'); }, 2500);
+    }
+
+    window.loadMore = function() {
+      currentPage++;
+      fetchNotifications(true);
+    };
+
+    window.markAllRead = async function() {
+      try {
+        const res = await fetch('/api/notifications/read-all', { method: 'POST', credentials: 'include' });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        currentPage = 1;
+        await fetchNotifications();
+        showToast('All marked as read', 'success');
+      } catch (err) {
+        showToast(err.message || 'Failed', 'error');
+      }
+    };
+
+    // Tab switching
+    document.getElementById('notif-tabs').addEventListener('click', function(e) {
+      const tab = e.target.closest('.notif-tab');
+      if (!tab) return;
+      document.querySelectorAll('.notif-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      currentPage = 1;
+      document.getElementById('notif-page-list').innerHTML = '<div style="padding:40px;text-align:center;color:#8890B0;">Loading…</div>';
+      fetchNotifications();
+    });
+
+    // Click delegation
+    document.getElementById('notif-page-list').addEventListener('click', async function(e) {
+      const delBtn = e.target.closest('.notif-delete-btn');
+      if (delBtn) {
+        e.stopPropagation();
+        const id = delBtn.dataset.id;
+        const item = delBtn.closest('.notif-item');
+        if (!confirm('Delete this notification?')) return;
+        try {
+          const res = await fetch('/api/notifications/' + id, { method: 'DELETE', credentials: 'include' });
+          const json = await res.json();
+          if (!json.success) throw new Error(json.message);
+          item.remove();
+          showToast('Deleted', 'success');
+          if (!document.querySelector('#notif-page-list .notif-item')) fetchNotifications();
+        } catch (err) { showToast(err.message || 'Failed', 'error'); }
+        return;
+      }
+      const item = e.target.closest('.notif-item');
+      if (item && item.classList.contains('unread')) {
+        item.classList.remove('unread');
+        const dot = item.querySelector('.notif-unread-dot');
+        if (dot) dot.remove();
+        try { await fetch('/api/notifications/' + item.dataset.id + '/read', { method: 'PATCH', credentials: 'include' }); } catch {}
+        const badge = document.getElementById('tab-unread-count');
+        const n = Math.max(0, parseInt(badge.textContent, 10) - 1);
+        badge.textContent = n;
+        const head = document.getElementById('notif-count-badge');
+        if (n === 0) { head.style.display = 'none'; document.getElementById('mark-all-btn').disabled = true; }
+        else head.textContent = n + ' unread';
+      }
+    });
+
+    fetchNotifications();
+  </script>
+</body>
+</html>

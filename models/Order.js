@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { ORDER_STATUS, DELIVERY_MODES, PAYMENT_MODES } = require('../config/appConstants');
+const { ORDER_STATUS, DELIVERY_MODES, PAYMENT_MODES, DISPUTE_STATUS, DISPUTE_CATEGORIES } = require('../config/appConstants');
 
 
 const ShippingAddressSchema = new mongoose.Schema({
@@ -10,6 +10,30 @@ const ShippingAddressSchema = new mongoose.Schema({
   city:     { type: String, default: '' },
   lat:      { type: Number, default: null },
   lng:      { type: Number, default: null },
+}, { _id: false });
+
+// Timeline entry — records every status change with actor + timestamp
+const TimelineEntrySchema = new mongoose.Schema({
+  event:  { type: String, required: true },                                          // 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'dispute-opened' | 'dispute-resolved'
+  actor:  { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },      // who triggered the change
+  at:     { type: Date, default: Date.now },
+  note:   { type: String, default: '' },
+}, { _id: false });
+
+// Dispute sub-document — buyer or seller can open one on confirmed/completed orders
+const DisputeSchema = new mongoose.Schema({
+  status:         { type: String, enum: Object.values(DISPUTE_STATUS), default: DISPUTE_STATUS.OPEN },
+  openedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  openedRole:     { type: String, enum: ['buyer', 'seller'], required: true },
+  category:       { type: String, enum: DISPUTE_CATEGORIES, default: 'other' },
+  reason:         { type: String, required: true, maxlength: 200 },
+  description:    { type: String, default: '', maxlength: 2000 },
+  evidenceImages: { type: [String], default: [] },
+  openedAt:       { type: Date, default: Date.now },
+  resolvedBy:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  resolution:     { type: String, default: '' },         // 'buyer-favor' | 'seller-favor' | 'mutual' | 'rejected'
+  resolutionNote: { type: String, default: '', maxlength: 1000 },
+  resolvedAt:     { type: Date, default: null },
 }, { _id: false });
 
 const OrderSchema = new mongoose.Schema(
@@ -65,9 +89,17 @@ const OrderSchema = new mongoose.Schema(
     confirmedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
+
+    // Timeline of status transitions — each entry records who changed status and when
+    timeline: { type: [TimelineEntrySchema], default: [] },
+
+    // Dispute (null until one is opened)
+    dispute: { type: DisputeSchema, default: null },
   },
   { timestamps: true }
 );
+
+OrderSchema.index({ 'dispute.status': 1, 'dispute.openedAt': -1 });
 
 // Dùng để xem lịch sử mua của buyer, bán của seller
 OrderSchema.index({ buyer:  1, createdAt: -1 });

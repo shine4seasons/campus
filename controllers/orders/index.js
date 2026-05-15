@@ -9,6 +9,8 @@ const { ORDER_STATUS, PRODUCT_STATUS, DELIVERY_MODES, PAYMENT_MODES, TRANSITIONS
 
 // Create Order
 exports.createOrder = async (req, res) => {
+  let claimedProduct = null;
+  let order = null;
   try {
     const buyerId = req.user._id;
     const {
@@ -32,34 +34,51 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    if (product.status !== PRODUCT_STATUS.ACTIVE) return res.status(400).json({ success: false, message: 'This product is already sold or hidden' });
-    if (String(product.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'You cannot purchase your own product' });
+    // Atomic claim: only succeeds if product is currently ACTIVE and not owned by buyer.
+    // This prevents double-sell when two buyers click "Buy" simultaneously.
+    claimedProduct = await Product.findOneAndUpdate(
+      { _id: productId, status: PRODUCT_STATUS.ACTIVE, seller: { $ne: buyerId } },
+      { $set: { status: PRODUCT_STATUS.SOLD, buyer: buyerId, soldAt: new Date() } },
+      { new: true }
+    );
 
-    const sellerId = product.seller;
+    if (!claimedProduct) {
+      // Diagnose why the claim failed
+      const existing = await Product.findById(productId).select('seller status').lean();
+      if (!existing) return res.status(404).json({ success: false, message: 'Product not found' });
+      if (String(existing.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'You cannot purchase your own product' });
+      return res.status(409).json({ success: false, message: 'This product is already sold or unavailable' });
+    }
 
-    const order = await Order.create({
+    const sellerId = claimedProduct.seller;
+
+    // Order.create after claim. If this fails we rollback the product claim below.
+    order = await Order.create({
       product: productId,
       buyer: buyerId,
       seller: sellerId,
-      priceSnapshot: product.price,
+      priceSnapshot: claimedProduct.price,
       deliveryMode,
       paymentMode,
       note: note.trim().substring(0, 500),
       shippingAddress: deliveryMode === 'ship' ? shippingAddress : null,
       pickupLocation: deliveryMode === 'pickup' ? pickupLocation : null,
       status: ORDER_STATUS.PENDING,
+      timeline: [{
+        event: ORDER_STATUS.PENDING,
+        actor: buyerId,
+        at: new Date(),
+        note: 'Order placed'
+      }],
     });
 
-    product.status = PRODUCT_STATUS.SOLD;
-    product.buyer = buyerId;
-    product.soldAt = new Date();
-    await product.save();
+    // Counters are best-effort metrics — log on failure but don't fail the order
+    Promise.all([
+      User.findByIdAndUpdate(sellerId, { $inc: { totalSales: 1 } }),
+      User.findByIdAndUpdate(buyerId, { $inc: { totalOrders: 1 } })
+    ]).catch(err => console.error('[orders] counter update error:', err));
 
-    User.findByIdAndUpdate(sellerId, { $inc: { totalSales: 1 } }).catch(console.error);
-    User.findByIdAndUpdate(buyerId, { $inc: { totalOrders: 1 } }).catch(console.error);
-
+    const product = claimedProduct;
     let conv = null;
     try {
       conv = await findOrCreateConversation(buyerId, sellerId, productId);
@@ -125,6 +144,16 @@ exports.createOrder = async (req, res) => {
     });
   } catch (err) {
     console.error('[checkout] createOrder:', err);
+    // Rollback: if we claimed the product but failed to create the order, release it.
+    if (claimedProduct && !order) {
+      try {
+        await Product.findByIdAndUpdate(claimedProduct._id, {
+          $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
+        });
+      } catch (rollbackErr) {
+        console.error('[checkout] rollback failed:', rollbackErr);
+      }
+    }
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -197,6 +226,7 @@ exports.getOrderById = async (req, res) => {
       .populate('product', 'title images price category condition location')
       .populate('buyer', 'name nickname avatar phone')
       .populate('seller', 'name nickname avatar phone')
+      .populate('timeline.actor', 'name nickname avatar')
       .lean();
 
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
@@ -229,12 +259,9 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     const role = isSeller ? ORDER_ROLES.SELLER : ORDER_ROLES.BUYER;
-
-    // Allow broader transitions for sellers/admins (both directions).
     const isAdminOrSeller = isSeller || req.user.role === 'admin';
 
     if (!isAdminOrSeller) {
-      // For buyers, keep strict transitions from constants
       const allowed = TRANSITIONS[role]?.[order.status] || [];
       if (!allowed.includes(status)) {
         return res.status(400).json({ success: false, message: `Cannot transition from "${order.status}" to "${status}"` });
@@ -242,30 +269,69 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     const prevStatus = order.status;
-    order.status = status;
-
-    // Manage timestamps according to new status
-    if (status === ORDER_STATUS.CONFIRMED) order.confirmedAt = new Date(); else order.confirmedAt = null;
-    if (status === ORDER_STATUS.COMPLETED) order.completedAt = new Date(); else order.completedAt = null;
-    if (status === ORDER_STATUS.CANCELLED) order.cancelledAt = new Date(); else order.cancelledAt = null;
-
-    // Handle product and user counters when cancelling or restoring
-    try {
-      if (status === ORDER_STATUS.CANCELLED && prevStatus !== ORDER_STATUS.CANCELLED) {
-        await Product.findByIdAndUpdate(order.product, { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null });
-        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: -1 } }).catch(() => { });
-        User.findByIdAndUpdate(order.buyer, { $inc: { totalOrders: -1 } }).catch(() => { });
-      } else if (prevStatus === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.CANCELLED) {
-        // restore counts when moving out of cancelled
-        await Product.findByIdAndUpdate(order.product, { status: PRODUCT_STATUS.SOLD, buyer: order.buyer, soldAt: new Date() });
-        User.findByIdAndUpdate(order.seller, { $inc: { totalSales: 1 } }).catch(() => { });
-        User.findByIdAndUpdate(order.buyer, { $inc: { totalOrders: 1 } }).catch(() => { });
-      }
-    } catch (e) {
-      console.error('[orders] product/user update error:', e.message);
+    if (prevStatus === status) {
+      return res.json({ success: true, data: order });
     }
 
-    await order.save();
+    // Atomic status transition: only succeeds if status hasn't changed since we read it.
+    // Prevents two concurrent updates from both decrementing/incrementing counters.
+    const now = new Date();
+    const updates = { status };
+    updates.confirmedAt = status === ORDER_STATUS.CONFIRMED ? now : null;
+    updates.completedAt = status === ORDER_STATUS.COMPLETED ? now : null;
+    updates.cancelledAt = status === ORDER_STATUS.CANCELLED ? now : null;
+
+    const noteByStatus = {
+      [ORDER_STATUS.CONFIRMED]: isSeller ? 'Seller confirmed the order' : (req.user.role === 'admin' ? 'Admin confirmed the order' : 'Buyer confirmed the order'),
+      [ORDER_STATUS.COMPLETED]: isSeller ? 'Seller marked as completed' : (req.user.role === 'admin' ? 'Admin marked as completed' : 'Buyer marked as completed'),
+      [ORDER_STATUS.CANCELLED]: isSeller ? 'Cancelled by seller' : (req.user.role === 'admin' ? 'Cancelled by admin' : 'Cancelled by buyer'),
+      [ORDER_STATUS.PENDING]:   'Order reopened to pending',
+    };
+
+    const updatedOrder = await Order.findOneAndUpdate(
+      { _id: order._id, status: prevStatus },
+      {
+        $set: updates,
+        $push: {
+          timeline: {
+            event: status,
+            actor: req.user._id,
+            at: now,
+            note: noteByStatus[status] || `Status changed to ${status}`
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(409).json({ success: false, message: 'Order status was changed by another request. Please refresh and try again.' });
+    }
+
+    // Now safe to apply downstream side effects — we own this transition.
+    try {
+      if (status === ORDER_STATUS.CANCELLED && prevStatus !== ORDER_STATUS.CANCELLED) {
+        await Product.findByIdAndUpdate(updatedOrder.product, {
+          $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
+        });
+        Promise.all([
+          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: -1 } }),
+          User.findByIdAndUpdate(updatedOrder.buyer, { $inc: { totalOrders: -1 } })
+        ]).catch(err => console.error('[orders] counter update error:', err));
+      } else if (prevStatus === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.CANCELLED) {
+        await Product.findByIdAndUpdate(updatedOrder.product, {
+          $set: { status: PRODUCT_STATUS.SOLD, buyer: updatedOrder.buyer, soldAt: new Date() }
+        });
+        Promise.all([
+          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: 1 } }),
+          User.findByIdAndUpdate(updatedOrder.buyer, { $inc: { totalOrders: 1 } })
+        ]).catch(err => console.error('[orders] counter update error:', err));
+      }
+    } catch (e) {
+      console.error('[orders] product update error:', e.message);
+    }
+
+    Object.assign(order, updatedOrder.toObject());
 
     // Notify the other party about status change in real-time
     try {
@@ -358,3 +424,9 @@ exports.getAnalytics = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// Re-export dispute handlers
+const dispute = require('./dispute');
+exports.openDispute     = dispute.openDispute;
+exports.resolveDispute  = dispute.resolveDispute;
+exports.getAllDisputes  = dispute.getAllDisputes;

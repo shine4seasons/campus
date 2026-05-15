@@ -20,43 +20,66 @@
       <section class="hero">
         <div class="hero-grid"></div>
         <div class="hero-content">
+          <div class="hero-eyebrow">
+            <span class="hero-eyebrow-dot"></span>
+            For students, by students
+          </div>
           <h1>Buy &amp; sell <em>smarter</em><br>on campus</h1>
-          <p class="hero-sub">Thousands of second-hand items — from textbooks and electronics to everyday essentials.
-          </p>
-          <div class="search-wrap">
+          <p class="hero-sub">Thousands of second-hand items — from textbooks and electronics to everyday essentials.</p>
+
+          <div class="search-wrap" id="search-wrap">
             <select class="search-select" id="search-cat">
               <option value="">All categories</option>
-              <option value="books">Books</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="furniture">Furniture</option>
-              <option value="daily-needs">Daily needs</option>
-              <option value="sports">Sports</option>
             </select>
-            <input class="search-input" type="text" id="search-input" placeholder="Search for items...">
+            <input class="search-input" type="text" id="search-input" placeholder="Search for items..." autocomplete="off">
             <button class="search-btn" onclick="handleSearch()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               Search
             </button>
+            <!-- Autocomplete dropdown -->
+            <div class="search-dropdown" id="search-dropdown"></div>
           </div>
+
+          <!-- Quick CTAs -->
+          <div class="hero-actions">
+            <a href="#featured" class="hero-btn hero-btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              Browse items
+            </a>
+            <% if (user) { %>
+              <a href="/sell" class="hero-btn hero-btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Sell something
+              </a>
+            <% } else { %>
+              <a href="/login" class="hero-btn hero-btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                Sign in to sell
+              </a>
+            <% } %>
+          </div>
+
           <div class="hero-stats">
             <div class="stat">
-              <div class="stat-num">1,240+</div>
+              <div class="stat-num">1,240<span>+</span></div>
               <div class="stat-label">Products</div>
             </div>
+            <div class="stat-divider"></div>
             <div class="stat">
-              <div class="stat-num">850+</div>
+              <div class="stat-num">850<span>+</span></div>
               <div class="stat-label">Students</div>
             </div>
+            <div class="stat-divider"></div>
             <div class="stat">
-              <div class="stat-num">3,500+</div>
+              <div class="stat-num">3,500<span>+</span></div>
               <div class="stat-label">Deals</div>
             </div>
+            <div class="stat-divider"></div>
             <div class="stat">
-              <div class="stat-num">4.9<i data-lucide="star" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;fill:currentColor;"></i></div>
+              <div class="stat-num">4.9<svg width="14" height="14" viewBox="0 0 24 24" fill="#FCD34D" stroke="#FCD34D" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-left:3px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
               <div class="stat-label">Rating</div>
             </div>
           </div>
@@ -81,22 +104,37 @@
           <div class="section-header fade-up">
             <div class="section-label">Featured today</div>
             <h2>Latest products</h2>
-            <p>Posted in the last 24 hours</p>
+            <p>Browse the freshest listings from your campus community</p>
           </div>
-          <div class="filter-bar fade-up" id="filter-bar">
-            <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">
-              <i data-lucide="layout-grid" width="14" height="14"></i> All
-            </button>
-            <% CATEGORIES.forEach(cat=> { %>
-              <button class="filter-btn" data-filter="<%= cat.slug %>" onclick="setFilter(this,'<%= cat.slug %>')">
-                <i data-lucide="<%= cat.lucideIcon %>" width="14" height="14"></i>
-                <%= cat.name.replace(/&amp;/g, '&' ) %>
+
+          <!-- Toolbar: filters + sort -->
+          <div class="featured-toolbar fade-up">
+            <div class="filter-bar" id="filter-bar">
+              <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">
+                <i data-lucide="layout-grid" width="14" height="14"></i> All
               </button>
+              <% CATEGORIES.forEach(cat=> { %>
+                <button class="filter-btn" data-filter="<%= cat.slug %>" onclick="setFilter(this,'<%= cat.slug %>')">
+                  <i data-lucide="<%= cat.lucideIcon %>" width="14" height="14"></i>
+                  <%= cat.name.replace(/&amp;/g, '&' ) %>
+                </button>
               <% }) %>
+            </div>
+            <div class="sort-wrap">
+              <label class="sort-label">Sort by</label>
+              <select class="sort-select" id="sort-select" onchange="applySort()">
+                <option value="newest">Newest first</option>
+                <option value="price-asc">Price: low → high</option>
+                <option value="price-desc">Price: high → low</option>
+                <option value="rating">Top rated</option>
+              </select>
+            </div>
           </div>
-          <div class="products-grid" id="products-grid"></div>
+
+          <div class="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5" id="products-grid"></div>
+
           <div class="load-more-wrap fade-up">
-            <button class="btn btn-secondary" style="padding:12px 32px;font-size:15px;" onclick="loadMore()">
+            <button class="btn-load-more" onclick="loadMore()">
               Load more products
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9" />
@@ -112,24 +150,29 @@
           <div class="section-header fade-up">
             <div class="section-label">How it works</div>
             <h2>Simple — Fast — Reliable</h2>
+            <p>Four easy steps from sign in to safe handover</p>
           </div>
           <div class="steps-grid">
             <div class="step-card fade-up">
+              <div class="step-num">01</div>
               <div class="step-icon"><i data-lucide="log-in"></i></div>
-              <div class="step-title">Sign in with your email</div>
-              <div class="step-desc">Use your Google account to verify your student identity.</div>
+              <div class="step-title">Sign in with email</div>
+              <div class="step-desc">Verify your student identity using your Google account.</div>
             </div>
             <div class="step-card fade-up" style="transition-delay:0.08s">
+              <div class="step-num">02</div>
               <div class="step-icon"><i data-lucide="package-plus"></i></div>
               <div class="step-title">List your item</div>
-              <div class="step-desc">Upload photos and AI automatically generates an attractive description.</div>
+              <div class="step-desc">Upload photos — AI writes the description for you.</div>
             </div>
             <div class="step-card fade-up" style="transition-delay:0.16s">
+              <div class="step-num">03</div>
               <div class="step-icon"><i data-lucide="message-circle"></i></div>
               <div class="step-title">Chat directly</div>
-              <div class="step-desc">Real-time chat with the seller, negotiate the price and arrange a meetup.</div>
+              <div class="step-desc">Real-time chat with the seller, negotiate and arrange a meetup.</div>
             </div>
             <div class="step-card fade-up" style="transition-delay:0.24s">
+              <div class="step-num">04</div>
               <div class="step-icon"><i data-lucide="handshake"></i></div>
               <div class="step-title">Safe exchange</div>
               <div class="step-desc">Meet in person on campus or arrange delivery.</div>
@@ -138,48 +181,80 @@
         </div>
       </section>
 
-      <!-- TRUST BANNER -->
-      <!-- <section class="trust-banner">
-    <div class="container">
-      <div class="trust-inner fade-up">
-        <div class="trust-text">
-          <h2>Get started today <i data-lucide="graduation-cap" style="display:inline-block;vertical-align:middle;width:28px;height:28px;"></i></h2>
-          <p>Join a community of over 850 students buying and selling</p>
+      <!-- CTA BANNER -->
+      <section class="cta-banner">
+        <div class="container">
+          <div class="cta-inner fade-up">
+            <div class="cta-text">
+              <div class="cta-eyebrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Ready to declutter?
+              </div>
+              <h2>Got something to sell?</h2>
+              <p>List your unused books, gadgets or clothes in under 2 minutes. AI helps you write a great description.</p>
+            </div>
+            <div class="cta-actions">
+              <% if (user) { %>
+                <a href="/sell" class="cta-btn cta-btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Post a listing
+                </a>
+                <a href="#featured" class="cta-btn cta-btn-ghost">Browse instead</a>
+              <% } else { %>
+                <a href="/login" class="cta-btn cta-btn-primary">Sign in to start</a>
+                <a href="#featured" class="cta-btn cta-btn-ghost">Browse first</a>
+              <% } %>
+            </div>
+          </div>
         </div>
-        <div class="trust-actions">
-          <% if (user) { %>
-            <a href="/sell" class="btn-white">+ List an item</a>
-            <a href="#featured" class="btn-outline-white">Browse products</a>
-          <% } else { %>
-            <a href="/login" class="btn-white">Sign in now</a>
-            <a href="#featured" class="btn-outline-white">Browse products</a>
-          <% } %>
-        </div>
-      </div>
-    </div>
-  </section> -->
+      </section>
 
       <!-- FOOTER -->
       <footer>
         <div class="container">
           <div class="footer-grid">
-            <div>
+            <div class="footer-brand-col">
               <div class="footer-brand">
-                <i data-lucide="store"
-                  style="display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:6px;"></i>
+                <i data-lucide="store" style="display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:6px;"></i>
                 Campus Marketplace
               </div>
               <div class="footer-desc">A second-hand marketplace built exclusively for students.</div>
+              <div class="footer-social">
+                <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+                <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+                <a href="mailto:hello@campus.market" aria-label="Email"><i data-lucide="mail"></i></a>
+              </div>
             </div>
             <div class="footer-col">
-              <h4>Explore</h4><a href="#">Books</a><a href="#">Electronics</a><a href="#">Clothing</a>
+              <h4>Explore</h4>
+              <a href="/?cat=books">Books &amp; Textbooks</a>
+              <a href="/?cat=electronics">Electronics</a>
+              <a href="/?cat=clothing">Clothing</a>
+              <a href="/?cat=furniture">Furniture &amp; Dorm</a>
             </div>
             <div class="footer-col">
-              <h4>Support</h4><a href="#">Help center</a><a href="#">Terms</a><a href="#">Privacy</a>
+              <h4>Account</h4>
+              <% if (user) { %>
+                <a href="/profile">My profile</a>
+                <a href="/my-products">My listings</a>
+                <a href="/orders-buyer">My orders</a>
+                <a href="/messages">Messages</a>
+              <% } else { %>
+                <a href="/login">Sign in</a>
+                <a href="/login">Create account</a>
+              <% } %>
             </div>
             <div class="footer-col">
-              <h4>Connect</h4><a href="#">Facebook</a><a href="#">Instagram</a>
+              <h4>Support</h4>
+              <a href="/?help=1">Help center</a>
+              <a href="/?terms=1">Terms of service</a>
+              <a href="/?privacy=1">Privacy policy</a>
+              <a href="mailto:hello@campus.market">Contact us</a>
             </div>
+          </div>
+          <div class="footer-bottom">
+            <span>© 2026 Campus Marketplace. Built for students.</span>
+            <span>Made with <i data-lucide="heart" style="width:12px;height:12px;color:#FCA5A5;display:inline-block;vertical-align:middle;fill:currentColor;"></i> on campus</span>
           </div>
         </div>
       </footer>
@@ -196,13 +271,27 @@
         // Populate search category select
         document.getElementById('search-cat').innerHTML = '<option value="">All categories</option>' + CATEGORIES.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
 
+        // Color theme per category (subtle pastel accents)
+        const CAT_COLORS = {
+          'books':        { bg:'#FEF3C7', icon:'#92400E' },  // amber
+          'electronics':  { bg:'#DBEAFE', icon:'#1E40AF' },  // blue
+          'clothing':     { bg:'#FCE7F3', icon:'#9D174D' },  // pink
+          'furniture':    { bg:'#D1FAE5', icon:'#065F46' },  // emerald
+          'daily-needs':  { bg:'#FED7AA', icon:'#9A3412' },  // orange
+          'sports':       { bg:'#E0E7FF', icon:'#3730A3' },  // indigo
+          'gaming':       { bg:'#F3E8FF', icon:'#6B21A8' },  // purple
+          'other':        { bg:'#E5E7EB', icon:'#374151' },  // gray
+        };
+
         // Render categories
-        document.getElementById('cat-grid').innerHTML = CATEGORIES.map(c =>
-          '<div class="cat-card" onclick="filterByCategory(\'' + c.slug + '\')">' +
-          '<div class="cat-icon">' + c.icon.replace(/width="28" height="28"/, 'width="4vw" height="4vw"') + '</div>' +
-          '<div class="cat-name">' + c.name + '</div>' +
-          '<div class="cat-count" style="opacity:0.6;">Loading...</div></div>'
-        ).join('');
+        document.getElementById('cat-grid').innerHTML = CATEGORIES.map(c => {
+          const col = CAT_COLORS[c.slug] || CAT_COLORS.other;
+          return '<div class="cat-card" data-cat="' + c.slug + '" onclick="filterByCategory(\'' + c.slug + '\')">' +
+            '<div class="cat-icon-wrap" style="background:' + col.bg + ';color:' + col.icon + ';">' + c.icon.replace(/stroke="currentColor"/, 'stroke="' + col.icon + '"').replace(/width="28" height="28"/, 'width="22" height="22"') + '</div>' +
+            '<div class="cat-name">' + c.name + '</div>' +
+            '<div class="cat-count">Loading…</div>' +
+          '</div>';
+        }).join('');
 
         // Authentication state
         const IS_AUTH = <%= !!user %>;
@@ -241,11 +330,11 @@
         }
 
         function updateCategoryCounts() {
-          document.querySelectorAll('.cat-card').forEach((card, idx) => {
-            const slug = CATEGORIES[idx] && CATEGORIES[idx].slug;
+          document.querySelectorAll('.cat-card').forEach(card => {
+            const slug = card.dataset.cat;
             const count = window.ALL_PRODUCTS.filter(p => p.category === slug).length;
             const el = card.querySelector('.cat-count');
-            if (el) el.textContent = count > 0 ? count + '+ products' : 'None yet';
+            if (el) el.textContent = count > 0 ? count + (count === 1 ? ' item' : ' items') : 'None yet';
           });
         }
 
@@ -257,9 +346,135 @@
         }, { threshold: 0.12 });
         document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-        // Search
-        document.getElementById('search-input').addEventListener('keydown', e => {
-          if (e.key === 'Enter') handleSearch();
+        // ── Search + Autocomplete ─────────────────────────────────────────
+        const searchInput = document.getElementById('search-input');
+        const searchDropdown = document.getElementById('search-dropdown');
+        const searchWrap = document.getElementById('search-wrap');
+        let suggestActiveIdx = -1;
+        let suggestList = [];
+
+        function renderSuggestions(items) {
+          suggestList = items;
+          suggestActiveIdx = -1;
+          if (!items.length) {
+            searchDropdown.innerHTML = '<div class="search-empty">No matching items — press Enter to search anyway</div>';
+            searchDropdown.classList.add('show');
+            return;
+          }
+          const cat = document.getElementById('search-cat').value;
+          searchDropdown.innerHTML = items.map((p, i) => {
+            const thumb = p.image
+              ? `<img src="${p.image}" alt="">`
+              : `<div class="sg-thumb-placeholder">${p.icon.replace(/width="28" height="28"/, 'width="18" height="18"')}</div>`;
+            return `
+              <div class="search-suggest" data-idx="${i}" data-id="${p.id}">
+                <div class="sg-thumb">${thumb}</div>
+                <div class="sg-info">
+                  <div class="sg-title">${escapeHtml(p.title)}</div>
+                  <div class="sg-meta">${CATEGORY_LABELS[p.category] || p.category} · ${formatPrice(p.price)}</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8890B0" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            `;
+          }).join('') + `
+            <div class="search-footer" data-action="search-all">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              See all results for "<strong>${escapeHtml(searchInput.value)}</strong>"
+            </div>
+          `;
+          searchDropdown.classList.add('show');
+        }
+
+        function escapeHtml(s) {
+          return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function updateSuggestions() {
+          const q = searchInput.value.trim().toLowerCase();
+          const cat = document.getElementById('search-cat').value;
+          if (!q) { hideSuggestions(); return; }
+          let pool = window.ALL_PRODUCTS || [];
+          if (cat) pool = pool.filter(p => p.category === cat);
+          // Score: title startsWith > title includes > desc includes
+          const scored = [];
+          pool.forEach(p => {
+            const title = (p.title || '').toLowerCase();
+            const desc  = (p.desc  || '').toLowerCase();
+            if (title.startsWith(q))      scored.push([p, 3]);
+            else if (title.includes(q))   scored.push([p, 2]);
+            else if (desc.includes(q))    scored.push([p, 1]);
+          });
+          scored.sort((a, b) => b[1] - a[1]);
+          renderSuggestions(scored.slice(0, 6).map(s => s[0]));
+        }
+
+        function hideSuggestions() {
+          searchDropdown.classList.remove('show');
+          suggestList = [];
+          suggestActiveIdx = -1;
+        }
+
+        function highlightSuggestion(idx) {
+          const items = searchDropdown.querySelectorAll('.search-suggest');
+          items.forEach((el, i) => el.classList.toggle('active', i === idx));
+          if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+        }
+
+        // Debounced input handler
+        let suggestTimer;
+        searchInput.addEventListener('input', () => {
+          clearTimeout(suggestTimer);
+          suggestTimer = setTimeout(updateSuggestions, 120);
+        });
+        searchInput.addEventListener('focus', () => {
+          if (searchInput.value.trim()) updateSuggestions();
+        });
+
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', e => {
+          const open = searchDropdown.classList.contains('show');
+          if (e.key === 'Enter') {
+            if (open && suggestActiveIdx >= 0 && suggestList[suggestActiveIdx]) {
+              e.preventDefault();
+              window.openProduct(suggestList[suggestActiveIdx].id);
+              return;
+            }
+            handleSearch(); hideSuggestions();
+          } else if (e.key === 'ArrowDown' && open) {
+            e.preventDefault();
+            suggestActiveIdx = Math.min(suggestActiveIdx + 1, suggestList.length - 1);
+            highlightSuggestion(suggestActiveIdx);
+          } else if (e.key === 'ArrowUp' && open) {
+            e.preventDefault();
+            suggestActiveIdx = Math.max(suggestActiveIdx - 1, -1);
+            highlightSuggestion(suggestActiveIdx);
+          } else if (e.key === 'Escape') {
+            hideSuggestions();
+          }
+        });
+
+        // Click on suggestion
+        searchDropdown.addEventListener('click', e => {
+          const sug = e.target.closest('.search-suggest');
+          if (sug) {
+            window.openProduct(sug.dataset.id);
+            hideSuggestions();
+            return;
+          }
+          if (e.target.closest('[data-action="search-all"]')) {
+            handleSearch();
+            hideSuggestions();
+          }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', e => {
+          if (!searchWrap.contains(e.target)) hideSuggestions();
+        });
+
+        // Refresh suggestions when category changes
+        document.getElementById('search-cat').addEventListener('change', () => {
+          if (searchInput.value.trim()) updateSuggestions();
         });
 
         window.handleSearch = function () {
@@ -296,6 +511,17 @@
         window.loadMore = function () {
           window.displayCount += PER_PAGE;
           renderProducts(window.currentFilteredProducts);
+        };
+
+        window.applySort = function () {
+          const sortBy = document.getElementById('sort-select').value;
+          const arr = [...window.currentFilteredProducts];
+          if (sortBy === 'price-asc')  arr.sort((a, b) => a.price - b.price);
+          if (sortBy === 'price-desc') arr.sort((a, b) => b.price - a.price);
+          if (sortBy === 'rating')     arr.sort((a, b) => (b.ratingAverage || 0) - (a.ratingAverage || 0));
+          // 'newest' uses original API order
+          window.currentFilteredProducts = arr;
+          renderProducts(arr);
         };
 
         function formatPrice(p) {

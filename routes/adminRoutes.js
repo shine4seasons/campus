@@ -195,7 +195,6 @@ ADMIN_SECTIONS.forEach(sectionName => {
         stats: {
           totalUsers: { value: 0, delta: 0, type: 'percentage' },
           totalListings: { value: 0, type: 'absolute' },
-          totalListings: { value: 0, type: 'absolute' },
           activeListings: { value: 0, delta: 0, type: 'absolute' },
           ordersThisMonth: { value: 0, delta: 0, type: 'percentage' },
           gmvThisMonth: { value: 0, delta: 0, type: 'percentage' }

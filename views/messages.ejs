@@ -104,6 +104,47 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
+
+    /* Skeleton loader */
+    .chat-skeleton {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px;
+      overflow: hidden;
+    }
+    .skeleton-bubble {
+      height: 38px;
+      border-radius: 18px;
+      background: linear-gradient(90deg, #EEF1F8 0%, #F5F7FB 50%, #EEF1F8 100%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.4s ease-in-out infinite;
+      max-width: 60%;
+    }
+    .skeleton-bubble.short { max-width: 35%; }
+    .skeleton-bubble.me { align-self: flex-end; max-width: 50%; }
+    .skeleton-bubble.other { align-self: flex-start; }
+    @keyframes skeletonShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .chat-toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0D0F1A; color: #fff;
+      padding: 12px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      opacity: 0; pointer-events: none;
+      transition: all .25s ease; z-index: 9999;
+    }
+    .chat-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .chat-toast[data-type="error"] { background: #E5484D; }
+    .chat-toast[data-type="success"] { background: #34C759; }
   </style>
 </head>
 <body>
@@ -137,10 +178,32 @@
         <!-- Rendered by JS -->
       </div>
 
+      <!-- Loading skeleton (shown on initial conversation load) -->
+      <div class="chat-skeleton" id="chat-skeleton" style="display:none;">
+        <div class="skeleton-bubble other"></div>
+        <div class="skeleton-bubble me"></div>
+        <div class="skeleton-bubble other short"></div>
+        <div class="skeleton-bubble me"></div>
+      </div>
+
       <!-- Product context banner (shown when coming from a product page or stored) -->
       <div class="product-banner" id="product-banner" style="display:none;"></div>
 
+      <div class="image-preview" id="image-preview" style="display:none;">
+        <img id="image-preview-img" src="" alt="Preview">
+        <button type="button" class="image-preview-remove" id="image-preview-remove" title="Remove">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="image-preview-overlay" id="image-preview-overlay" style="display:none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="animation:spin 0.7s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+        </div>
+      </div>
+
       <div class="chat-input-area" id="chat-input-area">
+        <input type="file" id="chat-image-input" accept="image/*" style="display:none;">
+        <button type="button" class="chat-attach-btn" id="chat-attach-btn" title="Attach image" onclick="document.getElementById('chat-image-input').click()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+        </button>
         <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
         <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left:-2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -282,6 +345,16 @@
       } catch (err) { console.error('Error fetching inbox:', err); }
     }
 
+    // Escape HTML for safe interpolation
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderInbox(convs) {
       const list = document.getElementById('conv-list');
       // Filter conversations according to current UI mode (buyer/seller)
@@ -292,54 +365,57 @@
         list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages yet.</div>';
         return;
       }
-        // Apply mode filter: sellers see conversations where they are the product seller;
-        // buyers see conversations where they are the buyer (i.e., not the product seller).
-        const filtered = convs.filter(c => {
-          if (uiMode === 'seller') return c.isSellerConversation;
-          return !c.isSellerConversation;
-        });
 
-        if (filtered.length === 0) {
-          list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages for current mode.</div>';
-          return;
-        }
+      // Apply mode filter: sellers see conversations where they are the product seller;
+      // buyers see conversations where they are the buyer (i.e., not the product seller).
+      const filtered = convs.filter(c => {
+        if (uiMode === 'seller') return c.isSellerConversation;
+        return !c.isSellerConversation;
+      });
 
-        list.innerHTML = filtered.map(c => {
-        // Prefer server-provided partner object, fall back to client-side detection.
+      if (filtered.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:#8890B0;font-size:14px;">No messages for current mode.</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(c => {
         const partner = c.partner || (c.participants ? c.participants.find(p => String(p._id) !== MY_USER_ID) : null) || { name: 'Unknown', nickname: '' };
         const name = partner.nickname || partner.name || 'Unknown';
         const initial = (name && name.charAt) ? name.charAt(0).toUpperCase() : '?';
         const activeClass = c._id === currentConvId ? 'active' : '';
-        const unreadHtml = c.unreadCount > 0 ? `<div class="unread-badge">${c.unreadCount}</div>` : '';
+        const unreadHtml = c.unreadCount > 0 ? `<div class="unread-badge">${esc(c.unreadCount)}</div>` : '';
         const prodName = c.product ? c.product.title : 'Deleted Product';
 
+        // Use data attributes — safe with apostrophes/quotes — handled by delegation
         return `
-          <div class="conv-item ${activeClass}" onclick="selectConversation('${c._id}', '${name}', '${encodeURIComponent(JSON.stringify(partner))}')">
-            <div class="conv-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);">${initial}</div>
+          <div class="conv-item ${activeClass}" data-conv-id="${esc(c._id)}" data-conv-name="${esc(name)}">
+            <div class="conv-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);">${esc(initial)}</div>
             <div class="conv-info">
               <div style="display:flex;align-items:center;">
-                <div class="conv-name">${name}</div>
+                <div class="conv-name">${esc(name)}</div>
                 ${unreadHtml}
               </div>
-              <div class="conv-product"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:6px;vertical-align:middle;display:inline-block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg> ${prodName}</div>
-              <div class="conv-lastmsg">${c.lastMessage || '...'}</div>
+              <div class="conv-product"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:6px;vertical-align:middle;display:inline-block"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg> ${esc(prodName)}</div>
+              <div class="conv-lastmsg">${esc(c.lastMessage || '...')}</div>
             </div>
           </div>
         `;
       }).join('');
 
-      // If a conversationId was provided (via ?id=...), attempt to auto-select
-      // the matching conversation after the inbox has been rendered.
-      if (currentConvId) {
-        // small timeout to ensure DOM is painted
-        setTimeout(() => {
-          const convItem = document.querySelector(`.conv-item[onclick*="${currentConvId}"]`);
-          if (convItem) convItem.click();
-        }, 50);
-      }
+      // NOTE: auto-select on initial load is handled ONCE in init block below.
+      // This function intentionally does NOT auto-click on subsequent polls.
     }
 
-    window.selectConversation = async function(convId, partnerName, partnerDataRaw) {
+    // Click delegation — handles dynamic .conv-item without inline onclick
+    document.getElementById('conv-list').addEventListener('click', function (e) {
+      const item = e.target.closest('.conv-item');
+      if (!item) return;
+      const convId = item.dataset.convId;
+      const convName = item.dataset.convName || 'User';
+      if (convId) selectConversation(convId, convName);
+    });
+
+    window.selectConversation = async function(convId, partnerName) {
       currentConvId = convId;
         // join socket room
         if (socket) {
@@ -357,6 +433,7 @@
       document.getElementById('chat-input').focus();
 
       autoScroll = true;
+      isInitialFetch = true;
       await fetchMessages();
       fetchInbox();
 
@@ -364,13 +441,56 @@
     };
 
     // ── Messages ────────────────────────────────────────────────────────────
+    let isInitialFetch = true;
+    let pollFailures = 0;
     async function fetchMessages() {
       if (!currentConvId) return;
+      const skel = document.getElementById('chat-skeleton');
+      const cont = document.getElementById('chat-messages');
+      if (isInitialFetch && skel && cont) {
+        skel.style.display = 'flex';
+        cont.style.display = 'none';
+      }
       try {
         const res = await fetch('/api/chat/' + currentConvId + '/messages', { credentials: 'include' });
         const json = await res.json();
         if (json.success) renderMessages(json.data);
-      } catch (err) { console.error('Error fetching messages:', err); }
+        // On success: reset failure counter and restore fast polling if it was slowed
+        if (pollFailures > 0) {
+          pollFailures = 0;
+          if (pollSlowed) restartFastPolling();
+        }
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+        pollFailures++;
+        if (pollFailures >= 3 && pollInterval && !pollSlowed) {
+          clearInterval(pollInterval);
+          pollInterval = setInterval(pollTick, 10000);
+          pollSlowed = true;
+          showChatToast('Connection unstable — slowing refresh', 'error');
+        }
+      } finally {
+        if (isInitialFetch && skel && cont) {
+          skel.style.display = 'none';
+          cont.style.display = 'flex';
+          isInitialFetch = false;
+        }
+      }
+    }
+
+    function showChatToast(message, type = 'error') {
+      let toast = document.getElementById('chat-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'chat-toast';
+        toast.className = 'chat-toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.dataset.type = type;
+      toast.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     function renderMessages(messages) {
@@ -396,9 +516,18 @@
           `;
         }
 
+        const safeText = (m.text || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const imageHtml = m.imageUrl
+          ? `<img class="message-image" src="${m.imageUrl}" alt="Image" onclick="window.open('${m.imageUrl}','_blank')">`
+          : '';
+        const textHtml = safeText
+          ? `<div class="message-bubble">${safeText}</div>`
+          : '';
+
         html += `
           <div class="message-row ${isMe ? 'me' : 'other'}">
-            <div class="message-bubble">${m.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+            ${imageHtml}
+            ${textHtml}
             <div class="message-time">${time}</div>
           </div>
         `;
@@ -412,37 +541,101 @@
       }
     }
 
+    // ── Image attachment ────────────────────────────────────────────────────
+    let pendingImageFile = null;
+
+    const imageInput = document.getElementById('chat-image-input');
+    const previewBox = document.getElementById('image-preview');
+    const previewImg = document.getElementById('image-preview-img');
+    const previewRemove = document.getElementById('image-preview-remove');
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showChatToast('Please select an image file');
+        imageInput.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showChatToast('Image must be under 5MB');
+        imageInput.value = '';
+        return;
+      }
+      pendingImageFile = file;
+      previewImg.src = URL.createObjectURL(file);
+      previewBox.style.display = 'flex';
+    });
+
+    previewRemove.addEventListener('click', () => {
+      pendingImageFile = null;
+      previewBox.style.display = 'none';
+      imageInput.value = '';
+      previewImg.src = '';
+    });
+
+    async function uploadChatImage(file) {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/upload/chat', { method: 'POST', body: fd, credentials: 'include' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success || !json.url) {
+        throw new Error(json.message || 'Upload failed');
+      }
+      return json.url;
+    }
+
     // ── Send ────────────────────────────────────────────────────────────────
     window.sendMessage = async function() {
       const input = document.getElementById('chat-input');
       const text  = input.value.trim();
       const btn   = document.getElementById('chat-send-btn');
+      const overlay = document.getElementById('image-preview-overlay');
 
-      if (!text || !currentConvId) return;
+      if (!currentConvId) return;
+      if (!text && !pendingImageFile) return;
 
       input.disabled = true;
       btn.disabled   = true;
+      const originalIcon = btn.innerHTML;
+      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.7s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>';
 
       try {
+        let imageUrl = null;
+        if (pendingImageFile) {
+          if (overlay) overlay.style.display = 'flex';
+          imageUrl = await uploadChatImage(pendingImageFile);
+        }
+
         const res = await fetch('/api/chat/' + currentConvId + '/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, imageUrl }),
           credentials: 'include'
         });
-        const json = await res.json();
-        if (json.success) {
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.success) {
           input.value = '';
+          pendingImageFile = null;
+          previewBox.style.display = 'none';
+          imageInput.value = '';
+          previewImg.src = '';
           autoScroll  = true;
-            // fetchMessages will also be triggered by socket; but call once to be safe
-            await fetchMessages();
-            fetchInbox();
+          await fetchMessages();
+          fetchInbox();
+        } else {
+          showChatToast(json.message || 'Failed to send message');
         }
-      } catch (err) { console.error('Error sending message:', err); }
-
-      input.disabled = false;
-      btn.disabled   = false;
-      input.focus();
+      } catch (err) {
+        console.error('Error sending message:', err);
+        showChatToast(err.message || 'Network error — message not sent');
+      } finally {
+        if (overlay) overlay.style.display = 'none';
+        btn.innerHTML  = originalIcon;
+        input.disabled = false;
+        btn.disabled   = false;
+        input.focus();
+      }
     };
 
     document.getElementById('chat-input').addEventListener('keydown', (e) => {
@@ -450,24 +643,62 @@
     });
 
     // ── Init ────────────────────────────────────────────────────────────────
-    fetchInbox();
-    if (currentConvId) {
-      setTimeout(() => {
-        const convItem = document.querySelector(`.conv-item[onclick*="${currentConvId}"]`);
-        if (convItem) convItem.click();
-      }, 500);
-    }
+    let pollSlowed = false;
+    let initialAutoSelectDone = false;
 
-    pollInterval = setInterval(() => {
+    function pollTick() {
       fetchInbox();
       if (currentConvId) {
         const container = document.getElementById('chat-messages');
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+        if (container && container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
           autoScroll = true;
         }
         fetchMessages();
       }
-    }, 3000);
+    }
+
+    function startPolling(intervalMs) {
+      stopPolling();
+      pollInterval = setInterval(pollTick, intervalMs || 5000);
+    }
+    function stopPolling() {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+    function restartFastPolling() {
+      pollSlowed = false;
+      // Only restart polling if socket is currently disconnected
+      if (!socket || !socket.connected) startPolling(5000);
+    }
+
+    // Initial inbox load + one-time auto-select if URL has ?id=...
+    (async function initialLoad() {
+      await fetchInbox();
+      if (currentConvId && !initialAutoSelectDone) {
+        initialAutoSelectDone = true;
+        const convItem = document.querySelector(`.conv-item[data-conv-id="${currentConvId}"]`);
+        if (convItem) convItem.click();
+      }
+    })();
+
+    // Polling is FALLBACK only — start it if socket isn't ready, stop on connect
+    if (socket) {
+      socket.on('connect',    () => { stopPolling(); pollSlowed = false; pollFailures = 0; });
+      socket.on('disconnect', () => { startPolling(5000); });
+      // If socket hasn't connected within 2s, start polling as backup
+      setTimeout(() => { if (!socket.connected) startPolling(5000); }, 2000);
+    } else {
+      // No socket support at all → polling is the only source of updates
+      startPolling(3000);
+    }
+
+    // Pause polling when tab is hidden — saves bandwidth
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopPolling();
+      } else if (!socket || !socket.connected) {
+        startPolling(5000);
+      }
+    });
 
   </script>
 </body>

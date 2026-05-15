@@ -39,6 +39,9 @@ router.post('/avatar', protect, upload.single('image'), (req, res) =>
   handleImageUpload(req, res, UPLOAD_FOLDERS.AVATARS)
 );
 
-module.exports = router;
+// POST /api/upload/chat — upload chat image attachment
+router.post('/chat', protect, upload.single('image'), (req, res) =>
+  handleImageUpload(req, res, UPLOAD_FOLDERS.CHAT)
+);
 
 module.exports = router;

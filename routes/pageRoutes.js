@@ -78,6 +78,31 @@ router.get('/messages', requireAuth, (req, res) => {
   });
 });
 
+// ── GET /notifications ─────────────────────────────────
+router.get('/notifications', requireAuth, (req, res) => {
+  res.render(VIEWS.NOTIFICATIONS, {
+    title: `Notifications${TITLE_SEPARATOR}${APP_NAME}`,
+    isLoginPage: false
+  });
+});
+
+// ── GET /favorites ─────────────────────────────────────
+router.get('/favorites', requireAuth, (req, res) => {
+  res.render(VIEWS.FAVORITES, {
+    title: `Favorites${TITLE_SEPARATOR}${APP_NAME}`,
+    isLoginPage: false,
+    activePage: 'favorites'
+  });
+});
+
+// ── GET /admin/disputes ────────────────────────────────
+router.get('/admin/disputes', requireAuth, requireAdminPage, (req, res) => {
+  res.render(VIEWS.ADMIN_DISPUTES, {
+    title: `Disputes${TITLE_SEPARATOR}${APP_NAME}`,
+    isLoginPage: false
+  });
+});
+
 // ── GET /dashboard ───────────────────────────────────────────── 
 // Admin-only dashboard
 router.get('/dashboard', requireAuth, requireAdminPage, pageController.getDashboard);

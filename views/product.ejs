@@ -51,275 +51,229 @@
     }
   %>
 
-            <div class="detail-layout">
+  <main class="pdp">
 
-              <!-- Gallery -->
-              <div class="gallery">
-                <div class="gallery-main">
-                  <% if (p.images && p.images[0]) { %>
-                    <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>" onclick="openImageModal(this.src)">
-                    <% } else { %>
-                      <div
-                        style="font-size:80px; display:flex; align-items:center; justify-content:center; color:#1B5EFF;">
-                        <svg width="67" height="67" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="1.5" style="display:block">
-                          <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z" />
-                          <path d="M12 3v10" />
-                        </svg>
-                      </div>
-                      <% } %>
-                </div>
-                <% if (p.images && p.images.length> 1) { %>
-                  <div class="gallery-thumbs">
-                    <% p.images.forEach(function(url, i) { %>
-                      <div class="gallery-thumb <%= i === 0 ? 'active' : '' %>" onclick="setImg(<%= i %>)">
-                        <img src="<%= url %>" alt="image <%= i+1 %>"
-                          onclick="event.stopPropagation(); openImageModal(this.src)">
-                      </div>
-                      <% }) %>
-                  </div>
-                  <% } %>
-              </div>
+    <!-- Breadcrumb -->
+    <nav class="pdp-crumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="pdp-crumb-sep">/</span>
+      <a href="/?cat=<%= p.category %>"><%= CAT_LABEL[p.category] || p.category %></a>
+      <span class="pdp-crumb-sep">/</span>
+      <span class="pdp-crumb-current"><%= p.title %></span>
+    </nav>
 
-              <!-- Right column -->
-              <div class="info-section">
+    <!-- HERO: Gallery + Buy panel -->
+    <section class="pdp-hero">
 
-                <!-- CTA card -->
-                <div class="cta-card">
-                  <div class="product-badges">
-                    <span class="badge badge-cat">
-                      <%= CAT_LABEL[p.category] || p.category %>
-                    </span>
-                    <span class="badge <%= cond[2] %>">
-                      <%= cond[0] %>
-                        <%= cond[1] %>
-                    </span>
-                    <% if (isSold) { %><span class="badge badge-sold">Sold</span>
-                      <% } %>
-                  </div>
-                  <div class="product-title">
-                    <%= p.title %>
-                  </div>
-                  <div class="cta-price">
-                    <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price) %>
-                  </div>
-                  <div class="product-meta" style="margin-bottom:16px;">
-                    <span>
-                      <%= p.views || 0 %> views
-                    </span>
-                    <span><span id="interested-count">
-                        <%= p.interested || 0 %>
-                      </span> interested</span>
-                    <span>
-                      <%= timeAgo(p.createdAt) %>
-                    </span>
-                  </div>
-
-                  <% if (isSold) { %>
-                    <div class="sold-overlay">This item has been sold</div>
-                    <% } else if (isOwner) { %>
-                      <div class="owner-actions">
-                        <button class="btn-edit" onclick="window.location.href='/sell?id=<%= p._id %>'">
-                          <i data-lucide="edit-3"
-                            style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
-                          Edit this product
-                        </button>
-                        <button class="btn-mark-sold" onclick="markSold()">
-                          <i data-lucide="check"
-                            style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:4px;"></i>
-                          Mark as sold
-                        </button>
-                        <button class="btn-delete" onclick="deleteProduct()">
-                          <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
-                        </button>
-                      </div>
-                      <% } else { %>
-                        <% if (user) { %>
-                          <button class="btn-contact" id="btn-msg-seller" onclick="initChat()"
-                            style="margin-bottom:8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                              stroke-width="2">
-                              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                            </svg>
-                            Message seller
-                          </button>
-                          <button class="btn-report-product" onclick="showReportModal('product', '<%= p._id %>')"
-                            style="width:100%;padding:10px;border:1px solid #fca5a5;background:#fff5f5;color:#dc2626;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:inherit;">
-                            Report this listing
-                          </button>
-                          <% } else { %>
-                            <a href="/login" class="btn-contact">
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                              </svg>
-                              Sign in to message seller
-                            </a>
-                            <% } %>
-                              <button class="btn-interested" id="btn-interested" onclick="toggleInterested()"
-                                style="display:flex;align-items:center;gap:6px;justify-content:center;">
-                                <i data-lucide="heart" id="heart-icon" style="width:18px;height:18px;"></i>
-                                Interested <span id="int-count">(<%= p.interested || 0 %>)</span>
-                              </button>
-                              <% } %>
-                </div>
-
-
-
-              </div>
-              <!-- Description -->
-              <div>
-                <div class="section-title">Product description</div>
-                <p class="product-desc">
-                  <%= p.description %>
-                </p>
-              </div>
-
-              <!-- Location -->
-              <% if (p.location && p.location.address) { %>
-                <div class="product-location-section">
-                  <div class="section-title">Pickup location</div>
-                  <div class="location-details" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                    <div class="location-chip" style="margin:0;display:flex;align-items:center;gap:6px;">
-                      <i data-lucide="map-pin" style="width:16px;height:16px;color:#1B5EFF;"></i>
-                      <%= p.location.address %>
-                    </div>
-                  </div>
-
-                  <div id="product-map"
-                    style="height: 250px; width: 100%; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; z-index: 1; margin-bottom: 24px;">
-                  </div>
-                </div>
-                <% } %>
-
-                  <!-- Seller -->
-                  <div>
-                    <div class="section-title">Seller</div>
-                    <a href="/user/<%= seller._id %>" class="seller-card"
-                      style="text-decoration:none;color:inherit;display:block;">
-                      <div class="seller-row">
-                        <div class="seller-avatar">
-                          <% if (seller.avatar) { %>
-                            <img src="<%= seller.avatar %>" alt="<%= sellerName %>">
-                            <% } else { %>
-                              <span>
-                                <%= (sellerName[0] || '?' ).toUpperCase() %>
-                              </span>
-                              <% } %>
-                        </div>
-                        <div>
-                          <div class="seller-name" style="color:#1B5EFF;">
-                            <%= sellerName %>
-                          </div>
-                          <div class="seller-uni">
-                            <%= seller.university || '' %>
-                              <%= joinDate ? ' · Joined ' + joinDate : '' %>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="seller-stats">
-                        <div class="stat-item">
-                          <div class="stat-num" style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                            <%- renderStars(seller.rating || 5, 14) %>
-                              <span style="font-size:13px;font-weight:700;margin-left:2px">
-                                <%= (seller.rating || 5).toFixed(1) %>
-                              </span>
-                          </div>
-                          <div class="stat-lbl">Rating</div>
-                        </div>
-                        <div class="stat-item">
-                          <div class="stat-num">
-                            <%= seller.totalSales || 0 %>
-                          </div>
-                          <div class="stat-lbl">Sold</div>
-                        </div>
-                        <div class="stat-item">
-                          <div class="stat-num">
-                            <%= seller.ratingCount || 0 %>
-                          </div>
-                          <div class="stat-lbl">Reviews</div>
-                        </div>
-                      </div>
-                    </a>
-                    <% if (user) { %>
-                      <button class="btn-report-seller" onclick="showReportModal('user', '<%= seller._id %>')"
-                        style="margin-top:12px;width:100%;padding:11px;border:1px solid #f87171;background:#fff7ed;color:#dc2626;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:inherit;">
-                        Report this seller
-                      </button>
-                      <% } %>
-                  </div>
+      <!-- Gallery -->
+      <div class="pdp-gallery">
+        <div class="pdp-main-img">
+          <% if (p.images && p.images[0]) { %>
+            <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>" onclick="openImageModal(this.src)">
+          <% } else { %>
+            <div class="pdp-img-fallback">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z" />
+                <path d="M12 3v10" />
+              </svg>
             </div>
-            <!-- Product Rating Section -->
-            <div class="product-review-section"
-              style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #E4E7F2; max-width: 1100px; margin-left: auto; margin-right: auto; padding-left: 24px; padding-right: 24px; padding-bottom: 40px;">
-              <div style="max-width: 700px;">
+          <% } %>
+          <% if (isSold) { %><span class="pdp-sold-ribbon">SOLD</span><% } %>
+        </div>
+        <% if (p.images && p.images.length > 1) { %>
+          <div class="pdp-thumbs">
+            <% p.images.forEach(function(url, i) { %>
+              <button type="button" class="pdp-thumb <%= i === 0 ? 'active' : '' %>" onclick="setImg(<%= i %>)" aria-label="Image <%= i+1 %>">
+                <img src="<%= url %>" alt="image <%= i+1 %>">
+              </button>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
 
-                <!-- Product Rating Overview -->
-                <div id="product-rating-stats" style="margin-bottom: 24px;">
-                  <div style="font-size: 20px; font-weight: 800; margin-bottom: 16px; color: #0D0F1A;">Product Reviews
-                  </div>
-                  <div id="product-rating-stats-content" style="color: #3D4258;">Loading...</div>
-                </div>
+      <!-- Buy panel -->
+      <aside class="pdp-buy">
+        <div class="pdp-badges">
+          <span class="pdp-badge pdp-badge-cat"><%= CAT_LABEL[p.category] || p.category %></span>
+          <span class="pdp-badge <%= cond[2] %>"><%= cond[1] %></span>
+          <% if (isSold) { %><span class="pdp-badge badge-sold">Sold</span><% } %>
+        </div>
 
-                <!-- Rating Distribution -->
-                <div
-                  style="margin-bottom: 24px; padding: 16px; background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 12px;">
-                  <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">Rating
-                    Distribution</div>
-                  <div id="product-rating-dist-content" style="color: #3D4258;">Loading...</div>
-                </div>
+        <h1 class="pdp-title"><%= p.title %></h1>
 
-                <!-- Submit Rating Form -->
-                <% if (user && !isOwner) { %>
-                  <div
-                    style="background: #F7F8FC; border: 1px solid #E4E7F2; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-                    <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">Leave a Review
-                    </div>
-                    <div id="rating-form-container">
-                      <textarea id="rating-comment" class="rating-form-textarea"
-                        placeholder="Share your thoughts about this product" maxlength="500"
-                        style="background:#fff; color:#0D0F1A; border-color:#E4E7F2;"></textarea>
-                      <div class="rating-input" id="rating-stars" style="margin: 12px 0;">
-                        <span class="star star-empty" data-score="1" onmouseenter="updateRatingHover(this, 1)"
-                          onmouseleave="clearRatingHover()" onclick="selectRating(this, 1)"
-                          style="font-size:24px;cursor:pointer;">★</span>
-                        <span class="star star-empty" data-score="2" onmouseenter="updateRatingHover(this, 2)"
-                          onmouseleave="clearRatingHover()" onclick="selectRating(this, 2)"
-                          style="font-size:24px;cursor:pointer;">★</span>
-                        <span class="star star-empty" data-score="3" onmouseenter="updateRatingHover(this, 3)"
-                          onmouseleave="clearRatingHover()" onclick="selectRating(this, 3)"
-                          style="font-size:24px;cursor:pointer;">★</span>
-                        <span class="star star-empty" data-score="4" onmouseenter="updateRatingHover(this, 4)"
-                          onmouseleave="clearRatingHover()" onclick="selectRating(this, 4)"
-                          style="font-size:24px;cursor:pointer;">★</span>
-                        <span class="star star-empty" data-score="5" onmouseenter="updateRatingHover(this, 5)"
-                          onmouseleave="clearRatingHover()" onclick="selectRating(this, 5)"
-                          style="font-size:24px;cursor:pointer;">★</span>
-                      </div>
-                      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
-                        <button class="btn-cancel-rating"
-                          onclick="document.getElementById('rating-comment').value = ''; document.querySelectorAll('#rating-stars .star').forEach(s => { s.classList.add('star-empty'); s.classList.remove('star-filled'); });">Cancel</button>
-                        <button class="btn-submit-rating" onclick="submitProductRating()">Submit Review</button>
-                      </div>
-                    </div>
-                  </div>
-                  <% } %>
+        <div class="pdp-price"><%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price) %></div>
 
-                    <!-- Reviews List -->
-                    <div id="product-ratings-list">
-                      <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #0D0F1A;">All Reviews
-                      </div>
-                      <div id="product-ratings-list-content" style="color: #3D4258;">Loading reviews...</div>
-                    </div>
+        <div class="pdp-meta">
+          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <%= p.views || 0 %> views</span>
+          <span class="pdp-meta-sep">·</span>
+          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span id="interested-count"><%= p.interested || 0 %></span> interested</span>
+          <span class="pdp-meta-sep">·</span>
+          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <%= timeAgo(p.createdAt) %></span>
+        </div>
 
+        <div class="pdp-actions">
+          <% if (isSold) { %>
+            <div class="pdp-sold-banner">This item has been sold</div>
+          <% } else if (isOwner) { %>
+            <button class="pdp-btn pdp-btn-primary" onclick="window.location.href='/sell?id=<%= p._id %>'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit listing
+            </button>
+            <button class="pdp-btn pdp-btn-secondary" onclick="markSold()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Mark as sold
+            </button>
+            <button class="pdp-btn pdp-btn-danger-ghost" onclick="deleteProduct()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Delete
+            </button>
+          <% } else if (user) { %>
+            <button class="pdp-btn pdp-btn-primary" id="btn-msg-seller" onclick="initChat()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Message seller
+            </button>
+            <button class="pdp-btn pdp-btn-secondary" id="btn-interested" onclick="toggleInterested()">
+              <i data-lucide="heart" id="heart-icon" style="width:16px;height:16px;"></i>
+              Interested <span id="int-count">(<%= p.interested || 0 %>)</span>
+            </button>
+            <button class="pdp-btn pdp-btn-ghost" onclick="showReportModal('product', '<%= p._id %>')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Report listing
+            </button>
+          <% } else { %>
+            <a class="pdp-btn pdp-btn-primary" href="/login">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Sign in to message
+            </a>
+          <% } %>
+        </div>
+
+        <!-- Mini seller card -->
+        <div class="pdp-seller-mini">
+          <a href="/user/<%= seller._id %>" class="pdp-seller-row">
+            <div class="pdp-seller-avatar">
+              <% if (seller.avatar) { %>
+                <img src="<%= seller.avatar %>" alt="<%= sellerName %>">
+              <% } else { %>
+                <span><%= (sellerName[0] || '?').toUpperCase() %></span>
+              <% } %>
+            </div>
+            <div class="pdp-seller-info">
+              <div class="pdp-seller-name"><%= sellerName %></div>
+              <div class="pdp-seller-stats">
+                <%- renderStars(seller.rating || 5, 12) %>
+                <span><%= (seller.rating || 5).toFixed(1) %> · <%= seller.totalSales || 0 %> sold · <%= seller.ratingCount || 0 %> reviews</span>
               </div>
             </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pdp-seller-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
 
-            <% if (typeof relatedProducts !=='undefined' && relatedProducts.length> 0) { %>
-              <div class="similar-section">
-                <div class="similar-title">Similar Listings</div>
-                <div class="products-grid">
+        <!-- Safety tips -->
+        <div class="pdp-safety">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div>
+            <strong>Safe trading tips</strong>
+            Meet on campus during daytime · Inspect before paying · Never pre-pay via untrusted methods
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- DESCRIPTION + LOCATION (2-col on desktop, stacked on mobile) -->
+    <section class="pdp-cols">
+      <div class="pdp-card pdp-desc-card">
+        <h2 class="pdp-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Description
+        </h2>
+        <p class="pdp-desc"><%= p.description %></p>
+      </div>
+
+      <% if (p.location && p.location.address) { %>
+        <div class="pdp-card pdp-location-card">
+          <h2 class="pdp-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Pickup location
+          </h2>
+          <div class="pdp-location-addr">
+            <i data-lucide="map-pin" style="width:14px;height:14px;color:#1B5EFF;"></i>
+            <span><%= p.location.address %></span>
+          </div>
+          <div id="product-map" class="pdp-map"></div>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="pdp-card pdp-reviews">
+      <h2 class="pdp-card-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Reviews
+      </h2>
+      <div id="product-rating-stats">
+        <div id="product-rating-stats-content" class="pdp-muted">Loading…</div>
+      </div>
+
+      <% if (user && !isOwner) { %>
+        <div class="pdp-leave-review">
+          <div class="pdp-leave-title">Leave a review</div>
+          <div class="rating-input pdp-stars-input" id="rating-stars">
+            <% for (let i = 1; i <= 5; i++) { %>
+              <span class="star star-empty" data-score="<%= i %>"
+                onmouseenter="updateRatingHover(this, <%= i %>)"
+                onmouseleave="clearRatingHover()"
+                onclick="selectRating(this, <%= i %>)">★</span>
+            <% } %>
+          </div>
+          <textarea id="rating-comment" class="rating-form-textarea pdp-review-textarea"
+            placeholder="Share your thoughts about this product" maxlength="500"></textarea>
+          <div class="pdp-review-actions">
+            <button class="btn-cancel-rating"
+              onclick="document.getElementById('rating-comment').value=''; document.querySelectorAll('#rating-stars .star').forEach(s=>{ s.classList.add('star-empty'); s.classList.remove('star-filled','selected'); });">Cancel</button>
+            <button class="btn-submit-rating" onclick="submitProductRating()">Submit review</button>
+          </div>
+        </div>
+      <% } %>
+
+      <div id="product-ratings-list" class="pdp-reviews-list">
+        <div class="pdp-leave-title" style="margin-bottom:12px;">All reviews</div>
+        <div id="product-ratings-list-content" class="pdp-muted">Loading reviews…</div>
+      </div>
+    </section>
+
+    <!-- SELLER FULL CARD + Report button -->
+    <section class="pdp-card pdp-seller-full">
+      <div class="pdp-seller-full-row">
+        <div class="pdp-seller-avatar pdp-seller-avatar-lg">
+          <% if (seller.avatar) { %>
+            <img src="<%= seller.avatar %>" alt="<%= sellerName %>">
+          <% } else { %>
+            <span><%= (sellerName[0] || '?').toUpperCase() %></span>
+          <% } %>
+        </div>
+        <div class="pdp-seller-full-info">
+          <a href="/user/<%= seller._id %>" class="pdp-seller-full-name"><%= sellerName %></a>
+          <div class="pdp-seller-uni"><%= seller.university || 'Campus member' %><%= joinDate ? ' · Joined ' + joinDate : '' %></div>
+          <div class="pdp-seller-grid">
+            <div><%- renderStars(seller.rating || 5, 14) %> <strong><%= (seller.rating || 5).toFixed(1) %></strong> <span>Rating</span></div>
+            <div><strong><%= seller.totalSales || 0 %></strong> <span>Sold</span></div>
+            <div><strong><%= seller.ratingCount || 0 %></strong> <span>Reviews</span></div>
+          </div>
+        </div>
+        <div class="pdp-seller-full-actions">
+          <a href="/user/<%= seller._id %>" class="pdp-btn pdp-btn-secondary">View profile</a>
+          <% if (user && !isOwner) { %>
+            <button class="pdp-btn pdp-btn-ghost" onclick="showReportModal('user', '<%= seller._id %>')">Report seller</button>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+    <% if (typeof relatedProducts !=='undefined' && relatedProducts.length> 0) { %>
+      <section class="pdp-similar">
+        <h2 class="pdp-similar-title">Similar listings</h2>
+        <div class="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <% relatedProducts.forEach(function(rp) { %>
                     <a href="/products/<%= rp._id %>" class="product-card">
                       <div class="product-img-placeholder">
@@ -352,9 +306,11 @@
                       </div>
                     </a>
                     <% }) %>
-                </div>
-              </div>
-              <% } %>
+        </div>
+      </section>
+    <% } %>
+
+  </main>
 
                 <div id="image-modal" class="image-modal" onclick="closeImageModal(event)">
                   <div class="image-modal-content" onclick="event.stopPropagation()">
@@ -568,20 +524,45 @@
                       };
 
                       // ── Interested ───────────────────────────────────────────────────────
+                      function applyHeartState(active) {
+                        const icon = document.getElementById('heart-icon');
+                        if (icon) {
+                          icon.style.fill = active ? '#f87171' : 'none';
+                          icon.style.stroke = active ? '#f87171' : 'currentColor';
+                        }
+                        const btn = document.getElementById('btn-interested');
+                        if (btn) btn.classList.toggle('active', active);
+                      }
+
+                      // Initialize favorite state from server on load
+                      if (IS_AUTH) {
+                        fetch('/api/products/favorites/ids', { credentials: 'include' })
+                          .then(r => r.json())
+                          .then(json => {
+                            if (json && json.success && Array.isArray(json.data)) {
+                              interestedState = json.data.includes(PRODUCT_ID);
+                              applyHeartState(interestedState);
+                            }
+                          })
+                          .catch(() => {});
+                      }
+
                       window.toggleInterested = async function () {
                         if (!IS_AUTH) { showToast('Please sign in to mark interest', 'err'); return; }
                         interestedState = !interestedState;
+                        applyHeartState(interestedState);
                         try {
                           const res = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
                           const data = await res.json();
-                          const icon = document.getElementById('heart-icon');
-                          if (icon) {
-                            icon.style.fill = interestedState ? '#f87171' : 'none';
-                            icon.style.stroke = interestedState ? '#f87171' : 'currentColor';
+                          if (data && typeof data.isFavorited === 'boolean') {
+                            interestedState = data.isFavorited;
+                            applyHeartState(interestedState);
                           }
                           document.getElementById('int-count').textContent = '(' + data.interested + ')';
-                          document.getElementById('btn-interested').classList.toggle('active', interestedState);
-                        } catch { interestedState = !interestedState; }
+                        } catch {
+                          interestedState = !interestedState;
+                          applyHeartState(interestedState);
+                        }
                       };
 
                       // ── Chat — redirect to /messages with conversation pre-selected ──────
@@ -678,7 +659,6 @@
                             setTimeout(() => {
                               loadRatings('product', PRODUCT_ID, 'product-ratings-list-content');
                               loadRatingStats('product', PRODUCT_ID, 'product-rating-stats-content');
-                              loadRatingStats('product', PRODUCT_ID, 'product-rating-dist-content');
                             }, 500);
                           }
                         } catch (err) {
@@ -754,7 +734,6 @@
                         // Load product rating stats (overview)
                         if (productId) {
                           loadRatingStats('product', productId, 'product-rating-stats-content');
-                          loadRatingStats('product', productId, 'product-rating-dist-content');
                         }
 
                         // Load product ratings list

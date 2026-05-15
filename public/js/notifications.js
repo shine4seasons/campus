@@ -97,14 +97,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function escHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     function createNotifElement(notif) {
         const div = document.createElement('a');
         div.href = notif.link || 'javascript:void(0)';
         div.className = `notif-item ${notif.isRead ? '' : 'unread'}`;
         div.innerHTML = `
             <div class="notif-content">
-                <div class="notif-title">${notif.title}</div>
-                <div class="notif-msg">${notif.message}</div>
+                <div class="notif-title">${escHtml(notif.title)}</div>
+                <div class="notif-msg">${escHtml(notif.message)}</div>
                 <div class="notif-time">${formatTime(notif.createdAt)}</div>
             </div>
         `;

@@ -1,26 +1,25 @@
-<% 
-  // Compute initials for avatar fallback
+<%
   let sbInitials = '';
   if (typeof user !== 'undefined' && user && user.name) {
     sbInitials = user.name.split(' ').map(function(n){ return n[0]; }).slice(0,2).join('').toUpperCase();
   }
 %>
 <aside class="sidebar">
-  <!-- sidebar logo removed — topbar contains the site logo now -->
-  <% /* Original admin/seller sidebar content removed and kept here for reference. */ %>
 
+  <%# ── Mode toggle (buyer / seller) ─────────────────── %>
   <% if (typeof user === 'undefined' || (user && user.role !== 'admin')) { %>
-  <div class="sb-mode-toggle" style="padding:10px 16px;">
+  <div class="sb-toggle-wrap">
     <div class="mode-pill">
+      <div class="mode-pill-track" id="mode-pill-track"></div>
       <button class="mode-pill-btn" id="mode-buyer-btn" onclick="setMode('buyer')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
         </svg>
         Buyer
       </button>
       <button class="mode-pill-btn" id="mode-seller-btn" onclick="setMode('seller')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 7h18M3 12h18M3 17h18" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
         </svg>
         Seller
       </button>
@@ -28,263 +27,260 @@
   </div>
   <% } %>
 
-    <% if (typeof user !=='undefined' && user && user.role==='admin' ) { %>
-      <div class="sb-admin-nav" style="padding-top:12px;">
-        <div class="sb-group-label">Overview</div>
-        <div class="nav-item" onclick="goAdmin('/admin','aDash', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M3 13h8V3H3v10z" />
-            <path d="M13 21h8V11h-8v10z" />
-          </svg>
-          <span style="margin-left:8px;">Dashboard</span>
-        </div>
-        <div class="sb-group-label" style="margin-top:14px">Management</div>
-        <div class="nav-item" onclick="goAdmin('/admin/analytics','aAnalytics', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M3 3v18h18" />
-            <path d="M18 7v10" />
-            <path d="M13 11v6" />
-            <path d="M8 13v4" />
-          </svg>
-          <span style="margin-left:8px">Analytics</span>
-        </div>
-        <div class="nav-item" onclick="goAdmin('/admin/users','aUsers', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-          </svg>
-          <span style="margin-left:8px">Users</span>
+  <%# ── Navigation ────────────────────────────────────── %>
+  <nav class="sb-nav">
 
-        </div>
-        <div class="nav-item" onclick="goAdmin('/admin/products','aProducts', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M21 16V8a2 2 0 00-1-1.73L13 3l-7 3.27A2 2 0 005 8v8a2 2 0 001 1.73L11 21l7-3.27A2 2 0 0021 16z" />
-          </svg>
-          <span style="margin-left:8px">Products</span>
+    <%# Admin ── %>
+    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
 
-        </div>
-        <div class="nav-item" onclick="goAdmin('/admin/orders','aOrders', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M3 3h18v4H3z" />
-            <path d="M3 11h18v10H3z" />
-          </svg>
-          <span style="margin-left:8px">Orders</span>
-        </div>
-        <div class="nav-item" onclick="goAdmin('/admin/reports','aReports', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M12 2l3 7h7l-6 4 3 7-7-4-7 4 3-7-6-4h7z" />
-          </svg>
-          <span style="margin-left:8px">Reports</span>
-
-        </div>
-        <div class="nav-item" onclick="goAdmin('/admin/settings','aSettings', this)" style="margin-top:12px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 013.27 17.1l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82L4.21 3.27A2 2 0 016 3.27l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09c.2.74.72 1.35 1.47 1.51h.41a1.65 1.65 0 001.82-.33l.06-.06A2 2 0 0120.73 6.9l-.06.06a1.65 1.65 0 00-.33 1.82V9c.09.54.39 1.05.86 1.46z" />
-          </svg>
-          <span style="margin-left:8px">Settings</span>
-        </div>
+    <div class="sb-section">
+      <span class="sb-group-label">Overview</span>
+      <div class="nav-item" onclick="goAdmin('/admin','aDash',this)">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10z"/><path d="M13 21h8V11h-8v10z"/></svg>
+        Dashboard
       </div>
+    </div>
+
+    <div class="sb-section">
+      <span class="sb-group-label">Management</span>
+      <div class="nav-item" onclick="goAdmin('/admin/analytics','aAnalytics',this)">
+        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 7v10"/><path d="M13 11v6"/><path d="M8 13v4"/></svg>
+        Analytics
+      </div>
+      <div class="nav-item" onclick="goAdmin('/admin/users','aUsers',this)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Users
+      </div>
+      <div class="nav-item" onclick="goAdmin('/admin/products','aProducts',this)">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73L13 3l-7 3.27A2 2 0 005 8v8a2 2 0 001 1.73L11 21l7-3.27A2 2 0 0021 16z"/></svg>
+        Products
+      </div>
+      <div class="nav-item" onclick="goAdmin('/admin/orders','aOrders',this)">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        Orders
+      </div>
+      <a class="nav-item" href="/admin/disputes">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Disputes
+      </a>
+      <div class="nav-item" onclick="goAdmin('/admin/reports','aReports',this)">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Reports
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <span class="sb-group-label">System</span>
+      <div class="nav-item" onclick="goAdmin('/admin/settings','aSettings',this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+
+    <% } else { %>
+
+    <%# ── Buyer nav ── %>
+    <div class="nav-links-buyer">
+      <div class="sb-section">
+        <span class="sb-group-label">Browse</span>
+        <a href="/#categories" class="nav-item nav-link buyer-only">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Categories
+        </a>
+        <a href="/#featured" class="nav-item nav-link buyer-only">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.9 5.88L21 9.24l-4.5 4.06L17.8 21 12 17.77 6.2 21l1.3-7.7L3 9.24l6.1-1.36L12 2z"/></svg>
+          Featured
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <span class="sb-group-label">My Activities</span>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'orders') ? ' active' : '' %>" href="/orders">
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          My Orders
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'favorites') ? ' active' : '' %>" href="/favorites">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'messages') ? ' active' : '' %>" href="/messages">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Messages
+          <span class="nav-badge" id="nav-chat-badge" style="display:none">0</span>
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'notifications') ? ' active' : '' %>" href="/notifications">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Notifications
+        </a>
+      </div>
+    </div>
+
+    <%# ── Seller nav ── %>
+    <div class="nav-links-seller" style="display:none;">
+      <div class="sb-section">
+        <span class="sb-group-label">Overview</span>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'dashboard') ? ' active' : '' %>" href="/dashboard">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10z"/><path d="M13 21h8V11h-8v10z"/></svg>
+          Dashboard
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <span class="sb-group-label">My Store</span>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'listings') ? ' active' : '' %>" href="/my-products">
+          <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          My Products
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'seller-orders') ? ' active' : '' %>" href="/orders-seller">
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          Orders
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'revenue') ? ' active' : '' %>" href="/revenue">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Revenue
+        </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'messages') ? ' active' : '' %>" href="/messages">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Messages
+          <span class="nav-badge" id="nav-chat-badge-seller" style="display:none">0</span>
+        </a>
+      </div>
+    </div>
+
+    <% } %>
+  </nav>
+
+  <%# ── Footer ──────────────────────────────────────── %>
+  <div class="sb-footer">
+    <div class="sb-avatar" id="sbAvatar">
+      <% if (typeof user !== 'undefined' && user && user.avatar) { %>
+        <img src="<%= user.avatar %>" alt="<%= user.name %>">
       <% } else { %>
-        <div class="sb-top-links">
-          <div class="sb-links-buyer nav-links-buyer">
-            <a href="/#categories" class="sb-link nav-link buyer-only">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-              Categories
-            </a>
-            <a href="/#featured" class="sb-link nav-link buyer-only">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 2l2.9 5.88L21 9.24l-4.5 4.06L17.8 21 12 17.77 6.2 21l1.3-7.7L3 9.24l6.1-1.36L12 2z" />
-              </svg>
-              Featured
-            </a>
-            <div class="sb-group-label" style="margin-top:14px">My Activities</div>
-            <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'orders') ? ' active' : '' %>"
-              href="/orders">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M3 3h18v4H3z" />
-                <path d="M3 11h18v10H3z" />
-              </svg>
-              <span style="margin-left:8px">My Orders</span>
-            </a>
-
-          </div>
-          <div class="sb-links-seller nav-links-seller" style="display:none;">
-            <div class="sb-group-label">Overview</div>
-            <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'dashboard') ? ' active' : '' %>"
-              href="/dashboard">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M3 13h8V3H3v10z" />
-                <path d="M13 21h8V11h-8v10z" />
-              </svg>
-              <span style="margin-left:8px;">Dashboard</span>
-            </a>
-
-            <div class="sb-group-label" style="margin-top:14px">My Store</div>
-            <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'listings') ? ' active' : '' %>"
-              href="/my-products">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-              </svg>
-              <span style="margin-left:8px">My products</span>
-            </a>
-            <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'orders') ? ' active' : '' %>"
-              href="/orders-seller">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M3 3h18v4H3z" />
-                <path d="M3 11h18v10H3z" />
-              </svg>
-              <span style="margin-left:8px">Orders</span>
-
-            </a>
-            <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'revenue') ? ' active' : '' %>"
-              href="/revenue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" />
-              </svg>
-              <span style="margin-left:8px">Revenue</span>
-            </a>
-          </div>
-        </div>
+        <%= sbInitials %>
+      <% } %>
+    </div>
+    <div class="sb-user-info">
+      <a href="/profile" class="sb-uname" id="sbName">
+        <%= (typeof user !== 'undefined' && user && user.name) ? user.name : 'Login' %>
+      </a>
+      <div class="sb-urole" id="sbRole">
+        <% if (typeof user !== 'undefined' && user && user.role) { %>
+          <span class="sb-role-dot"></span>
+          <%= user.role === 'admin' ? 'Admin' : (user.role === 'seller' ? 'Seller' : 'Buyer') %>
         <% } %>
+      </div>
+    </div>
+    <button id="logout-btn" class="sb-logout" title="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
 
-          <div class="sb-footer">
-            <div class="sb-avatar" id="sbAvatar">
-              <% if (typeof user !=='undefined' && user && user.avatar) { %>
-                <img src="<%= user.avatar %>" alt="<%= user.name %>">
-                <% } else { %>
-                  <%= sbInitials %>
-                    <% } %>
-            </div>
-            <div>
-              <a href="/profile" class="sb-uname" id="sbName">
-                <%= (typeof user !=='undefined' && user && user.name) ? user.name : 'Login' %>
-              </a>
-              <div class="sb-urole" id="sbRole">
-                <%= (typeof user !=='undefined' && user && user.role) ? (user.role==='admin' ? 'Admin' :
-                  (user.role==='seller' ? 'Seller' : user.role)) : '' %>
-              </div>
-            </div>
-            <button id="logout-btn" class="sb-logout" onclick="showToast('Logged out','info')">
-              <svg viewBox="0 0 24 24" stroke-width="2">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </button>
-          </div>
-          </aside>
+</aside>
 
-          <script>
-            (function () {
-              // Ensure a global `nav()` exists for pages that don't include the
-              // full dashboard script. If `nav` is already defined elsewhere,
-              // do not overwrite it.
-              if (typeof window.nav !== 'function') {
-                window.nav = function (el, id) {
-                  try {
-                    // If a dashboard `nav`/`showSection` exists, prefer it.
-                    if (typeof window.showSection === 'function') {
-                      if (el && el.classList) {
-                        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                        el.classList.add('active');
-                      }
-                      return window.showSection(id);
-                    }
-                  } catch (e) { }
+<!-- Mobile toggle & backdrop -->
+<button id="sb-mobile-toggle" class="sb-mobile-toggle" aria-label="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+<div id="sb-backdrop" class="sb-backdrop" aria-hidden="true"></div>
 
-                  // Fallback: map known section ids to full-page routes
-                  const PATHS = {
-                    aDash: '/admin', aAnalytics: '/admin/analytics', aUsers: '/admin/users', aProducts: '/admin/products', aOrders: '/admin/orders', aReports: '/admin/reports', aSettings: '/admin/settings',
-                    sDash: '/dashboard', sListings: '/my-products', sOrders: '/orders-seller', sRevenue: '/revenue', sMessages: '/messages', sProfile: '/profile'
-                  };
-                  if (el && el.classList) {
-                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                    el.classList.add('active');
-                  }
-                  const p = PATHS[id] || '/';
-                  window.location.href = p;
-                };
-              }
-              const STORAGE_KEY = 'campus_mode';
+<script>
+(function () {
+  if (typeof window.nav !== 'function') {
+    window.nav = function (el, id) {
+      try {
+        if (typeof window.showSection === 'function') {
+          if (el && el.classList) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+          }
+          return window.showSection(id);
+        }
+      } catch (e) {}
+      const PATHS = {
+        aDash:'/admin', aAnalytics:'/admin/analytics', aUsers:'/admin/users',
+        aProducts:'/admin/products', aOrders:'/admin/orders', aReports:'/admin/reports',
+        aSettings:'/admin/settings', sDash:'/dashboard', sListings:'/my-products',
+        sOrders:'/orders-seller', sRevenue:'/revenue', sMessages:'/messages', sProfile:'/profile'
+      };
+      if (el && el.classList) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+      window.location.href = PATHS[id] || '/';
+    };
+  }
 
-              // Helper to navigate admin dashboard in-page when possible
-              window.goAdmin = function (path, sectionId, el) {
-                try {
-                  const isAdminPath = window.location.pathname.startsWith('/admin');
-                  if (isAdminPath && typeof nav === 'function') {
-                    if (el) {
-                      document.querySelectorAll('#adminNav .nav-item').forEach(n => n.classList.remove('active'));
-                      el.classList.add('active');
-                    }
-                    nav(el, sectionId);
-                    // update history so URL reflects section
-                    history.replaceState(null, '', path);
-                    return;
-                  }
-                } catch (e) { }
-                // fallback: full navigation
-                window.location.href = path;
-              };
+  const STORAGE_KEY = 'campus_mode';
 
-              function applyMode(mode) {
-                document.body.classList.remove('mode-buyer', 'mode-seller');
-                document.body.classList.add('mode-' + mode);
-                const buyerBtn = document.getElementById('mode-buyer-btn');
-                const sellerBtn = document.getElementById('mode-seller-btn');
-                if (buyerBtn) buyerBtn.classList.toggle('active', mode === 'buyer');
-                if (sellerBtn) sellerBtn.classList.toggle('active', mode === 'seller');
-              }
+  window.goAdmin = function (path, sectionId, el) {
+    try {
+      if (window.location.pathname.startsWith('/admin') && typeof nav === 'function') {
+        if (el) {
+          document.querySelectorAll('#adminNav .nav-item').forEach(n => n.classList.remove('active'));
+          el.classList.add('active');
+        }
+        nav(el, sectionId);
+        history.replaceState(null, '', path);
+        return;
+      }
+    } catch (e) {}
+    window.location.href = path;
+  };
 
-              window.setMode = function (mode) {
-                localStorage.setItem(STORAGE_KEY, mode);
-                document.cookie = "campus_mode=" + mode + "; path=/; max-age=" + (30 * 24 * 60 * 60);
-                applyMode(mode);
-                const path = window.location.pathname;
-                if (mode === 'buyer') {
-                  window.location.href = '/';
-                } else if (mode === 'seller') {
-                  window.location.href = '/dashboard-seller';
-                } else {
-                  window.location.href = '/';
-                }
+  function applyMode(mode) {
+    document.body.classList.remove('mode-buyer', 'mode-seller');
+    document.body.classList.add('mode-' + mode);
+    const buyerBtn = document.getElementById('mode-buyer-btn');
+    const sellerBtn = document.getElementById('mode-seller-btn');
+    const track = document.getElementById('mode-pill-track');
+    if (buyerBtn) buyerBtn.classList.toggle('active', mode === 'buyer');
+    if (sellerBtn) sellerBtn.classList.toggle('active', mode === 'seller');
+    if (track) {
+      track.style.transform = mode === 'seller' ? 'translateX(100%)' : 'translateX(0)';
+      track.dataset.mode = mode;
+    }
+  }
 
-              };
+  window.setMode = function (mode) {
+    localStorage.setItem(STORAGE_KEY, mode);
+    document.cookie = 'campus_mode=' + mode + '; path=/; max-age=' + (30*24*60*60);
+    applyMode(mode);
+    window.location.href = mode === 'seller' ? '/dashboard-seller' : '/';
+  };
 
-              // Apply before render to avoid flash
-              applyMode(localStorage.getItem(STORAGE_KEY) || 'buyer');
+  applyMode(localStorage.getItem(STORAGE_KEY) || 'buyer');
 
-              try { document.body.classList.add('has-sidebar'); } catch (e) { }
+  try { document.body.classList.add('has-sidebar'); } catch(e) {}
 
-              document.addEventListener('DOMContentLoaded', () => {
-                // Show/hide seller links based on current mode
-                (function updateNavByMode() {
-                  const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-                  const buyerGroup = document.querySelector('.nav-links-buyer');
-                  const sellerGroup = document.querySelector('.nav-links-seller');
-                  if (!buyerGroup) return;
-                  if (mode === 'seller') {
-                    buyerGroup.style.display = 'none';
-                    if (sellerGroup) sellerGroup.style.display = 'block';
-                  } else {
-                    buyerGroup.style.display = 'block';
-                    if (sellerGroup) sellerGroup.style.display = 'none';
-                  }
-                })();
+  document.addEventListener('DOMContentLoaded', () => {
+    // Show correct nav group
+    (function updateNavByMode() {
+      const mode = localStorage.getItem(STORAGE_KEY) || 'buyer';
+      const buyerGroup = document.querySelector('.nav-links-buyer');
+      const sellerGroup = document.querySelector('.nav-links-seller');
+      if (!buyerGroup) return;
+      if (mode === 'seller') {
+        buyerGroup.style.display = 'none';
+        if (sellerGroup) sellerGroup.style.display = 'block';
+      } else {
+        buyerGroup.style.display = 'block';
+        if (sellerGroup) sellerGroup.style.display = 'none';
+      }
+    })();
 
-                // Modal for switching to buyer mode
-                let switchModalBackdrop = document.getElementById('switch-modal-backdrop');
-                if (!switchModalBackdrop) {
-                  switchModalBackdrop = document.createElement('div');
-                  switchModalBackdrop.id = 'switch-modal-backdrop';
-                  switchModalBackdrop.className = 'switch-modal-backdrop';
-                  switchModalBackdrop.innerHTML = `
+    // Buyer-only page modal
+    let switchModalBackdrop = document.getElementById('switch-modal-backdrop');
+    if (!switchModalBackdrop) {
+      switchModalBackdrop = document.createElement('div');
+      switchModalBackdrop.id = 'switch-modal-backdrop';
+      switchModalBackdrop.className = 'switch-modal-backdrop';
+      switchModalBackdrop.innerHTML = `
         <div class="switch-modal" role="dialog" aria-modal="true">
           <h3>Buyer-only page</h3>
           <p>This page is available for buyers. Switch to buyer mode to continue.</p>
@@ -293,151 +289,122 @@
             <button class="btn primary" id="switch-confirm">Switch to buyer</button>
           </div>
         </div>`;
-                  document.body.appendChild(switchModalBackdrop);
-                }
+      document.body.appendChild(switchModalBackdrop);
+    }
 
-                function showSwitchModal(targetHref) {
-                  switchModalBackdrop.style.display = 'flex';
-                  const cancel = document.getElementById('switch-cancel');
-                  const confirm = document.getElementById('switch-confirm');
-                  function hide() { switchModalBackdrop.style.display = 'none'; cancel.removeEventListener('click', onCancel); confirm.removeEventListener('click', onConfirm); }
-                  function onCancel() { hide(); }
-                  function onConfirm() { hide(); window.setMode('buyer'); if (targetHref) window.location.href = targetHref; }
-                  cancel.addEventListener('click', onCancel);
-                  confirm.addEventListener('click', onConfirm);
-                }
+    function showSwitchModal(targetHref) {
+      switchModalBackdrop.style.display = 'flex';
+      const cancel = document.getElementById('switch-cancel');
+      const confirm = document.getElementById('switch-confirm');
+      function hide() { switchModalBackdrop.style.display = 'none'; cancel.removeEventListener('click', onCancel); confirm.removeEventListener('click', onConfirm); }
+      function onCancel() { hide(); }
+      function onConfirm() { hide(); window.setMode('buyer'); if (targetHref) window.location.href = targetHref; }
+      cancel.addEventListener('click', onCancel);
+      confirm.addEventListener('click', onConfirm);
+    }
 
-                // Intercept clicks on buyer-only nav links when in seller mode
-                document.querySelectorAll('.nav-link.buyer-only').forEach(a => {
-                  a.addEventListener('click', (e) => {
-                    const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-                    const href = a.getAttribute('href');
-                    if (mode === 'seller') {
-                      e.preventDefault();
-                      if (href === '/') { window.location.href = '/my-products'; return; }
-                      showSwitchModal(href);
-                    }
-                  });
-                });
+    document.querySelectorAll('.nav-link.buyer-only').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const mode = localStorage.getItem(STORAGE_KEY) || 'buyer';
+        const href = a.getAttribute('href');
+        if (mode === 'seller') {
+          e.preventDefault();
+          if (href === '/') { window.location.href = '/my-products'; return; }
+          showSwitchModal(href);
+        }
+      });
+    });
 
-                // Intercept global anchor clicks for buyer-only paths
-                document.addEventListener('click', (e) => {
-                  const a = e.target.closest && e.target.closest('a');
-                  if (!a) return;
-                  const hrefAttr = a.getAttribute('href');
-                  if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
-                  let url;
-                  try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
-                  const path = url.pathname;
-                  const mode = (localStorage.getItem(STORAGE_KEY) || 'buyer');
-                  if (mode === 'seller' && ((/^\/orders(\/|$)/).test(path) && path !== '/orders-seller')) {
-                    e.preventDefault();
-                    showSwitchModal(hrefAttr);
-                  }
-                }, true);
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('a');
+      if (!a) return;
+      const hrefAttr = a.getAttribute('href');
+      if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
+      let url;
+      try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
+      const path = url.pathname;
+      const mode = localStorage.getItem(STORAGE_KEY) || 'buyer';
+      if (mode === 'seller' && (/^\/orders(\/|$)/.test(path) && path !== '/orders-seller')) {
+        e.preventDefault();
+        showSwitchModal(hrefAttr);
+      }
+    }, true);
 
-                const logoutBtn = document.getElementById('logout-btn');
-                if (logoutBtn) {
-                  logoutBtn.addEventListener('click', async () => {
-                    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch { }
-                    localStorage.removeItem('campus_token');
-                    localStorage.removeItem('campus_user');
-                    localStorage.removeItem(STORAGE_KEY);
-                    window.location.href = '/login';
-                  });
-                }
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+        localStorage.removeItem('campus_token');
+        localStorage.removeItem('campus_user');
+        localStorage.removeItem(STORAGE_KEY);
+        window.location.href = '/login';
+      });
+    }
 
-                async function updateChatBadge() {
-                  try {
-                    const res = await fetch('/api/chat', { credentials: 'include' });
-                    const json = await res.json();
-                    if (!json.success) return;
-                    
-                    const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
-                    const filtered = json.data.filter(c => {
-                      if (uiMode === 'seller') return c.isSellerConversation;
-                      return !c.isSellerConversation;
-                    });
-                    
-                    const total = filtered.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-                    const badge = document.getElementById('nav-chat-badge');
-                    if (badge) {
-                      badge.textContent = total > 99 ? '99+' : total;
-                      badge.style.display = total > 0 ? 'flex' : 'none';
-                    }
-                    
-                    // Also update the navbar chat dot if it exists
-                    const chatDot = document.getElementById('chat-dot');
-                    if (chatDot) {
-                      chatDot.textContent = total > 9 ? '9+' : total;
-                      chatDot.style.display = total > 0 ? 'block' : 'none';
-                    }
-                  } catch { }
-                }
-                updateChatBadge();
-                if (!window.location.pathname.startsWith('/messages')) {
-                  setInterval(updateChatBadge, 15000);
-                }
+    // Chat badge
+    async function updateChatBadge() {
+      try {
+        const res = await fetch('/api/chat', { credentials: 'include' });
+        const json = await res.json();
+        if (!json.success) return;
+        const uiMode = localStorage.getItem('campus_mode') || 'buyer';
+        const filtered = json.data.filter(c => uiMode === 'seller' ? c.isSellerConversation : !c.isSellerConversation);
+        const total = filtered.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        const badgeId = uiMode === 'seller' ? 'nav-chat-badge-seller' : 'nav-chat-badge';
+        const badge = document.getElementById(badgeId);
+        if (badge) {
+          badge.textContent = total > 99 ? '99+' : total;
+          badge.style.display = total > 0 ? 'flex' : 'none';
+        }
+        const chatDot = document.getElementById('chat-dot');
+        if (chatDot) {
+          chatDot.textContent = total > 9 ? '9+' : total;
+          chatDot.style.display = total > 0 ? 'block' : 'none';
+        }
+      } catch {}
+    }
+    updateChatBadge();
+    if (!window.location.pathname.startsWith('/messages')) setInterval(updateChatBadge, 15000);
 
-                // If current user is admin, prevent navigation to non-admin pages
-                const _USER_ROLE = <%- JSON.stringify(typeof user !== 'undefined' && user && user.role ? user.role : '') %>;
-                if (_USER_ROLE === 'admin') {
-                  document.addEventListener('click', function (e) {
-                    const a = e.target.closest && e.target.closest('a');
-                    if (!a) return;
-                    const hrefAttr = a.getAttribute('href');
-                    if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
-                    let url;
-                    try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
-                    const path = url.pathname || '';
-                    // allow admin paths, api calls, anchors to same page, and logout/login
-                    if (path.startsWith('/dashboard') || path.startsWith('/admin') || path.startsWith('/profile') || hrefAttr.startsWith('/api') || hrefAttr.startsWith('/auth') || hrefAttr.startsWith('/login') || hrefAttr.startsWith('/logout') || hrefAttr.startsWith('/user')) return;
-                    e.preventDefault();
-                    try { showToast('Administrators can only access admin pages', 'info'); } catch (e) { }
-                    window.location.href = '/admin';
-                  }, true);
-                }
-              });
-            })();
-          </script>
+    // Admin: restrict navigation
+    const _USER_ROLE = <%- JSON.stringify(typeof user !== 'undefined' && user && user.role ? user.role : '') %>;
+    if (_USER_ROLE === 'admin') {
+      document.addEventListener('click', function (e) {
+        const a = e.target.closest && e.target.closest('a');
+        if (!a) return;
+        const hrefAttr = a.getAttribute('href');
+        if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
+        let url;
+        try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
+        const path = url.pathname || '';
+        if (path.startsWith('/dashboard') || path.startsWith('/admin') || path.startsWith('/profile') ||
+            hrefAttr.startsWith('/api') || hrefAttr.startsWith('/auth') || hrefAttr.startsWith('/login') ||
+            hrefAttr.startsWith('/logout') || hrefAttr.startsWith('/user')) return;
+        e.preventDefault();
+        try { showToast('Administrators can only access admin pages', 'info'); } catch(e) {}
+        window.location.href = '/admin';
+      }, true);
+    }
 
-          <!-- Mobile sidebar toggle and backdrop -->
-          <button id="sb-mobile-toggle" class="sb-mobile-toggle" aria-label="Toggle sidebar" title="Menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" style="width:20px;height:20px;display:block;">
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-          <div id="sb-backdrop" class="sb-backdrop" aria-hidden="true"></div>
+    // Mobile toggle
+    const toggle = document.getElementById('sb-mobile-toggle');
+    const backdrop = document.getElementById('sb-backdrop');
+    if (toggle) {
+      toggle.addEventListener('click', () => document.body.classList.toggle('sb-open'));
+      if (backdrop) backdrop.addEventListener('click', () => document.body.classList.remove('sb-open'));
 
-          <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const toggle = document.getElementById('sb-mobile-toggle');
-              const backdrop = document.getElementById('sb-backdrop');
-              if (!toggle) return;
-              function updateToggleVisibility() {
-                // Hide the mobile toggle on dashboard pages when viewport is wide
-                const isDashboardPath = window.location.pathname.startsWith('/dashboard') || window.location.pathname.startsWith('/dashboard-seller') || window.location.pathname.startsWith('/dashboard-admin');
-                const pgTitle = document.querySelector('.pg-title');
-                const isDashboardTitle = pgTitle && /dashboard/i.test(pgTitle.textContent || '');
-                const wide = window.innerWidth > 760;
-                if ((isDashboardPath || isDashboardTitle) && wide) {
-                  toggle.style.display = 'none';
-                } else {
-                  // show only on small screens (CSS controls exact display)
-                  toggle.style.display = '';
-                }
-              }
-
-              toggle.addEventListener('click', function () {
-                document.body.classList.toggle('sb-open');
-              });
-              if (backdrop) backdrop.addEventListener('click', function () { document.body.classList.remove('sb-open'); });
-
-              // Initial visibility and on resize
-              updateToggleVisibility();
-              window.addEventListener('resize', updateToggleVisibility);
-            });
-          </script>
+      function updateToggleVisibility() {
+        const isDashboardPath = window.location.pathname.startsWith('/dashboard') ||
+          window.location.pathname.startsWith('/dashboard-seller') ||
+          window.location.pathname.startsWith('/dashboard-admin');
+        const pgTitle = document.querySelector('.pg-title');
+        const isDashboardTitle = pgTitle && /dashboard/i.test(pgTitle.textContent || '');
+        toggle.style.display = (isDashboardPath || isDashboardTitle) && window.innerWidth > 760 ? 'none' : '';
+      }
+      updateToggleVisibility();
+      window.addEventListener('resize', updateToggleVisibility);
+    }
+  });
+})();
+</script>

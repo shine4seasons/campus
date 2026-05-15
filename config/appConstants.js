@@ -32,6 +32,31 @@ const NOTIFICATION_TYPES = Object.freeze({
   RATING:  'rating',
   SYSTEM:  'system',
   INFO:    'info',
+  DISPUTE: 'dispute',
+});
+
+const DISPUTE_STATUS = Object.freeze({
+  OPEN:      'open',
+  IN_REVIEW: 'in_review',
+  RESOLVED:  'resolved',
+  REJECTED:  'rejected',
+});
+
+const DISPUTE_CATEGORIES = Object.freeze([
+  'item-not-received',
+  'item-damaged',
+  'wrong-item',
+  'item-not-as-described',
+  'payment-issue',
+  'fraud',
+  'other',
+]);
+
+const DISPUTE_RESOLUTIONS = Object.freeze({
+  BUYER_FAVOR:  'buyer-favor',
+  SELLER_FAVOR: 'seller-favor',
+  MUTUAL:       'mutual',
+  REJECTED:     'rejected',
 });
 
 const PRODUCT_CATEGORIES = Object.freeze([
@@ -66,4 +91,7 @@ module.exports = {
   DELIVERY_MODES,
   PAYMENT_MODES,
   TRANSITIONS,
+  DISPUTE_STATUS,
+  DISPUTE_CATEGORIES,
+  DISPUTE_RESOLUTIONS,
 };

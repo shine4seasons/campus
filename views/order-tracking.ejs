@@ -334,6 +334,143 @@
         </span>
       </div>
 
+      <%
+        const meId = String(user._id);
+        const isBuyer  = order.buyer  && String(order.buyer._id)  === meId;
+        const isSeller = order.seller && String(order.seller._id) === meId;
+        const canDispute = (isBuyer || isSeller)
+          && (order.status === 'confirmed' || order.status === 'completed')
+          && (!order.dispute || order.dispute.status === 'resolved' || order.dispute.status === 'rejected');
+        const hasActiveDispute = order.dispute && (order.dispute.status === 'open' || order.dispute.status === 'in_review');
+      %>
+
+      <% if (order.dispute) { %>
+        <div class="dispute-banner dispute-<%= order.dispute.status %>">
+          <div class="dispute-banner-icon">
+            <% if (order.dispute.status === 'resolved') { %>✓
+            <% } else if (order.dispute.status === 'rejected') { %>✕
+            <% } else { %>⚠<% } %>
+          </div>
+          <div class="dispute-banner-body">
+            <div class="dispute-banner-title">
+              <% if (order.dispute.status === 'open') { %>Dispute open
+              <% } else if (order.dispute.status === 'in_review') { %>Dispute under review
+              <% } else if (order.dispute.status === 'resolved') { %>Dispute resolved
+              <% } else { %>Dispute rejected<% } %>
+              <span class="dispute-banner-cat"><%= order.dispute.category %></span>
+            </div>
+            <div class="dispute-banner-reason"><strong>Reason:</strong> <%= order.dispute.reason %></div>
+            <% if (order.dispute.description) { %>
+              <div class="dispute-banner-desc"><%= order.dispute.description %></div>
+            <% } %>
+            <% if (order.dispute.evidenceImages && order.dispute.evidenceImages.length) { %>
+              <div class="dispute-banner-evidence">
+                <% order.dispute.evidenceImages.forEach(url => { %>
+                  <a href="<%= url %>" target="_blank"><img src="<%= url %>" alt="evidence"></a>
+                <% }); %>
+              </div>
+            <% } %>
+            <div class="dispute-banner-meta">
+              Opened by <strong><%= order.dispute.openedBy?.nickname || order.dispute.openedBy?.name || 'Unknown' %></strong>
+              (<%= order.dispute.openedRole %>)
+              · <%= new Date(order.dispute.openedAt).toLocaleString() %>
+            </div>
+            <% if (order.dispute.resolvedAt) { %>
+              <div class="dispute-banner-resolution">
+                <strong>Resolution:</strong> <%= order.dispute.resolution.replace('-', ' ') %>
+                <% if (order.dispute.resolutionNote) { %> — <%= order.dispute.resolutionNote %><% } %>
+                <% if (order.dispute.resolvedBy) { %>
+                  · by <%= order.dispute.resolvedBy.nickname || order.dispute.resolvedBy.name %>
+                <% } %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+
+      <% if (canDispute && !hasActiveDispute) { %>
+        <button class="btn-report-problem" onclick="openDisputeModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Report a problem
+        </button>
+      <% } %>
+
+      <style>
+        .dispute-banner {
+          display: flex; gap: 14px; align-items: flex-start;
+          padding: 16px 18px; border-radius: 12px; margin-bottom: 20px;
+          border: 1px solid; font-size: 14px;
+        }
+        .dispute-banner.dispute-open, .dispute-banner.dispute-in_review {
+          background: #FFF7ED; border-color: #FED7AA; color: #7C2D12;
+        }
+        .dispute-banner.dispute-resolved { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+        .dispute-banner.dispute-rejected { background: #F3F4F6; border-color: #D1D5DB; color: #374151; }
+        .dispute-banner-icon {
+          flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.7); font-size: 18px; font-weight: 800;
+        }
+        .dispute-banner-body { flex: 1; }
+        .dispute-banner-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .dispute-banner-cat { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.08); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+        .dispute-banner-reason, .dispute-banner-desc, .dispute-banner-meta, .dispute-banner-resolution { margin-top: 4px; line-height: 1.5; }
+        .dispute-banner-meta { font-size: 12px; opacity: 0.8; }
+        .dispute-banner-evidence { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .dispute-banner-evidence img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); }
+
+        .btn-report-problem {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;
+          padding: 10px 16px; border-radius: 10px;
+          font-weight: 600; font-size: 14px; cursor: pointer;
+          margin-bottom: 20px; transition: all 0.15s ease;
+        }
+        .btn-report-problem:hover { background: #FEE2E2; border-color: #FCA5A5; }
+
+        .dispute-modal-backdrop {
+          display: none; position: fixed; inset: 0;
+          background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+          z-index: 9999; align-items: center; justify-content: center;
+        }
+        .dispute-modal-backdrop.show { display: flex; }
+        .dispute-modal {
+          background: #fff; border-radius: 16px; max-width: 560px; width: 92%;
+          max-height: 90vh; overflow-y: auto; padding: 24px;
+        }
+        .dispute-modal h3 { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
+        .dispute-modal .sub { color: #6b7280; font-size: 13px; margin-bottom: 18px; }
+        .dispute-modal label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 6px; }
+        .dispute-modal select, .dispute-modal input[type="text"], .dispute-modal textarea {
+          width: 100%; padding: 10px 12px; border: 1px solid #E4E7F2; border-radius: 8px;
+          font-size: 14px; font-family: inherit; outline: none;
+        }
+        .dispute-modal textarea { min-height: 90px; resize: vertical; }
+        .dispute-modal select:focus, .dispute-modal input:focus, .dispute-modal textarea:focus { border-color: #1B5EFF; }
+        .dispute-evidence-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .dispute-evidence-thumb { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid #E4E7F2; }
+        .dispute-evidence-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .dispute-evidence-thumb button {
+          position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
+          border-radius: 50%; background: rgba(0,0,0,0.7); color: #fff; border: none;
+          font-size: 11px; line-height: 1; cursor: pointer;
+        }
+        .dispute-evidence-add {
+          width: 64px; height: 64px; border-radius: 8px; border: 2px dashed #C4C8DC;
+          background: #F7F8FC; color: #8890B0; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .dispute-evidence-add:hover { border-color: #1B5EFF; color: #1B5EFF; }
+        .dispute-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+        .dispute-modal-actions button {
+          padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 14px;
+          cursor: pointer; border: none;
+        }
+        .dispute-modal-actions .cancel { background: #F3F4F6; color: #374151; }
+        .dispute-modal-actions .submit { background: #DC2626; color: #fff; }
+        .dispute-modal-actions .submit:disabled { opacity: 0.6; cursor: not-allowed; }
+      </style>
+
       <div class="tracking-grid">
         <!-- Left column: Map and distance -->
         <div>
@@ -431,65 +568,81 @@
             </div>
 
             <!-- Status Timeline -->
+            <%
+              // Build timeline entries: prefer order.timeline (real activity log),
+              // fall back to deriving from timestamps for legacy orders.
+              let entries = (order.timeline && order.timeline.length)
+                ? order.timeline.slice()
+                : [];
+
+              if (entries.length === 0) {
+                entries.push({ event: 'pending',   at: order.createdAt,   actor: order.buyer,  note: 'Order placed' });
+                if (order.confirmedAt) entries.push({ event: 'confirmed', at: order.confirmedAt, actor: order.seller, note: 'Order confirmed' });
+                if (order.completedAt) entries.push({ event: 'completed', at: order.completedAt, actor: null,         note: 'Order completed' });
+                if (order.cancelledAt) entries.push({ event: 'cancelled', at: order.cancelledAt, actor: null,         note: 'Order cancelled' });
+              }
+
+              // Sort ascending so newest is at the bottom (cleaner reading)
+              entries.sort((a, b) => new Date(a.at) - new Date(b.at));
+
+              const eventLabels = {
+                pending:   'Order Placed',
+                confirmed: 'Order Confirmed',
+                completed: 'Order Completed',
+                cancelled: 'Order Cancelled'
+              };
+
+              const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            %>
+
             <div class="status-timeline">
               <div class="section-label">Status Timeline</div>
-              
-              <div class="timeline-item">
-                <div class="timeline-dot <%= order.status !== 'pending' ? 'completed' : 'active' %>" style="display:flex;align-items:center;justify-content:center;">
-                   <i data-lucide="check" style="width:12px;height:12px;"></i>
-                </div>
-                <div class="timeline-content">
-                  <div class="timeline-title">Order Placed</div>
-                  <div class="timeline-date"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
-                </div>
-              </div>
 
-              <div class="timeline-item">
-                <div class="timeline-dot <%= order.status === 'confirmed' || (order.status !== 'pending' && order.status !== 'cancelled') ? 'completed' : '' %>" style="display:flex;align-items:center;justify-content:center;">
-                  <% if (order.status === 'confirmed' || (order.status !== 'pending' && order.status !== 'cancelled')) { %>
-                    <i data-lucide="check" style="width:12px;height:12px;"></i>
-                  <% } %>
-                </div>
-                <div class="timeline-content">
-                  <div class="timeline-title">Order Confirmed</div>
-                  <div class="timeline-date">
-                    <% if (order.confirmedAt) { %>
-                      <%= new Date(order.confirmedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
-                    <% } else { %>
-                      Awaiting seller confirmation
-                    <% } %>
-                  </div>
-                </div>
-              </div>
-
-              <div class="timeline-item">
-                <div class="timeline-dot <%= order.status === 'completed' ? 'completed' : '' %>" style="display:flex;align-items:center;justify-content:center;">
-                  <% if (order.status === 'completed') { %>
-                    <i data-lucide="check" style="width:12px;height:12px;"></i>
-                  <% } %>
-                </div>
-                <div class="timeline-content">
-                  <div class="timeline-title">Order Completed</div>
-                  <div class="timeline-date">
-                    <% if (order.completedAt) { %>
-                      <%= new Date(order.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
-                    <% } else { %>
-                      In progress
-                    <% } %>
-                  </div>
-                </div>
-              </div>
-
-              <% if (order.status === 'cancelled') { %>
+              <% entries.forEach((e, idx) => {
+                const isCancel = e.event === 'cancelled';
+                const isLast   = idx === entries.length - 1;
+                const dotClass = isCancel ? '' : (isLast ? 'active' : 'completed');
+                const actorName = e.actor && (e.actor.nickname || e.actor.name) || '';
+              %>
                 <div class="timeline-item">
-                  <div class="timeline-dot" style="background: #dc2626; border-color: #dc2626; color: white; display:flex;align-items:center;justify-content:center;">
-                    <i data-lucide="x" style="width:12px;height:12px;"></i>
+                  <div class="timeline-dot <%= dotClass %>" style="<%= isCancel ? 'background:#dc2626;border-color:#dc2626;color:white;' : '' %>display:flex;align-items:center;justify-content:center;">
+                    <% if (isCancel) { %>
+                      <i data-lucide="x" style="width:12px;height:12px;"></i>
+                    <% } else if (dotClass === 'completed' || dotClass === 'active') { %>
+                      <i data-lucide="check" style="width:12px;height:12px;"></i>
+                    <% } %>
                   </div>
                   <div class="timeline-content">
-                    <div class="timeline-title" style="color: #dc2626">Order Cancelled</div>
-                    <div class="timeline-date">
-                      <%= new Date(order.cancelledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    <div class="timeline-title" style="<%= isCancel ? 'color:#dc2626' : '' %>">
+                      <%= eventLabels[e.event] || e.event %>
                     </div>
+                    <div class="timeline-date"><%= fmtDate(e.at) %></div>
+                    <% if (e.note || actorName) { %>
+                      <div class="timeline-meta" style="font-size:12px;color:#6b7280;margin-top:2px;">
+                        <% if (e.note) { %><%= e.note %><% } %>
+                        <% if (actorName) { %>
+                          <% if (e.note) { %> · <% } %>by <strong><%= actorName %></strong>
+                        <% } %>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+
+              <% if (order.status === 'pending' && !entries.some(e => e.event === 'confirmed')) { %>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="display:flex;align-items:center;justify-content:center;"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-title" style="color:#9ca3af;">Awaiting Confirmation</div>
+                    <div class="timeline-date">Pending seller action</div>
+                  </div>
+                </div>
+              <% } else if (order.status === 'confirmed' && !entries.some(e => e.event === 'completed' || e.event === 'cancelled')) { %>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="display:flex;align-items:center;justify-content:center;"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-title" style="color:#9ca3af;">Awaiting Completion</div>
+                    <div class="timeline-date">Order in progress</div>
                   </div>
                 </div>
               <% } %>
@@ -624,6 +777,130 @@
     }).addTo(map);
   } catch (e) {}
 </script>
+
+<!-- Dispute modal -->
+<div class="dispute-modal-backdrop" id="dispute-modal-backdrop">
+  <div class="dispute-modal" role="dialog" aria-modal="true">
+    <h3>Report a problem</h3>
+    <p class="sub">Tell us what went wrong. An admin will review your report.</p>
+
+    <label for="dispute-category">Category</label>
+    <select id="dispute-category">
+      <option value="item-not-received">Item not received</option>
+      <option value="item-damaged">Item damaged</option>
+      <option value="wrong-item">Wrong item</option>
+      <option value="item-not-as-described">Not as described</option>
+      <option value="payment-issue">Payment issue</option>
+      <option value="fraud">Fraud / scam</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="dispute-reason">Short reason <span style="color:#DC2626">*</span></label>
+    <input type="text" id="dispute-reason" maxlength="200" placeholder="e.g. Item never arrived after 5 days">
+
+    <label for="dispute-description">Details (optional)</label>
+    <textarea id="dispute-description" maxlength="2000" placeholder="Describe what happened, dates, conversations, etc."></textarea>
+
+    <label>Evidence (max 6 images)</label>
+    <div class="dispute-evidence-list" id="dispute-evidence-list">
+      <button type="button" class="dispute-evidence-add" id="dispute-evidence-add" title="Add image">+</button>
+    </div>
+    <input type="file" id="dispute-evidence-input" accept="image/*" style="display:none">
+
+    <div class="dispute-modal-actions">
+      <button type="button" class="cancel" onclick="closeDisputeModal()">Cancel</button>
+      <button type="button" class="submit" id="dispute-submit-btn" onclick="submitDispute()">Submit report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DISPUTE_ORDER_ID = '<%= String(order._id) %>';
+  let disputeEvidenceUrls = [];
+
+  window.openDisputeModal = function() {
+    document.getElementById('dispute-modal-backdrop').classList.add('show');
+  };
+  window.closeDisputeModal = function() {
+    document.getElementById('dispute-modal-backdrop').classList.remove('show');
+  };
+  document.getElementById('dispute-modal-backdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'dispute-modal-backdrop') closeDisputeModal();
+  });
+
+  // Evidence image upload
+  const evInput = document.getElementById('dispute-evidence-input');
+  const evList  = document.getElementById('dispute-evidence-list');
+  const evAdd   = document.getElementById('dispute-evidence-add');
+
+  evAdd.addEventListener('click', () => evInput.click());
+
+  evInput.addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('Please pick an image'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB'); return; }
+    if (disputeEvidenceUrls.length >= 6) { alert('Maximum 6 images'); return; }
+
+    evAdd.textContent = '…';
+    evAdd.disabled = true;
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/upload/chat', { method: 'POST', body: fd, credentials: 'include' });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Upload failed');
+      disputeEvidenceUrls.push(json.url);
+      addEvidenceThumb(json.url);
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      evAdd.textContent = '+';
+      evAdd.disabled = false;
+      evInput.value = '';
+    }
+  });
+
+  function addEvidenceThumb(url) {
+    const thumb = document.createElement('div');
+    thumb.className = 'dispute-evidence-thumb';
+    thumb.innerHTML = `<img src="${url}" alt="evidence"><button type="button">✕</button>`;
+    thumb.querySelector('button').addEventListener('click', () => {
+      disputeEvidenceUrls = disputeEvidenceUrls.filter(u => u !== url);
+      thumb.remove();
+    });
+    evList.insertBefore(thumb, evAdd);
+  }
+
+  window.submitDispute = async function() {
+    const category    = document.getElementById('dispute-category').value;
+    const reason      = document.getElementById('dispute-reason').value.trim();
+    const description = document.getElementById('dispute-description').value.trim();
+    const btn         = document.getElementById('dispute-submit-btn');
+
+    if (!reason) { alert('Please enter a short reason'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    try {
+      const res = await fetch('/api/orders/' + DISPUTE_ORDER_ID + '/dispute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ category, reason, description, evidenceImages: disputeEvidenceUrls })
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Failed');
+
+      btn.textContent = 'Submitted';
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      alert('Could not submit: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Submit report';
+    }
+  };
 </script>
 
 </body>

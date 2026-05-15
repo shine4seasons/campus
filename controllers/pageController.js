@@ -484,6 +484,9 @@ exports.getOrderTracking = async (req, res) => {
       .populate('product', 'title images price category location')
       .populate('buyer', 'name nickname avatar phone location')
       .populate('seller', 'name nickname avatar phone location rating ratingCount')
+      .populate('timeline.actor', 'name nickname avatar')
+      .populate('dispute.openedBy', 'name nickname avatar')
+      .populate('dispute.resolvedBy', 'name nickname')
       .lean();
 
     if (!order) {

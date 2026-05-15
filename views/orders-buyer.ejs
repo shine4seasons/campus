@@ -297,11 +297,13 @@
     <div style="margin-top: 24px">
       <% if (!orders || !orders.length) { %>
         <div class="card" style="padding: 32px">
-          <div class="empty-state">
-            <div class="empty-state-icon"><i data-lucide="package" style="width:48px;height:48px;margin:0 auto;stroke:#8890B0;"></i></div>
-            <div class="empty-state-title">No orders yet</div>
-            <p>Start exploring products and place your first order!</p>
-            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 600; margin-top: 16px; display: inline-block">Browse Products →</a>
+          <div class="empty-state" style="text-align:center;padding:24px 12px;">
+            <div class="empty-state-icon"><i data-lucide="package" style="width:56px;height:56px;margin:0 auto 12px;stroke:#8890B0;"></i></div>
+            <div class="empty-state-title" style="font-size:18px;font-weight:700;color:#0D0F1A;margin-bottom:6px;">No orders yet</div>
+            <p style="color:#8890B0;margin-bottom:18px;">Discover great deals from fellow students and place your first order.</p>
+            <a href="/" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1B5EFF,#5B8AFF);color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:600;box-shadow:0 4px 12px rgba(27,94,255,0.25);">
+              <i data-lucide="search" style="width:16px;height:16px;"></i> Browse products
+            </a>
           </div>
         </div>
       <% } else { %>

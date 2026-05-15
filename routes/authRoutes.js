@@ -30,6 +30,3 @@ router.post(AUTH_ROUTES.REFRESH, refresh);
 router.patch(AUTH_ROUTES.UPDATE_PROFILE, protect, updateProfile);
 
 module.exports = router;
-router.patch('/profile', protect, updateProfile);
-
-module.exports = router;
