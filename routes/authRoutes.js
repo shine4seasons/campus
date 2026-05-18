@@ -29,4 +29,33 @@ router.post(AUTH_ROUTES.REFRESH, refresh);
 // Update user profile from onboarding
 router.patch(AUTH_ROUTES.UPDATE_PROFILE, protect, updateProfile);
 
+// Development-only dev-login bypass for testing and visual auditing
+if (process.env.NODE_ENV === 'development') {
+  router.get('/dev-login', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).send('userId is required');
+    
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ sub: userId.toString() }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE || '7d',
+    });
+    
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    
+    // Set campus_mode cookie to buyer/seller/admin based on role
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user) {
+      const mode = user.role === 'admin' ? 'admin' : 'buyer';
+      res.cookie('campus_mode', mode, { path: '/', maxAge: 30*24*60*60*1000 });
+    }
+    res.redirect('/');
+  });
+}
+
 module.exports = router;

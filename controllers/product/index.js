@@ -2,8 +2,13 @@ const Product = require('../../models/Product');
 const User    = require('../../models/User');
 const { ALLOWED_UPDATE_FIELDS } = require('./constants');
 
+const parseProductQuantity = (value) => {
+  const quantity = Number.parseInt(value, 10);
+  return Number.isFinite(quantity) && quantity >= 0 ? quantity : NaN;
+};
+
 const buildFilter = (query) => {
-  const filter = { status: 'active' };
+  const filter = { status: 'active', $or: [{ quantity: { $gt: 0 } }, { quantity: { $exists: false } }] };
   if (query.category) filter.category = query.category;
   if (query.condition) filter.condition = query.condition;
   if (query.seller)   filter.seller = query.seller;
@@ -26,15 +31,17 @@ const getProducts = async (req, res) => {
     }
 
     let query;
+    let queryFilter = filter;
     if (q) {
-      query = Product.find({ ...filter, $text: { $search: q } }, { score: { $meta: 'textScore' } })
+      queryFilter = { ...filter, $text: { $search: q } };
+      query = Product.find(queryFilter, { score: { $meta: 'textScore' } })
         .sort({ score: { $meta: 'textScore' } });
     } else {
       query = Product.find(filter).sort(sort);
     }
 
     const skip  = (Number(page) - 1) * Number(limit);
-    const total = await Product.countDocuments(filter);
+    const total = await Product.countDocuments(queryFilter);
     const products = await query
       .skip(skip)
       .limit(Number(limit))
@@ -70,9 +77,13 @@ const getProduct = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     const { title, description, price, category, condition, images, location } = req.body;
+    const quantity = parseProductQuantity(req.body.quantity ?? 1);
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      return res.status(400).json({ success: false, message: 'Quantity must be at least 1' });
+    }
 
     const product = await Product.create({
-      title, description, price, category, condition,
+      title, description, price, quantity, category, condition,
       images:   images || [],
       location: location || {},
       seller:   req.user._id,
@@ -97,11 +108,31 @@ const updateProduct = async (req, res) => {
     }
 
     const oldPrice = product.price;
-    ALLOWED_UPDATE_FIELDS.forEach(k => { if (req.body[k] !== undefined) product[k] = req.body[k]; });
+    const oldStatus = product.status;
+    ALLOWED_UPDATE_FIELDS.forEach(k => {
+      if (req.body[k] === undefined) return;
+      if (k === 'quantity') {
+        const quantity = parseProductQuantity(req.body[k]);
+        if (!Number.isFinite(quantity)) throw new Error('Quantity must be a non-negative number');
+        product.quantity = quantity;
+        if (quantity === 0) {
+          product.status = 'sold';
+          product.soldAt = product.soldAt || new Date();
+        }
+        if (quantity > 0 && product.status === 'sold' && req.body.status === undefined) {
+          product.status = 'active';
+          product.soldAt = null;
+          product.buyer = null;
+        }
+        return;
+      }
+      product[k] = req.body[k];
+    });
 
     const priceDropped = req.body.price !== undefined && req.body.price < oldPrice;
 
-    if (req.body.status === 'sold' && product.status !== 'sold') {
+    if (req.body.status === 'sold' && oldStatus !== 'sold') {
+      product.quantity = 0;
       product.soldAt = new Date();
       if (req.body.buyerId) product.buyer = req.body.buyerId;
       User.findByIdAndUpdate(product.seller, { $inc: { totalSales: 1 } }).catch(() => {});
@@ -202,7 +233,7 @@ const getFavorites = async (req, res) => {
         .limit(limit)
         .populate({
           path: 'product',
-          select: 'title price images category condition status seller interested ratingAverage ratingCount soldAt',
+          select: 'title price quantity images category condition status seller interested ratingAverage ratingCount soldAt',
           populate: { path: 'seller', select: 'name nickname avatar' }
         })
         .lean(),

@@ -1,55 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Tracking — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/rating.css">
-  <!-- Leaflet CSS for maps -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .tracking-container {
       max-width: 1200px;
       margin: 0 auto;
+      padding-bottom: 60px;
     }
+
     .tracking-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 380px 1fr;
+      gap: 32px;
       margin-top: 24px;
+      align-items: start;
     }
+
     @media (max-width: 1024px) {
       .tracking-grid {
         grid-template-columns: 1fr;
       }
     }
+
     .tracking-card {
       background: var(--bg1);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
     }
+
     .tracking-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       margin-bottom: 20px;
     }
+
     .tracking-title {
-      font-size: 20px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--t1);
+      letter-spacing: -0.02em;
+    }
+
+    #map {
+      width: 100%;
+      height: 320px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .next-action-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 500px;
+    }
+
+    .payment-resume-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      margin: 0 0 24px;
+      border-radius: 16px;
+      border: 1px solid #dbe7ff;
+      background: linear-gradient(135deg, #f7faff 0%, #eef4ff 100%);
+      box-shadow: 0 10px 24px rgba(27, 94, 255, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .payment-resume-main {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .payment-resume-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: #1b5eff;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 8px 18px rgba(27, 94, 255, 0.24);
+    }
+
+    .payment-resume-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .payment-resume-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--t1);
+      margin-bottom: 3px;
+    }
+
+    .payment-resume-sub {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.5;
+    }
+
+    .payment-resume-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      min-width: 170px;
+      background: linear-gradient(135deg, #1b5eff, #5b8aff);
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(27, 94, 255, 0.22);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .payment-resume-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(27, 94, 255, 0.28);
+    }
+
+    .next-action-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .next-action-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .next-action-body {
+      flex: 1;
+    }
+
+    .next-action-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1px;
+    }
+
+    .next-action-title {
+      font-size: 14px;
       font-weight: 700;
       color: var(--t1);
     }
-    #map {
-      width: 100%;
-      height: 500px;
-      border-radius: 6px;
-      margin-bottom: 16px;
+
+    .next-action-eta {
+      font-size: 12px;
+      color: var(--t2);
     }
+
+    .status-timeline {
+      margin-top: 32px;
+      position: relative;
+      padding-left: 12px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 36px;
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 32px;
+      width: 2px;
+      height: calc(100% - 4px);
+      background: var(--border);
+    }
+
+    .timeline-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-dot.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .timeline-dot.completed {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-title {
+      font-weight: 800;
+      color: var(--t1);
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .timeline-title.active {
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .timeline-date {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t3);
+    }
+
+    .timeline-meta {
+      font-size: 13px;
+      color: var(--t2);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .order-details-card {
+      padding: 24px;
+      background: var(--bg2);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .order-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+    }
+
+    .order-info-label {
+      font-size: 13px;
+      color: var(--t3);
+      font-weight: 600;
+    }
+
+    .order-info-value {
+      font-size: 14px;
+      color: var(--t1);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .order-id-chip {
+      background: var(--bg2);
+      color: var(--t2);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .order-product-name {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--t1);
+      text-decoration: none;
+      line-height: 1.2;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .order-product-name:hover {
+      color: var(--primary);
+    }
+
+    .order-product-price {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .person-card {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg1);
+      transition: all 0.2s ease;
+    }
+
+    .person-card:hover {
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .person-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .person-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .person-name {
+      font-weight: 700;
+      color: var(--t1);
+      font-size: 14px;
+    }
+
+    .person-role {
+      font-size: 12px;
+      color: var(--t3);
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .btn-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-message:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-pending {
+      background: #FFF7ED;
+      color: #C2410C;
+      border: 1px solid #FFEDD5;
+    }
+
+    .badge-confirmed {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #DBEAFE;
+    }
+
+    .badge-completed {
+      background: #ECFDF5;
+      color: #047857;
+      border: 1px solid #D1FAE5;
+    }
+
+    .badge-cancelled {
+      background: #FEF2F2;
+      color: #B91C1C;
+      border: 1px solid #FEE2E2;
+    }
+
     .map-legend {
       font-size: 12px;
       color: var(--t2);
@@ -58,850 +449,917 @@
       flex-wrap: wrap;
       margin-top: 12px;
     }
+
     .legend-item {
       display: flex;
       align-items: center;
       gap: 6px;
     }
+
     .legend-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       display: inline-block;
     }
+
     .buyer-dot {
       background: #1B5EFF;
     }
+
     .seller-dot {
       background: #16a34a;
     }
-    .route-line {
-      background: #fbbf24;
-    }
-    .info-box {
-      background: var(--bg2);
-      border-left: 3px solid var(--primary);
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      font-size: 13px;
-    }
-    .info-box-title {
-      font-weight: 600;
-      color: var(--t1);
-      margin-bottom: 4px;
-    }
-    .info-box-content {
-      color: var(--t2);
-    }
-    .status-timeline {
-      margin-top: 16px;
-    }
-    .timeline-item {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-      position: relative;
-    }
-    .timeline-item:not(:last-child)::before {
-      content: '';
-      position: absolute;
-      left: 11px;
-      top: 30px;
-      width: 2px;
-      height: 32px;
-      background: var(--border);
-    }
-    .timeline-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--bg2);
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }
-    .timeline-dot.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-    .timeline-dot.completed {
-      background: var(--success);
-      border-color: var(--success);
-      color: white;
-    }
-    .timeline-content {
-      flex: 1;
-    }
-    .timeline-title {
-      font-weight: 600;
-      color: var(--t1);
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-    .timeline-date {
-      font-size: 12px;
-      color: var(--t3);
-    }
-    .order-details {
-      background: var(--bg2);
-      border-radius: 6px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .order-detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .order-detail-row:last-child {
-      border-bottom: none;
-    }
-    .order-detail-label {
-      color: var(--t2);
-      font-weight: 500;
-    }
-    .order-detail-value {
-      color: var(--t1);
-      font-weight: 600;
-    }
-    .person-card {
-      background: var(--bg2);
-      border-radius: 6px;
-      padding: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .person-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 18px;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    .person-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .person-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .person-name {
-      font-weight: 600;
-      color: var(--t1);
-      font-size: 13px;
-    }
-    .person-role {
-      font-size: 12px;
-      color: var(--t2);
-      margin-top: 2px;
-    }
-    .person-contact {
-      font-size: 12px;
-      color: var(--primary);
-      margin-top: 2px;
-      text-decoration: none;
-    }
-    .btn-message {
-      padding: 8px 16px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
-      margin-top: 8px;
-    }
-    .btn-message:hover {
-      background: var(--primary-dark);
-    }
-    .section-label {
-      font-size: 12px;
-      color: var(--t2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      margin-top: 16px;
-    }
-    .section-label:first-child {
-      margin-top: 0;
-    }
-    .distance-info {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 6px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .distance-info-title {
-      font-weight: 700;
-      color: var(--t1);
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .distance-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 4px;
-    }
-    .distance-time {
-      font-size: 12px;
-      color: var(--t2);
-    }
+
     .back-button {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: var(--primary);
+      color: var(--t3);
       text-decoration: none;
       font-weight: 600;
       font-size: 13px;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
       transition: all 0.2s ease;
     }
+
     .back-button:hover {
-      gap: 10px;
+      color: var(--primary);
     }
-    .badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 4px;
+
+    .dispute-banner {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid;
+      font-size: 14px;
+    }
+
+    .dispute-banner.dispute-open,
+    .dispute-banner.dispute-in_review {
+      background: #FFF7ED;
+      border-color: #FED7AA;
+      color: #7C2D12;
+    }
+
+    .dispute-banner.dispute-resolved {
+      background: #ECFDF5;
+      border-color: #A7F3D0;
+      color: #065F46;
+    }
+
+    .dispute-banner.dispute-rejected {
+      background: #F3F4F6;
+      border-color: #D1D5DB;
+      color: #374151;
+    }
+
+    .dispute-banner-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .dispute-banner-body {
+      flex: 1;
+    }
+
+    .dispute-banner-title {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .dispute-banner-cat {
       font-size: 11px;
-      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.08);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
+      font-weight: 600;
     }
-    .badge-pending {
-      background: rgba(217, 119, 6, 0.1);
-      color: #d97706;
+
+    .dispute-banner-reason,
+    .dispute-banner-desc,
+    .dispute-banner-meta,
+    .dispute-banner-resolution {
+      margin-top: 4px;
+      line-height: 1.5;
     }
-    .badge-confirmed {
-      background: rgba(37, 99, 235, 0.1);
-      color: #2563eb;
+
+    .dispute-banner-meta {
+      font-size: 12px;
+      opacity: 0.8;
     }
-    .badge-completed {
-      background: rgba(22, 163, 74, 0.1);
-      color: #16a34a;
+
+    .dispute-banner-evidence {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
     }
-    .badge-cancelled {
-      background: rgba(220, 38, 38, 0.1);
-      color: #dc2626;
+
+    .dispute-banner-evidence img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-report-problem {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FEF2F2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-report-problem:hover {
+      background: #FEE2E2;
+      border-color: #FCA5A5;
+    }
+
+    .dispute-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dispute-modal-backdrop.show {
+      display: flex;
+    }
+
+    .dispute-modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 560px;
+      width: 92%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .dispute-modal h3 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .dispute-modal .sub {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .dispute-modal label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 12px 0 6px;
+    }
+
+    .dispute-modal select,
+    .dispute-modal input[type="text"],
+    .dispute-modal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #E4E7F2;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .dispute-modal textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .dispute-modal select:focus,
+    .dispute-modal input:focus,
+    .dispute-modal textarea:focus {
+      border-color: #1B5EFF;
+    }
+
+    .dispute-evidence-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .dispute-evidence-thumb {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #E4E7F2;
+    }
+
+    .dispute-evidence-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .dispute-evidence-thumb button {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: none;
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .dispute-evidence-add {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      border: 2px dashed #C4C8DC;
+      background: #F7F8FC;
+      color: #8890B0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .dispute-evidence-add:hover {
+      border-color: #1B5EFF;
+      color: #1B5EFF;
+    }
+
+    .dispute-modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .dispute-modal-actions button {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .dispute-modal-actions .cancel {
+      background: #F3F4F6;
+      color: #374151;
+    }
+
+    .dispute-modal-actions .submit {
+      background: #DC2626;
+      color: #fff;
+    }
+
+    .dispute-modal-actions .submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   </style>
 </head>
+
 <body>
-<%- include('partials/navbar') %>
-<%- include('partials/sidebar') %>
+  <%- include('partials/navbar') %>
+    <%- include('partials/sidebar') %>
 
-<main class="main">
-  <div class="content">
-    <div class="tracking-container">
-      <a href="/orders" class="back-button"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Orders</a>
+      <main class="main">
+        <div class="content">
+          <div class="tracking-container">
+            <a href="/orders" class="back-button"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back
+              to Orders</a>
 
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px">
-        <div>
-          <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px">
-            Track Your Order
-          </h1>
-          <p style="color: var(--t2); font-size: 14px">
-            Order #<%= String(order._id).substring(0, 8).toUpperCase() %>
-          </p>
-        </div>
-        <span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>">
-          <%= order.status %>
-        </span>
-      </div>
-
-      <%
-        const meId = String(user._id);
-        const isBuyer  = order.buyer  && String(order.buyer._id)  === meId;
-        const isSeller = order.seller && String(order.seller._id) === meId;
-        const canDispute = (isBuyer || isSeller)
-          && (order.status === 'confirmed' || order.status === 'completed')
-          && (!order.dispute || order.dispute.status === 'resolved' || order.dispute.status === 'rejected');
-        const hasActiveDispute = order.dispute && (order.dispute.status === 'open' || order.dispute.status === 'in_review');
-      %>
-
-      <% if (order.dispute) { %>
-        <div class="dispute-banner dispute-<%= order.dispute.status %>">
-          <div class="dispute-banner-icon">
-            <% if (order.dispute.status === 'resolved') { %>✓
-            <% } else if (order.dispute.status === 'rejected') { %>✕
-            <% } else { %>⚠<% } %>
-          </div>
-          <div class="dispute-banner-body">
-            <div class="dispute-banner-title">
-              <% if (order.dispute.status === 'open') { %>Dispute open
-              <% } else if (order.dispute.status === 'in_review') { %>Dispute under review
-              <% } else if (order.dispute.status === 'resolved') { %>Dispute resolved
-              <% } else { %>Dispute rejected<% } %>
-              <span class="dispute-banner-cat"><%= order.dispute.category %></span>
-            </div>
-            <div class="dispute-banner-reason"><strong>Reason:</strong> <%= order.dispute.reason %></div>
-            <% if (order.dispute.description) { %>
-              <div class="dispute-banner-desc"><%= order.dispute.description %></div>
-            <% } %>
-            <% if (order.dispute.evidenceImages && order.dispute.evidenceImages.length) { %>
-              <div class="dispute-banner-evidence">
-                <% order.dispute.evidenceImages.forEach(url => { %>
-                  <a href="<%= url %>" target="_blank"><img src="<%= url %>" alt="evidence"></a>
-                <% }); %>
-              </div>
-            <% } %>
-            <div class="dispute-banner-meta">
-              Opened by <strong><%= order.dispute.openedBy?.nickname || order.dispute.openedBy?.name || 'Unknown' %></strong>
-              (<%= order.dispute.openedRole %>)
-              · <%= new Date(order.dispute.openedAt).toLocaleString() %>
-            </div>
-            <% if (order.dispute.resolvedAt) { %>
-              <div class="dispute-banner-resolution">
-                <strong>Resolution:</strong> <%= order.dispute.resolution.replace('-', ' ') %>
-                <% if (order.dispute.resolutionNote) { %> — <%= order.dispute.resolutionNote %><% } %>
-                <% if (order.dispute.resolvedBy) { %>
-                  · by <%= order.dispute.resolvedBy.nickname || order.dispute.resolvedBy.name %>
-                <% } %>
-              </div>
-            <% } %>
-          </div>
-        </div>
-      <% } %>
-
-      <% if (canDispute && !hasActiveDispute) { %>
-        <button class="btn-report-problem" onclick="openDisputeModal()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Report a problem
-        </button>
-      <% } %>
-
-      <style>
-        .dispute-banner {
-          display: flex; gap: 14px; align-items: flex-start;
-          padding: 16px 18px; border-radius: 12px; margin-bottom: 20px;
-          border: 1px solid; font-size: 14px;
-        }
-        .dispute-banner.dispute-open, .dispute-banner.dispute-in_review {
-          background: #FFF7ED; border-color: #FED7AA; color: #7C2D12;
-        }
-        .dispute-banner.dispute-resolved { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
-        .dispute-banner.dispute-rejected { background: #F3F4F6; border-color: #D1D5DB; color: #374151; }
-        .dispute-banner-icon {
-          flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(255,255,255,0.7); font-size: 18px; font-weight: 800;
-        }
-        .dispute-banner-body { flex: 1; }
-        .dispute-banner-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .dispute-banner-cat { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.08); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
-        .dispute-banner-reason, .dispute-banner-desc, .dispute-banner-meta, .dispute-banner-resolution { margin-top: 4px; line-height: 1.5; }
-        .dispute-banner-meta { font-size: 12px; opacity: 0.8; }
-        .dispute-banner-evidence { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .dispute-banner-evidence img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); }
-
-        .btn-report-problem {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;
-          padding: 10px 16px; border-radius: 10px;
-          font-weight: 600; font-size: 14px; cursor: pointer;
-          margin-bottom: 20px; transition: all 0.15s ease;
-        }
-        .btn-report-problem:hover { background: #FEE2E2; border-color: #FCA5A5; }
-
-        .dispute-modal-backdrop {
-          display: none; position: fixed; inset: 0;
-          background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-          z-index: 9999; align-items: center; justify-content: center;
-        }
-        .dispute-modal-backdrop.show { display: flex; }
-        .dispute-modal {
-          background: #fff; border-radius: 16px; max-width: 560px; width: 92%;
-          max-height: 90vh; overflow-y: auto; padding: 24px;
-        }
-        .dispute-modal h3 { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
-        .dispute-modal .sub { color: #6b7280; font-size: 13px; margin-bottom: 18px; }
-        .dispute-modal label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 6px; }
-        .dispute-modal select, .dispute-modal input[type="text"], .dispute-modal textarea {
-          width: 100%; padding: 10px 12px; border: 1px solid #E4E7F2; border-radius: 8px;
-          font-size: 14px; font-family: inherit; outline: none;
-        }
-        .dispute-modal textarea { min-height: 90px; resize: vertical; }
-        .dispute-modal select:focus, .dispute-modal input:focus, .dispute-modal textarea:focus { border-color: #1B5EFF; }
-        .dispute-evidence-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-        .dispute-evidence-thumb { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid #E4E7F2; }
-        .dispute-evidence-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .dispute-evidence-thumb button {
-          position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
-          border-radius: 50%; background: rgba(0,0,0,0.7); color: #fff; border: none;
-          font-size: 11px; line-height: 1; cursor: pointer;
-        }
-        .dispute-evidence-add {
-          width: 64px; height: 64px; border-radius: 8px; border: 2px dashed #C4C8DC;
-          background: #F7F8FC; color: #8890B0; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; font-size: 22px;
-        }
-        .dispute-evidence-add:hover { border-color: #1B5EFF; color: #1B5EFF; }
-        .dispute-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-        .dispute-modal-actions button {
-          padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 14px;
-          cursor: pointer; border: none;
-        }
-        .dispute-modal-actions .cancel { background: #F3F4F6; color: #374151; }
-        .dispute-modal-actions .submit { background: #DC2626; color: #fff; }
-        .dispute-modal-actions .submit:disabled { opacity: 0.6; cursor: not-allowed; }
-      </style>
-
-      <div class="tracking-grid">
-        <!-- Left column: Map and distance -->
-        <div>
-          <div class="tracking-card">
-            <div class="tracking-header">
-              <div class="tracking-title">Delivery Route</div>
-            </div>
-            
-            <div id="map"></div>
-            
-            <div class="map-legend">
-              <div class="legend-item">
-                <span class="legend-dot buyer-dot" style="display:inline-flex;align-items:center;justify-content:center;color:white;font-size:8px;">B</span>
-                <span>Your Location</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot seller-dot" style="display:inline-flex;align-items:center;justify-content:center;color:white;font-size:8px;">S</span>
-                <span>Seller Location</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot route-line"></span>
-                <span>Route Distance</span>
-              </div>
-            </div>
-
-            <!-- Distance information -->
-            <div class="distance-info">
-              <div class="distance-info-title">Estimated Distance</div>
-              <div class="distance-value" id="distanceValue">Calculating...</div>
-              <div class="distance-time" id="estimatedTime"></div>
-            </div>
-
-            <div class="info-box">
-              <div class="info-box-title" style="display:flex;align-items:center;gap:6px;">
-                <i data-lucide="map-pin" style="width:16px;height:16px;"></i> Delivery Method
-              </div>
-              <div class="info-box-content">
-                <% if (order.deliveryMode === 'ship') { %>
-                  <strong>Shipping to:</strong><br/>
-                  <%= order.shippingAddress?.name %><br/>
-                  <%= order.shippingAddress?.street %><br/>
-                  <%= order.shippingAddress?.district %>, <%= order.shippingAddress?.city %>
-                <% } else { %>
-                  <strong>Pickup</strong><br/>
-                  You will pick up this item from the seller's location
-                <% } %>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right column: Order details and status -->
-        <div>
-          <!-- Order Details -->
-          <div class="tracking-card">
-            <div class="tracking-header">
-              <div class="tracking-title">Order Details</div>
-            </div>
-
-            <div class="order-details">
-              <div class="order-detail-row">
-                <span class="order-detail-label">Product</span>
-                <span class="order-detail-value">
-                  <% if (order.product) { %>
-                    <a href="/products/<%= order.product._id %>" style="color: var(--primary); text-decoration: none;">
-                      <%= order.product.title %>
-                    </a>
-                  <% } %>
-                </span>
-              </div>
-              <div class="order-detail-row">
-                <span class="order-detail-label">Price</span>
-                <span class="order-detail-value">
-                  <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot) %>
-                </span>
-              </div>
-              <div class="order-detail-row">
-                <span class="order-detail-label">Payment Method</span>
-                <span class="order-detail-value">
-                  <%= order.paymentMode === 'card' ? 'Card' : 'Cash' %>
-                </span>
-              </div>
-              <div class="order-detail-row">
-                <span class="order-detail-label">Ordered on</span>
-                <span class="order-detail-value">
-                  <%= new Date(order.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
-                </span>
-              </div>
-              <% if (order.note) { %>
-                <div class="order-detail-row">
-                  <span class="order-detail-label">Note</span>
-                  <span class="order-detail-value"><%= order.note %></span>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                  <h1 style="font-size: 32px; font-weight: 900; color: var(--t1); letter-spacing: -0.03em;">
+                    Track Order
+                  </h1>
+                  <span
+                    class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>">
+                    <%= order.status %>
+                  </span>
                 </div>
-              <% } %>
+                <div class="order-id-chip">
+                  #<%= String(order._id).substring(0, 8).toUpperCase() %>
+                </div>
+              </div>
             </div>
 
-            <!-- Status Timeline -->
-            <%
-              // Build timeline entries: prefer order.timeline (real activity log),
-              // fall back to deriving from timestamps for legacy orders.
-              let entries = (order.timeline && order.timeline.length)
-                ? order.timeline.slice()
-                : [];
-
-              if (entries.length === 0) {
-                entries.push({ event: 'pending',   at: order.createdAt,   actor: order.buyer,  note: 'Order placed' });
-                if (order.confirmedAt) entries.push({ event: 'confirmed', at: order.confirmedAt, actor: order.seller, note: 'Order confirmed' });
-                if (order.completedAt) entries.push({ event: 'completed', at: order.completedAt, actor: null,         note: 'Order completed' });
-                if (order.cancelledAt) entries.push({ event: 'cancelled', at: order.cancelledAt, actor: null,         note: 'Order cancelled' });
-              }
-
-              // Sort ascending so newest is at the bottom (cleaner reading)
-              entries.sort((a, b) => new Date(a.at) - new Date(b.at));
-
-              const eventLabels = {
-                pending:   'Order Placed',
-                confirmed: 'Order Confirmed',
-                completed: 'Order Completed',
-                cancelled: 'Order Cancelled'
-              };
-
-              const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            %>
-
-            <div class="status-timeline">
-              <div class="section-label">Status Timeline</div>
-
-              <% entries.forEach((e, idx) => {
-                const isCancel = e.event === 'cancelled';
-                const isLast   = idx === entries.length - 1;
-                const dotClass = isCancel ? '' : (isLast ? 'active' : 'completed');
-                const actorName = e.actor && (e.actor.nickname || e.actor.name) || '';
+            <% const meId=String(user._id); const isBuyer=order.buyer && String(order.buyer._id)===meId; const
+              isSeller=order.seller && String(order.seller._id)===meId; const canDispute=(isBuyer || isSeller) &&
+              (order.status==='confirmed' || order.status==='completed' ) && (!order.dispute ||
+              order.dispute.status==='resolved' || order.dispute.status==='rejected' ); const
+              hasActiveDispute=order.dispute && (order.dispute.status==='open' || order.dispute.status==='in_review' );
+              const canResumePayment = isBuyer && order.paymentMode === 'qr' && order.status === 'pending_payment' && payment && payment.status === 'PENDING';
               %>
-                <div class="timeline-item">
-                  <div class="timeline-dot <%= dotClass %>" style="<%= isCancel ? 'background:#dc2626;border-color:#dc2626;color:white;' : '' %>display:flex;align-items:center;justify-content:center;">
-                    <% if (isCancel) { %>
-                      <i data-lucide="x" style="width:12px;height:12px;"></i>
-                    <% } else if (dotClass === 'completed' || dotClass === 'active') { %>
-                      <i data-lucide="check" style="width:12px;height:12px;"></i>
-                    <% } %>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-title" style="<%= isCancel ? 'color:#dc2626' : '' %>">
-                      <%= eventLabels[e.event] || e.event %>
-                    </div>
-                    <div class="timeline-date"><%= fmtDate(e.at) %></div>
-                    <% if (e.note || actorName) { %>
-                      <div class="timeline-meta" style="font-size:12px;color:#6b7280;margin-top:2px;">
-                        <% if (e.note) { %><%= e.note %><% } %>
-                        <% if (actorName) { %>
-                          <% if (e.note) { %> · <% } %>by <strong><%= actorName %></strong>
-                        <% } %>
-                      </div>
-                    <% } %>
-                  </div>
-                </div>
-              <% }); %>
 
-              <% if (order.status === 'pending' && !entries.some(e => e.event === 'confirmed')) { %>
-                <div class="timeline-item">
-                  <div class="timeline-dot" style="display:flex;align-items:center;justify-content:center;"></div>
-                  <div class="timeline-content">
-                    <div class="timeline-title" style="color:#9ca3af;">Awaiting Confirmation</div>
-                    <div class="timeline-date">Pending seller action</div>
+              <% if (canResumePayment) { %>
+                <div class="payment-resume-card">
+                  <div class="payment-resume-main">
+                    <div class="payment-resume-icon">
+                      <i data-lucide="qr-code" style="width:20px;height:20px;"></i>
+                    </div>
+                    <div>
+                      <div class="payment-resume-label">Payment Required</div>
+                      <div class="payment-resume-title">Complete your QR payment to continue this order</div>
+                      <div class="payment-resume-sub">
+                        Transfer exactly
+                        <strong><%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(payment.amount) %></strong>
+                        using the existing payment session.
+                      </div>
+                    </div>
                   </div>
-                </div>
-              <% } else if (order.status === 'confirmed' && !entries.some(e => e.event === 'completed' || e.event === 'cancelled')) { %>
-                <div class="timeline-item">
-                  <div class="timeline-dot" style="display:flex;align-items:center;justify-content:center;"></div>
-                  <div class="timeline-content">
-                    <div class="timeline-title" style="color:#9ca3af;">Awaiting Completion</div>
-                    <div class="timeline-date">Order in progress</div>
-                  </div>
+                  <a href="/checkout/payment/<%= payment._id %>" class="payment-resume-btn">
+                    <i data-lucide="arrow-up-right" style="width:16px;height:16px;"></i>
+                    Continue payment
+                  </a>
                 </div>
               <% } %>
-            </div>
-          </div>
 
-          <!-- Seller Information -->
-          <div class="tracking-card" style="margin-top: 20px">
-            <div class="tracking-header">
-              <div class="tracking-title">Seller Information</div>
-            </div>
-
-            <div class="person-card">
-              <div class="person-avatar">
-                <% if (order.seller.avatar) { %>
-                  <img src="<%= order.seller.avatar %>" alt="<%= order.seller.name %>" />
-                <% } else { %>
-                  <%= (order.seller.name || 'Seller').charAt(0).toUpperCase() %>
-                <% } %>
-              </div>
-              <div class="person-info">
-                <a href="/user/<%= order.seller._id %>" style="text-decoration: none; color: inherit">
-                  <div class="person-name"><%= order.seller.nickname || order.seller.name %></div>
-                  <div class="person-role">Campus Seller</div>
-                  <div style="font-size: 12px; margin-top: 6px; color: #fbbf24;">
-                    <i data-lucide="star" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:2px;fill:currentColor;"></i> <%= (order.seller.rating || 5).toFixed(1) %> 
-                    <span style="color: var(--t2);">(<%= order.seller.ratingCount || 0 %> reviews)</span>
+              <% if (order.dispute) { %>
+                <div class="dispute-banner dispute-<%= order.dispute.status %>">
+                  <div class="dispute-banner-icon">
+                    <% if (order.dispute.status==='resolved' ) { %>✓
+                      <% } else if (order.dispute.status==='rejected' ) { %>✕
+                        <% } else { %>⚠<% } %>
                   </div>
-                </a>
-                <% if (order.seller.phone) { %>
-                  <a href="tel:<%= order.seller.phone %>" class="person-contact" style="display:flex;align-items:center;gap:4px;">
-                    <i data-lucide="phone" style="width:12px;height:12px;"></i> <%= order.seller.phone %>
-                  </a>
+                  <div class="dispute-banner-body">
+                    <div class="dispute-banner-title">
+                      <% if (order.dispute.status==='open' ) { %>Dispute open
+                        <% } else if (order.dispute.status==='in_review' ) { %>Dispute under review
+                          <% } else if (order.dispute.status==='resolved' ) { %>Dispute resolved
+                            <% } else { %>Dispute rejected<% } %>
+                                <span class="dispute-banner-cat">
+                                  <%= order.dispute.category %>
+                                </span>
+                    </div>
+                    <div class="dispute-banner-reason"><strong>Reason:</strong>
+                      <%= order.dispute.reason %>
+                    </div>
+                    <div class="dispute-banner-meta">
+                      Opened by <strong>
+                        <%= order.dispute.openedBy?.nickname || order.dispute.openedBy?.name || 'Unknown' %>
+                      </strong>
+                      · <%= new Date(order.dispute.openedAt).toLocaleString() %>
+                    </div>
+                  </div>
+                </div>
                 <% } %>
-              </div>
-            </div>
 
-            <a href="/messages?id=<%= order.conversation || '' %>" class="btn-message" style="display:flex;align-items:center;justify-content:center;gap:8px;">
-              <i data-lucide="message-square" style="width:16px;height:16px;"></i> Message Seller
-            </a>
+                  <!-- Next Action Card (Compact) -->
+                  <div class="next-action-card">
+                    <div class="next-action-icon">
+                      <% if (order.status==='pending' ) { %><i data-lucide="clock"></i>
+                        <% } else if (order.status==='confirmed' ) { %><i data-lucide="package"></i>
+                          <% } else if (order.status==='completed' ) { %><i data-lucide="check-circle"></i>
+                            <% } else { %><i data-lucide="x-circle"></i>
+                              <% } %>
+                    </div>
+                    <div class="next-action-body">
+                      <div class="next-action-label">Next Step</div>
+                      <div class="next-action-title">
+                        <% if (order.status==='pending' ) { %>Waiting for seller confirmation
+                          <% } else if (order.status==='confirmed' ) { %>Prepare for exchange / delivery
+                            <% } else if (order.status==='completed' ) { %>Leave a review for the seller
+                              <% } else { %>Check other products<% } %>
+                      </div>
+                    </div>
+                    <div class="next-action-eta"
+                      style="margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border);">
+                      <% if (order.status==='pending' ) { %>Est. 24h
+                        <% } else if (order.status==='confirmed' ) { %>Est. 1-2d
+                          <% } else if (order.status==='completed' ) { %>Done<% } %>
+                    </div>
+                  </div>
+
+                  <% if (canDispute && !hasActiveDispute) { %>
+                    <button class="btn-report-problem" onclick="openDisputeModal()">
+                      <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Report a problem
+                    </button>
+                    <% } %>
+
+                      <div class="tracking-grid">
+                        <!-- Left column: Map (35%) -->
+                        <aside>
+                          <div class="tracking-card">
+                            <div class="tracking-header">
+                              <div class="tracking-title">Live Route</div>
+                            </div>
+
+                            <div id="map"></div>
+
+                            <div class="map-legend">
+                              <div class="legend-item"><span class="legend-dot buyer-dot"></span><span>You</span></div>
+                              <div class="legend-item"><span class="legend-dot seller-dot"></span><span>Seller</span>
+                              </div>
+                            </div>
+
+                            <div class="distance-info"
+                              style="background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 20px 0;">
+                              <div
+                                style="font-size: 11px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                                Estimated Distance</div>
+                              <div id="distanceValue"
+                                style="font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 4px;">
+                                Calculating...</div>
+                              <div id="estimatedTime" style="font-size: 13px; font-weight: 600; color: var(--success);">
+                              </div>
+                            </div>
+
+                            <div class="order-details-card"
+                              style="background: transparent; border-color: var(--border); padding: 16px;">
+                              <div
+                                style="font-size: 11px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
+                                Delivery Details</div>
+                              <div style="font-size: 14px; line-height: 1.6; color: var(--t2);">
+                                <% if (order.deliveryMode==='ship' ) { %>
+                                  <div style="display:flex; gap:10px;">
+                                    <i data-lucide="truck"
+                                      style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"></i>
+                                    <div>
+                                      <strong style="color:var(--t1)">Shipping to:</strong><br />
+                                      <%= order.shippingAddress?.name %><br />
+                                        <%= order.shippingAddress?.street %><br />
+                                          <%= order.shippingAddress?.district %>
+                                    </div>
+                                  </div>
+                                  <% } else { %>
+                                    <div style="display:flex; gap:10px;">
+                                      <i data-lucide="map-pin"
+                                        style="width:18px;height:18px;color:var(--success);flex-shrink:0;"></i>
+                                      <div>
+                                        <strong style="color:var(--t1)">Self-Pickup:</strong><br />
+                                        Coordinate a meetup at the seller's location.
+                                      </div>
+                                    </div>
+                                    <% } %>
+                              </div>
+                            </div>
+                          </div>
+                        </aside>
+
+                        <!-- Right column: Status & Actions (65%) -->
+                        <section>
+                          <div class="tracking-card">
+                            <div class="tracking-header">
+                              <div class="tracking-title">Order Information</div>
+                            </div>
+
+                            <div class="order-details-card">
+                              <div style="margin-bottom: 24px;">
+                                <% if (order.product) { %>
+                                  <a href="/products/<%= order.product._id %>" class="order-product-name">
+                                    <%= order.product.title %>
+                                  </a>
+                                  <% } %>
+                                    <span class="order-product-price">
+                                      <%= new Intl.NumberFormat('en-US', { style: 'currency' , currency: 'VND'
+                                        }).format(order.priceSnapshot) %>
+                                    </span>
+                                    <div style="font-size:13px;color:var(--t3);font-weight:700;margin-top:-10px;">
+                                      Quantity: <%= order.quantity || 1 %>
+                                    </div>
+                              </div>
+
+                              <div
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--border); padding-top: 20px;">
+                                <div class="order-info-row"
+                                  style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                  <span class="order-info-label">Payment Mode</span>
+                                  <span class="order-info-value">
+                                    <%= order.paymentMode==='qr' ? 'QR Transfer' : (order.paymentMode==='card' ? 'Card' : 'Cash') %>
+                                  </span>
+                                </div>
+                                <div class="order-info-row"
+                                  style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                  <span class="order-info-label">Order Created</span>
+                                  <span class="order-info-value">
+                                    <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short' ,
+                                      day: 'numeric' , year: 'numeric' }) %>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Enhanced Status Timeline -->
+                            <div class="status-timeline">
+                              <% let entries=(order.timeline && order.timeline.length) ? order.timeline.slice() : []; if
+                                (entries.length===0) { entries.push({ event: 'pending' , at: order.createdAt,
+                                note: 'Order placed by buyer' }); if (order.confirmedAt) entries.push({
+                                event: 'confirmed' , at: order.confirmedAt, note: 'Seller confirmed the order' }); if
+                                (order.completedAt) entries.push({ event: 'completed' , at: order.completedAt,
+                                note: 'Order marked as finished' }); if (order.cancelledAt) entries.push({
+                                event: 'cancelled' , at: order.cancelledAt, note: 'Order was cancelled' }); }
+                                entries.sort((a, b)=> new Date(a.at) - new Date(b.at));
+                                const eventLabels = { pending: 'Order Placed', confirmed: 'Order Confirmed', completed:
+                                'Order Completed', cancelled: 'Order Cancelled' };
+                                const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day:
+                                'numeric', hour: '2-digit', minute: '2-digit' });
+                                %>
+
+                                <% entries.forEach((e, idx)=> {
+                                  const isCancel = e.event === 'cancelled';
+                                  const isLast = idx === entries.length - 1;
+                                  const dotClass = isCancel ? '' : (isLast ? 'active' : 'completed');
+                                  %>
+                                  <div class="timeline-item">
+                                    <div class="timeline-dot <%= dotClass %>"
+                                      style="<%= isCancel ? 'background:#dc2626;border-color:#dc2626;color:white;' : '' %>">
+                                      <% if (isCancel) { %><i data-lucide="x" style="width:14px;height:14px;"></i>
+                                        <% } else if (dotClass==='completed' ) { %><i data-lucide="check"
+                                            style="width:14px;height:14px;"></i>
+                                          <% } else if (dotClass==='active' ) { %><i data-lucide="circle"
+                                              style="width:12px;height:12px;fill:white;"></i>
+                                            <% } %>
+                                    </div>
+                                    <div class="timeline-content">
+                                      <div class="timeline-title <%= dotClass === 'active' ? 'active' : '' %>"
+                                        style="<%= isCancel ? 'color:#dc2626' : '' %>">
+                                        <%= eventLabels[e.event] || e.event %>
+                                      </div>
+                                      <div class="timeline-date">
+                                        <%= fmtDate(e.at) %>
+                                      </div>
+                                      <div class="timeline-meta">
+                                        <%= e.note || '' %>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <% }); %>
+
+                                    <% if (order.status==='pending' ) { %>
+                                      <div class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-content">
+                                          <div class="timeline-title" style="color:var(--t3)">Awaiting Confirmation
+                                          </div>
+                                          <div class="timeline-meta">Seller will review your request soon</div>
+                                        </div>
+                                      </div>
+                                      <% } else if (order.status==='confirmed' ) { %>
+                                        <div class="timeline-item">
+                                          <div class="timeline-dot"></div>
+                                          <div class="timeline-content">
+                                            <div class="timeline-title" style="color:var(--t3)">Awaiting Pickup/Delivery
+                                            </div>
+                                            <div class="timeline-meta">Preparing for exchange</div>
+                                          </div>
+                                        </div>
+                                        <% } %>
+                            </div>
+
+                            <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border);">
+                              <div
+                                style="font-size: 11px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">
+                                Contact Information</div>
+                              <div class="person-card">
+                                <div class="person-avatar">
+                                  <% if (order.seller.avatar) { %>
+                                    <img src="<%= order.seller.avatar %>" alt="<%= order.seller.name %>" />
+                                    <% } else { %>
+                                      <%= (order.seller.name || 'S' ).charAt(0).toUpperCase() %>
+                                        <% } %>
+                                </div>
+                                <div class="person-info">
+                                  <div class="person-name">
+                                    <%= order.seller.nickname || order.seller.name %>
+                                  </div>
+                                  <div class="person-role">Verified Seller · <i data-lucide="star"
+                                      style="width:12px;height:12px;fill:#fbbf24;color:#fbbf24;display:inline-block;"></i>
+                                    <%= (order.seller.rating || 5).toFixed(1) %>
+                                  </div>
+                                </div>
+                                <div style="flex-shrink:0;">
+                                  <a href="/messages?id=<%= order.conversation || '' %>" class="btn-message">
+                                    <i data-lucide="message-square" style="width:14px;height:14px;"></i> Message
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Leaflet JS for maps -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+      <!-- Leaflet Routing Machine for routes -->
+      <script
+        src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.umd.js"></script>
+      <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+      <script>
+        // Initialize map
+        const map = L.map('map').setView([21.0285, 105.8542], 13); // Default to Hanoi
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+
+        // Order data
+        const order = <%- JSON.stringify(order) %>;
+
+        // EJS User Roles
+        const isBuyer = <%= isBuyer %>;
+        const isSeller = <%= isSeller %>;
+
+        // Extract coordinates with fallback logic
+        let buyerPos = null;
+        let sellerPos = null;
+
+        // 1. Determine Buyer/Destination Position
+        if (order.deliveryMode === 'ship' && order.shippingAddress && order.shippingAddress.lat) {
+          buyerPos = [order.shippingAddress.lat, order.shippingAddress.lng];
+        } else if (order.buyer && order.buyer.location && order.buyer.location.lat) {
+          buyerPos = [order.buyer.location.lat, order.buyer.location.lng];
+        }
+
+        // 2. Determine Seller/Origin Position
+        if (order.deliveryMode === 'pickup' && order.pickupLocation && order.pickupLocation.lat) {
+          sellerPos = [order.pickupLocation.lat, order.pickupLocation.lng];
+        } else if (order.product && order.product.location && order.product.location.lat) {
+          sellerPos = [order.product.location.lat, order.product.location.lng];
+        } else if (order.seller && order.seller.location && order.seller.location.lat) {
+          sellerPos = [order.seller.location.lat, order.seller.location.lng];
+        }
+
+        // Fallbacks for demo if data is missing
+        if (!buyerPos) buyerPos = [21.0285, 105.8542]; // Hanoi center
+        if (!sellerPos) sellerPos = [21.0435, 105.8542]; // Slightly North
+
+        // Add markers
+        const buyerMarker = L.marker(buyerPos, {
+          icon: L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzFCNUVGRiIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
+            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+          })
+        }).addTo(map).bindPopup(isBuyer ? '<strong>Destination (You)</strong><br>Your Location' : '<strong>Destination</strong><br>Buyer Location');
+
+        const sellerMarker = L.marker(sellerPos, {
+          icon: L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzE2YTM0YSIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
+            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+          })
+        }).addTo(map).bindPopup(isSeller ? '<strong>Origin (You)</strong><br>Your Location' : '<strong>Origin</strong><br>Seller Location');
+
+        // Distance Calculation (Haversine)
+        function calcDist(p1, p2) {
+          const R = 6371;
+          const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+          const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // Draw Route & Distance Manager
+        let routeLine = L.polyline([buyerPos, sellerPos], { color: '#fbbf24', dashArray: '8, 8' }).addTo(map);
+        let routingControl = null;
+
+        function drawRoute() {
+          const dist = calcDist(buyerPos, sellerPos);
+          document.getElementById('distanceValue').textContent = dist.toFixed(1) + ' km';
+          document.getElementById('estimatedTime').textContent = `Est. delivery time: ${Math.round(dist * 6)} mins`;
+
+          // Update simple polyline
+          if (routeLine) {
+            routeLine.setLatLngs([buyerPos, sellerPos]);
+          }
+
+          // Update Leaflet Routing Machine if loaded
+          if (routingControl) {
+            try {
+              map.removeControl(routingControl);
+            } catch (e) {}
+          }
+          try {
+            routingControl = L.Routing.control({
+              waypoints: [L.latLng(sellerPos), L.latLng(buyerPos)],
+              routeWhileDragging: false,
+              addWaypoints: false,
+              show: false
+            }).addTo(map);
+          } catch (e) { }
+
+          // Fit bounds safely
+          const bounds = L.latLngBounds([buyerPos, sellerPos]);
+          map.fitBounds(bounds.pad(0.5));
+        }
+
+        // Draw initial route
+        drawRoute();
+
+        // Use browser Geolocation API to fetch current user's actual live position
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const livePos = [position.coords.latitude, position.coords.longitude];
+              if (isBuyer) {
+                buyerPos = livePos;
+                if (buyerMarker) {
+                  buyerMarker.setLatLng(buyerPos);
+                  buyerMarker.bindPopup('<strong>Destination (You)</strong><br>Your Live Location').openPopup();
+                }
+              } else if (isSeller) {
+                sellerPos = livePos;
+                if (sellerMarker) {
+                  sellerMarker.setLatLng(sellerPos);
+                  sellerMarker.bindPopup('<strong>Origin (You)</strong><br>Your Live Location').openPopup();
+                }
+              }
+              // Redraw the path and adjust the map bounds
+              drawRoute();
+            },
+            (error) => {
+              console.warn('Geolocation error or permission denied:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        }
+      </script>
+
+      <!-- Dispute modal -->
+      <div class="dispute-modal-backdrop" id="dispute-modal-backdrop">
+        <div class="dispute-modal" role="dialog" aria-modal="true">
+          <h3>Report a problem</h3>
+          <p class="sub">Tell us what went wrong. An admin will review your report.</p>
+
+          <label for="dispute-category">Category</label>
+          <select id="dispute-category">
+            <option value="item-not-received">Item not received</option>
+            <option value="item-damaged">Item damaged</option>
+            <option value="wrong-item">Wrong item</option>
+            <option value="item-not-as-described">Not as described</option>
+            <option value="payment-issue">Payment issue</option>
+            <option value="fraud">Fraud / scam</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label for="dispute-reason">Short reason <span style="color:#DC2626">*</span></label>
+          <input type="text" id="dispute-reason" maxlength="200" placeholder="e.g. Item never arrived after 5 days">
+
+          <label for="dispute-description">Details (optional)</label>
+          <textarea id="dispute-description" maxlength="2000"
+            placeholder="Describe what happened, dates, conversations, etc."></textarea>
+
+          <label>Evidence (max 6 images)</label>
+          <div class="dispute-evidence-list" id="dispute-evidence-list">
+            <button type="button" class="dispute-evidence-add" id="dispute-evidence-add" title="Add image">+</button>
+          </div>
+          <input type="file" id="dispute-evidence-input" accept="image/*" style="display:none">
+
+          <div class="dispute-modal-actions">
+            <button type="button" class="cancel" onclick="closeDisputeModal()">Cancel</button>
+            <button type="button" class="submit" id="dispute-submit-btn" onclick="submitDispute()">Submit
+              report</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</main>
 
-<!-- Leaflet JS for maps -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<!-- Leaflet Routing Machine for routes -->
-<script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.umd.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+      <script>
+        const DISPUTE_ORDER_ID = '<%= String(order._id) %>';
+        let disputeEvidenceUrls = [];
 
-<script>
-  // Initialize map
-  const map = L.map('map').setView([21.0285, 105.8542], 13); // Default to Hanoi
+        window.openDisputeModal = function () {
+          document.getElementById('dispute-modal-backdrop').classList.add('show');
+        };
+        window.closeDisputeModal = function () {
+          document.getElementById('dispute-modal-backdrop').classList.remove('show');
+        };
+        document.getElementById('dispute-modal-backdrop').addEventListener('click', (e) => {
+          if (e.target.id === 'dispute-modal-backdrop') closeDisputeModal();
+        });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
+        // Evidence image upload
+        const evInput = document.getElementById('dispute-evidence-input');
+        const evList = document.getElementById('dispute-evidence-list');
+        const evAdd = document.getElementById('dispute-evidence-add');
 
-  // Order data
-  const order = <%- JSON.stringify(order) %>;
+        evAdd.addEventListener('click', () => evInput.click());
 
-  // Extract coordinates with fallback logic
-  let buyerPos = null;
-  let sellerPos = null;
+        evInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          if (!file.type.startsWith('image/')) { showToast('Please pick an image', 'err'); return; }
+          if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB', 'err'); return; }
+          if (disputeEvidenceUrls.length >= 6) { showToast('Maximum 6 images', 'err'); return; }
 
-  // 1. Determine Buyer/Destination Position
-  if (order.deliveryMode === 'ship' && order.shippingAddress && order.shippingAddress.lat) {
-    buyerPos = [order.shippingAddress.lat, order.shippingAddress.lng];
-  } else if (order.buyer && order.buyer.location && order.buyer.location.lat) {
-    buyerPos = [order.buyer.location.lat, order.buyer.location.lng];
-  }
+          evAdd.textContent = '…';
+          evAdd.disabled = true;
+          try {
+            const fd = new FormData();
+            fd.append('image', file);
+            const res = await fetch('/api/upload/chat', { method: 'POST', body: fd, credentials: 'include' });
+            const json = await res.json();
+            if (!res.ok || !json.success) throw new Error(json.message || 'Upload failed');
+            disputeEvidenceUrls.push(json.url);
+            addEvidenceThumb(json.url);
+          } catch (err) {
+            showToast('Upload failed: ' + err.message, 'err');
+          } finally {
+            evAdd.textContent = '+';
+            evAdd.disabled = false;
+            evInput.value = '';
+          }
+        });
 
-  // 2. Determine Seller/Origin Position
-  if (order.deliveryMode === 'pickup' && order.pickupLocation && order.pickupLocation.lat) {
-    sellerPos = [order.pickupLocation.lat, order.pickupLocation.lng];
-  } else if (order.product && order.product.location && order.product.location.lat) {
-    sellerPos = [order.product.location.lat, order.product.location.lng];
-  } else if (order.seller && order.seller.location && order.seller.location.lat) {
-    sellerPos = [order.seller.location.lat, order.seller.location.lng];
-  }
+        function addEvidenceThumb(url) {
+          const thumb = document.createElement('div');
+          thumb.className = 'dispute-evidence-thumb';
+          thumb.innerHTML = `<img src="${url}" alt="evidence"><button type="button">✕</button>`;
+          thumb.querySelector('button').addEventListener('click', () => {
+            disputeEvidenceUrls = disputeEvidenceUrls.filter(u => u !== url);
+            thumb.remove();
+          });
+          evList.insertBefore(thumb, evAdd);
+        }
 
-  // Fallbacks for demo if data is missing
-  if (!buyerPos) buyerPos = [21.0285, 105.8542]; // Hanoi center
-  if (!sellerPos) sellerPos = [21.0435, 105.8542]; // Slightly North
+        window.submitDispute = async function () {
+          const category = document.getElementById('dispute-category').value;
+          const reason = document.getElementById('dispute-reason').value.trim();
+          const description = document.getElementById('dispute-description').value.trim();
+          const btn = document.getElementById('dispute-submit-btn');
 
-  // Add markers
-  const buyerMarker = L.marker(buyerPos, {
-    icon: L.icon({
-      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzFCNUVGRiIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
-      iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
-    })
-  }).addTo(map).bindPopup('<strong>Destination</strong><br>Buyer Location');
+          if (!reason) { showToast('Please enter a short reason', 'err'); return; }
 
-  const sellerMarker = L.marker(sellerPos, {
-    icon: L.icon({
-      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzE2YTM0YSIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
-      iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
-    })
-  }).addTo(map).bindPopup('<strong>Origin</strong><br>Seller Location');
+          btn.disabled = true;
+          btn.textContent = 'Submitting...';
 
-  // Fit bounds
-  const bounds = L.latLngBounds([buyerPos, sellerPos]);
-  map.fitBounds(bounds.pad(0.3));
+          try {
+            const res = await fetch('/api/orders/' + DISPUTE_ORDER_ID + '/dispute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ category, reason, description, evidenceImages: disputeEvidenceUrls })
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) throw new Error(json.message || 'Failed');
 
-  // Distance Calculation (Haversine)
-  function calcDist(p1, p2) {
-    const R = 6371;
-    const dLat = (p2[0]-p1[0])*Math.PI/180;
-    const dLon = (p2[1]-p1[1])*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(p1[0]*Math.PI/180)*Math.cos(p2[0]*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
+            btn.textContent = 'Submitted';
+            showToast('Dispute submitted successfully', 'ok');
+            setTimeout(() => location.reload(), 600);
+          } catch (err) {
+            showToast('Could not submit: ' + err.message, 'err');
+            btn.disabled = false;
+            btn.textContent = 'Submit report';
+          }
+        };
 
-  const dist = calcDist(buyerPos, sellerPos);
-  document.getElementById('distanceValue').textContent = dist.toFixed(1) + ' km';
-  document.getElementById('estimatedTime').textContent = `Est. delivery time: ${Math.round(dist * 6)} mins`;
-
-  // Draw Route
-  L.polyline([buyerPos, sellerPos], { color: '#fbbf24', dashArray: '8, 8' }).addTo(map);
-
-  // Optional: Routing Machine
-  try {
-    L.Routing.control({
-      waypoints: [L.latLng(sellerPos), L.latLng(buyerPos)],
-      routeWhileDragging: false,
-      addWaypoints: false,
-      show: false
-    }).addTo(map);
-  } catch (e) {}
-</script>
-
-<!-- Dispute modal -->
-<div class="dispute-modal-backdrop" id="dispute-modal-backdrop">
-  <div class="dispute-modal" role="dialog" aria-modal="true">
-    <h3>Report a problem</h3>
-    <p class="sub">Tell us what went wrong. An admin will review your report.</p>
-
-    <label for="dispute-category">Category</label>
-    <select id="dispute-category">
-      <option value="item-not-received">Item not received</option>
-      <option value="item-damaged">Item damaged</option>
-      <option value="wrong-item">Wrong item</option>
-      <option value="item-not-as-described">Not as described</option>
-      <option value="payment-issue">Payment issue</option>
-      <option value="fraud">Fraud / scam</option>
-      <option value="other">Other</option>
-    </select>
-
-    <label for="dispute-reason">Short reason <span style="color:#DC2626">*</span></label>
-    <input type="text" id="dispute-reason" maxlength="200" placeholder="e.g. Item never arrived after 5 days">
-
-    <label for="dispute-description">Details (optional)</label>
-    <textarea id="dispute-description" maxlength="2000" placeholder="Describe what happened, dates, conversations, etc."></textarea>
-
-    <label>Evidence (max 6 images)</label>
-    <div class="dispute-evidence-list" id="dispute-evidence-list">
-      <button type="button" class="dispute-evidence-add" id="dispute-evidence-add" title="Add image">+</button>
-    </div>
-    <input type="file" id="dispute-evidence-input" accept="image/*" style="display:none">
-
-    <div class="dispute-modal-actions">
-      <button type="button" class="cancel" onclick="closeDisputeModal()">Cancel</button>
-      <button type="button" class="submit" id="dispute-submit-btn" onclick="submitDispute()">Submit report</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const DISPUTE_ORDER_ID = '<%= String(order._id) %>';
-  let disputeEvidenceUrls = [];
-
-  window.openDisputeModal = function() {
-    document.getElementById('dispute-modal-backdrop').classList.add('show');
-  };
-  window.closeDisputeModal = function() {
-    document.getElementById('dispute-modal-backdrop').classList.remove('show');
-  };
-  document.getElementById('dispute-modal-backdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'dispute-modal-backdrop') closeDisputeModal();
-  });
-
-  // Evidence image upload
-  const evInput = document.getElementById('dispute-evidence-input');
-  const evList  = document.getElementById('dispute-evidence-list');
-  const evAdd   = document.getElementById('dispute-evidence-add');
-
-  evAdd.addEventListener('click', () => evInput.click());
-
-  evInput.addEventListener('change', async (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { alert('Please pick an image'); return; }
-    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB'); return; }
-    if (disputeEvidenceUrls.length >= 6) { alert('Maximum 6 images'); return; }
-
-    evAdd.textContent = '…';
-    evAdd.disabled = true;
-    try {
-      const fd = new FormData();
-      fd.append('image', file);
-      const res = await fetch('/api/upload/chat', { method: 'POST', body: fd, credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.message || 'Upload failed');
-      disputeEvidenceUrls.push(json.url);
-      addEvidenceThumb(json.url);
-    } catch (err) {
-      alert('Upload failed: ' + err.message);
-    } finally {
-      evAdd.textContent = '+';
-      evAdd.disabled = false;
-      evInput.value = '';
-    }
-  });
-
-  function addEvidenceThumb(url) {
-    const thumb = document.createElement('div');
-    thumb.className = 'dispute-evidence-thumb';
-    thumb.innerHTML = `<img src="${url}" alt="evidence"><button type="button">✕</button>`;
-    thumb.querySelector('button').addEventListener('click', () => {
-      disputeEvidenceUrls = disputeEvidenceUrls.filter(u => u !== url);
-      thumb.remove();
-    });
-    evList.insertBefore(thumb, evAdd);
-  }
-
-  window.submitDispute = async function() {
-    const category    = document.getElementById('dispute-category').value;
-    const reason      = document.getElementById('dispute-reason').value.trim();
-    const description = document.getElementById('dispute-description').value.trim();
-    const btn         = document.getElementById('dispute-submit-btn');
-
-    if (!reason) { alert('Please enter a short reason'); return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Submitting...';
-
-    try {
-      const res = await fetch('/api/orders/' + DISPUTE_ORDER_ID + '/dispute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ category, reason, description, evidenceImages: disputeEvidenceUrls })
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.message || 'Failed');
-
-      btn.textContent = 'Submitted';
-      setTimeout(() => location.reload(), 600);
-    } catch (err) {
-      alert('Could not submit: ' + err.message);
-      btn.disabled = false;
-      btn.textContent = 'Submit report';
-    }
-  };
-</script>
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      </script>
 
 </body>
+
 </html>

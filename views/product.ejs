@@ -11,8 +11,10 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/product.css">
+  <link rel="stylesheet" href="/css/image-modal.css">
   <link rel="stylesheet" href="/css/rating.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -30,7 +32,8 @@
     const p         = product;
     const seller    = p.seller || {};
     const isOwner   = user && (String(p.seller && p.seller._id ? p.seller._id : p.seller) === String(user && user._id));
-    const isSold    = p.status === 'sold';
+    const availableQty = typeof p.quantity === 'number' ? p.quantity : 1;
+    const isSold    = p.status === 'sold' || availableQty <= 0;
     const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
     const COND_INFO = { new:['','New','badge-new'], 'like-new':['','Like new','badge-like-new'], good:['','Good','badge-good'], fair:['','Fair','badge-fair'] };
     const cond      = COND_INFO[p.condition] || ['', p.condition, 'badge-new'];
@@ -38,6 +41,7 @@
     const joinDate  = seller.createdAt ? new Date(seller.createdAt).toLocaleDateString('en-US', { month:'long', year:'numeric' }) : '';
 
     function timeAgo(dateStr) {
+      if (!dateStr) return '';
       const diff = Date.now() - new Date(dateStr).getTime();
       const m = Math.floor(diff / 60000);
       if (m < 1)  return 'Just now';
@@ -48,6 +52,11 @@
       if (d < 30) return d + ' day' + (d > 1 ? 's' : '') + ' ago';
       const mo = Math.floor(d / 30);
       return mo + ' month' + (mo > 1 ? 's' : '') + ' ago';
+    }
+
+    function fmtPrice(val) {
+      if (typeof val !== 'number') return '0';
+      return new Intl.NumberFormat('en-US').format(val);
     }
   %>
 
@@ -62,20 +71,17 @@
       <span class="pdp-crumb-current"><%= p.title %></span>
     </nav>
 
-    <!-- HERO: Gallery + Buy panel -->
+    <!-- HERO: Gallery + Purchase Panel (40/60) -->
     <section class="pdp-hero">
 
-      <!-- Gallery -->
+      <!-- 40% Gallery -->
       <div class="pdp-gallery">
-        <div class="pdp-main-img">
+        <div class="pdp-main-img premium-card">
           <% if (p.images && p.images[0]) { %>
             <img id="main-img" src="<%= p.images[0] %>" alt="<%= p.title %>" onclick="openImageModal(this.src)">
           <% } else { %>
             <div class="pdp-img-fallback">
-              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z" />
-                <path d="M12 3v10" />
-              </svg>
+              <i data-lucide="package" style="width:48px;height:48px;opacity:0.1;"></i>
             </div>
           <% } %>
           <% if (isSold) { %><span class="pdp-sold-ribbon">SOLD</span><% } %>
@@ -83,72 +89,64 @@
         <% if (p.images && p.images.length > 1) { %>
           <div class="pdp-thumbs">
             <% p.images.forEach(function(url, i) { %>
-              <button type="button" class="pdp-thumb <%= i === 0 ? 'active' : '' %>" onclick="setImg(<%= i %>)" aria-label="Image <%= i+1 %>">
-                <img src="<%= url %>" alt="image <%= i+1 %>">
+              <button type="button" class="pdp-thumb <%= i === 0 ? 'active' : '' %>" onclick="setImg(<%= i %>)">
+                <img src="<%= url %>" alt="thumbnail <%= i+1 %>">
               </button>
             <% }) %>
           </div>
         <% } %>
       </div>
 
-      <!-- Buy panel -->
-      <aside class="pdp-buy">
-        <div class="pdp-badges">
-          <span class="pdp-badge pdp-badge-cat"><%= CAT_LABEL[p.category] || p.category %></span>
-          <span class="pdp-badge <%= cond[2] %>"><%= cond[1] %></span>
-          <% if (isSold) { %><span class="pdp-badge badge-sold">Sold</span><% } %>
+      <!-- 60% Sticky Purchase Panel -->
+      <aside class="pdp-buy premium-card glass">
+        <div class="pdp-price">
+          <%= fmtPrice(p.price) %><span class="pdp-currency">VND</span>
         </div>
 
         <h1 class="pdp-title"><%= p.title %></h1>
 
-        <div class="pdp-price"><%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price) %></div>
+        <div class="pdp-badges">
+          <span class="pdp-badge <%= cond[2] %>"><%= cond[1] %></span>
+          <span class="pdp-badge pdp-badge-cat"><%= CAT_LABEL[p.category] || p.category %></span>
+          <span class="pdp-badge pdp-badge-cat"><%= availableQty %> available</span>
+        </div>
 
         <div class="pdp-meta">
-          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <%= p.views || 0 %> views</span>
-          <span class="pdp-meta-sep">·</span>
-          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span id="interested-count"><%= p.interested || 0 %></span> interested</span>
-          <span class="pdp-meta-sep">·</span>
-          <span class="pdp-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <%= timeAgo(p.createdAt) %></span>
+          <span><i data-lucide="eye"></i> <%= p.views || 0 %> views</span>
+          <span style="color:var(--border-2);">•</span>
+          <span><i data-lucide="heart"></i> <span id="int-count">(<%= p.interested || 0 %>)</span> interested</span>
+          <span style="color:var(--border-2);">•</span>
+          <span><i data-lucide="clock"></i> <%= timeAgo(p.createdAt) %></span>
         </div>
 
         <div class="pdp-actions">
           <% if (isSold) { %>
-            <div class="pdp-sold-banner">This item has been sold</div>
+            <div class="sold-overlay">This item has been sold</div>
           <% } else if (isOwner) { %>
-            <button class="pdp-btn pdp-btn-primary" onclick="window.location.href='/sell?id=<%= p._id %>'">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit listing
-            </button>
-            <button class="pdp-btn pdp-btn-secondary" onclick="markSold()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Mark as sold
-            </button>
-            <button class="pdp-btn pdp-btn-danger-ghost" onclick="deleteProduct()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-              Delete
-            </button>
-          <% } else if (user) { %>
-            <button class="pdp-btn pdp-btn-primary" id="btn-msg-seller" onclick="initChat()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              Message seller
-            </button>
-            <button class="pdp-btn pdp-btn-secondary" id="btn-interested" onclick="toggleInterested()">
-              <i data-lucide="heart" id="heart-icon" style="width:16px;height:16px;"></i>
-              Interested <span id="int-count">(<%= p.interested || 0 %>)</span>
-            </button>
-            <button class="pdp-btn pdp-btn-ghost" onclick="showReportModal('product', '<%= p._id %>')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              Report listing
-            </button>
+            <div class="owner-actions" style="display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; gap:10px;">
+                <a href="/edit-product/<%= p._id %>" class="btn-interested" style="flex:1;">
+                  <i data-lucide="edit-3"></i> Edit Product
+                </a>
+                <button class="btn-contact" style="flex:2;" onclick="markSold()">
+                  <i data-lucide="check-circle"></i> Mark as Sold
+                </button>
+              </div>
+              <button class="btn-delete" onclick="deleteProduct()">
+                <i data-lucide="trash-2" style="width:16px;"></i> Delete Product
+              </button>
+            </div>
           <% } else { %>
-            <a class="pdp-btn pdp-btn-primary" href="/login">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              Sign in to message
-            </a>
+            <button class="btn-contact" id="btn-msg-seller" onclick="initChat()">
+              <i data-lucide="message-circle"></i> Chat with Seller
+            </button>
+            <button class="btn-interested" id="btn-interested" onclick="toggleInterested()">
+              <i data-lucide="heart" id="heart-icon"></i> Add to Interests
+            </button>
           <% } %>
         </div>
 
-        <!-- Mini seller card -->
+        <!-- Seller Trust Card -->
         <div class="pdp-seller-mini">
           <a href="/user/<%= seller._id %>" class="pdp-seller-row">
             <div class="pdp-seller-avatar">
@@ -161,44 +159,43 @@
             <div class="pdp-seller-info">
               <div class="pdp-seller-name"><%= sellerName %></div>
               <div class="pdp-seller-stats">
-                <%- renderStars(seller.rating || 5, 12) %>
-                <span><%= (seller.rating || 5).toFixed(1) %> · <%= seller.totalSales || 0 %> sold · <%= seller.ratingCount || 0 %> reviews</span>
+                <span style="color:#f59e0b; font-weight:700;">★ <%= (seller.rating || 5).toFixed(1) %></span>
+                <span style="opacity:0.3;">•</span>
+                <span><%= seller.totalSales || 0 %> sold</span>
+                <span style="opacity:0.3;">•</span>
+                <span>Joined <%= joinDate %></span>
               </div>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pdp-seller-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+            <i data-lucide="chevron-right" class="pdp-seller-arrow"></i>
           </a>
         </div>
 
-        <!-- Safety tips -->
         <div class="pdp-safety">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <i data-lucide="shield-check"></i>
           <div>
-            <strong>Safe trading tips</strong>
-            Meet on campus during daytime · Inspect before paying · Never pre-pay via untrusted methods
+            <strong>Campus Safety Tip</strong>
+            Meet in person at public campus areas like the library or canteen. Inspect items before paying.
           </div>
         </div>
       </aside>
     </section>
 
-    <!-- DESCRIPTION + LOCATION (2-col on desktop, stacked on mobile) -->
+    <!-- DESCRIPTION + MAP (65/35) -->
     <section class="pdp-cols">
       <div class="pdp-card pdp-desc-card">
         <h2 class="pdp-card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Description
+          <i data-lucide="align-left"></i> Description
         </h2>
-        <p class="pdp-desc"><%= p.description %></p>
+        <div class="pdp-desc"><%= p.description %></div>
       </div>
 
       <% if (p.location && p.location.address) { %>
         <div class="pdp-card pdp-location-card">
           <h2 class="pdp-card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Pickup location
+            <i data-lucide="map-pin"></i> Pickup location
           </h2>
           <div class="pdp-location-addr">
-            <i data-lucide="map-pin" style="width:14px;height:14px;color:#1B5EFF;"></i>
-            <span><%= p.location.address %></span>
+            <%= p.location.address %>
           </div>
           <div id="product-map" class="pdp-map"></div>
         </div>
@@ -208,17 +205,17 @@
     <!-- REVIEWS -->
     <section class="pdp-card pdp-reviews">
       <h2 class="pdp-card-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Reviews
+        <i data-lucide="star"></i> Reviews
       </h2>
+      
       <div id="product-rating-stats">
-        <div id="product-rating-stats-content" class="pdp-muted">Loading…</div>
+        <div id="product-rating-stats-content" class="pdp-no-reviews">No reviews yet</div>
       </div>
 
       <% if (user && !isOwner) { %>
         <div class="pdp-leave-review">
-          <div class="pdp-leave-title">Leave a review</div>
-          <div class="rating-input pdp-stars-input" id="rating-stars">
+          <div class="pdp-leave-title">Write a review</div>
+          <div class="pdp-stars-input rating-input" id="rating-stars">
             <% for (let i = 1; i <= 5; i++) { %>
               <span class="star star-empty" data-score="<%= i %>"
                 onmouseenter="updateRatingHover(this, <%= i %>)"
@@ -226,23 +223,21 @@
                 onclick="selectRating(this, <%= i %>)">★</span>
             <% } %>
           </div>
-          <textarea id="rating-comment" class="rating-form-textarea pdp-review-textarea"
-            placeholder="Share your thoughts about this product" maxlength="500"></textarea>
+          <textarea id="rating-comment" class="pdp-review-textarea"
+            placeholder="What did you think of this product?"></textarea>
           <div class="pdp-review-actions">
-            <button class="btn-cancel-rating"
-              onclick="document.getElementById('rating-comment').value=''; document.querySelectorAll('#rating-stars .star').forEach(s=>{ s.classList.add('star-empty'); s.classList.remove('star-filled','selected'); });">Cancel</button>
+            <button class="btn-cancel-rating" onclick="resetRatingForm()">Cancel</button>
             <button class="btn-submit-rating" onclick="submitProductRating()">Submit review</button>
           </div>
         </div>
       <% } %>
 
       <div id="product-ratings-list" class="pdp-reviews-list">
-        <div class="pdp-leave-title" style="margin-bottom:12px;">All reviews</div>
-        <div id="product-ratings-list-content" class="pdp-muted">Loading reviews…</div>
+        <div id="product-ratings-list-content"></div>
       </div>
     </section>
 
-    <!-- SELLER FULL CARD + Report button -->
+    <!-- SELLER FULL CARD -->
     <section class="pdp-card pdp-seller-full">
       <div class="pdp-seller-full-row">
         <div class="pdp-seller-avatar pdp-seller-avatar-lg">
@@ -254,518 +249,560 @@
         </div>
         <div class="pdp-seller-full-info">
           <a href="/user/<%= seller._id %>" class="pdp-seller-full-name"><%= sellerName %></a>
-          <div class="pdp-seller-uni"><%= seller.university || 'Campus member' %><%= joinDate ? ' · Joined ' + joinDate : '' %></div>
+          <div class="pdp-seller-uni">
+            <i data-lucide="graduation-cap" style="width:14px; margin-right:4px;"></i>
+            <%= seller.university || 'Campus Marketplace' %>
+            <% if (joinDate) { %> · Joined <%= joinDate %><% } %>
+          </div>
           <div class="pdp-seller-grid">
-            <div><%- renderStars(seller.rating || 5, 14) %> <strong><%= (seller.rating || 5).toFixed(1) %></strong> <span>Rating</span></div>
+            <div><strong><%= (seller.rating || 5).toFixed(1) %></strong> <span>Rating</span></div>
             <div><strong><%= seller.totalSales || 0 %></strong> <span>Sold</span></div>
             <div><strong><%= seller.ratingCount || 0 %></strong> <span>Reviews</span></div>
           </div>
         </div>
         <div class="pdp-seller-full-actions">
-          <a href="/user/<%= seller._id %>" class="pdp-btn pdp-btn-secondary">View profile</a>
+          <a href="/user/<%= seller._id %>" class="pdp-btn-secondary" style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); font-weight:700; text-decoration:none; color:var(--text); display:inline-block;">View Profile</a>
           <% if (user && !isOwner) { %>
-            <button class="pdp-btn pdp-btn-ghost" onclick="showReportModal('user', '<%= seller._id %>')">Report seller</button>
+            <button class="pdp-btn-ghost" onclick="showReportModal('user', '<%= seller._id %>')" style="margin-left:12px; border:none; background:none; color:var(--text-3); font-size:13px; font-weight:600; cursor:pointer;">Report Seller</button>
           <% } %>
         </div>
       </div>
     </section>
 
+    <!-- SIMILAR LISTINGS -->
     <% if (typeof relatedProducts !=='undefined' && relatedProducts.length> 0) { %>
       <section class="pdp-similar">
-        <h2 class="pdp-similar-title">Similar listings</h2>
-        <div class="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  <% relatedProducts.forEach(function(rp) { %>
-                    <a href="/products/<%= rp._id %>" class="product-card">
-                      <div class="product-img-placeholder">
-                        <% if (rp.images && rp.images[0]) { %>
-                          <img src="<%= rp.images[0] %>" style="width:100%;height:100%;object-fit:cover;">
-                          <% } else { %>
-                            <div
-                              style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#1B5EFF;">
-                              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5">
-                                <path
-                                  d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z" />
-                                <path d="M12 3v10" />
-                              </svg>
-                            </div>
-                            <% } %>
-                      </div>
-                      <div class="product-body">
-                        <div class="product-category">
-                          <%= CAT_LABEL[rp.category] || rp.category %>
-                        </div>
-                        <div class="product-name">
-                          <%= rp.title %>
-                        </div>
-                        <div class="product-footer">
-                          <div class="product-price">
-                            <%= new Intl.NumberFormat('en-US',{style:'currency',currency:'VND'}).format(rp.price) %>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                    <% }) %>
+        <h2 class="pdp-similar-title">Similar Products</h2>
+        <div class="products-grid">
+          <% relatedProducts.forEach(function(rp) { %>
+            <div class="product-card" onclick="window.location.href='/products/<%= rp._id %>'">
+              <div class="product-img-placeholder">
+                <% if (rp.images && rp.images[0]) { %>
+                  <img src="<%= rp.images[0] %>" alt="<%= rp.title %>">
+                <% } else { %>
+                  <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface-2); color:var(--primary); opacity:0.3;">
+                    <i data-lucide="package" style="width:32px; height:32px;"></i>
+                  </div>
+                <% } %>
+                <div class="product-cta">View details →</div>
+              </div>
+              <div class="product-body">
+                  <div class="product-price"><%= fmtPrice(rp.price) %> VND</div>
+                <div class="product-name"><%= rp.title %></div>
+                <div class="product-category"><%= CAT_LABEL[rp.category] || rp.category %> · <%= typeof rp.quantity === 'number' ? rp.quantity : 1 %> available</div>
+                <div class="product-footer">
+                  <div class="product-seller">
+                    <div class="seller-avatar" style="display:flex; align-items:center; justify-content:center; background:var(--primary-light); color:var(--primary); font-size:10px; font-weight:700;">
+                      <%= (rp.seller && rp.seller.nickname ? rp.seller.nickname[0] : (rp.seller && rp.seller.name ? rp.seller.name[0] : '?')).toUpperCase() %>
+                    </div>
+                    <span class="seller-name"><%= rp.seller ? (rp.seller.nickname || rp.seller.name) : 'Seller' %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
         </div>
       </section>
     <% } %>
 
   </main>
 
-                <div id="image-modal" class="image-modal" onclick="closeImageModal(event)">
-                  <div class="image-modal-content" onclick="event.stopPropagation()">
-                    <button type="button" class="image-modal-close" onclick="closeImageModal(event)">×</button>
-                    <img id="image-modal-img" src="" alt="Expanded product image">
-                  </div>
-                </div>
+  <!-- Image Modal -->
+  <div id="image-modal" class="image-modal" onclick="closeImageModal(event)">
+    <div class="image-modal-content" onclick="event.stopPropagation()">
+      <button type="button" class="image-modal-close" onclick="closeImageModal(event)">×</button>
+      <div class="image-modal-toolbar">
+        <button type="button" class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out">−</button>
+        <span class="zoom-level" id="zoom-level">100%</span>
+        <button type="button" class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in">+</button>
+        <button type="button" class="zoom-btn" id="zoom-reset-btn" onclick="resetZoom()" title="Reset">⟲</button>
+      </div>
+      <div class="image-modal-container" id="image-container">
+        <img id="image-modal-img" src="" alt="Expanded product image">
+      </div>
+    </div>
+  </div>
 
-                <div id="toast-wrap"></div>
+  <!-- Report Modal -->
+  <div id="report-modal"
+    style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;flex-direction:column;">
+    <div
+      style="background:#fff;border-radius:16px;padding:24px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Report this <%= user ? 'item' : '' %></div>
+      <div style="color:#666;font-size:14px;margin-bottom:20px;">Help us keep Campus safe by reporting inappropriate content.</div>
 
-                <!-- Report Modal -->
-                <div id="report-modal"
-                  style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;flex-direction:column;">
-                  <div
-                    style="background:#fff;border-radius:16px;padding:24px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                    <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Report this <%= user ? 'item' : ''
-                        %>
-                    </div>
-                    <div style="color:#666;font-size:14px;margin-bottom:20px;">Help us keep Campus safe by reporting
-                      inappropriate content.</div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Reason *</label>
+        <select id="report-reason"
+          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;">
+          <option value="">Select a reason...</option>
+          <option value="inappropriate-content">Inappropriate content</option>
+          <option value="offensive-language">Offensive language</option>
+          <option value="fraud-scam">Fraud/Scam</option>
+          <option value="counterfeit-item">Counterfeit item</option>
+          <option value="damaged-item">Damaged/Missing item</option>
+          <option value="misleading-description">Misleading description</option>
+          <option value="fake-account">Fake account</option>
+          <option value="suspicious-behavior">Suspicious behavior</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
 
-                    <div style="margin-bottom:16px;">
-                      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Reason *</label>
-                      <select id="report-reason"
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;">
-                        <option value="">Select a reason...</option>
-                        <option value="inappropriate-content">Inappropriate content</option>
-                        <option value="offensive-language">Offensive language</option>
-                        <option value="fraud-scam">Fraud/Scam</option>
-                        <option value="counterfeit-item">Counterfeit item</option>
-                        <option value="damaged-item">Damaged/Missing item</option>
-                        <option value="misleading-description">Misleading description</option>
-                        <option value="fake-account">Fake account</option>
-                        <option value="suspicious-behavior">Suspicious behavior</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Description</label>
+        <textarea id="report-content" maxlength="500"
+          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;"
+          placeholder="Provide details (optional)..."></textarea>
+        <div style="font-size:12px;color:#999;margin-top:4px;text-align:right;"><span id="report-char-count">0</span>/500</div>
+      </div>
 
-                    <div style="margin-bottom:20px;">
-                      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Description</label>
-                      <textarea id="report-content" maxlength="500"
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;"
-                        placeholder="Provide details (optional)..."></textarea>
-                      <div style="font-size:12px;color:#999;margin-top:4px;text-align:right;"><span
-                          id="report-char-count">0</span>/500</div>
-                    </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeReportModal()"
+          style="flex:1;padding:11px;border:1px solid #ddd;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Cancel</button>
+        <button onclick="submitReport()"
+          style="flex:1;padding:11px;border:none;background:#dc2626;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Submit Report</button>
+      </div>
+    </div>
+  </div>
 
-                    <div style="display:flex;gap:10px;">
-                      <button onclick="closeReportModal()"
-                        style="flex:1;padding:11px;border:1px solid #ddd;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Cancel</button>
-                      <button onclick="submitReport()"
-                        style="flex:1;padding:11px;border:none;background:#dc2626;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;">Submit
-                        Report</button>
-                    </div>
-                  </div>
-                </div>
+  <!-- ── Fixed bottom buy bar ── -->
+  <% if (!isSold && !isOwner) { %>
+    <div class="buy-bar" id="buy-bar">
+      <div class="buy-bar-price">
+        <%= fmtPrice(p.price) %> VND
+      </div>
+      <div class="buy-bar-actions">
+        <button class="buy-bar-buy" onclick="goCheckout()">
+          Buy Now
+        </button>
+      </div>
+    </div>
+  <% } %>
 
+  <script>
+    const PRODUCT_ID = <%- JSON.stringify(product._id) %>;
+    const IS_AUTH = <%- !!user %>;
+    const IMAGES = <%- JSON.stringify(product.images || []) %>;
+    let interestedState = false;
 
-                <!-- ── Fixed bottom buy bar ── -->
-                <% if (!isSold && !isOwner) { %>
-                  <div class="buy-bar" id="buy-bar">
-                    <div class="buy-bar-price">
-                      <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price) %>
-                    </div>
-                    <div class="buy-bar-actions">
-                      <button class="buy-bar-buy" onclick="goCheckout()">
+    // Product metadata — pass to /messages to show context banner
+    const PRODUCT_META = {
+      id: PRODUCT_ID,
+      title: <%- JSON.stringify(product.title) %>,
+      price: <%- JSON.stringify(fmtPrice(product.price) + ' VND') %>,
+      image: <%- JSON.stringify((product.images && product.images[0]) || '') %>,
+      url: '/products/' + PRODUCT_ID
+    };
 
-                        Buy now
-                      </button>
-                    </div>
-                  </div>
-                  <style>
-                    body {
-                      padding-bottom: 80px;
-                    }
+    // ── Gallery ──────────────────────────────────────────────────────────
+    window.setImg = function (i) {
+      const main = document.getElementById('main-img');
+      if (main && IMAGES[i]) main.src = IMAGES[i];
+      document.querySelectorAll('.pdp-thumb').forEach((t, j) => t.classList.toggle('active', j === i));
+    };
 
-                    .buy-bar {
-                      position: fixed;
-                      bottom: 0;
-                      left: var(--sb-w);
-                      right: 0;
-                      z-index: 200;
-                      background: #fff;
-                      border-top: 1px solid #E4E7F2;
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      padding: 12px 24px;
-                      box-shadow: 0 -4px 24px rgba(13, 15, 26, 0.10);
-                      gap: 16px;
-                    }
+    window.openImageModal = function (src) {
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('image-modal-img');
+      if (!modal || !modalImg || !src) return;
+      modalImg.src = src;
+      modalImg.style.transform = 'scale(1) translate(0, 0)';
+      modal.classList.add('open');
+      currentZoom = 1;
+      panX = 0;
+      panY = 0;
+      updateZoomLevel();
+    };
 
-                    .buy-bar-price {
-                      font-size: 20px;
-                      font-weight: 900;
-                      color: #1B5EFF;
-                      white-space: nowrap;
-                    }
+    window.closeImageModal = function (event) {
+      event.stopPropagation();
+      const modal = document.getElementById('image-modal');
+      if (!modal) return;
+      modal.classList.remove('open');
+      const modalImg = document.getElementById('image-modal-img');
+      if (modalImg) modalImg.src = '';
+      currentZoom = 1;
+      panX = 0;
+      panY = 0;
+    };
 
-                    .buy-bar-actions {
-                      display: flex;
-                      gap: 10px;
-                      align-items: center;
-                    }
+    // ── Image Zoom & Pan ─────────────────────────────────────────────
+    let currentZoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
 
-                    .buy-bar-cart {
-                      display: flex;
-                      align-items: center;
-                      gap: 6px;
-                      padding: 11px 20px;
-                      border: 2px solid #1B5EFF;
-                      border-radius: 12px;
-                      background: #fff;
-                      color: #1B5EFF;
-                      font-size: 14px;
-                      font-weight: 700;
-                      cursor: pointer;
-                      transition: all 0.18s;
-                      font-family: inherit;
-                    }
+    const MIN_ZOOM = 1;
+    const MAX_ZOOM = 5;
+    const ZOOM_STEP = 0.2;
 
-                    .buy-bar-cart:hover {
-                      background: #EBF0FF;
-                    }
+    function updateZoomLevel() {
+      const zoomLevelEl = document.getElementById('zoom-level');
+      if (zoomLevelEl) {
+        zoomLevelEl.textContent = Math.round(currentZoom * 100) + '%';
+      }
+    }
 
-                    .buy-bar-buy {
-                      display: flex;
-                      align-items: center;
-                      gap: 6px;
-                      padding: 11px 28px;
-                      border: none;
-                      border-radius: 12px;
-                      background: linear-gradient(135deg, #1B5EFF, #5B8AFF);
-                      color: #fff;
-                      font-size: 14px;
-                      font-weight: 700;
-                      cursor: pointer;
-                      transition: all 0.18s;
-                      font-family: inherit;
-                      box-shadow: 0 4px 14px rgba(27, 94, 255, 0.35);
-                    }
+    function updateImageTransform() {
+      const img = document.getElementById('image-modal-img');
+      if (img) {
+        img.style.transform = `scale(${currentZoom}) translate(${panX}px, ${panY}px)`;
+      }
+    }
 
-                    .buy-bar-buy:hover {
-                      transform: translateY(-1px);
-                      box-shadow: 0 6px 20px rgba(27, 94, 255, 0.45);
-                    }
+    window.zoomIn = function () {
+      if (currentZoom < MAX_ZOOM) {
+        currentZoom = Math.min(currentZoom + ZOOM_STEP, MAX_ZOOM);
+        updateImageTransform();
+        updateZoomLevel();
+      }
+    };
 
-                    .buy-bar-buy:active {
-                      transform: translateY(0);
-                    }
-                  </style>
-                  <style>
-                    /* Ensure buy bar doesn't overlap the left sidebar on wide screens */
-                    @media (min-width: 901px) {
-                      .buy-bar {
-                        width: calc(100% - var(--sb-w));
-                      }
-                    }
+    window.zoomOut = function () {
+      if (currentZoom > MIN_ZOOM) {
+        currentZoom = Math.max(currentZoom - ZOOM_STEP, MIN_ZOOM);
+        panX = 0;
+        panY = 0;
+        updateImageTransform();
+        updateZoomLevel();
+      }
+    };
 
-                    /* On small screens where sidebar is hidden, full-width buy bar */
-                    @media (max-width: 900px) {
-                      .buy-bar {
-                        left: 0;
-                        width: 100%;
-                      }
+    window.resetZoom = function () {
+      currentZoom = 1;
+      panX = 0;
+      panY = 0;
+      updateImageTransform();
+      updateZoomLevel();
+    };
 
-                      body {
-                        padding-bottom: 80px;
-                      }
-                    }
-                  </style>
-                  <% } %>
+    // Zoom with mouse wheel
+    document.addEventListener('wheel', function (e) {
+      const modal = document.getElementById('image-modal');
+      if (!modal || !modal.classList.contains('open')) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        window.zoomIn();
+      } else {
+        window.zoomOut();
+      }
+    }, { passive: false });
 
-                    <script>
-                      const PRODUCT_ID = '<%= p._id %>';
-                      const IS_AUTH = <%= !!user %>;
-                      const IMAGES = <%- JSON.stringify(p.images || []) %>;
-                      let interestedState = false;
+    // Pan with mouse drag
+    const img = document.getElementById('image-modal-img');
+    if (img) {
+      img.addEventListener('mousedown', function (e) {
+        const modal = document.getElementById('image-modal');
+        if (!modal || !modal.classList.contains('open')) return;
+        isDragging = true;
+        dragStartX = e.clientX - panX;
+        dragStartY = e.clientY - panY;
+        img.classList.add('dragging');
+      });
 
-                      // Product metadata — pass to /messages to show context banner
-                      const PRODUCT_META = {
-                        id: PRODUCT_ID,
-                        title: <%- JSON.stringify(p.title) %>,
-                        price: <%- JSON.stringify(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(p.price)) %>,
-                        image: <%- JSON.stringify((p.images && p.images[0]) || '') %>,
-                        url: '/products/' + PRODUCT_ID
-                      };
+      document.addEventListener('mousemove', function (e) {
+        if (!isDragging || currentZoom <= 1) return;
+        panX = e.clientX - dragStartX;
+        panY = e.clientY - dragStartY;
+        updateImageTransform();
+      });
 
-                      // ── Gallery ──────────────────────────────────────────────────────────
-                      window.setImg = function (i) {
-                        const main = document.getElementById('main-img');
-                        if (main && IMAGES[i]) main.src = IMAGES[i];
-                        document.querySelectorAll('.gallery-thumb').forEach((t, j) => t.classList.toggle('active', j === i));
-                      };
+      document.addEventListener('mouseup', function () {
+        isDragging = false;
+        img.classList.remove('dragging');
+      });
 
-                      window.openImageModal = function (src) {
-                        const modal = document.getElementById('image-modal');
-                        const modalImg = document.getElementById('image-modal-img');
-                        if (!modal || !modalImg || !src) return;
-                        modalImg.src = src;
-                        modal.classList.add('open');
-                      };
+      // Touch zoom (pinch)
+      let touchDistance = 0;
+      img.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 2) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          touchDistance = Math.sqrt(dx * dx + dy * dy);
+        } else if (e.touches.length === 1) {
+          isDragging = true;
+          dragStartX = e.touches[0].clientX - panX;
+          dragStartY = e.touches[0].clientY - panY;
+        }
+      });
 
-                      window.closeImageModal = function (event) {
-                        event.stopPropagation();
-                        const modal = document.getElementById('image-modal');
-                        if (!modal) return;
-                        modal.classList.remove('open');
-                        const modalImg = document.getElementById('image-modal-img');
-                        if (modalImg) modalImg.src = '';
-                      };
+      img.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 2) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const newDistance = Math.sqrt(dx * dx + dy * dy);
+          const delta = newDistance - touchDistance;
+          if (delta > 5) {
+            window.zoomIn();
+          } else if (delta < -5) {
+            window.zoomOut();
+          }
+          touchDistance = newDistance;
+        } else if (isDragging && e.touches.length === 1 && currentZoom > 1) {
+          panX = e.touches[0].clientX - dragStartX;
+          panY = e.touches[0].clientY - dragStartY;
+          updateImageTransform();
+        }
+      });
 
-                      // ── Interested ───────────────────────────────────────────────────────
-                      function applyHeartState(active) {
-                        const icon = document.getElementById('heart-icon');
-                        if (icon) {
-                          icon.style.fill = active ? '#f87171' : 'none';
-                          icon.style.stroke = active ? '#f87171' : 'currentColor';
-                        }
-                        const btn = document.getElementById('btn-interested');
-                        if (btn) btn.classList.toggle('active', active);
-                      }
+      img.addEventListener('touchend', function () {
+        isDragging = false;
+      });
+    }
 
-                      // Initialize favorite state from server on load
-                      if (IS_AUTH) {
-                        fetch('/api/products/favorites/ids', { credentials: 'include' })
-                          .then(r => r.json())
-                          .then(json => {
-                            if (json && json.success && Array.isArray(json.data)) {
-                              interestedState = json.data.includes(PRODUCT_ID);
-                              applyHeartState(interestedState);
-                            }
-                          })
-                          .catch(() => {});
-                      }
+    // ── Interested ───────────────────────────────────────────────────────
+    function applyHeartState(active) {
+      const icon = document.getElementById('heart-icon');
+      if (icon) {
+        icon.style.fill = active ? '#f87171' : 'none';
+        icon.style.stroke = active ? '#f87171' : 'currentColor';
+      }
+      const btn = document.getElementById('btn-interested');
+      if (btn) btn.classList.toggle('active', active);
+    }
 
-                      window.toggleInterested = async function () {
-                        if (!IS_AUTH) { showToast('Please sign in to mark interest', 'err'); return; }
-                        interestedState = !interestedState;
-                        applyHeartState(interestedState);
-                        try {
-                          const res = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
-                          const data = await res.json();
-                          if (data && typeof data.isFavorited === 'boolean') {
-                            interestedState = data.isFavorited;
-                            applyHeartState(interestedState);
-                          }
-                          document.getElementById('int-count').textContent = '(' + data.interested + ')';
-                        } catch {
-                          interestedState = !interestedState;
-                          applyHeartState(interestedState);
-                        }
-                      };
+    // Initialize favorite state from server on load
+    if (IS_AUTH) {
+      fetch('/api/products/favorites/ids', { credentials: 'include' })
+        .then(r => r.json())
+        .then(json => {
+          if (json && json.success && Array.isArray(json.data)) {
+            interestedState = json.data.includes(PRODUCT_ID);
+            applyHeartState(interestedState);
+          }
+        })
+        .catch(() => {});
+    }
 
-                      // ── Chat — redirect to /messages with conversation pre-selected ──────
-                      window.initChat = async function () {
-                        const btn = document.getElementById('btn-msg-seller');
-                        if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
-                        try {
-                          const res = await fetch('/api/chat/init', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ productId: PRODUCT_ID }),
-                            credentials: 'include'
-                          });
-                          const json = await res.json();
-                          if (json.success) {
-                            window.location.href = '/messages?id=' + json.conversationId
-                              + '&product=' + encodeURIComponent(JSON.stringify(PRODUCT_META));
-                          } else {
-                            showToast(json.message, 'err');
-                            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-                          }
-                        } catch (err) {
-                          showToast(err.message, 'err');
-                          if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-                        }
-                      };
+    window.toggleInterested = async function () {
+      if (!IS_AUTH) { if (typeof showToast === 'function') showToast('Please sign in to mark interest', 'err'); return; }
+      interestedState = !interestedState;
+      applyHeartState(interestedState);
+      try {
+        const res = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
+        const data = await res.json();
+        if (data && typeof data.isFavorited === 'boolean') {
+          interestedState = data.isFavorited;
+          applyHeartState(interestedState);
+        }
+        document.getElementById('int-count').textContent = '(' + (data.interested || 0) + ')';
+      } catch {
+        interestedState = !interestedState;
+        applyHeartState(interestedState);
+      }
+    };
 
-                      // ── Owner: mark sold ─────────────────────────────────────────────────
-                      window.markSold = async function () {
-                        const confirmed = await showConfirm({
-                          title: 'Mark as Sold',
-                          message: 'Are you sure you want to mark this item as sold?',
-                          confirmText: 'Mark as Sold'
-                        });
-                        if (!confirmed) return;
-                        try {
-                          const res = await fetch('/api/products/' + PRODUCT_ID, {
-                            method: 'PATCH', credentials: 'include',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status: 'sold' })
-                          });
-                          if (!res.ok) throw new Error((await res.json()).message);
-                          showToast('Status updated!', 'ok');
-                          setTimeout(() => location.reload(), 1000);
-                        } catch (err) { showToast(err.message, 'err'); }
-                      };
+    // ── Chat — redirect to /messages with conversation pre-selected ──────
+    window.initChat = async function () {
+      const btn = document.getElementById('btn-msg-seller');
+      if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+      try {
+        const res = await fetch('/api/chat/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: PRODUCT_ID }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          window.location.href = '/messages?id=' + json.conversationId
+            + '&product=' + encodeURIComponent(JSON.stringify(PRODUCT_META));
+        } else {
+          if (typeof showToast === 'function') showToast(json.message, 'err');
+          if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        }
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'err');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+      }
+    };
 
-                      // ── Owner: delete ────────────────────────────────────────────────────
-                      window.deleteProduct = async function () {
-                        const confirmed = await showConfirm({
-                          title: 'Delete Listing',
-                          message: 'Are you sure you want to delete this listing? This action cannot be undone.',
-                          confirmText: 'Delete',
-                          type: 'danger'
-                        });
-                        if (!confirmed) return;
-                        try {
-                          const res = await fetch('/api/products/' + PRODUCT_ID, { method: 'DELETE', credentials: 'include' });
-                          if (!res.ok) throw new Error((await res.json()).message);
-                          showToast('Listing deleted', 'ok');
-                          setTimeout(() => window.location.href = '/', 1200);
-                        } catch (err) { showToast(err.message, 'err'); }
-                      };
+    // ── Owner: mark sold ─────────────────────────────────────────────────
+    window.markSold = async function () {
+      const confirmed = await showConfirm({
+        title: 'Mark as Sold',
+        message: 'Are you sure you want to mark this item as sold?',
+        confirmText: 'Mark as Sold'
+      });
+      if (confirmed) markAsSoldExec();
+    };
 
+    async function markAsSoldExec() {
+      try {
+        const res = await fetch('/api/products/' + PRODUCT_ID, {
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'sold' })
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        if (typeof showToast === 'function') showToast('Status updated!', 'ok');
+        setTimeout(() => location.reload(), 1000);
+      } catch (err) { if (typeof showToast === 'function') showToast(err.message, 'err'); }
+    }
 
-                      // ── Buy Now — go to checkout ─────────────────────────────────────────
-                      window.goCheckout = function () {
-                        if (!IS_AUTH) { showToast('Please sign in to purchase', 'err'); return; }
-                        window.location.href = '/checkout/' + PRODUCT_ID;
-                      };
+    // ── Owner: delete ────────────────────────────────────────────────────
+    window.deleteProduct = async function () {
+      const confirmed = await showConfirm({
+        title: 'Delete Product',
+        message: 'Are you sure you want to delete this product? This action cannot be undone.',
+        confirmText: 'Delete',
+        type: 'danger'
+      });
+      if (confirmed) deleteProductExec();
+    };
 
-                      // ── Submit Product Rating ─────────────────────────────────────────────
-                      window.submitProductRating = async function () {
-                        const stars = document.querySelectorAll('#rating-stars .star.selected');
-                        const score = stars.length > 0 ? stars[stars.length - 1].dataset.score : 0;
-                        const comment = document.getElementById('rating-comment').value.trim();
+    async function deleteProductExec() {
+      try {
+        const res = await fetch('/api/products/' + PRODUCT_ID, { method: 'DELETE', credentials: 'include' });
+        if (!res.ok) throw new Error((await res.json()).message);
+        if (typeof showToast === 'function') showToast('Product deleted', 'ok');
+        setTimeout(() => window.location.href = '/', 1200);
+      } catch (err) { if (typeof showToast === 'function') showToast(err.message, 'err'); }
+    }
 
-                        if (!score || score < 1 || score > 5) {
-                          showToast('Please select a rating', 'err');
-                          return;
-                        }
+    // ── Buy Now — go to checkout ─────────────────────────────────────────
+    window.goCheckout = function () {
+      if (!IS_AUTH) { if (typeof showToast === 'function') showToast('Please sign in to purchase', 'err'); return; }
+      window.location.href = '/checkout/' + PRODUCT_ID;
+    };
 
-                        try {
-                          const success = await submitRating('product', PRODUCT_ID, score, comment);
-                          if (success) {
-                            // Reset form
-                            document.getElementById('rating-comment').value = '';
-                            document.querySelectorAll('#rating-stars .star').forEach(s => {
-                              s.classList.add('star-empty');
-                              s.classList.remove('star-filled', 'selected');
-                            });
+    // ── Submit Product Rating ─────────────────────────────────────────────
+    window.submitProductRating = async function () {
+      const stars = document.querySelectorAll('#rating-stars .star.selected');
+      const score = stars.length > 0 ? stars[stars.length - 1].dataset.score : 0;
+      const comment = document.getElementById('rating-comment').value.trim();
 
-                            // Reload ratings
-                            setTimeout(() => {
-                              loadRatings('product', PRODUCT_ID, 'product-ratings-list-content');
-                              loadRatingStats('product', PRODUCT_ID, 'product-rating-stats-content');
-                            }, 500);
-                          }
-                        } catch (err) {
-                          showToast('Error: ' + err.message, 'err');
-                        }
-                      };
+      if (!score || score < 1 || score > 5) {
+        if (typeof showToast === 'function') showToast('Please select a rating', 'err');
+        return;
+      }
 
-                      // ── Report Modal ──────────────────────────────────────────────────────
-                      let reportTargetType = '';
-                      let reportTargetId = '';
+      try {
+        const success = await submitRating('product', PRODUCT_ID, score, comment);
+        if (success) {
+          resetRatingForm();
+          // Reload ratings
+          setTimeout(() => {
+            loadRatings('product', PRODUCT_ID, 'product-ratings-list-content');
+            loadRatingStats('product', PRODUCT_ID, 'product-rating-stats-content');
+          }, 500);
+        }
+      } catch (err) {
+        if (typeof showToast === 'function') showToast('Error: ' + err.message, 'err');
+      }
+    };
 
-                      window.showReportModal = function (targetType, targetId) {
-                        reportTargetType = targetType;
-                        reportTargetId = targetId;
-                        document.getElementById('report-modal').style.display = 'flex';
-                        document.getElementById('report-reason').value = '';
-                        document.getElementById('report-content').value = '';
-                        document.getElementById('report-char-count').textContent = '0';
-                      };
+    window.resetRatingForm = function() {
+      document.getElementById('rating-comment').value = '';
+      document.querySelectorAll('#rating-stars .star').forEach(s => {
+        s.classList.remove('star-filled', 'selected');
+        s.classList.add('star-empty');
+      });
+    };
 
-                      window.closeReportModal = function () {
-                        document.getElementById('report-modal').style.display = 'none';
-                      };
+    // ── Report Modal ──────────────────────────────────────────────────────
+    let reportTargetType = '';
+    let reportTargetId = '';
 
-                      window.submitReport = async function () {
-                        const reason = document.getElementById('report-reason').value;
-                        const content = document.getElementById('report-content').value;
+    window.showReportModal = function (targetType, targetId) {
+      reportTargetType = targetType;
+      reportTargetId = targetId;
+      document.getElementById('report-modal').style.display = 'flex';
+      document.getElementById('report-reason').value = '';
+      document.getElementById('report-content').value = '';
+      document.getElementById('report-char-count').textContent = '0';
+    };
 
-                        if (!reason) {
-                          showToast('Please select a reason', 'err');
-                          return;
-                        }
+    window.closeReportModal = function () {
+      document.getElementById('report-modal').style.display = 'none';
+    };
 
-                        try {
-                          const res = await fetch('/api/report', {
-                            method: 'POST',
-                            credentials: 'include',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              targetType: reportTargetType,
-                              targetId: reportTargetId,
-                              reason,
-                              content
-                            })
-                          });
+    window.submitReport = async function () {
+      const reason = document.getElementById('report-reason').value;
+      const content = document.getElementById('report-content').value;
 
-                          const data = await res.json();
-                          if (!res.ok) throw new Error(data.message || 'Failed to submit report');
+      if (!reason) {
+        if (typeof showToast === 'function') showToast('Please select a reason', 'err');
+        return;
+      }
 
-                          showToast('Report submitted. Thank you!', 'ok');
-                          closeReportModal();
-                        } catch (err) {
-                          showToast(err.message, 'err');
-                        }
-                      };
+      try {
+        const res = await fetch('/api/report', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetType: reportTargetType,
+            targetId: reportTargetId,
+            reason,
+            content
+          })
+        });
 
-                      // Character counter for report textarea
-                      document.addEventListener('DOMContentLoaded', () => {
-                        const textarea = document.getElementById('report-content');
-                        if (textarea) {
-                          textarea.addEventListener('input', () => {
-                            document.getElementById('report-char-count').textContent = textarea.value.length;
-                          });
-                        }
-                      });
-                    </script>
-                    <script src="/js/rating.js"></script>
-                    <script>
-                      // Initialize product rating on page load
-                      document.addEventListener('DOMContentLoaded', async () => {
-                        const productId = '<%= product._id %>';
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to submit report');
 
-                        // Load product rating stats (overview)
-                        if (productId) {
-                          loadRatingStats('product', productId, 'product-rating-stats-content');
-                        }
+        if (typeof showToast === 'function') showToast('Report submitted. Thank you!', 'ok');
+        closeReportModal();
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'err');
+      }
+    };
 
-                        // Load product ratings list
-                        if (productId) {
-                          loadRatings('product', productId, 'product-ratings-list-content');
-                        }
-
-                        // Initialize Map
-                        const lat = <%= p.location && p.location.lat ? p.location.lat : 'null' %>;
-                        const lng = <%= p.location && p.location.lng ? p.location.lng : 'null' %>;
-                        const address = '<%= p.location && p.location.address ? p.location.address.replace(/\'/g, "\\\'") : "" %>';
-
-                      if (lat && lng && document.getElementById('product-map')) {
-                        const map = L.map('product-map').setView([lat, lng], 15);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        }).addTo(map);
-
-                        L.marker([lat, lng]).addTo(map)
-                          .bindPopup(address || 'Pickup Location')
-                          .openPopup();
-                        // Initialize icons
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                      } else if (document.getElementById('product-map')) {
-                        // Fallback or hide if no coordinates
-                        document.getElementById('product-map').style.display = 'none';
-                      }
-
-                      // Initialize all icons on page
-                      if (typeof lucide !== 'undefined') lucide.createIcons();
+    // Character counter for report textarea
+    document.addEventListener('DOMContentLoaded', () => {
+      const textarea = document.getElementById('report-content');
+      if (textarea) {
+        textarea.addEventListener('input', () => {
+          document.getElementById('report-char-count').textContent = textarea.value.length;
+        });
+      }
     });
-                    </script>
+  </script>
+  <script src="/js/rating.js"></script>
+  <script>
+    // Initialize product rating on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const productId = <%- JSON.stringify(product._id) %>;
+
+      // Load product rating stats (overview)
+      if (productId && typeof loadRatingStats === 'function') {
+        loadRatingStats('product', productId, 'product-rating-stats-content');
+      }
+
+      // Load product ratings list
+      if (productId && typeof loadRatings === 'function') {
+        loadRatings('product', productId, 'product-ratings-list-content');
+      }
+
+      // Initialize Map
+      const lat = <%- JSON.stringify(product.location && product.location.lat ? product.location.lat : null) %>;
+      const lng = <%- JSON.stringify(product.location && product.location.lng ? product.location.lng : null) %>;
+      const address = <%- JSON.stringify(product.location && product.location.address ? product.location.address : "") %>;
+
+      if (lat && lng && document.getElementById('product-map') && typeof L !== 'undefined') {
+        try {
+          const map = L.map('product-map').setView([lat, lng], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          }).addTo(map);
+
+          L.marker([lat, lng]).addTo(map)
+            .bindPopup(address || 'Pickup Location')
+            .openPopup();
+        } catch (e) {
+          console.error('Leaflet error:', e);
+        }
+      } else if (document.getElementById('product-map')) {
+        document.getElementById('product-map').style.display = 'none';
+      }
+
+      // Initialize all icons on page
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  </script>
 </body>
 
 </html>

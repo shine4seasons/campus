@@ -181,10 +181,11 @@ window.showToast = function(msg, type = 'ok') {
 // Global Confirm logic
 window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'info' }) {
     return new Promise((resolve) => {
-        const container = document.getElementById('modal-container');
+        let container = document.getElementById('modal-container');
         if (!container) {
-            resolve(confirm(message));
-            return;
+            container = document.createElement('div');
+            container.id = 'modal-container';
+            document.body.appendChild(container);
         }
 
         const modal = document.createElement('div');

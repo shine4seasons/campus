@@ -1,11 +1,12 @@
 // Admin configuration constants
-const ADMIN_SECTIONS = ['analytics', 'users', 'products', 'orders', 'reports', 'settings'];
+const ADMIN_SECTIONS = ['analytics', 'users', 'products', 'orders', 'payouts', 'reports', 'settings'];
 
 const SECTION_MAP = {
   analytics: 'aAnalytics',
   users: 'aUsers',
   products: 'aProducts',
   orders: 'aOrders',
+  payouts: 'aPayouts',
   reports: 'aReports',
   settings: 'aSettings'
 };

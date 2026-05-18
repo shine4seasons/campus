@@ -7,8 +7,9 @@
   <title>Seller Dashboard — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/rating.css">
@@ -23,161 +24,146 @@
       <main class="main">
 
         <div class="content">
+          <header class="page-heading">
+            <div class="page-heading-copy">
+              <h1 class="page-heading-title" id="pageTitle">Seller Dashboard</h1>
+              <p class="page-heading-sub" id="pageSub">Overview of your sales & performance</p>
+            </div>
+          </header>
 
           <!-- ── SECTION: Dashboard ── -->
           <section class="section active" id="sDash">
             <div class="stat-grid">
-              <div class="stat-card">
+              <div class="stat-card glass">
                 <div class="stat-top">
-                  <div>
-                    <div class="stat-label">Active products</div>
-                  </div>
-                  <div class="stat-icon" style="background:#dcfce7;color:#16a34a">
-                    <svg viewBox="0 0 24 24">
-                      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                      <line x1="3" y1="6" x2="21" y2="6" />
-                    </svg>
+                  <div class="stat-label">Active products</div>
+                  <div class="stat-icon" style="background:var(--success-light);color:var(--success)">
+                    <i data-lucide="package"></i>
                   </div>
                 </div>
                 <div class="stat-val">
-                  <%= stats.activeListings %>
+                  <%= stats.activeProducts %>
                 </div>
-                <div class="stat-delta delta-neu">Total active items</div>
+                <div class="stat-delta">Total live products</div>
               </div>
-              <div class="stat-card">
+              <div class="stat-card glass">
                 <div class="stat-top">
-                  <div>
-                    <div class="stat-label">Orders awaiting confirmation</div>
-                  </div>
-                  <div class="stat-icon" style="background:#fef3c7;color:#d97706">
-                    <svg viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
+                  <div class="stat-label">Awaiting confirmation</div>
+                  <div class="stat-icon" style="background:var(--warning-light);color:var(--warning)">
+                    <i data-lucide="clock"></i>
                   </div>
                 </div>
-                <div class="stat-val" style="color:#d97706">
+                <div class="stat-val" style="color:var(--warning)">
                   <%= stats.pendingOrders %>
                 </div>
-                <div class="stat-delta" style="color:#d97706">need confirmation</div>
+                <div class="stat-delta">Needs your action</div>
               </div>
-              <div class="stat-card">
+              <div class="stat-card glass">
                 <div class="stat-top">
-                  <div>
-                    <div class="stat-label">This month's revenue</div>
-                  </div>
-                  <div class="stat-icon" style="background:#dbeafe;color:#2563eb">
-                    <svg viewBox="0 0 24 24">
-                      <line x1="12" y1="1" x2="12" y2="23" />
-                      <path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" />
-                    </svg>
+                  <div class="stat-label">Monthly Revenue</div>
+                  <div class="stat-icon" style="background:var(--info-light);color:var(--info)">
+                    <i data-lucide="dollar-sign"></i>
                   </div>
                 </div>
                 <div class="stat-val">
-                  <%= (stats.monthRevenue>= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M VND' : new
-                    Intl.NumberFormat('en-US').format(stats.monthRevenue) + ' VND' %>
+                  <%= (stats.monthRevenue>= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M' : new
+                    Intl.NumberFormat('en-US').format(stats.monthRevenue) %>
+                    <span style="font-size: 14px; font-weight: 600; opacity: 0.7;">VND</span>
                 </div>
-                <div class="stat-delta delta-neu">Earned this month</div>
+                <div class="stat-delta">Earned this month</div>
               </div>
-              <div class="stat-card">
+              <div class="stat-card glass">
                 <div class="stat-top">
-                  <div>
-                    <div class="stat-label">Avg. rating</div>
-                  </div>
-                  <div class="stat-icon" style="background:#fef3c7;color:#d97706">
-                    <svg viewBox="0 0 24 24">
-                      <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
+                  <div class="stat-label">Seller Rating</div>
+                  <div class="stat-icon" style="background:var(--accent-light);color:var(--accent)">
+                    <i data-lucide="star"></i>
                   </div>
                 </div>
-                <div class="stat-val" style="display:flex;align-items:center;gap:4px">
-                  <%- renderStars(user.rating || 5, 16) %>
-                    <span style="font-size:18px;font-weight:800;margin-left:2px">
+                <div class="stat-val" style="display:flex;align-items:center;gap:6px">
+                  <%- renderStars(user.rating || 5, 18) %>
+                    <span style="font-size:18px;font-weight:800">
                       <%= (user.rating || 5).toFixed(1) %>
                     </span>
                 </div>
-                <div class="stat-delta delta-neu">Based on <%= user.ratingCount || 0 %> reviews</div>
+                <div class="stat-delta">From <%= user.ratingCount || 0 %> reviews</div>
               </div>
             </div>
 
             <% if (stats.pendingOrders> 0) { %>
-              <div class="alert-box alert-info" style="margin-bottom:18px">
-                <svg viewBox="0 0 24 24" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <div class="alert-box-text">You have <%= stats.pendingOrders %> order<%= stats.pendingOrders> 1 ? 's' :
-                      '' %> awaiting confirmation. Please confirm within 24 hours to
-                      avoid automatic cancellation.</div>
+              <div class="alert-box glass" style="margin-bottom:24px; border-left: 4px solid var(--warning);">
+                <i data-lucide="alert-circle" style="color:var(--warning); width:24px; height:24px;"></i>
+                <div class="alert-box-text">
+                  You have <strong>
+                    <%= stats.pendingOrders %>
+                  </strong> order<%= stats.pendingOrders> 1 ? 's' : '' %> awaiting confirmation.
+                    Please confirm within 24 hours to avoid automatic cancellation.
+                </div>
               </div>
               <% } %>
 
                 <div class="quick-grid">
-                  <div class="quick-card" onclick="window.location.href='/my-products'">
-                    <div class="qc-icon" style="background:#dbeafe;color:#2563eb">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                      </svg>
+                  <div class="quick-card glass" onclick="window.location.href='/my-products'">
+                    <div class="qc-icon" style="background:var(--primary-light);color:var(--primary)">
+                      <i data-lucide="layout-grid"></i>
                     </div>
                     <div class="qc-body">
-                      <div class="qc-label">Manage products</div>
+                      <div class="qc-label">My Products</div>
                       <div class="qc-sub">
-                        <%= stats.activeListings %> active · <%= stats.totalSold %> sold
+                        <%= stats.activeProducts %> active products
                       </div>
                     </div>
+                    <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
-                  <div class="quick-card" onclick="window.location.href='/orders-seller'">
-                    <div class="qc-icon" style="background:#fef3c7;color:#d97706">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
+                  <div class="quick-card glass" onclick="window.location.href='/orders-seller'">
+                    <div class="qc-icon" style="background:var(--warning-light);color:var(--warning)">
+                      <i data-lucide="shopping-cart"></i>
                     </div>
                     <div class="qc-body">
-                      <div class="qc-label">View orders</div>
+                      <div class="qc-label">Sales Orders</div>
                       <div class="qc-sub">
-                        <%= stats.pendingOrders %> order<%= stats.pendingOrders> 1 ? 's' : '' %> awaiting confirmation
+                        <%= stats.pendingOrders %> pending orders
                       </div>
                     </div>
+                    <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
-                  <div class="quick-card" onclick="window.location.href='/sell'">
-                    <div class="qc-icon" style="background:#dcfce7;color:#16a34a">
-                      <svg viewBox="0 0 24 24">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
+                  <div class="quick-card glass" onclick="showSection('sWallet')">
+                    <div class="qc-icon" style="background:var(--accent-light);color:var(--accent)">
+                      <i data-lucide="wallet"></i>
                     </div>
                     <div class="qc-body">
-                      <div class="qc-label">Post a new product</div>
-                      <div class="qc-sub">Create a new product</div>
+                      <div class="qc-label">Platform Wallet</div>
+                      <div class="qc-sub">
+                        <%= new Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> VND available
+                      </div>
                     </div>
+                    <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
                 </div>
 
                 <div class="charts-row">
-                  <div class="card">
+                  <div class="card premium-card">
                     <div class="card-head">
                       <div>
-                        <div class="card-title">My revenue — 2026</div>
+                        <div class="card-title">Revenue Overview — 2026</div>
                         <div class="card-sub">By month (VND thousands)</div>
                       </div>
                     </div>
-                    <div style="position:relative;height:200px"><canvas id="cSellerRev"></canvas></div>
+                    <div style="position:relative;height:240px"><canvas id="cSellerRev"></canvas></div>
                   </div>
-                  <div class="card">
+                  <div class="card premium-card">
                     <div class="card-head">
                       <div>
-                        <div class="card-title">Categories sold</div>
-                        <div class="card-sub">Distribution</div>
+                        <div class="card-title">Sales Distribution</div>
+                        <div class="card-sub">By category</div>
                       </div>
                     </div>
-                    <div style="position:relative;height:160px;margin-bottom:12px"><canvas id="cSellerCat"></canvas>
+                    <div style="position:relative;height:180px;margin-bottom:12px"><canvas id="cSellerCat"></canvas>
                     </div>
-                    <div class="legend" style="flex-direction:column;gap:7px" id="sCatLegend">
-                      <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>No data</span>
+                    <div class="legend"
+                      style="flex-direction:column;gap:7px; padding-top: 10px; border-top: 1px solid var(--border);"
+                      id="sCatLegend">
+                      <span class="leg-item"><span class="leg-dot" style="background:var(--primary)"></span>No
+                        data</span>
                     </div>
                   </div>
                 </div>
@@ -406,6 +392,85 @@
             </div>
           </section>
 
+          <!-- ── SECTION: Wallet ── -->
+          <section class="section" id="sWallet">
+            <div class="wallet-hero glass"
+              style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 32px; border-radius: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Available Balance</div>
+                <div style="font-size: 36px; font-weight: 800; letter-spacing: -0.02em;">
+                  <%= new Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> <span
+                      style="font-size: 16px; opacity: 0.7;">VND</span>
+                </div>
+                <div
+                  style="font-size: 14px; opacity: 0.8; margin-top: 12px; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                  Pending: <%= new Intl.NumberFormat('vi-VN').format(wallet.pendingBalance) %> VND
+                </div>
+              </div>
+              <button class="btn"
+                style="background: #fff; color: var(--primary); padding: 12px 24px; border-radius: 12px; font-weight: 700; border: none;"
+                onclick="openWithdrawModal()">
+                Withdraw Funds
+              </button>
+            </div>
+
+            <div class="card premium-card">
+              <div class="card-head">
+                <div class="card-title">Transaction History</div>
+              </div>
+              <div class="tbl-wrap">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="walletTransactions">
+                    <tr>
+                      <td colspan="4" style="text-align:center; padding: 40px; color: var(--t2);">
+                        <i data-lucide="history"
+                          style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                        <div>No transactions found</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card premium-card" style="margin-top: 24px;">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">Payout Requests</div>
+                  <div class="card-sub">Track when your QR earnings are transferred to your bank account</div>
+                </div>
+              </div>
+              <div class="tbl-wrap">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Bank</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payoutRequestsTable">
+                    <tr>
+                      <td colspan="4" style="text-align:center; padding: 32px; color: var(--t2);">
+                        No payout requests yet
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
         </div><!-- /.content -->
       </main>
 
@@ -416,8 +481,145 @@
         <div class="nav-item" data-section="sDash" onclick="nav(this,'sDash')"></div>
         <div class="nav-item" data-section="sMessages" onclick="nav(this,'sMessages')"></div>
         <div class="nav-item" data-section="sProfile" onclick="nav(this,'sProfile')"></div>
+        <div class="nav-item" data-section="sWallet" onclick="nav(this,'sWallet')"></div>
       </nav>
 
+      <!-- Withdraw Modal -->
+      <div class="modal-overlay" id="withdrawModal">
+        <div class="modal glass" style="max-width: 400px; margin: 40px auto;">
+          <div class="modal-head">
+            <div class="modal-title">Withdraw Funds</div>
+            <button class="modal-close" onclick="closeWithdrawModal()"><i data-lucide="x"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Amount (VND)</label>
+              <input type="number" class="form-input" id="withdrawAmount" value="<%= wallet.availableBalance %>">
+              <div style="font-size: 12px; color: var(--t3); margin-top: 4px;">Available: <%= new
+                  Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> VND</div>
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Bank Name</label>
+              <input type="text" class="form-input" id="bankName" placeholder="e.g., MB Bank">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Account Number</label>
+              <input type="text" class="form-input" id="accountNumber">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Holder</label>
+              <input type="text" class="form-input" id="accountName" style="text-transform: uppercase;">
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn btn-sec" onclick="closeWithdrawModal()">Cancel</button>
+            <button class="btn btn-pri" onclick="submitWithdraw()">Submit Request</button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function openWithdrawModal() {
+          document.getElementById('withdrawModal').classList.add('show');
+        }
+        function closeWithdrawModal() {
+          document.getElementById('withdrawModal').classList.remove('show');
+        }
+        async function submitWithdraw() {
+          const amount = document.getElementById('withdrawAmount').value;
+          const bankName = document.getElementById('bankName').value;
+          const accountNumber = document.getElementById('accountNumber').value;
+          const accountName = document.getElementById('accountName').value;
+
+          if (!amount || amount < 50000) return showToast('Minimum withdrawal is 50,000 VND', 'err');
+          if (!bankName || !accountNumber || !accountName) return showToast('Please fill all bank details', 'err');
+
+          try {
+            const res = await fetch('/api/wallet/payout-request', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ amount, bankInfo: { bankName, accountNumber, accountName } })
+            });
+            const json = await res.json();
+            if (json.success) {
+              showToast('Payout request submitted successfully!', 'ok');
+              setTimeout(() => location.reload(), 900);
+            } else {
+              showToast('Error: ' + json.message, 'err');
+            }
+          } catch (err) {
+            showToast('Network error', 'err');
+          }
+        }
+
+        async function fetchTransactions() {
+          try {
+            const res = await fetch('/api/wallet/transactions');
+            const json = await res.json();
+            if (json.success && json.data.length > 0) {
+              const tbody = document.getElementById('walletTransactions');
+              tbody.innerHTML = json.data.map(t => `
+                <tr>
+                  <td style="font-size: 13px; color: var(--t2);">${new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td><span class="badge ${t.amount >= 0 ? 'badge-completed' : 'badge-cancelled'}" style="font-size: 11px;">${t.type}</span></td>
+                  <td style="font-size: 13px;">${t.description}</td>
+                  <td style="font-weight: 700; color: ${t.amount >= 0 ? 'var(--success)' : 'var(--error)'}">${t.amount >= 0 ? '+' : ''}${new Intl.NumberFormat('vi-VN').format(t.amount)}</td>
+                </tr>
+              `).join('');
+            }
+          } catch (err) {
+            console.error('Fetch transactions error:', err);
+          }
+        }
+
+        async function fetchPayoutRequests() {
+          try {
+            const res = await fetch('/api/wallet/payout-requests');
+            const json = await res.json();
+            const tbody = document.getElementById('payoutRequestsTable');
+            if (!tbody) return;
+
+            if (!json.success || !json.data.length) {
+              tbody.innerHTML = `
+                <tr>
+                  <td colspan="4" style="text-align:center; padding: 32px; color: var(--t2);">No payout requests yet</td>
+                </tr>
+              `;
+              return;
+            }
+
+            const statusClass = {
+              PENDING: 'badge-pending',
+              PROCESSING: 'badge-pending',
+              PAID: 'badge-completed',
+              REJECTED: 'badge-cancelled'
+            };
+
+            tbody.innerHTML = json.data.map(p => `
+              <tr>
+                <td style="font-size: 13px; color: var(--t2);">${new Date(p.createdAt).toLocaleDateString()}</td>
+                <td style="font-weight: 700;">${new Intl.NumberFormat('vi-VN').format(p.amount)} VND</td>
+                <td style="font-size: 13px;">${p.bankInfo?.bankName || '—'}<br><span style="color: var(--t3);">${p.bankInfo?.accountNumber || ''}</span></td>
+                <td><span class="badge ${statusClass[p.status] || 'badge-pending'}" style="font-size: 11px;">${p.status}</span></td>
+              </tr>
+            `).join('');
+          } catch (err) {
+            console.error('Fetch payout requests error:', err);
+          }
+        }
+
+        window.showSection = function (id) {
+          const navItem = document.querySelector(`.nav-item[data-section="${id}"]`);
+          if (navItem) {
+            navItem.click();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (id === 'sWallet') {
+              fetchTransactions();
+              fetchPayoutRequests();
+            }
+          }
+        }
+      </script>
       <script>window.INITIAL_SECTION = "<%= (typeof initialSection !== 'undefined' ? initialSection : 'sDash') %>";</script>
       <script src="/js/rating.js"></script>
       <%- include('partials/dashboard-scripts') %>

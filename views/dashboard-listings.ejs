@@ -7,8 +7,9 @@
   <title>products — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
 </head>
@@ -19,12 +20,18 @@
 
       <main class="main">
         <div class="content">
+          <header class="page-heading">
+            <div class="page-heading-copy">
+              <h1 class="page-heading-title" id="pageTitle">My Products</h1>
+              <p class="page-heading-sub" id="pageSub">Manage your active and sold products</p>
+            </div>
+          </header>
 
           <!-- ── SECTION: Listings ── -->
           <div class="tbl-wrap">
             <div class="tbl-toolbar">
               <div>
-                <div class="tbl-title">My products</div>
+                <div class="tbl-title">Inventory</div>
                 <div class="tbl-count">20 products total</div>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
@@ -148,7 +155,7 @@
 
       <div id="toast-wrap"></div>
 
-      <script>window.INITIAL_SECTION = 'sListings';</script>
+      <script>window.INITIAL_SECTION = 'sProducts';</script>
       <%- include('partials/dashboard-scripts') %>
 </body>
 

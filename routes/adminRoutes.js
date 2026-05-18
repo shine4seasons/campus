@@ -34,20 +34,20 @@ async function getDashboardStats() {
 
   const totalUsersDelta = newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(0) : 0;
 
-  // Total listings
-  const totalListings = await Product.countDocuments({});
+  // Total products
+  const totalProducts = await Product.countDocuments({});
 
-  // Active listings
-  const activeListings = await Product.countDocuments({ status: 'active' });
+  // Active products
+  const activeProducts = await Product.countDocuments({ status: 'active' });
 
-  // Active listings yesterday (approximate, since no historical)
+  // Active products yesterday (approximate, since no historical)
   // For simplicity, assume no change, or calculate based on createdAt
   // Actually, to simulate, perhaps count products created before yesterday
-  const activeListingsYesterday = await Product.countDocuments({
+  const activeProductsYesterday = await Product.countDocuments({
     status: 'active',
     createdAt: { $lt: yesterday }
   });
-  const activeListingsDelta = activeListings - activeListingsYesterday;
+  const activeProductsDelta = activeProducts - activeProductsYesterday;
 
   // Orders this month
   const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: startOfMonth } });
@@ -77,8 +77,8 @@ async function getDashboardStats() {
 
   return {
     totalUsers: { value: totalUsers, delta: totalUsersDelta, type: 'percentage' },
-    totalListings: { value: totalListings, type: 'absolute' },
-    activeListings: { value: activeListings, delta: activeListingsDelta, type: 'absolute' },
+    totalProducts: { value: totalProducts, type: 'absolute' },
+    activeProducts: { value: activeProducts, delta: activeProductsDelta, type: 'absolute' },
     ordersThisMonth: { value: ordersThisMonth, delta: ordersDelta, type: 'percentage' },
     gmvThisMonth: { value: gmvThisMonth, delta: gmvDelta, type: 'percentage' }
   };
@@ -161,7 +161,7 @@ router.get('/', async (req, res) => {
       topSellers: [],
       stats: {
         totalUsers: { value: 0, delta: 0, type: 'percentage' },
-        activeListings: { value: 0, delta: 0, type: 'absolute' },
+        activeProducts: { value: 0, delta: 0, type: 'absolute' },
         ordersThisMonth: { value: 0, delta: 0, type: 'percentage' },
         gmvThisMonth: { value: 0, delta: 0, type: 'percentage' }
       },
@@ -194,8 +194,8 @@ ADMIN_SECTIONS.forEach(sectionName => {
         CATEGORIES,
         stats: {
           totalUsers: { value: 0, delta: 0, type: 'percentage' },
-          totalListings: { value: 0, type: 'absolute' },
-          activeListings: { value: 0, delta: 0, type: 'absolute' },
+          totalProducts: { value: 0, type: 'absolute' },
+          activeProducts: { value: 0, delta: 0, type: 'absolute' },
           ordersThisMonth: { value: 0, delta: 0, type: 'percentage' },
           gmvThisMonth: { value: 0, delta: 0, type: 'percentage' }
         }

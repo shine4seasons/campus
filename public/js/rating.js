@@ -179,7 +179,7 @@ async function submitRating(entityType, entityId, score, comment = '') {
   const notify = (msg, type = 'ok') => {
     if (typeof showToast === 'function') showToast(msg, type);
     else if (typeof toast === 'function') toast(msg, type);
-    else alert(msg);
+    else console.warn(msg);
   };
 
   if (!score || score < 1 || score > 5) {
@@ -225,10 +225,19 @@ async function deleteRating(entityType, entityId) {
   const notify = (msg, type = 'ok') => {
     if (typeof showToast === 'function') showToast(msg, type);
     else if (typeof toast === 'function') toast(msg, type);
-    else alert(msg);
+    else console.warn(msg);
   };
 
-  if (!confirm('Are you sure you want to delete this rating?')) {
+  const confirmed = typeof showConfirm === 'function'
+    ? await showConfirm({
+        title: 'Delete Review',
+        message: 'Are you sure you want to delete this rating?',
+        confirmText: 'Delete',
+        type: 'danger'
+      })
+    : false;
+
+  if (!confirmed) {
     return false;
   }
 

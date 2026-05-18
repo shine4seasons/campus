@@ -17,8 +17,20 @@
     const sec = document.getElementById(id);
     if (sec) sec.classList.add('active');
 
-    const pgTitleEl = document.getElementById('pgTitle');
-    const pgSubEl = document.getElementById('pgSub');
+    // Automatically highlight sidebar active element
+    try {
+      const el = Array.from(document.querySelectorAll('.sb-nav .nav-item')).find(n => {
+        const onclick = n.getAttribute('onclick');
+        return onclick && onclick.includes(`'${id}'`);
+      });
+      if (el) {
+        document.querySelectorAll('.sb-nav .nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+    } catch (e) {}
+
+    const pgTitleEl = document.getElementById('pageTitle');
+    const pgSubEl = document.getElementById('pageSub');
     const primaryLabelEl = document.getElementById('tbPrimaryLabel');
 
     // Prefer explicit data attributes on the section element
@@ -32,6 +44,30 @@
     }
 
     // Small fallback map for known sections when no data-* provided
+    const fallbacks = {
+      'aDash': { title: 'Admin Dashboard', sub: 'Overview & analytics', cta: 'Action' },
+      'aAnalytics': { title: 'Detailed Analytics', sub: 'Platform performance & metrics', cta: 'Export PDF' },
+      'aUsers': { title: 'User Management', sub: 'Active, banned & new users', cta: 'Action' },
+      'aProducts': { title: 'Product Moderation', sub: 'Manage products and reports', cta: 'Action' },
+      'aOrders': { title: 'Order Ledger', sub: 'Platform-wide order details', cta: 'Action' },
+      'aPayouts': { title: 'Seller Payout Requests', sub: 'Review and process withdrawal requests', cta: 'Action' },
+      'aReports': { title: 'Reported Content', sub: 'Review inappropriate items and accounts', cta: 'Action' },
+      'aSettings': { title: 'Platform Settings', sub: 'Configure global options', cta: 'Action' },
+      
+      // Seller sections
+      'sDash': { title: 'Seller Dashboard', sub: 'Overview of your sales & performance', cta: 'Action' },
+      'sProducts': { title: 'My Products', sub: 'Manage your active and sold products', cta: 'Create Product' },
+      'sOrders': { title: 'Seller Orders', sub: 'Manage buyer orders & fulfillment', cta: 'Action' },
+      'sRevenue': { title: 'Revenue & Wallet', sub: 'Review wallet balance and payouts', cta: 'Withdraw' },
+      'sMessages': { title: 'Inbox Messages', sub: 'Chat with buyers and sellers', cta: 'Action' },
+      'sProfile': { title: 'User Profile', sub: 'Manage account details & settings', cta: 'Action' }
+    };
+
+    if (!title && fallbacks[id]) {
+      title = fallbacks[id].title;
+      sub = fallbacks[id].sub;
+      cta = fallbacks[id].cta;
+    }
 
     if (pgTitleEl) pgTitleEl.textContent = title;
     if (pgSubEl) pgSubEl.textContent = sub;
@@ -72,6 +108,7 @@
         if (group.closest('#aUsers')) return; // handled in specialized script
         if (group.closest('#aOrders')) return; // handled in specialized script
         if (group.closest('#aReports')) return; // handled in specialized script
+        if (group.closest('#aPayouts')) return; // handled in specialized script
 
         group.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
         pill.classList.add('on');
@@ -127,7 +164,7 @@
 
   window._dashboard.AXIS_OPTS = window._dashboard.AXIS_OPTS || {
     grid: { color: 'rgba(100,116,139,.1)' },
-    ticks: { color: '#94a3b8', font: { size: 11, family: "'Be Vietnam Pro'" } },
+    ticks: { color: '#94a3b8', font: { size: 11, family: "'Plus Jakarta Sans'" } },
     border: { display: false },
   };
   var AXIS_OPTS = window._dashboard.AXIS_OPTS;
@@ -200,7 +237,7 @@
               if (label.includes('New users')) valEl.textContent = kpi.newUsers7d || 0;
               if (label.includes('Return rate')) valEl.textContent = (kpi.returnRate || 0) + '%';
               if (label.includes('Avg order value')) valEl.textContent = kpi.avgOrderValue ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(kpi.avgOrderValue) : '0 VND';
-              if (label.includes('New listings')) valEl.textContent = kpi.newListingsPerDay || 0;
+              if (label.includes('New products')) valEl.textContent = kpi.newProductsPerDay || 0;
             });
           }
 
@@ -436,6 +473,7 @@
     if (id === 'aProducts') fetchAdminProducts(1);
     if (id === 'aOrders' && typeof loadOrders === 'function') { loadOrders(1); fetchAdminOrderCounts(); }
     if (id === 'aReports' && typeof loadReports === 'function') loadReports();
+    if (id === 'aPayouts' && typeof loadPayouts === 'function') loadPayouts(1);
     if (id === 'aDash') fetchAdminStats();
     if (id === 'aSettings') fetchAdminSettings();
     if (id === 'sDash') fetchSellerStats();
@@ -521,10 +559,10 @@
         const statJson = await statRes.json();
         const d = statJson.data || {};
         const users = d.totalUsers || 1;
-        const listings = d.activeListings || 1;
+        const activeProducts = d.activeProducts || 1;
 
         const dbSize = (Math.max(1.2, users * 0.05)).toFixed(2) + ' MB';
-        const storage = (Math.max(5.5, listings * 1.5)).toFixed(2) + ' MB';
+        const storage = (Math.max(5.5, activeProducts * 1.5)).toFixed(2) + ' MB';
         const rps = (users * 25 + Math.floor(Math.random() * 100));
 
         const sysStats = document.getElementById('adminSysStats');
@@ -578,7 +616,7 @@
         const valEl = card.querySelector('.stat-val');
         if (!label || !valEl) return;
         if (label.includes('Total users')) valEl.textContent = (d.totalUsers || 0).toLocaleString();
-        if (label.includes('Active listings')) valEl.textContent = (d.activeListings || 0).toLocaleString();
+        if (label.includes('Active products')) valEl.textContent = (d.activeProducts || 0).toLocaleString();
         if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth || 0).toLocaleString();
         if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
       });

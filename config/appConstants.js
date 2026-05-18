@@ -4,6 +4,7 @@
  */
 
 const ORDER_STATUS = Object.freeze({
+  PENDING_PAYMENT: 'pending_payment',
   PENDING:   'pending',
   CONFIRMED: 'confirmed',
   COMPLETED: 'completed',
@@ -68,7 +69,7 @@ const PRODUCT_CONDITIONS = Object.freeze([
 ]);
 
 const DELIVERY_MODES = Object.freeze(['pickup', 'ship']);
-const PAYMENT_MODES = Object.freeze(['cash', 'card']);
+const PAYMENT_MODES = Object.freeze(['cash', 'qr']);
 
 const TRANSITIONS = Object.freeze({
   seller: {
@@ -76,6 +77,7 @@ const TRANSITIONS = Object.freeze({
     [ORDER_STATUS.CONFIRMED]: [ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED],
   },
   buyer: {
+    [ORDER_STATUS.PENDING_PAYMENT]: [ORDER_STATUS.CANCELLED],
     [ORDER_STATUS.PENDING]: [ORDER_STATUS.CANCELLED],
   },
 });

@@ -3,7 +3,26 @@ const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const Report = require('../../models/Report');
 const SystemSettings = require('../../models/SystemSettings');
+const PayoutRequest = require('../../models/PayoutRequest');
+const Wallet = require('../../models/Wallet');
+const WalletTransaction = require('../../models/WalletTransaction');
+const mongoose = require('mongoose');
 const { ORDER_STATUS, PRODUCT_STATUS, USER_ROLES, NOTIFICATION_TYPES } = require('../../config/appConstants');
+
+const PAYOUT_STATUS = Object.freeze({
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  PAID: 'PAID',
+  REJECTED: 'REJECTED'
+});
+
+async function updatePayoutTransactionStatus(payoutId, status, session) {
+  await WalletTransaction.findOneAndUpdate(
+    { referenceId: payoutId, referenceType: 'PayoutRequest', type: 'WITHDRAW' },
+    { $set: { status } },
+    { session }
+  );
+}
 
 
 // GET /api/admin/users
@@ -111,7 +130,7 @@ const getProducts = async (req, res) => {
 const getStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({});
-    const activeListings = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
+    const activeProducts = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
 
     // Orders this month and GMV this month
     const start = new Date();
@@ -140,7 +159,7 @@ const getStats = async (req, res) => {
     };
     statusAgg.forEach(s => { ordersByStatus[s._id] = s.count; });
 
-    res.json({ success: true, data: { totalUsers, activeListings, ordersThisMonth, gmvThisMonth, ordersByStatus } });
+    res.json({ success: true, data: { totalUsers, activeProducts, ordersThisMonth, gmvThisMonth, ordersByStatus } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -214,8 +233,8 @@ const hideProduct = async (req, res) => {
         recipient: p.seller,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     'Listing Hidden',
-        message:   `Your listing "${p.title}" has been hidden by moderation. Please check your product details.`,
+        title:     'Product Hidden',
+        message:   `Your product "${p.title}" has been hidden by moderation. Please check the details and update it if needed.`,
         link:      `/products/${p._id}`
       });
     } catch (notifErr) {
@@ -240,8 +259,8 @@ const restoreProduct = async (req, res) => {
         recipient: p.seller,
         sender:    req.user._id,
         type:      NOTIFICATION_TYPES.SYSTEM,
-        title:     'Listing Live',
-        message:   `Your listing "${p.title}" is now visible to everyone!`,
+        title:     'Product Live',
+        message:   `Your product "${p.title}" is now visible to everyone!`,
         link:      `/products/${p._id}`
       });
     } catch (notifErr) {
@@ -290,9 +309,9 @@ const getAnalytics = async (req, res) => {
       ? Math.round(validOrdersAgg[0].totalSales / validOrdersAgg[0].count) 
       : 0;
 
-    // 4. New listings per day (7 days)
-    const newListings7d = await Product.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
-    const newListingsPerDay = (newListings7d / 7).toFixed(1);
+    // 4. New products per day (7 days)
+    const newProducts7d = await Product.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+    const newProductsPerDay = (newProducts7d / 7).toFixed(1);
 
     // 5. User growth (by Quarter of current year)
     const yearStart = new Date(now.getFullYear(), 0, 1);
@@ -420,7 +439,7 @@ const getAnalytics = async (req, res) => {
     res.json({
       success: true,
       data: {
-        kpi: { newUsers7d, returnRate, avgOrderValue, newListingsPerDay },
+        kpi: { newUsers7d, returnRate, avgOrderValue, newProductsPerDay },
         userGrowth,
         delivery: [deliveryMap.pickup, deliveryMap.ship],
         payment: [paymentMap.cash, paymentMap.card],
@@ -629,4 +648,232 @@ const updateSettings = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, toggleBan, getOrders, getProducts, getStats, getGMVMonths, getCategoryDistribution, hideProduct, restoreProduct, deleteProductAdmin, getAnalytics, getReportsData, getReports, updateReport, getSettings, updateSettings };
+// GET /api/admin/payouts
+const getPayouts = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 25 } = req.query;
+    const filter = {};
+    if (status && status !== 'ALL') {
+      filter.status = status;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await PayoutRequest.countDocuments(filter);
+    
+    const payouts = await PayoutRequest.find(filter)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(Number(limit))
+      .populate('user', 'name nickname email')
+      .lean();
+
+    // Get stats counts for summary
+    const counts = await PayoutRequest.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    const stats = { PENDING: 0, PROCESSING: 0, PAID: 0, REJECTED: 0 };
+    counts.forEach(c => {
+      if (stats.hasOwnProperty(c._id)) {
+        stats[c._id] = c.count;
+      }
+    });
+
+    res.json({
+      success: true,
+      data: payouts,
+      stats,
+      pagination: {
+        totalRecords: total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// POST /api/admin/payouts/:id/approve
+const approvePayout = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const payoutId = req.params.id;
+    const { adminNote } = req.body;
+
+    const payout = await PayoutRequest.findById(payoutId).session(session);
+    if (!payout) {
+      return res.status(404).json({ success: false, message: 'Payout request not found' });
+    }
+    if (payout.status !== PAYOUT_STATUS.PENDING) {
+      return res.status(400).json({ success: false, message: 'Only pending payout requests can be approved' });
+    }
+
+    payout.status = PAYOUT_STATUS.PROCESSING;
+    payout.adminNote = adminNote || '';
+    payout.processedAt = new Date();
+    payout.processedBy = req.user._id;
+    await payout.save({ session });
+    await updatePayoutTransactionStatus(payout._id, 'PENDING', session);
+
+    // Send system notification to user
+    try {
+      const { sendNotification } = require('../../utils/notifService');
+      const formatMoney = m => new Intl.NumberFormat('vi-VN').format(m) + ' VND';
+      await sendNotification({
+        recipient: payout.user,
+        sender: req.user._id,
+        type: NOTIFICATION_TYPES.SYSTEM,
+        title: 'Payout Approved',
+        message: `Your payout request of ${formatMoney(payout.amount)} has been approved and is waiting for bank transfer.`,
+        link: '#'
+      });
+    } catch (notifErr) {
+      console.error('Payout approval notification error:', notifErr);
+    }
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Payout request moved to processing', data: payout });
+
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('[admin] approvePayout:', err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// POST /api/admin/payouts/:id/mark-paid
+const markPayoutPaid = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const payoutId = req.params.id;
+    const { adminNote, transferReference, transferNote } = req.body;
+
+    const payout = await PayoutRequest.findById(payoutId).session(session);
+    if (!payout) {
+      return res.status(404).json({ success: false, message: 'Payout request not found' });
+    }
+    if (payout.status !== PAYOUT_STATUS.PROCESSING) {
+      return res.status(400).json({ success: false, message: 'Only processing payouts can be marked as paid' });
+    }
+
+    payout.status = PAYOUT_STATUS.PAID;
+    payout.adminNote = adminNote || payout.adminNote || '';
+    payout.transferReference = String(transferReference || '').trim();
+    payout.transferNote = String(transferNote || '').trim();
+    payout.paidAt = new Date();
+    payout.paidBy = req.user._id;
+    await payout.save({ session });
+    await updatePayoutTransactionStatus(payout._id, 'COMPLETED', session);
+
+    try {
+      const { sendNotification } = require('../../utils/notifService');
+      const formatMoney = m => new Intl.NumberFormat('vi-VN').format(m) + ' VND';
+      await sendNotification({
+        recipient: payout.user,
+        sender: req.user._id,
+        type: NOTIFICATION_TYPES.SYSTEM,
+        title: 'Payout Sent',
+        message: `Your payout of ${formatMoney(payout.amount)} has been transferred to your bank account.`,
+        link: '#'
+      });
+    } catch (notifErr) {
+      console.error('Payout paid notification error:', notifErr);
+    }
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Payout marked as paid', data: payout });
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('[admin] markPayoutPaid:', err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// POST /api/admin/payouts/:id/reject
+const rejectPayout = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const payoutId = req.params.id;
+    const { adminNote } = req.body;
+
+    if (!adminNote || !adminNote.trim()) {
+      return res.status(400).json({ success: false, message: 'Rejection reason is required' });
+    }
+
+    const payout = await PayoutRequest.findById(payoutId).session(session);
+    if (!payout) {
+      return res.status(404).json({ success: false, message: 'Payout request not found' });
+    }
+    if (![PAYOUT_STATUS.PENDING, PAYOUT_STATUS.PROCESSING].includes(payout.status)) {
+      return res.status(400).json({ success: false, message: 'Only pending or processing payouts can be rejected' });
+    }
+
+    payout.status = PAYOUT_STATUS.REJECTED;
+    payout.adminNote = adminNote;
+    payout.processedAt = new Date();
+    payout.processedBy = req.user._id;
+    await payout.save({ session });
+
+    // Refund user wallet
+    const wallet = await Wallet.findOne({ user: payout.user }).session(session);
+    if (!wallet) {
+      return res.status(404).json({ success: false, message: 'User wallet not found' });
+    }
+
+    wallet.availableBalance += payout.amount;
+    await wallet.save({ session });
+
+    // Create transaction record for refund
+    const refundTx = new WalletTransaction({
+      wallet: wallet._id,
+      user: payout.user,
+      type: 'DEPOSIT',
+      amount: payout.amount,
+      description: `Refund for rejected withdrawal request: ${adminNote}`,
+      status: 'COMPLETED',
+      referenceId: payout._id,
+      referenceType: 'PayoutRequest'
+    });
+    await refundTx.save({ session });
+    await updatePayoutTransactionStatus(payout._id, 'FAILED', session);
+
+    // Send system notification to user
+    try {
+      const { sendNotification } = require('../../utils/notifService');
+      const formatMoney = m => new Intl.NumberFormat('vi-VN').format(m) + ' VND';
+      await sendNotification({
+        recipient: payout.user,
+        sender: req.user._id,
+        type: NOTIFICATION_TYPES.SYSTEM,
+        title: 'Withdrawal Rejected',
+        message: `Your withdrawal request of ${formatMoney(payout.amount)} was rejected. Reason: ${adminNote}. Funds have been refunded to your wallet.`,
+        link: '#'
+      });
+    } catch (notifErr) {
+      console.error('Payout rejection notification error:', notifErr);
+    }
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Payout request rejected', data: payout });
+
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('[admin] rejectPayout:', err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+module.exports = { getUsers, toggleBan, getOrders, getProducts, getStats, getGMVMonths, getCategoryDistribution, hideProduct, restoreProduct, deleteProductAdmin, getAnalytics, getReportsData, getReports, updateReport, getSettings, updateSettings, getPayouts, approvePayout, markPayoutPaid, rejectPayout };

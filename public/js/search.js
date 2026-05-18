@@ -27,14 +27,14 @@
         { title: 'Admin Dashboard', sub: 'System overview', icon: icons.dash, sectionId: 'aDash', path: '/admin', role: 'admin', keywords: 'admin dashboard overview system' },
         { title: 'Analytics', sub: 'Stats & Analytics', icon: icons.chart, sectionId: 'aAnalytics', path: '/admin/analytics', role: 'admin', keywords: 'stats reports analytics admin statistics' },
         { title: 'Users Management', sub: 'Manage platform users', icon: icons.users, sectionId: 'aUsers', path: '/admin/users', role: 'admin', keywords: 'users members admin management' },
-        { title: 'Products Management', sub: 'Manage product listings', icon: icons.package, sectionId: 'aProducts', path: '/admin/products', role: 'admin', keywords: 'products items admin management' },
+        { title: 'Products Management', sub: 'Manage products', icon: icons.package, sectionId: 'aProducts', path: '/admin/products', role: 'admin', keywords: 'products items admin management' },
         { title: 'Orders Management', sub: 'Manage transactions', icon: icons.orders, sectionId: 'aOrders', path: '/admin/orders', role: 'admin', keywords: 'orders transactions admin management' },
         { title: 'Reports', sub: 'Violation reports', icon: icons.report, sectionId: 'aReports', path: '/admin/reports', role: 'admin', keywords: 'reports violations admin management' },
         { title: 'System Settings', sub: 'Platform configuration', icon: icons.settings, sectionId: 'aSettings', path: '/admin/settings', role: 'admin', keywords: 'settings config admin' },
 
         // Seller items
         { title: 'Seller Dashboard', sub: 'Store overview', icon: icons.dash, sectionId: 'sDash', path: '/dashboard', role: 'seller', keywords: 'seller dashboard store overview' },
-        { title: 'My Products', sub: 'My listed products', icon: icons.package, sectionId: 'sListings', path: '/my-products', role: 'seller', keywords: 'my products seller inventory' },
+        { title: 'My Products', sub: 'Manage my products', icon: icons.package, sectionId: 'sProducts', path: '/my-products', role: 'seller', keywords: 'my products seller inventory' },
         { title: 'Orders (Seller)', sub: 'Customer orders', icon: icons.orders, sectionId: 'sOrders', path: '/orders-seller', role: 'seller', keywords: 'orders customer seller management' },
         { title: 'Revenue', sub: 'Revenue & Finances', icon: icons.revenue, sectionId: 'sRevenue', path: '/revenue', role: 'seller', keywords: 'revenue finances seller' },
         { title: 'Messages (Seller)', sub: 'Customer messages', icon: icons.report, sectionId: 'sMessages', path: '/dashboard', role: 'seller', keywords: 'messages chat seller inbox' },

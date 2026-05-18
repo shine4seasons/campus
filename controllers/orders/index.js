@@ -3,18 +3,24 @@ const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const User = require('../../models/User');
 const Message = require('../../models/Message');
+const Payment = require('../../models/Payment');
+const Wallet = require('../../models/Wallet');
+const WalletTransaction = require('../../models/WalletTransaction');
 
 const { findOrCreateConversation } = require('../chat/conversation');
 const { ORDER_STATUS, PRODUCT_STATUS, DELIVERY_MODES, PAYMENT_MODES, TRANSITIONS, ORDER_ROLES, NOTIFICATION_TYPES } = require('../../config/appConstants');
+const sepayService = require('../../services/sepayService');
 
 // Create Order
 exports.createOrder = async (req, res) => {
   let claimedProduct = null;
   let order = null;
+  let orderQuantity = 1;
   try {
     const buyerId = req.user._id;
     const {
       productId,
+      quantity = 1,
       deliveryMode,
       paymentMode,
       note = '',
@@ -23,6 +29,10 @@ exports.createOrder = async (req, res) => {
     } = req.body;
 
     if (!productId) return res.status(400).json({ success: false, message: 'Missing productId' });
+    orderQuantity = Number.parseInt(quantity, 10);
+    if (!Number.isFinite(orderQuantity) || orderQuantity < 1) {
+      return res.status(400).json({ success: false, message: 'Quantity must be at least 1' });
+    }
 
     if (!DELIVERY_MODES.includes(deliveryMode)) return res.status(400).json({ success: false, message: 'Invalid deliveryMode' });
     if (!PAYMENT_MODES.includes(paymentMode)) return res.status(400).json({ success: false, message: 'Invalid paymentMode' });
@@ -34,47 +44,131 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    // Atomic claim: only succeeds if product is currently ACTIVE and not owned by buyer.
-    // This prevents double-sell when two buyers click "Buy" simultaneously.
+    // Atomic claim: only succeeds if product has enough active stock and is not owned by buyer.
+    // This prevents overselling when two buyers click "Buy" simultaneously.
     claimedProduct = await Product.findOneAndUpdate(
-      { _id: productId, status: PRODUCT_STATUS.ACTIVE, seller: { $ne: buyerId } },
-      { $set: { status: PRODUCT_STATUS.SOLD, buyer: buyerId, soldAt: new Date() } },
+      {
+        _id: productId,
+        status: PRODUCT_STATUS.ACTIVE,
+        seller: { $ne: buyerId },
+        $or: [
+          { quantity: { $gte: orderQuantity } },
+          ...(orderQuantity === 1 ? [{ quantity: { $exists: false } }] : [])
+        ]
+      },
+      [
+        {
+          $set: {
+            quantity: { $subtract: [{ $ifNull: ['$quantity', 1] }, orderQuantity] },
+            status: {
+              $cond: [
+                { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, orderQuantity] }, 0] },
+                PRODUCT_STATUS.SOLD,
+                PRODUCT_STATUS.ACTIVE
+              ]
+            },
+            buyer: {
+              $cond: [
+                { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, orderQuantity] }, 0] },
+                buyerId,
+                '$buyer'
+              ]
+            },
+            soldAt: {
+              $cond: [
+                { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, orderQuantity] }, 0] },
+                new Date(),
+                '$soldAt'
+              ]
+            }
+          }
+        }
+      ],
       { new: true }
     );
 
     if (!claimedProduct) {
       // Diagnose why the claim failed
-      const existing = await Product.findById(productId).select('seller status').lean();
+      const existing = await Product.findById(productId).select('seller status quantity').lean();
       if (!existing) return res.status(404).json({ success: false, message: 'Product not found' });
       if (String(existing.seller) === String(buyerId)) return res.status(400).json({ success: false, message: 'You cannot purchase your own product' });
+      if ((existing.quantity || 0) < orderQuantity) return res.status(409).json({ success: false, message: 'Not enough quantity available' });
       return res.status(409).json({ success: false, message: 'This product is already sold or unavailable' });
     }
 
     const sellerId = claimedProduct.seller;
+    const orderTotal = claimedProduct.price * orderQuantity;
+
+    const isQrPayment = paymentMode === 'qr';
+    const initialStatus = isQrPayment ? ORDER_STATUS.PENDING_PAYMENT : ORDER_STATUS.PENDING;
 
     // Order.create after claim. If this fails we rollback the product claim below.
     order = await Order.create({
       product: productId,
       buyer: buyerId,
       seller: sellerId,
-      priceSnapshot: claimedProduct.price,
+      priceSnapshot: orderTotal,
+      quantity: orderQuantity,
       deliveryMode,
       paymentMode,
       note: note.trim().substring(0, 500),
       shippingAddress: deliveryMode === 'ship' ? shippingAddress : null,
       pickupLocation: deliveryMode === 'pickup' ? pickupLocation : null,
-      status: ORDER_STATUS.PENDING,
+      status: initialStatus,
       timeline: [{
-        event: ORDER_STATUS.PENDING,
+        event: initialStatus,
         actor: buyerId,
         at: new Date(),
         note: 'Order placed'
       }],
     });
 
+    let payment = null;
+    if (isQrPayment) {
+      const paymentCode = `SMP${String(order._id).toUpperCase()}`;
+
+      try {
+        // ====================================================================
+        // SEPAY INTEGRATION: Create QR payment via SePay API
+        // ====================================================================
+
+        const sepayPayment = await sepayService.createSePayPayment(
+          order,
+          orderTotal,
+          paymentCode
+        );
+
+        const paymentData = {
+          order: order._id,
+          buyer: buyerId,
+          seller: sellerId,
+          amount: orderTotal,
+          
+          // SePay-specific fields
+          sepayQrUrl: sepayPayment.qrUrl,
+          sepayReferenceCode: sepayPayment.referenceCode,
+          
+          // Legacy field (for backward compatibility)
+          paymentCode,
+          
+          status: 'PENDING',
+          expiredAt: new Date(Date.now() + 15 * 60000) // 15 mins to pay
+        };
+
+        if (sepayPayment.sepayPaymentId) {
+          paymentData.sepayPaymentId = sepayPayment.sepayPaymentId;
+        }
+
+        payment = await Payment.create(paymentData);
+      } catch (sepayErr) {
+        console.error('[Order] SePay payment creation failed:', sepayErr.message);
+        throw new Error(`Cannot create SePay QR: ${sepayErr.message}`);
+      }
+    }
+
     // Counters are best-effort metrics — log on failure but don't fail the order
     Promise.all([
-      User.findByIdAndUpdate(sellerId, { $inc: { totalSales: 1 } }),
+      User.findByIdAndUpdate(sellerId, { $inc: { totalSales: orderQuantity } }),
       User.findByIdAndUpdate(buyerId, { $inc: { totalOrders: 1 } })
     ]).catch(err => console.error('[orders] counter update error:', err));
 
@@ -87,12 +181,13 @@ exports.createOrder = async (req, res) => {
         ? `Delivery to: ${shippingAddress?.street || ''}, ${shippingAddress?.city || ''}`
         : 'Method: Pickup';
 
-      const payText = paymentMode === 'cash' ? 'Payment: Cash' : 'Payment: Card';
+      const payText = paymentMode === 'cash' ? 'Payment: Cash' : 'Payment: QR Transfer';
 
       const autoMsg =
         `[ORDER] *New order from ${req.user.nickname || req.user.name}*\n` +
         `Product: ${product.title}\n` +
-        `Price: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(product.price)}\n` +
+        `Quantity: ${orderQuantity}\n` +
+        `Total: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(orderTotal)}\n` +
         deliveryText + '\n' +
         payText +
         (note.trim() ? `\nNote: ${note.trim()}` : '');
@@ -129,7 +224,7 @@ exports.createOrder = async (req, res) => {
         sender: buyerId,
         type: NOTIFICATION_TYPES.ORDER,
         title: 'New Order',
-        message: `${req.user.nickname || req.user.name} placed an order for "${product.title}"`,
+        message: `${req.user.nickname || req.user.name} placed an order for ${orderQuantity} x "${product.title}"`,
         link: `/orders-seller`
       });
     } catch (chatErr) {
@@ -139,22 +234,42 @@ exports.createOrder = async (req, res) => {
     return res.status(201).json({
       success: true,
       orderId: order._id,
+      paymentId: payment ? payment._id : null,
+      // SePay fields
+      sepayQrUrl: payment && payment.sepayQrUrl ? payment.sepayQrUrl : null,
+      sepayPaymentId: payment && payment.sepayPaymentId ? payment.sepayPaymentId : null,
+      amount: payment ? payment.amount : null,
+      expiredAt: payment ? payment.expiredAt : null,
       conversationId: conv?._id || null,
       message: 'Order placed successfully',
     });
   } catch (err) {
     console.error('[checkout] createOrder:', err);
-    // Rollback: if we claimed the product but failed to create the order, release it.
-    if (claimedProduct && !order) {
+    // Rollback: release product and cleanup partially-created records.
+    if (order) {
+      try {
+        await Payment.deleteMany({ order: order._id });
+        await Order.findByIdAndDelete(order._id);
+      } catch (cleanupErr) {
+        console.error('[checkout] order cleanup failed:', cleanupErr.message);
+      }
+    }
+
+    if (claimedProduct) {
       try {
         await Product.findByIdAndUpdate(claimedProduct._id, {
+          $inc: { quantity: order?.quantity || orderQuantity || 1 },
           $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
         });
       } catch (rollbackErr) {
         console.error('[checkout] rollback failed:', rollbackErr);
       }
     }
-    res.status(500).json({ success: false, message: err.message });
+
+    const message = err.message || 'Create order failed';
+    const isSePayIssue = message.includes('SePay QR') || message.includes('SEPAY_QR_ACC');
+    const statusCode = isSePayIssue ? 503 : 500;
+    res.status(statusCode).json({ success: false, message });
   }
 };
 
@@ -312,20 +427,94 @@ exports.updateOrderStatus = async (req, res) => {
     try {
       if (status === ORDER_STATUS.CANCELLED && prevStatus !== ORDER_STATUS.CANCELLED) {
         await Product.findByIdAndUpdate(updatedOrder.product, {
+          $inc: { quantity: updatedOrder.quantity || 1 },
           $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
         });
         Promise.all([
-          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: -1 } }),
+          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: -(updatedOrder.quantity || 1) } }),
           User.findByIdAndUpdate(updatedOrder.buyer, { $inc: { totalOrders: -1 } })
         ]).catch(err => console.error('[orders] counter update error:', err));
       } else if (prevStatus === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.CANCELLED) {
-        await Product.findByIdAndUpdate(updatedOrder.product, {
-          $set: { status: PRODUCT_STATUS.SOLD, buyer: updatedOrder.buyer, soldAt: new Date() }
-        });
+        const quantityToReserve = updatedOrder.quantity || 1;
+        const reclaimedProduct = await Product.findOneAndUpdate(
+          { _id: updatedOrder.product, status: PRODUCT_STATUS.ACTIVE, quantity: { $gte: quantityToReserve } },
+          [
+            {
+              $set: {
+                quantity: { $subtract: ['$quantity', quantityToReserve] },
+                status: {
+                  $cond: [
+                    { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
+                    PRODUCT_STATUS.SOLD,
+                    PRODUCT_STATUS.ACTIVE
+                  ]
+                },
+                buyer: {
+                  $cond: [
+                    { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
+                    updatedOrder.buyer,
+                    '$buyer'
+                  ]
+                },
+                soldAt: {
+                  $cond: [
+                    { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
+                    new Date(),
+                    '$soldAt'
+                  ]
+                }
+              }
+            }
+          ],
+          { new: true }
+        );
+        if (!reclaimedProduct) {
+          return res.status(409).json({ success: false, message: 'Not enough quantity available to reopen this order' });
+        }
         Promise.all([
-          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: 1 } }),
+          User.findByIdAndUpdate(updatedOrder.seller, { $inc: { totalSales: quantityToReserve } }),
           User.findByIdAndUpdate(updatedOrder.buyer, { $inc: { totalOrders: 1 } })
         ]).catch(err => console.error('[orders] counter update error:', err));
+      }
+
+      // ── Wallet settlement on COMPLETED ────────────────────────────────────
+      if (status === ORDER_STATUS.COMPLETED && prevStatus !== ORDER_STATUS.COMPLETED) {
+        try {
+          const amount = updatedOrder.priceSnapshot || 0;
+          if (amount > 0) {
+            let wallet = await Wallet.findOne({ user: updatedOrder.seller });
+            if (!wallet) {
+              wallet = await Wallet.create({
+                user: updatedOrder.seller,
+                availableBalance: 0,
+                pendingBalance: 0,
+                totalSales: 0
+              });
+            }
+
+            // If QR payment: move from pending → available
+            const wasQrPaid = updatedOrder.paymentMode === 'qr';
+            if (wasQrPaid) {
+              wallet.pendingBalance = Math.max(0, wallet.pendingBalance - amount);
+            }
+            wallet.availableBalance += amount;
+            wallet.totalSales = (wallet.totalSales || 0) + amount;
+            await wallet.save();
+
+            await WalletTransaction.create({
+              wallet: wallet._id,
+              user: updatedOrder.seller,
+              type: 'DEPOSIT',
+              amount,
+              description: `Order #${updatedOrder._id.toString().slice(-8).toUpperCase()} completed`,
+              status: 'COMPLETED',
+              referenceId: updatedOrder._id,
+              referenceType: 'Order'
+            });
+          }
+        } catch (walletErr) {
+          console.error('[orders] wallet settlement error:', walletErr.message);
+        }
       }
     } catch (e) {
       console.error('[orders] product update error:', e.message);
@@ -405,7 +594,7 @@ exports.getAnalytics = async (req, res) => {
     // 3. KPI Stats
     const kpiAgg = await Order.aggregate([
       { $match: { ...filter, status: ORDER_STATUS.COMPLETED } },
-      { $group: { _id: null, totalRev: { $sum: '$priceSnapshot' }, totalSold: { $sum: 1 } } }
+      { $group: { _id: null, totalRev: { $sum: '$priceSnapshot' }, totalSold: { $sum: '$quantity' } } }
     ]);
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const mAgg = await Order.aggregate([

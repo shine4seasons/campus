@@ -1,117 +1,623 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= editProduct ? 'Edit Product' : 'Post a Product' %> — Campus Marketplace</title>
+  <title>
+    <%= editProduct ? 'Edit Product' : 'Post a Product' %> — Campus Marketplace
+  </title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/sell.css">
-  <link rel="stylesheet" href="/css/1.css">
   <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
+    .sell-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    .sell-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 32px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .sell-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sell-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .sell-card.active {
+      border-color: var(--primary-light);
+      box-shadow: 0 8px 24px rgba(27, 94, 255, 0.04);
+    }
+
+    .sell-step-num {
+      position: absolute;
+      left: -14px;
+      top: 28px;
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(27, 94, 255, 0.3);
+    }
+
+    .sell-card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--t1);
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .sell-card-sub {
+      font-size: 13px;
+      color: var(--t3);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .preview-sidebar {
+      position: sticky;
+      top: 100px;
+    }
+
+    .preview-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .preview-card-image {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-card-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--t1);
+      text-transform: uppercase;
+    }
+
+    .preview-card-content {
+      padding: 18px;
+    }
+
+    .preview-card-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .preview-card-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--t1);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .preview-card-price {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .sell-progress-wrap {
+      margin-bottom: 32px;
+      padding: 2px;
+      background: var(--bg2);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .sell-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      width: 25%;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sf {
+      margin-bottom: 18px;
+    }
+
+    .sf-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--t2);
+      margin-bottom: 8px;
+    }
+
+    .sf-input,
+    .sf-select,
+    .sf-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: var(--bg1);
+    }
+
+    .sf-input:focus,
+    .sf-select:focus,
+    .sf-textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .category-combobox {
+      position: relative;
+    }
+
+    .category-trigger {
+      width: 100%;
+      min-height: 54px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg1);
+      color: var(--t1);
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .category-trigger:hover {
+      border-color: var(--primary);
+      background: #F7F9FF;
+    }
+
+    .category-combobox.open .category-trigger {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--bg2);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .category-icon i,
+    .category-icon svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .category-trigger-text {
+      min-width: 0;
+      flex: 1;
+      text-align: left;
+    }
+
+    .category-trigger-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--t1);
+      line-height: 1.25;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .category-trigger-hint {
+      display: block;
+      margin-top: 1px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+    }
+
+    @media (max-width: 520px) {
+      .category-trigger {
+        gap: 8px;
+        padding: 8px 10px;
+      }
+
+      .category-icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      .category-trigger-hint {
+        display: none;
+      }
+    }
+
+    .category-chevron {
+      width: 18px;
+      height: 18px;
+      color: var(--t3);
+      transition: transform 0.2s;
+      flex: 0 0 auto;
+    }
+
+    .category-combobox.open .category-chevron {
+      transform: rotate(180deg);
+    }
+
+    .category-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 120;
+      display: none;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 45px rgba(13, 15, 26, 0.14);
+    }
+
+    .category-combobox.open .category-panel {
+      display: block;
+    }
+
+    .category-search {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .category-search i,
+    .category-search svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      color: var(--t3);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .category-search input {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px 0 38px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      background: var(--bg2);
+    }
+
+    .category-search input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    .category-options {
+      display: grid;
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .category-option {
+      width: 100%;
+      min-height: 48px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--t1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: inherit;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .category-option:hover,
+    .category-option.active {
+      background: #F7F9FF;
+      border-color: #DCE5FF;
+    }
+
+    .category-option.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .category-option .category-icon {
+      width: 30px;
+      height: 30px;
+    }
+
+    .category-option-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--t1);
+    }
+
+    .category-option-slug {
+      display: block;
+      margin-top: 1px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      text-transform: capitalize;
+    }
+
+    .category-empty {
+      display: none;
+      padding: 14px 10px;
+      color: var(--t3);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .ai-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin: 0 0 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg2);
+    }
+
+    .ai-option {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .ai-option label,
+    .ai-length-head {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--t3);
+      text-transform: uppercase;
+    }
+
+    .ai-option select {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--t1);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .ai-option select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .ai-length-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-length-value {
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .ai-length-range {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(27, 94, 255, 0.3);
+    }
+
+    .cond-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .cond-opt {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .cond-opt.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .cond-icon {
+      color: var(--t3);
+      margin-bottom: 8px;
+    }
+
+    .cond-opt.selected .cond-icon {
+      color: var(--primary);
+    }
+
+    .cond-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--t1);
+    }
+
+    .cond-sub {
+      font-size: 12px;
+      color: var(--t3);
+      margin-top: 2px;
+    }
+
     .dropdown-item {
       padding: 12px 16px;
       cursor: pointer;
       border-bottom: 1px solid #F0F1F8;
       transition: background-color 0.2s;
     }
-    .dropdown-item:hover { background-color: #F7F8FC; }
-    .dropdown-item:last-child { border-bottom: none; }
-    .dropdown-name { font-weight: 600; color: #0D0F1A; font-size: 14px; }
-    .dropdown-address { color: #8890B0; font-size: 12px; margin-top: 2px; }
 
-    /* Icon sizing helpers */
-    .card-head-icon svg,
-    .card-head-icon i { width: 22px; height: 22px; display: block; }
-    .cond-icon svg { width: 24px; height: 24px; }
-    .tip-icon svg  { width: 15px; height: 15px; }
-    .filter-btn i  { display: inline-block; vertical-align: middle; }
+    .dropdown-item:hover {
+      background-color: #F7F8FC;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-name {
+      font-weight: 600;
+      color: #0D0F1A;
+      font-size: 14px;
+    }
+
+    .dropdown-address {
+      color: #8890B0;
+      font-size: 12px;
+      margin-top: 2px;
+    }
   </style>
   <script>
     function initLocationPicker() {
       const defaultLat = parseFloat(document.getElementById('f-lat').value) || 21.0285;
       const defaultLng = parseFloat(document.getElementById('f-lng').value) || 105.8542;
       const hasExisting = !!document.getElementById('f-lat').value;
-
       const map = new maplibregl.Map({
         container: 'location-map',
-        style: {
-          version: 8,
-          sources: { 'osm': { type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256, attribution:'© OpenStreetMap contributors' } },
-          layers: [{ id:'osm', type:'raster', source:'osm' }]
-        },
+        style: { version: 8, sources: { 'osm': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap contributors' } }, layers: [{ id: 'osm', type: 'raster', source: 'osm' }] },
         center: [defaultLng, defaultLat],
         zoom: 13
       });
-
       window.mapInstance = map;
       let marker;
-
-      if (hasExisting) {
-        marker = new maplibregl.Marker().setLngLat([defaultLng, defaultLat]).addTo(map);
-        window.currentMarker = marker;
-      }
-
-      map.on('click', function(e) {
+      if (hasExisting) { marker = new maplibregl.Marker().setLngLat([defaultLng, defaultLat]).addTo(map); window.currentMarker = marker; }
+      map.on('click', function (e) {
         const { lng, lat } = e.lngLat;
         if (window.currentMarker) window.currentMarker.remove();
         marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
         window.currentMarker = marker;
         updateLocation(lat, lng);
       });
-
       initAutocomplete(map, marker);
     }
-
     async function updateLocation(lat, lng) {
       document.getElementById('f-lat').value = lat;
       document.getElementById('f-lng').value = lng;
-      try {
-        const address = await reverseGeocode(lat, lng);
-        document.getElementById('f-location').value = address;
-      } catch (err) { console.error('Geocoding failed:', err); }
+      try { const address = await reverseGeocode(lat, lng); document.getElementById('f-location').value = address; } catch (err) { console.error('Geocoding failed:', err); }
     }
-
-    async function reverseGeocode(lat, lng) {
-      const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-      const data = await res.json();
-      return data.display_name;
-    }
-
-    async function searchLocation(query) {
-      const res  = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
-      const data = await res.json();
-      return data.features || [];
-    }
-
+    async function reverseGeocode(lat, lng) { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`); const data = await res.json(); return data.display_name; }
+    async function searchLocation(query) { const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`); const data = await res.json(); return data.features || []; }
     function initAutocomplete(map, marker) {
-      const input    = document.getElementById('location-search');
+      const input = document.getElementById('location-search');
       const dropdown = document.getElementById('location-dropdown');
       let timeout;
-
-      input.addEventListener('input', function() {
+      input.addEventListener('input', function () {
         clearTimeout(timeout);
         const query = this.value.trim();
         if (query.length < 2) { dropdown.style.display = 'none'; return; }
-        timeout = setTimeout(async () => {
-          try {
-            const results = await searchLocation(query);
-            showDropdown(results, map, marker);
-          } catch (err) { console.error('Search failed:', err); }
-        }, 300);
+        timeout = setTimeout(async () => { try { const results = await searchLocation(query); showDropdown(results, map, marker); } catch (err) { console.error('Search failed:', err); } }, 300);
       });
-
-      document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !dropdown.contains(e.target))
-          dropdown.style.display = 'none';
-      });
+      document.addEventListener('click', function (e) { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none'; });
     }
-
     function showDropdown(results, map, marker) {
       const dropdown = document.getElementById('location-dropdown');
       if (!results.length) { dropdown.style.display = 'none'; return; }
@@ -122,8 +628,7 @@
         </div>`).join('');
       dropdown.style.display = 'block';
     }
-
-    window.selectLocation = function(lat, lng, name) {
+    window.selectLocation = function (lat, lng, name) {
       const map = window.mapInstance;
       if (window.currentMarker) window.currentMarker.remove();
       window.currentMarker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
@@ -133,8 +638,7 @@
       document.getElementById('location-dropdown').style.display = 'none';
       document.getElementById('location-search').value = name;
     };
-
-    window.geolocateMe = function() {
+    window.geolocateMe = function () {
       if (!navigator.geolocation) return;
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
@@ -146,583 +650,636 @@
         await updateLocation(lat, lng);
       });
     };
-
     document.addEventListener('DOMContentLoaded', initLocationPicker);
   </script>
 </head>
+
 <body>
   <%- include('partials/navbar') %>
-  <%- include('partials/sidebar') %>
+    <%- include('partials/sidebar') %>
 
-  <% const ep = editProduct; %>
+      <main class="main">
+        <div class="content">
+          <% const ep=editProduct; %>
+          <% const selectedCategory = CATEGORIES.find(cat => ep && ep.category === cat.slug); %>
 
-  <!-- Page header -->
-  <div class="sell-header">
-    <div class="sell-header-inner">
-      <a href="/" class="sell-back">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Back
-      </a>
-      <div>
-        <h1 class="sell-title"><%= ep ? 'Edit listing' : 'Post a listing' %></h1>
-        <p class="sell-sub">Fill in the details below — the more info you add, the faster it sells</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="sell-layout">
-    <!-- LEFT: Form steps -->
-    <div class="sell-steps">
-
-      <!-- STEP 1: Item details -->
-      <div class="sell-card" id="step-details">
-        <div class="sell-card-header">
-          <div class="sell-step-num">01</div>
-          <div>
-            <div class="sell-card-title">Item details</div>
-            <div class="sell-card-sub">Name, describe and price your item</div>
-          </div>
-        </div>
-
-        <div class="sell-card-body">
-          <!-- Title -->
-          <div class="sf">
-            <div class="sf-label-row">
-              <label class="sf-label" for="f-title">Title <span class="sf-req">*</span></label>
-              <span class="sf-counter" id="title-count">0 / 120</span>
-            </div>
-            <input class="sf-input fi" id="f-title" type="text"
-              value="<%= ep ? ep.title : '' %>"
-              placeholder="E.g.: Calculus 1 Textbook — MIT"
-              maxlength="120" autocomplete="off"
-              oninput="updateCounters();updatePreview()">
+            <div class="sell-container">
+          <div style="margin-bottom: 32px">
+            <h1
+              style="font-size: 32px; font-weight: 900; color: var(--t1); letter-spacing: -0.03em; margin-bottom: 8px">
+              <%= ep ? 'Edit product' : 'Post a product' %>
+            </h1>
+            <p style="color: var(--t3); font-size: 15px; font-weight: 500;">Fill in the details to reach more buyers on
+              campus</p>
           </div>
 
-          <!-- Category + Price row -->
-          <div class="sf-row">
-            <div class="sf">
-              <label class="sf-label" for="f-cat">Category <span class="sf-req">*</span></label>
-              <select class="sf-select fs" id="f-cat" onchange="updatePreview()">
-                <option value="">Select a category…</option>
-                <% CATEGORIES.forEach(function(cat) { %>
-                  <option value="<%= cat.slug %>" <%= ep && ep.category === cat.slug ? 'selected' : '' %>>
-                    <%= cat.name %>
-                  </option>
-                <% }) %>
-              </select>
+          <!-- Progress bar -->
+          <div class="sell-progress-wrap">
+            <div class="sell-progress-fill" id="sell-progress-fill"></div>
+          </div>
+
+          <div class="sell-layout">
+            <!-- LEFT: Form -->
+            <div class="sell-steps">
+              <form id="sell-form">
+                <!-- Step 0: Images -->
+                <div class="sell-card active" id="step-0">
+                  <div class="sell-step-num">01</div>
+                  <div class="sell-card-title">Add photos</div>
+                  <div class="sell-card-sub">Upload clear photos of your item (max 5 images)</div>
+
+                  <div class="sf">
+                    <div style="border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s;" id="upload-drop-zone">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 16px; opacity: 0.5;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <div style="font-weight: 600; color: var(--t1); margin-bottom: 4px;">Click to upload or drag photos here</div>
+                      <div style="font-size: 13px; color: var(--t3);">JPG, PNG • Max 5MB per image</div>
+                      <input type="file" id="image-input" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div id="image-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 20px;">
+                    </div>
+                    <input type="hidden" id="f-images" value="">
+                  </div>
+                </div>
+
+                <!-- Step 1 -->
+                <div class="sell-card" id="step-1">
+                  <div class="sell-step-num">02</div>
+                  <div class="sell-card-title">Item condition</div>
+                  <div class="sell-card-sub">Select the best description for your item</div>
+
+                  <div class="cond-grid">
+                    <% ['new', 'like-new' , 'good' , 'fair' ].forEach(cond=> {
+                      const labels = { new: 'New', 'like-new': 'Like New', good: 'Good', fair: 'Fair' };
+                      const subs = { new: 'Never used', 'like-new': 'Used once', good: 'Works well', fair: 'Has wear' };
+                      %>
+                      <div class="cond-opt <%= ep && ep.condition === cond ? 'selected' : '' %>" data-val="<%= cond %>"
+                        onclick="selectCond(this)">
+                        <div class="cond-label">
+                          <%= labels[cond] %>
+                        </div>
+                        <div class="cond-sub">
+                          <%= subs[cond] %>
+                        </div>
+                      </div>
+                      <% }) %>
+                  </div>
+                  <input type="hidden" id="f-condition" value="<%= ep ? ep.condition : '' %>">
+                </div>
+
+                <!-- Step 2 -->
+                <div class="sell-card" id="step-2">
+                  <div class="sell-step-num">03</div>
+                  <div class="sell-card-title">Item details</div>
+                  <div class="sell-card-sub">Name, describe and price your item</div>
+
+                  <div class="sf">
+                    <label class="sf-label">Product Title *</label>
+                    <input class="sf-input" id="f-title" type="text" value="<%= ep ? ep.title : '' %>"
+                      placeholder="e.g. Calculus 1 Textbook" maxlength="120" oninput="updatePreview()">
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+                    <div class="sf">
+                      <label class="sf-label">Category *</label>
+                      <div class="category-combobox" id="category-combobox">
+                        <button type="button" class="category-trigger" id="category-trigger" aria-haspopup="listbox" aria-expanded="false">
+                          <span class="category-icon">
+                            <i data-lucide="<%= selectedCategory ? selectedCategory.lucideIcon : 'layout-grid' %>"></i>
+                          </span>
+                          <span class="category-trigger-text">
+                            <span class="category-trigger-label" id="category-label"><%= selectedCategory ? selectedCategory.name.replace(/&amp;/g, '&') : 'Select category' %></span>
+                            <span class="category-trigger-hint">Choose the closest match</span>
+                          </span>
+                          <i class="category-chevron" data-lucide="chevron-down"></i>
+                        </button>
+                        <div class="category-panel" id="category-panel">
+                          <div class="category-search">
+                            <i data-lucide="search"></i>
+                            <input id="category-search" type="text" placeholder="Search categories..." autocomplete="off">
+                          </div>
+                          <div class="category-options" id="category-options" role="listbox">
+                            <% CATEGORIES.forEach(cat=> { const catDisplayName = cat.name.replace(/&amp;/g, '&'); %>
+                              <button
+                                type="button"
+                                class="category-option <%= ep && ep.category === cat.slug ? 'selected' : '' %>"
+                                data-slug="<%= cat.slug %>"
+                                data-name="<%= catDisplayName %>"
+                                data-icon="<%= cat.lucideIcon %>"
+                                role="option"
+                                aria-selected="<%= ep && ep.category === cat.slug ? 'true' : 'false' %>">
+                                <span class="category-icon"><i data-lucide="<%= cat.lucideIcon %>"></i></span>
+                                <span>
+                                  <span class="category-option-name"><%= catDisplayName %></span>
+                                  <span class="category-option-slug"><%= cat.slug.replace('-', ' ') %></span>
+                                </span>
+                              </button>
+                            <% }) %>
+                          </div>
+                          <div class="category-empty" id="category-empty">No matching category</div>
+                        </div>
+                        <input type="hidden" id="f-cat" value="<%= selectedCategory ? selectedCategory.slug : '' %>">
+                      </div>
+                      <select class="sf-select" id="f-cat-native" aria-hidden="true" tabindex="-1" style="display:none">
+                        <option value=""></option>
+                        <% CATEGORIES.forEach(cat=> { const catDisplayName = cat.name.replace(/&amp;/g, '&'); %>
+                          <option value="<%= cat.slug %>" <%=ep && ep.category===cat.slug ? 'selected' : '' %>><%=
+                              catDisplayName %>
+                          </option>
+                          <% }) %>
+                      </select>
+                    </div>
+                    <div class="sf">
+                      <label class="sf-label">Price (VND) *</label>
+                      <input class="sf-input" id="f-price" type="number" value="<%= ep ? ep.price : '' %>"
+                        placeholder="0" oninput="updatePreview()">
+                    </div>
+                    <div class="sf">
+                      <label class="sf-label">Quantity *</label>
+                      <input class="sf-input" id="f-quantity" type="number" min="1" step="1"
+                        value="<%= ep ? (ep.quantity || 1) : 1 %>" placeholder="1" oninput="updatePreview()">
+                    </div>
+                  </div>
+
+                  <div class="sf">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <label class="sf-label" style="margin-bottom: 0;">Description *</label>
+                      <button type="button" class="btn-ai-describe" id="btn-ai-describe" onclick="generateAIDescription()" style="padding: 6px 12px; font-size: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        <span>AI Generate</span>
+                      </button>
+                    </div>
+                    <div class="ai-options">
+                      <div class="ai-option">
+                        <label for="ai-tone">Tone</label>
+                        <select id="ai-tone">
+                          <option value="friendly" selected>Friendly</option>
+                          <option value="concise">Concise</option>
+                          <option value="detailed">Detailed</option>
+                          <option value="urgent">Sell fast</option>
+                        </select>
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-language">Language</label>
+                        <select id="ai-language">
+                          <option value="english" selected>English</option>
+                          <option value="vietnamese">Vietnamese</option>
+                        </select>
+                      </div>
+                      <div class="ai-option">
+                        <div class="ai-length-head">
+                          <label for="ai-length">Length</label>
+                          <span class="ai-length-value"><span id="ai-length-value">100</span> words</span>
+                        </div>
+                        <input class="ai-length-range" id="ai-length" type="range" min="60" max="140" step="10" value="100">
+                      </div>
+                    </div>
+                    <textarea class="sf-textarea" id="f-desc" rows="5"
+                      placeholder="Tell buyers more about your item..."><%= ep ? ep.description : '' %></textarea>
+                    <div id="ai-status" style="display: none; margin-top: 8px; padding: 8px 12px; background: #e3f2fd; border-left: 3px solid #2196f3; border-radius: 4px; font-size: 12px; color: #1976d2;"></div>
+                  </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="sell-card" id="step-3">
+                  <div class="sell-step-num">04</div>
+                  <div class="sell-card-title">Location</div>
+                  <div class="sell-card-sub">Where can the buyer meet you?</div>
+
+                  <div class="sf">
+                    <div style="position:relative">
+                      <input class="sf-input" id="location-search" type="text" placeholder="Search campus location...">
+                      <div id="location-dropdown"
+                        style="position:absolute; top:100%; left:0; width:100%; background:#fff; border:1px solid var(--border); border-radius:12px; z-index:100; display:none; max-height:200px; overflow-y:auto;">
+                      </div>
+                    </div>
+                    <div id="location-map"
+                      style="height:300px; border-radius:12px; border:1px solid var(--border); margin-top:16px;"></div>
+                    <input type="hidden" id="f-lat" value="<%= ep ? (ep.location?.lat || '') : '' %>">
+                    <input type="hidden" id="f-lng" value="<%= ep ? (ep.location?.lng || '') : '' %>">
+                    <input type="hidden" id="f-location" value="<%= ep ? (ep.locationName || '') : '' %>">
+                  </div>
+                </div>
+
+                <button type="button" class="btn-submit" onclick="handleSubmit()">
+                  <i data-lucide="check-circle" style="width:20px;height:20px;"></i>
+                  <%= ep ? 'Save Changes' : 'Post Product Now' %>
+                </button>
+              </form>
             </div>
-            <div class="sf">
-              <label class="sf-label" for="f-price">Asking price <span class="sf-req">*</span></label>
-              <div class="sf-price-wrap">
-                <input class="sf-input sf-price-input fi" id="f-price" type="number"
-                  value="<%= ep ? ep.price : '' %>"
-                  placeholder="0" min="0" step="1000"
-                  oninput="onPriceInput()">
-                <span class="sf-price-unit">VND</span>
+
+            <!-- RIGHT: Preview -->
+            <aside class="preview-sidebar">
+              <div class="sell-card-title"
+                style="margin-bottom:16px; font-size:14px; color:var(--t3); text-transform:uppercase;">Live Preview
               </div>
-              <div class="sf-price-display" id="price-display"><% if (ep && ep.price) { %><%= new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(ep.price) %><% } %></div>
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="sf">
-            <div class="sf-label-row">
-              <label class="sf-label" for="f-desc">Description <span class="sf-req">*</span></label>
-              <span class="sf-counter" id="desc-count">0 / 2000</span>
-            </div>
-            <div style="position:relative;">
-              <textarea class="sf-textarea ft" id="f-desc" maxlength="2000" rows="6"
-                placeholder="Describe your item — condition, reason for selling, what's included…"
-                oninput="updateCounters()"><%= ep ? ep.description : '' %></textarea>
-            </div>
-            <button class="sf-ai-btn" id="btn-ai" type="button" onclick="generateAIDescription()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Generate description with AI
-              <span class="sf-ai-hint">— fill title, category &amp; condition first</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 2: Condition -->
-      <div class="sell-card" id="step-condition">
-        <div class="sell-card-header">
-          <div class="sell-step-num">02</div>
-          <div>
-            <div class="sell-card-title">Item condition <span class="sf-req">*</span></div>
-            <div class="sell-card-sub">Select the option that best describes your item</div>
-          </div>
-        </div>
-        <div class="sell-card-body">
-          <div class="cond-grid" id="cond-grid">
-            <%
-              const CONDITIONS = [
-                ['new',      'sparkles',   'New',       'Never used, sealed'],
-                ['like-new', 'star',       'Like new',  'Used once or twice'],
-                ['good',     'thumbs-up',  'Good',      'Works perfectly'],
-                ['fair',     'wrench',     'Fair',      'Visible wear/scratches'],
-              ];
-              CONDITIONS.forEach(function(c) {
-            %>
-              <div class="cond-opt <%= ep && ep.condition === c[0] ? 'selected' : '' %>"
-                data-val="<%= c[0] %>" onclick="selectCondition(this)">
-                <div class="cond-icon"><i data-lucide="<%= c[1] %>"></i></div>
-                <div class="cond-label"><%= c[2] %></div>
-                <div class="cond-sub"><%= c[3] %></div>
+              <div class="preview-card">
+                <div class="preview-card-image" id="p-image-wrap">
+                  <div class="preview-card-badge" id="p-cond">Condition</div>
+                  <i data-lucide="image" style="width:48px;height:48px;color:var(--t3);opacity:0.3;"></i>
+                </div>
+                <div class="preview-card-content">
+                  <div class="preview-card-meta" id="p-cat">Category</div>
+                  <div class="preview-card-title" id="p-title">Product Title</div>
+                  <div class="preview-card-price" id="p-price">₫0</div>
+                  <div style="font-size:12px;font-weight:700;color:var(--t3);margin-top:6px;" id="p-quantity">Stock: 1</div>
+                </div>
               </div>
-            <% }) %>
-          </div>
-          <input type="hidden" id="f-condition" value="<%= ep ? ep.condition : '' %>">
-        </div>
-      </div>
 
-      <!-- STEP 3: Images -->
-      <div class="sell-card" id="step-images">
-        <div class="sell-card-header">
-          <div class="sell-step-num">03</div>
-          <div>
-            <div class="sell-card-title">Photos</div>
-            <div class="sell-card-sub">Up to 5 photos · First photo is the cover · Max 5 MB each</div>
-          </div>
-        </div>
-        <div class="sell-card-body">
-          <input type="file" id="file-input" accept="image/*" multiple style="display:none">
-          <div class="upload-zone" id="upload-zone">
-            <div class="upload-zone-icon">
-              <i data-lucide="image-plus" style="width:40px;height:40px;stroke:#8890B0;"></i>
-            </div>
-            <p class="upload-zone-text">Drag &amp; drop photos here</p>
-            <p class="upload-zone-sub">PNG, JPG, WEBP · max 5 MB each</p>
-            <div class="upload-zone-btn">
-              <i data-lucide="folder-open" style="width:14px;height:14px;vertical-align:middle;margin-right:5px;display:inline-block;"></i>
-              Browse files
-            </div>
-          </div>
-          <div class="img-grid" id="img-grid"></div>
-        </div>
-      </div>
-
-      <!-- STEP 4: Location -->
-      <div class="sell-card" id="step-location">
-        <div class="sell-card-header">
-          <div class="sell-step-num">04</div>
-          <div>
-            <div class="sell-card-title">Pickup location</div>
-            <div class="sell-card-sub">Where will you meet the buyer?</div>
-          </div>
-        </div>
-        <div class="sell-card-body">
-          <div class="sf-loc-search">
-            <input type="text" id="location-search" class="sf-input"
-              placeholder="Search address or click on the map…"
-              autocomplete="off">
-            <div id="location-dropdown" class="sf-loc-dropdown"></div>
-            <button type="button" class="sf-loc-geo" onclick="geolocateMe()" title="Use my location">
-              <i data-lucide="locate-fixed" style="width:16px;height:16px;stroke:#1B5EFF;"></i>
-            </button>
-          </div>
-          <input type="hidden" id="f-location" value="<%= ep && ep.location ? (ep.location.address || '') : '' %>">
-
-          <div id="location-map" class="sf-map">
-            <div class="sf-map-placeholder">
-              <i data-lucide="map" style="width:40px;height:40px;stroke:#8890B0;margin-bottom:10px;"></i>
-              <div>Loading map…</div>
-            </div>
-          </div>
-          <div class="sf-map-hint">
-            <i data-lucide="mouse-pointer-click" style="width:13px;height:13px;"></i>
-            Click anywhere on the map to pin a pickup point
-          </div>
-          <input type="hidden" id="f-lat" value="<%= ep && ep.location ? (ep.location.lat || '') : '' %>">
-          <input type="hidden" id="f-lng" value="<%= ep && ep.location ? (ep.location.lng || '') : '' %>">
-        </div>
-      </div>
-
-    </div><!-- /.sell-steps -->
-
-    <!-- RIGHT: Sticky action panel -->
-    <aside class="sell-panel">
-
-      <!-- Submit actions -->
-      <div class="sell-card sell-actions-card">
-        <button class="sell-btn-primary" id="btn-submit" type="button" onclick="submitProduct()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          <%= ep ? 'Save changes' : 'Post listing' %>
-        </button>
-        <button class="sell-btn-ghost" type="button" onclick="submitProduct('hidden')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Save as draft
-        </button>
-      </div>
-
-      <!-- Live preview -->
-      <div class="sell-card sell-preview-card">
-        <div class="sell-preview-header">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          Live preview
-        </div>
-        <div id="preview-wrap">
-          <div class="preview-empty">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>Fill in details to see preview</span>
+              <div
+                style="margin-top:24px; padding:20px; background:var(--bg2); border-radius:16px; border:1px solid var(--border);">
+                <div style="font-size:13px; font-weight:800; color:var(--t1); margin-bottom:8px;">Pro Tip</div>
+                <p style="font-size:12px; color:var(--t3); line-height:1.6;">Items with clear photos and detailed
+                  descriptions sell 3x faster. Be honest about the condition!</p>
+              </div>
+            </aside>
           </div>
         </div>
       </div>
+    </main>
 
-      <!-- Tips -->
-      <div class="sell-card sell-tips-card">
-        <div class="sell-tips-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Sell faster
-        </div>
-        <ul class="sell-tips-list">
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Clear photos can triple your views</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Use AI to write a compelling description</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Price 30–50% below retail to sell fast</li>
-          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Specify a clear pickup spot on campus</li>
-        </ul>
-      </div>
+        <script>
+          let uploadedImages = [];
 
-    </aside>
-  </div><!-- /.sell-layout -->
+          // ──── Image Upload Handlers ────────────────────────────────────
+          const dropZone = document.getElementById('upload-drop-zone');
+          const imageInput = document.getElementById('image-input');
+          const imagePreview = document.getElementById('image-preview');
+          const notify = (message, type = 'err') => {
+            if (typeof showToast === 'function') showToast(message, type);
+          };
 
-  <div id="toast-wrap"></div>
+          function initCategoryDropdown() {
+            const combo = document.getElementById('category-combobox');
+            const trigger = document.getElementById('category-trigger');
+            const search = document.getElementById('category-search');
+            const hidden = document.getElementById('f-cat');
+            const nativeSelect = document.getElementById('f-cat-native');
+            const label = document.getElementById('category-label');
+            const triggerIcon = trigger?.querySelector('.category-icon i');
+            const empty = document.getElementById('category-empty');
+            const options = Array.from(document.querySelectorAll('.category-option'));
+            let activeIndex = Math.max(0, options.findIndex(opt => opt.classList.contains('selected')));
 
-  <script>
-    const EDIT_ID   = <%- JSON.stringify(ep ? String(ep._id) : null) %>;
-    let imgUrls     = <%- JSON.stringify(ep && ep.images ? ep.images : []) %>;
-    let uploadCount = 0;
+            if (!combo || !trigger || !search || !hidden || !label || !options.length) return;
 
-    const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
+            const open = () => {
+              combo.classList.add('open');
+              trigger.setAttribute('aria-expanded', 'true');
+              search.value = '';
+              filterOptions('');
+              setActiveOption(activeIndex);
+              setTimeout(() => search.focus(), 0);
+            };
 
-    // SVG icon strings cho JS-rendered content (preview card)
-    const CAT_ICON_SVG = {
-      books:        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-      electronics:  '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-      clothing:     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>',
-      furniture:    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0z"/><line x1="6" y1="18" x2="6" y2="22"/><line x1="18" y1="18" x2="18" y2="22"/></svg>',
-      'daily-needs':'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-      sports:       '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93 19.07 19.07"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-      gaming:       '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="12" r=".5" fill="currentColor"/><circle cx="17.5" cy="10" r=".5" fill="currentColor"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59l-.9 7.2A4 4 0 0 0 5.77 20h.59a4 4 0 0 0 3.02-1.38l.86-1a2 2 0 0 1 1.52-.7h.5a2 2 0 0 1 1.52.7l.86 1A4 4 0 0 0 17.64 20h.59a4 4 0 0 0 3.97-4.21l-.9-7.2A4 4 0 0 0 17.32 5z"/></svg>',
-      other:        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-    };
+            const close = () => {
+              combo.classList.remove('open');
+              trigger.setAttribute('aria-expanded', 'false');
+            };
 
-    // ── Condition ─────────────────────────────────────────
-    function selectCondition(el) {
-      document.querySelectorAll('.cond-opt').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('f-condition').value = el.dataset.val;
-    }
+            const toggle = () => combo.classList.contains('open') ? close() : open();
 
-    // ── Counters ──────────────────────────────────────────
-    function updateCounters() {
-      const tl = document.getElementById('f-title').value.length;
-      const dl = document.getElementById('f-desc').value.length;
-      const tc = document.getElementById('title-count');
-      const dc = document.getElementById('desc-count');
-      tc.textContent = tl + ' / 120';
-      tc.className = 'char-count' + (tl > 115 ? ' over' : tl > 100 ? ' warn' : '');
-      dc.textContent = dl + ' / 2000';
-      dc.className = 'char-count' + (dl > 1950 ? ' over' : dl > 1800 ? ' warn' : '');
-    }
+            function setActiveOption(index) {
+              const visibleOptions = options.filter(opt => opt.style.display !== 'none');
+              if (!visibleOptions.length) return;
+              activeIndex = Math.max(0, Math.min(index, visibleOptions.length - 1));
+              options.forEach(opt => opt.classList.remove('active'));
+              visibleOptions[activeIndex].classList.add('active');
+              visibleOptions[activeIndex].scrollIntoView({ block: 'nearest' });
+            }
 
-    // ── Price ─────────────────────────────────────────────
-    function onPriceInput() {
-      const val = Number(document.getElementById('f-price').value);
-      document.getElementById('price-display').textContent = val > 0
-        ? new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(val) : '';
-      updatePreview();
-    }
+            function filterOptions(query) {
+              const normalized = query.trim().toLowerCase();
+              let visibleCount = 0;
 
-    // ── Preview ───────────────────────────────────────────
-    function updatePreview() {
-      const title = document.getElementById('f-title').value.trim();
-      const price = Number(document.getElementById('f-price').value);
-      const cat   = document.getElementById('f-cat').value;
-      const wrap  = document.getElementById('preview-wrap');
-      if (!title && !price) {
-        wrap.innerHTML = '<div class="preview-empty">Fill in the details to preview</div>';
-        return;
-      }
-      const validUrls = imgUrls.filter(u => !u.startsWith('temp-'));
-      const thumb = validUrls.length
-        ? '<img src="' + validUrls[0] + '" style="width:100%;height:100%;object-fit:cover;">'
-        : '<span style="display:flex;align-items:center;justify-content:center;opacity:0.4;">' + (CAT_ICON_SVG[cat] || CAT_ICON_SVG.other) + '</span>';
-      wrap.innerHTML =
-        '<div class="preview-card"><div class="preview-thumb">' + thumb + '</div>' +
-        '<div class="preview-body">' +
-        '<div class="preview-cat">' + (CAT_LABEL[cat] || 'Item') + '</div>' +
-        '<div class="preview-title">' + (title || 'Item title') + '</div>' +
-        '<div class="preview-price">' + (price > 0
-          ? new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(price)
-          : '---') + '</div></div></div>';
-    }
+              options.forEach((option) => {
+                const text = `${option.dataset.name} ${option.dataset.slug}`.toLowerCase();
+                const matches = !normalized || text.includes(normalized);
+                option.style.display = matches ? 'flex' : 'none';
+                if (matches) visibleCount += 1;
+              });
 
-    // ── Image grid ────────────────────────────────────────
-    function renderImgGrid() {
-      const grid      = document.getElementById('img-grid');
-      const fileInput = document.getElementById('file-input');
-      grid.innerHTML  = '';
+              empty.style.display = visibleCount ? 'none' : 'block';
+              activeIndex = 0;
+              setActiveOption(0);
+            }
 
-      imgUrls.forEach((url, i) => {
-        const isTemp = url.startsWith('temp-');
-        const slot   = document.createElement('div');
-        slot.className = 'img-slot';
+            function selectOption(option) {
+              if (!option) return;
+              hidden.value = option.dataset.slug;
+              if (nativeSelect) nativeSelect.value = option.dataset.slug;
+              label.textContent = option.dataset.name;
+              if (triggerIcon) triggerIcon.setAttribute('data-lucide', option.dataset.icon);
 
-        if (isTemp) {
-          slot.innerHTML =
-            '<div class="upload-progress">' +
-            '<svg width="22" height="22" viewBox="0 0 24 24" style="animation:spin 0.8s linear infinite">' +
-            '<circle cx="12" cy="12" r="10" fill="none" stroke="#1B5EFF" stroke-width="2.5" stroke-dasharray="20 60"/>' +
-            '</svg></div>';
-        } else {
-          slot.innerHTML =
-            '<img src="' + url + '" alt="image ' + (i + 1) + '">' +
-            '<button type="button" class="del-btn" onclick="removeImg(' + i + ')">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-            '</button>' +
-            (i === 0 ? '<div class="cover-badge">COVER</div>' : '');
-        }
-        grid.appendChild(slot);
-      });
+              options.forEach(opt => {
+                const selected = opt === option;
+                opt.classList.toggle('selected', selected);
+                opt.setAttribute('aria-selected', selected ? 'true' : 'false');
+              });
 
-      if (imgUrls.length < 5) {
-        const add = document.createElement('div');
-        add.className = 'img-slot-add';
-        add.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-        add.onclick = (e) => { e.stopPropagation(); fileInput.click(); };
-        grid.appendChild(add);
-      }
+              close();
+              updatePreview();
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
 
-      updatePreview();
-    }
+            trigger.addEventListener('click', toggle);
+            options.forEach(option => option.addEventListener('click', () => selectOption(option)));
+            search.addEventListener('input', () => filterOptions(search.value));
 
-    function removeImg(i) {
-      if (imgUrls[i] && imgUrls[i].startsWith('temp-')) return;
-      imgUrls.splice(i, 1);
-      renderImgGrid();
-    }
+            combo.addEventListener('keydown', (event) => {
+              const visibleOptions = options.filter(opt => opt.style.display !== 'none');
+              if (event.key === 'Escape') {
+                close();
+                trigger.focus();
+              } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (!combo.classList.contains('open')) open();
+                setActiveOption(activeIndex + 1);
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActiveOption(activeIndex - 1);
+              } else if (event.key === 'Enter' && combo.classList.contains('open')) {
+                event.preventDefault();
+                selectOption(visibleOptions[activeIndex]);
+              }
+            });
 
-    // ── Upload ────────────────────────────────────────────
-    async function handleFiles(files) {
-      const images = files.filter(f => f.type.startsWith('image/'));
-      if (!images.length) { toast('Please select image files', 'err'); return; }
-      const canAdd = 5 - imgUrls.filter(u => !u.startsWith('temp-')).length - uploadCount;
-      if (canAdd <= 0) { toast('Maximum 5 images reached', 'err'); return; }
-      for (const file of images.slice(0, canAdd)) {
-        if (file.size > 5 * 1024 * 1024) { toast(file.name + ' exceeds 5MB', 'err'); continue; }
-        uploadFile(file);
-      }
-    }
+            document.addEventListener('click', (event) => {
+              if (!combo.contains(event.target)) close();
+            });
+          }
 
-    async function uploadFile(file) {
-      uploadCount++;
-      const tempId = 'temp-' + Date.now() + '-' + Math.random();
-      imgUrls.push(tempId);
-      renderImgGrid();
-      const formData = new FormData();
-      formData.append('image', file);
-      try {
-        const res  = await fetch('/api/upload/image', { method:'POST', credentials:'include', body:formData });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Upload failed');
-        const idx = imgUrls.indexOf(tempId);
-        if (idx !== -1) imgUrls[idx] = data.url;
-        renderImgGrid();
-        toast('Photo uploaded', 'ok');
-      } catch (err) {
-        imgUrls = imgUrls.filter(u => u !== tempId);
-        renderImgGrid();
-        toast('Upload failed: ' + (err.message || 'Unknown error'), 'err');
-      } finally {
-        uploadCount--;
-      }
-    }
+          function initAIControls() {
+            const lengthInput = document.getElementById('ai-length');
+            const lengthValue = document.getElementById('ai-length-value');
+            if (!lengthInput || !lengthValue) return;
 
-    // ── AI Description ────────────────────────────────────
-    async function generateAIDescription() {
-      const title     = document.getElementById('f-title').value.trim();
-      const category  = document.getElementById('f-cat').value;
-      const condition = document.getElementById('f-condition').value;
+            const syncLength = () => {
+              lengthValue.textContent = lengthInput.value;
+            };
 
-      if (!title)     { toast('Please enter a title first', 'err'); document.getElementById('f-title').focus(); return; }
-      if (!category)  { toast('Please select a category first', 'err'); return; }
-      if (!condition) { toast('Please select item condition first', 'err'); return; }
+            lengthInput.addEventListener('input', syncLength);
+            syncLength();
+          }
 
-      const btn = document.getElementById('btn-ai');
-      const textarea = document.getElementById('f-desc');
-      const descWrap = textarea.parentElement;
-      btn.disabled = true;
-      textarea.disabled = true;
-      btn.innerHTML =
-        '<svg width="14" height="14" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:5px;">' +
-        '<circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>' +
-        '<path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Generating...';
+          function setupImageUpload() {
+            dropZone.addEventListener('click', () => imageInput.click());
+            dropZone.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              dropZone.style.borderColor = 'var(--primary)';
+              dropZone.style.background = 'var(--primary-light)';
+            });
+            dropZone.addEventListener('dragleave', () => {
+              dropZone.style.borderColor = 'var(--border)';
+              dropZone.style.background = 'transparent';
+            });
+            dropZone.addEventListener('drop', (e) => {
+              e.preventDefault();
+              dropZone.style.borderColor = 'var(--border)';
+              dropZone.style.background = 'transparent';
+              handleImageFiles(e.dataTransfer.files);
+            });
+            imageInput.addEventListener('change', (e) => handleImageFiles(e.target.files));
+          }
 
-      // Overlay on textarea
-      let overlay = document.getElementById('ai-desc-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'ai-desc-overlay';
-        overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.85);border-radius:12px;font-size:13px;font-weight:600;color:#1B5EFF;pointer-events:none;z-index:5;';
-        overlay.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(27,94,255,0.25)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#1B5EFF" stroke-width="2"/></svg>AI is writing your description...';
-        if (descWrap && getComputedStyle(descWrap).position === 'static') descWrap.style.position = 'relative';
-        descWrap.appendChild(overlay);
-      }
-      overlay.style.display = 'flex';
+          function handleImageFiles(files) {
+            if (uploadedImages.length >= 5) {
+              notify('Maximum 5 images allowed');
+              return;
+            }
+            
+            const filesToAdd = Array.from(files).slice(0, 5 - uploadedImages.length);
+            let uploadCount = 0;
 
-      try {
-        const imageUrl = imgUrls.find(u => !u.startsWith('temp-')) || null;
-        const res  = await fetch('/api/ai/describe', {
-          method:'POST', credentials:'include',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ title, category, condition, imageUrl }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'AI request failed');
-        overlay.style.display = 'none';
-        textarea.value = '';
-        textarea.disabled = false;
-        textarea.focus();
-        let idx = 0;
-        const iv = setInterval(() => {
-          textarea.value += data.description[idx];
-          idx++;
-          updateCounters();
-          if (idx >= data.description.length) { clearInterval(iv); toast('Description generated!', 'ok'); }
-        }, 15);
-      } catch (err) {
-        overlay.style.display = 'none';
-        textarea.disabled = false;
-        toast(err.message || 'AI unavailable. Please write manually.', 'err');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML =
-          '<i data-lucide="sparkles" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:5px;"></i> Generate with AI';
-        lucide.createIcons({ nodes: [btn] });
-      }
-    }
+            filesToAdd.forEach((file) => {
+              if (!file.type.startsWith('image/')) {
+                notify('Only image files are allowed');
+                return;
+              }
+              if (file.size > 5 * 1024 * 1024) {
+                notify('Image must be smaller than 5MB');
+                return;
+              }
 
-    // ── Submit ────────────────────────────────────────────
-    async function submitProduct(forcedStatus) {
-      if (uploadCount > 0) { toast('Please wait for photos to finish uploading', 'err'); return; }
+              const formData = new FormData();
+              formData.append('image', file);
 
-      const title     = document.getElementById('f-title').value.trim();
-      const desc      = document.getElementById('f-desc').value.trim();
-      const cat       = document.getElementById('f-cat').value;
-      const price     = Number(document.getElementById('f-price').value);
-      const condition = document.getElementById('f-condition').value;
-      const finalImgs = imgUrls.filter(u => !u.startsWith('temp-'));
+              fetch('/api/upload/image', {
+                method: 'POST',
+                body: formData
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  uploadedImages.push(data.url);
+                  renderImagePreview();
+                  updatePreview();
+                  document.getElementById('f-images').value = JSON.stringify(uploadedImages);
+                } else {
+                  notify('Upload failed: ' + (data.message || 'Unknown error'));
+                }
+              })
+              .catch(err => {
+                console.error('Upload error:', err);
+                notify('Network error during upload');
+              });
+            });
+          }
 
-      const errors = [];
-      if (!title)            errors.push('f-title');
-      if (!desc)             errors.push('f-desc');
-      if (!cat)              errors.push('f-cat');
-      if (!price || price <= 0) errors.push('f-price');
+          function renderImagePreview() {
+            imagePreview.innerHTML = uploadedImages.map((url, idx) => `
+              <div style="position:relative; border-radius:8px; overflow:hidden; background:var(--bg2);">
+                <img src="${url}" style="width:100%; height:100px; object-fit:cover;" alt="image ${idx+1}">
+                <button type="button" style="position:absolute; top:2px; right:2px; width:24px; height:24px; background:#ff4444; color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;" onclick="removeImage(${idx})">×</button>
+              </div>
+            `).join('');
+          }
 
-      document.querySelectorAll('.fi,.fs,.ft').forEach(el => el.classList.remove('err'));
-      errors.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('err'); });
+          function removeImage(idx) {
+            uploadedImages.splice(idx, 1);
+            renderImagePreview();
+            updatePreview();
+            document.getElementById('f-images').value = JSON.stringify(uploadedImages);
+          }
 
-      if (!condition) {
-        toast('Please select the item condition', 'err');
-        document.getElementById('cond-grid').scrollIntoView({ behavior:'smooth', block:'center' });
-        return;
-      }
-      if (errors.length) {
-        toast('Please fill in all required fields', 'err');
-        document.getElementById(errors[0]).scrollIntoView({ behavior:'smooth', block:'center' });
-        return;
-      }
+          function updatePreview() {
+            const title = document.getElementById('f-title').value || 'Product Title';
+            const selectedCategoryValue = document.getElementById('f-cat').value;
+            const cat = selectedCategoryValue ? document.getElementById('category-label').textContent : 'Category';
+            const price = document.getElementById('f-price').value || '0';
+            const quantity = document.getElementById('f-quantity').value || '1';
+            const cond = document.getElementById('f-condition').value || 'Condition';
+            
+            // Update preview image
+            const imageWrap = document.getElementById('p-image-wrap');
+            if (uploadedImages.length > 0) {
+              imageWrap.innerHTML = `<div class="preview-card-badge" id="p-cond">${cond}</div><img src="${uploadedImages[0]}" style="width:100%; height:100%; object-fit:cover;" alt="preview">`;
+            } else {
+              imageWrap.innerHTML = `<div class="preview-card-badge" id="p-cond">${cond}</div><i data-lucide="image" style="width:48px;height:48px;color:var(--t3);opacity:0.3;"></i>`;
+            }
 
-      const btn = document.getElementById('btn-submit');
-      btn.disabled = true;
-      btn.innerHTML =
-        '<svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;">' +
-        '<circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>' +
-        '<path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Posting...';
+            document.getElementById('p-title').textContent = title;
+            document.getElementById('p-cat').textContent = cat;
+            document.getElementById('p-price').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+            document.getElementById('p-quantity').textContent = 'Stock: ' + quantity;
 
-      try {
-        const method = EDIT_ID ? 'PATCH' : 'POST';
-        const url    = EDIT_ID ? '/api/products/' + EDIT_ID : '/api/products';
-        const res    = await fetch(url, {
-          method, credentials:'include',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            title, description: desc, price, category: cat, condition,
-            images: finalImgs, status: forcedStatus || 'active',
-            location: {
-              address : document.getElementById('f-location').value.trim(),
-              lat     : parseFloat(document.getElementById('f-lat').value) || null,
-              lng     : parseFloat(document.getElementById('f-lng').value) || null,
-            },
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Request failed');
-        toast(EDIT_ID ? 'Product updated!' : 'Product posted!', 'ok');
-        setTimeout(() => window.location.href = '/products/' + data.data._id, 1200);
-      } catch (err) {
-        btn.disabled = false;
-        btn.innerHTML =
-          '<i data-lucide="check" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>' +
-          (EDIT_ID ? 'Save changes' : 'Post product');
-        lucide.createIcons({ nodes: [btn] });
-        toast(err.message || 'Failed. Please try again.', 'err');
-      }
-    }
+            // Update progress
+            let filled = 0;
+            if (uploadedImages.length > 0) filled += 20;
+            if (title !== 'Product Title') filled += 20;
+            if (document.getElementById('f-desc').value) filled += 20;
+            if (cond !== 'Condition') filled += 20;
+            if (document.getElementById('f-lat').value) filled += 20;
+            document.getElementById('sell-progress-fill').style.width = filled + '%';
 
-    // ── Toast ─────────────────────────────────────────────
-    function toast(msg, type) {
-      const c   = document.getElementById('toast-wrap');
-      const isErr = type === 'err';
-      const t   = document.createElement('div');
-      const bg  = isErr ? '#E84040' : '#0D0F1A';
-      const icon = isErr
-        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
-      t.style.cssText = [
-        'display:flex', 'align-items:center', 'gap:10px',
-        'padding:12px 18px', 'border-radius:12px',
-        'font-size:14px', 'font-weight:600',
-        'color:#fff', 'background:' + bg,
-        'box-shadow:0 8px 32px rgba(13,15,26,0.18)',
-        'max-width:340px', 'min-width:160px',
-        'animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1)'
-      ].join(';');
-      t.innerHTML = icon + '<span>' + msg + '</span>';
-      c.appendChild(t);
-      setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transition = 'opacity 0.3s';
-        setTimeout(() => t.remove(), 300);
-      }, 3500);
-    }
+            lucide.createIcons();
+          }
 
-    // ── Init ──────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-      // Lucide static icons
-      lucide.createIcons();
+          window.selectCond = function (el) {
+            document.querySelectorAll('.cond-opt').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('f-condition').value = el.dataset.val;
+            updatePreview();
+          };
 
-      const zone      = document.getElementById('upload-zone');
-      const fileInput = document.getElementById('file-input');
+          async function generateAIDescription() {
+            const btn = document.getElementById('btn-ai-describe');
+            const statusDiv = document.getElementById('ai-status');
+            const textarea = document.getElementById('f-desc');
+            const title = document.getElementById('f-title').value.trim();
+            const category = document.getElementById('f-cat').value;
+            const condition = document.getElementById('f-condition').value;
+            const price = document.getElementById('f-price').value;
+            const location = document.getElementById('f-location').value;
+            const tone = document.getElementById('ai-tone').value;
+            const language = document.getElementById('ai-language').value;
+            const targetWords = Number(document.getElementById('ai-length').value);
+            const imageUrl = uploadedImages.find(url => !url.startsWith('temp-')) || '';
 
-      zone.addEventListener('click',    () => fileInput.click());
-      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        handleFiles(Array.from(e.dataTransfer.files));
-      });
-      fileInput.addEventListener('change', () => {
-        handleFiles(Array.from(fileInput.files));
-        fileInput.value = '';
-      });
+            if (!title) {
+              notify('Please enter a title first');
+              return;
+            }
+            if (!category) {
+              notify('Please select a category first');
+              return;
+            }
+            if (!condition) {
+              notify('Please select the item condition first');
+              return;
+            }
+            if (textarea.value.trim()) {
+              if (typeof showConfirm !== 'function') {
+                notify('Clear the current description before generating a new one');
+                return;
+              }
 
-      updateCounters();
-      renderImgGrid();
-      if (EDIT_ID) updatePreview();
-    });
-  </script>
+              const replace = await showConfirm({
+                title: 'Replace Description',
+                message: 'AI will replace the current description. Continue?',
+                confirmText: 'Replace',
+                type: 'danger'
+              });
+              if (!replace) return;
+            }
+
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '⏳ Generating description with AI...';
+
+            try {
+              const res = await fetch('/api/ai/describe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, category, condition, price, location, imageUrl, tone, language, targetWords })
+              });
+
+              const data = await res.json();
+              if (data.success && data.description) {
+                textarea.value = data.description;
+                statusDiv.style.background = '#e8f5e9';
+                statusDiv.style.borderLeftColor = '#4caf50';
+                statusDiv.style.color = '#2e7d32';
+                statusDiv.textContent = '✓ Description generated successfully!';
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+                updatePreview();
+              } else {
+                statusDiv.style.background = '#ffebee';
+                statusDiv.style.borderLeftColor = '#f44336';
+                statusDiv.style.color = '#c62828';
+                statusDiv.textContent = '✗ Failed: ' + (data.message || 'Try again');
+              }
+            } catch (e) {
+              statusDiv.style.background = '#ffebee';
+              statusDiv.style.borderLeftColor = '#f44336';
+              statusDiv.style.color = '#c62828';
+              statusDiv.textContent = '✗ Error: ' + e.message;
+            } finally {
+              btn.disabled = false;
+              btn.style.opacity = '1';
+            }
+          }
+
+          async function handleSubmit() {
+            const btn = document.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Publishing...';
+
+            const payload = {
+              title: document.getElementById('f-title').value,
+              category: document.getElementById('f-cat').value,
+              price: document.getElementById('f-price').value,
+              quantity: document.getElementById('f-quantity').value,
+              description: document.getElementById('f-desc').value,
+              condition: document.getElementById('f-condition').value,
+              images: uploadedImages,
+              location: {
+                lat: document.getElementById('f-lat').value,
+                lng: document.getElementById('f-lng').value
+              },
+              locationName: document.getElementById('f-location').value
+            };
+
+            try {
+              const url = '<%= ep ? "/api/products/" + ep._id : "/api/products" %>';
+              const res = await fetch(url, {
+                method: '<%= ep ? "PATCH" : "POST" %>',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const data = await res.json();
+              if (data.success) {
+                location.href = '/my-products';
+              } else {
+                notify(data.message || 'Failed to save');
+                btn.disabled = false;
+                btn.textContent = '<%= ep ? "Save Changes" : "Post Product Now" %>';
+              }
+            } catch (e) {
+              notify('Network error');
+              btn.disabled = false;
+              btn.textContent = '<%= ep ? "Save Changes" : "Post Product Now" %>';
+            }
+          }
+
+          document.addEventListener('DOMContentLoaded', () => {
+            // Load existing images if editing
+            <% if (ep && ep.images && ep.images.length > 0) { %>
+              uploadedImages = <%- JSON.stringify(ep.images) %>;
+              renderImagePreview();
+            <% } %>
+            
+            setupImageUpload();
+            initCategoryDropdown();
+            initAIControls();
+            lucide.createIcons();
+            updatePreview();
+          });
+        </script>
 </body>
+
 </html>

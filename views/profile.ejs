@@ -14,6 +14,7 @@
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
 
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/profile.css">
   <link rel="stylesheet" href="/css/rating.css">
@@ -29,13 +30,24 @@
       <% const profileUser=isOwnProfile ? user : viewingUser; const isViewingOwn=isOwnProfile; %>
 
         <div class="profile-wrap">
-
+          <div class="profile-page-intro">
+            <div class="profile-page-copy">
+              <span class="profile-kicker"><%= isViewingOwn ? 'My workspace' : 'Seller profile' %></span>
+              <h1><%= isViewingOwn ? (user.nickname || user.name) : (profileUser.nickname || profileUser.name) %></h1>
+              <p><%= isViewingOwn ? 'Manage your public identity, trust signals, and store-facing information from one place.' : 'Browse this seller profile, review signals, and active listings.' %></p>
+            </div>
+            <div class="profile-page-badges">
+              <span class="profile-badge"><i data-lucide="star"></i><%= ((profileUser.rating || 5)).toFixed(1) %> rating</span>
+              <span class="profile-badge"><i data-lucide="package"></i><%= products.length %> product<%= products.length !== 1 ? 's' : '' %></span>
+              <span class="profile-badge"><i data-lucide="message-square-more"></i><%= profileUser.ratingCount || 0 %> reviews</span>
+            </div>
+          </div>
 
           <% if (!isViewingOwn) { %>
             <!-- ── PUBLIC PROFILE VIEW ── -->
             <div class="profile-public">
               <!-- User Info Card -->
-              <div class="card user-info-card">
+              <div class="card user-info-card profile-hero-card premium-card glass">
                 <div class="user-info-header">
                   <div class="user-avatar-section">
                     <img
@@ -45,52 +57,51 @@
                       <div class="user-name">
                         <%= profileUser.nickname || profileUser.name %>
                       </div>
-                      <div class="user-uni"><i data-lucide="building-2"
-                          style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:6px;"></i>
+                      <div class="user-uni">
+                        <i data-lucide="building-2"></i>
                         <%= profileUser.university || 'No university listed' %>
                       </div>
                     </div>
                   </div>
                   <div class="user-stats">
                     <div class="stat-box">
-                      <div class="stat-value" style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                        <%- renderStars(profileUser.rating || 5, 16) %>
-                          <span style="font-size:16px;font-weight:700;margin-left:2px">
-                            <%= (profileUser.rating || 5).toFixed(1) %>
-                          </span>
+                      <div class="stat-value" style="display:flex;align-items:center;gap:6px;justify-content:center;">
+                        <%- renderStars(profileUser.rating || 5, 18) %>
+                        <span style="font-size:18px;font-weight:800"><%= (profileUser.rating || 5).toFixed(1) %></span>
                       </div>
                       <div class="stat-label">Rating</div>
                     </div>
                     <div class="stat-box">
-                      <div class="stat-value">
-                        <%= profileUser.totalSales || 0 %>
-                      </div>
+                      <div class="stat-value"><%= profileUser.totalSales || 0 %></div>
                       <div class="stat-label">Sales</div>
                     </div>
                     <div class="stat-box">
-                      <div class="stat-value">
-                        <%= profileUser.ratingCount || 0 %>
-                      </div>
+                      <div class="stat-value"><%= profileUser.ratingCount || 0 %></div>
                       <div class="stat-label">Reviews</div>
                     </div>
                   </div>
                 </div>
-                <% if (profileUser.bio) { %>
-                  <div class="user-bio">
-                    <%= profileUser.bio %>
-                  </div>
+                <div class="profile-hero-footer">
+                  <% if (profileUser.bio) { %>
+                    <div class="user-bio">
+                      <%= profileUser.bio %>
+                    </div>
                   <% } %>
-                    <% if (user && !isViewingOwn) { %>
-                      <button onclick="showReportModal('user', '<%= viewingUser._id %>')"
-                        style="width:100%;margin-top:12px;padding:12px;border:1px solid #fca5a5;background:#fff5f5;color:#dc2626;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:inherit;">
-                        Report this profile
-                      </button>
-                      <% } %>
+                  <% if (user && !isViewingOwn) { %>
+                    <button class="btn-report-profile" onclick="showReportModal('user', '<%= profileUser._id %>')">
+                      <i data-lucide="flag"></i> Report this profile
+                    </button>
+                  <% } %>
+                </div>
               </div>
 
               <!-- User Rating Section -->
-              <div class="card" style="margin: 20px 0;">
-                <div style="font-size: 20px; font-weight: 800; margin-bottom: 16px; color: var(--t1);">User Reviews
+              <div class="card section-card">
+                <div class="section-card-head">
+                  <div>
+                    <div class="section-card-title">User Reviews</div>
+                    <div class="section-card-sub">Feedback from completed transactions and community interactions.</div>
+                  </div>
                 </div>
                 <div id="user-rating-stats-content">No reviews</div>
                 <div id="user-rating-dist-content" style="margin-top: 16px;"></div>
@@ -153,10 +164,9 @@
               <div class="profile-grid profile-grid-own">
 
               <!-- ── LEFT: Avatar + Stats + Recent products ── -->
-              <div style="display:flex;flex-direction:column;gap:20px;">
-
+              <div class="profile-side-stack">
                 <!-- Avatar card -->
-                <div class="card avatar-card">
+                <div class="card avatar-card profile-hero-card premium-card glass">
                   <div class="avatar-wrap" id="avatar-wrap">
                     <img
                       src="<%= user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=E8F0FE&color=2563EB&size=200' %>"
@@ -172,43 +182,40 @@
                   <div class="avatar-email">
                     <%= user.email %>
                   </div>
-                  <div class="avatar-hint">
-                    Avatar is synced from Google.<br>
-                    Or upload a custom one
-                    <i data-lucide="arrow-up"
-                      style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i>
+                  <div class="avatar-meta-row">
+                    <span class="avatar-meta-pill"><i data-lucide="building-2"></i><%= user.university || 'University not set' %></span>
+                    <% if (user.studentId) { %>
+                      <span class="avatar-meta-pill"><i data-lucide="id-card"></i><%= user.studentId %></span>
+                    <% } %>
                   </div>
 
                   <div class="stats-mini">
                     <div class="stat-mini">
-                      <div class="stat-mini-num"
-                        style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                        <%- renderStars(user.rating || 5, 15) %>
-                          <span style="font-size:16px;font-weight:700;margin-left:2px">
-                            <%= (user.rating || 5).toFixed(1) %>
-                          </span>
+                      <div class="stat-mini-num" style="display:flex;align-items:center;gap:4px;justify-content:center;">
+                        <%- renderStars(user.rating || 5, 14) %>
+                        <span style="font-size:14px;font-weight:700"><%= (user.rating || 5).toFixed(1) %></span>
                       </div>
                       <div class="stat-mini-lbl">Rating</div>
                     </div>
                     <div class="stat-mini">
-                      <div class="stat-mini-num">
-                        <%= user.totalSales || 0 %>
-                      </div>
+                      <div class="stat-mini-num"><%= user.totalSales || 0 %></div>
                       <div class="stat-mini-lbl">Sold</div>
                     </div>
                     <div class="stat-mini">
-                      <div class="stat-mini-num">
-                        <%= user.ratingCount || 0 %>
-                      </div>
+                      <div class="stat-mini-num"><%= user.ratingCount || 0 %></div>
                       <div class="stat-mini-lbl">Reviews</div>
                     </div>
                   </div>
                 </div>
 
+
                 <!-- Recent products -->
-                <div class="card">
-                  <div class="card-title">
-                    My Products
+                <div class="card section-card premium-card glass">
+                  <div class="section-card-head">
+                    <div>
+                      <div class="section-card-title">My Products</div>
+                      <div class="section-card-sub">A quick snapshot of your most recent listings.</div>
+                    </div>
                   </div>
                   <% if (products && products.length> 0) { %>
                     <div class="recent-products">
@@ -216,32 +223,25 @@
                         furniture: 'sofa' , 'daily-needs' :'shopping-bag', sports: 'dumbbell' , gaming: 'gamepad-2' ,
                         other: 'package' , }; %>
                         <% products.slice(0, 4).forEach(function(p) { %>
-                          <a href="/products/<%= p._id %>" class="mini-row"
-                            style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F1F8;transition:all 0.2s ease;">
+                          <a href="/products/<%= p._id %>" class="mini-row">
                             <div class="mini-thumb">
                               <% if (p.images && p.images[0]) { %>
                                 <img src="<%= p.images[0] %>" alt="<%= p.title %>">
-                                <% } else { %>
-                                  <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"
-                                    style="width:20px;height:20px;stroke:#8890B0;"></i>
-                                  <% } %>
+                              <% } else { %>
+                                <i data-lucide="<%= CAT_ICON[p.category] || 'package' %>"></i>
+                              <% } %>
                             </div>
-                            <div style="flex:1;min-width:0;">
-                              <div class="mini-title"
-                                style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                <%= p.title %>
-                              </div>
+                            <div class="mini-body">
+                              <div class="mini-title"><%= p.title %></div>
                               <div class="mini-meta">
                                 <span class="status-dot dot-<%= p.status %>"></span>
                                 <%= p.status==='active' ? 'Active' : p.status==='sold' ? 'Sold' : 'Draft' %>
-                                  ·
-                                  <i data-lucide="eye"></i>
-                                  <%= p.views || 0 %>
+                                <span class="meta-sep">·</span>
+                                <i data-lucide="eye"></i> <%= p.views || 0 %>
                               </div>
                             </div>
                             <div class="mini-price">
-                              <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price)
-                                %>
+                              <%= new Intl.NumberFormat('en-US').format(p.price) %> <span style="font-size:10px; opacity:0.6;">VND</span>
                             </div>
                           </a>
                           <% }) %>
@@ -267,11 +267,13 @@
 
               </div>
 
-              <!-- ── RIGHT: Edit form ── -->
-              <div class="card form-section">
-                <div class="card-title">
-                  Edit Profile
-                </div>
+                <div class="card form-section section-card premium-card glass">
+                  <div class="section-card-head section-card-head-spacious">
+                    <div>
+                      <div class="section-card-title">Edit Profile</div>
+                      <div class="section-card-sub">Manage your public seller identity and personal details.</div>
+                    </div>
+                  </div>
 
                 <!-- Read-only: from Google -->
                 <div class="form-row">

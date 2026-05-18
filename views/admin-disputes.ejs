@@ -6,6 +6,7 @@
   <title><%= title %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <style>
     .dsp-page { padding: 24px; max-width: 1200px; margin: 0 auto; }
@@ -289,9 +290,10 @@
         if (!json.success) throw new Error(json.message);
 
         closeResolveModal();
+        if (typeof showToast === 'function') showToast('Dispute resolved successfully', 'ok');
         fetchDisputes();
       } catch (err) {
-        alert('Failed: ' + err.message);
+        if (typeof showToast === 'function') showToast('Failed: ' + err.message, 'err');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Submit decision';

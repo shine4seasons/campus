@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — Campus Marketplace</title>
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/login.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -94,7 +95,7 @@
         <div class="error-box" style="display:flex">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span>
-            <% const errMsgs = { oauth_failed: 'Google OAuth failed. Please try again.', auth_failed: 'Authentication failed. Please try again.', fetch_user_failed: 'Unable to retrieve user information.' }; %>
+            <% const errMsgs = { banned: 'This account has been banned.', oauth_failed: 'Google OAuth failed. Please try again.', auth_failed: 'Authentication failed. Please try again.', fetch_user_failed: 'Unable to retrieve user information.' }; %>
             <%= errMsgs[error] || 'An error occurred. Please try again.' %>
           </span>
         </div>
@@ -284,6 +285,20 @@
 
   // Initialize all icons on page
   if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // Show error toast if redirect error is banned
+  const urlParams = new URLSearchParams(window.location.search);
+  const errorParam = urlParams.get('error');
+  if (errorParam === 'banned') {
+    if (!document.getElementById('toast-wrap')) {
+      const wrap = document.createElement('div');
+      wrap.id = 'toast-wrap';
+      document.body.appendChild(wrap);
+    }
+    if (typeof showToast === 'function') {
+      showToast('This account has been banned.', 'err');
+    }
+  }
 </script>
 
 </body>

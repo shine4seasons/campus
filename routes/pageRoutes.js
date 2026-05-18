@@ -6,115 +6,88 @@ const requireAdminPage = require('../middleware/adminPageAuth');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR } = require('../config/pageConstants');
 const { CATEGORIES } = require('../public/js/categories');
 
-// ── GET / ──────────────────────────────────────────────
 router.get('/', (req, res) => {
   if (res.locals.user) {
     if (res.locals.user.role === 'admin') {
       return res.redirect('/dashboard');
-    } else if (res.locals.mode === 'seller') {
+    }
+
+    if (res.locals.mode === 'seller') {
       return res.redirect('/dashboard-seller');
     }
   }
 
-  res.render(VIEWS.INDEX, {
+  return res.render(VIEWS.INDEX, {
     title: APP_NAME,
     isLoginPage: false,
-    CATEGORIES
+    CATEGORIES,
   });
 });
 
-// ── GET /login ─────────────────────────────────────────
+router.get('/search', pageController.getSearchResults);
+
 router.get('/login', (req, res) => {
-  // Redirect if already logged in with complete profile
   if (res.locals.user && res.locals.user.profileComplete) {
     return res.redirect('/');
   }
 
-  res.render(VIEWS.LOGIN, {
+  return res.render(VIEWS.LOGIN, {
     title: `Login${TITLE_SEPARATOR}${APP_NAME}`,
     error: req.query.error || null,
     step: req.query.step || null,
-    isLoginPage: true
+    isLoginPage: true,
   });
 });
 
-// ── GET /logout ────────────────────────────────────────
 router.get('/logout', authController.logoutRedirect);
 
-// ── GET /callback ──────────────────────────────────────
 router.get('/callback', (req, res) => {
-  res.render(VIEWS.CALLBACK, { title: 'Authenticating...' });
+  return res.render(VIEWS.CALLBACK, { title: 'Authenticating...' });
 });
 
-// ── GET /products/:id ──────────────────────────────────
 router.get('/products/:id', pageController.getProduct);
-
-// ── GET /my-products ───────────────────────────────────
 router.get('/my-products', requireAuth, pageController.getMyProducts);
-
-// ── GET /sell ──────────────────────────────────────────
 router.get('/sell', requireAuth, pageController.getSellPage);
-
-// ── GET /profile ───────────────────────────────────────
 router.get('/profile', requireAuth, pageController.getProfile);
-
-// ── GET /user/:userId ──────────────────────────────────
 router.get('/user/:userId', pageController.getUserProfile);
-
-// ── GET /orders ────────────────────────────────────────
-// Buyer's orders page
 router.get('/orders', requireAuth, pageController.getBuyerOrders);
-
-// ── GET /orders/tracking/:orderId ───────────────────────────────────
-// Order tracking page with map
 router.get('/orders/tracking/:orderId', requireAuth, pageController.getOrderTracking);
 
-// ── GET /messages ──────────────────────────────────────
 router.get('/messages', requireAuth, (req, res) => {
-  res.render(VIEWS.MESSAGES, {
+  return res.render(VIEWS.MESSAGES, {
     title: `Messages${TITLE_SEPARATOR}${APP_NAME}`,
     conversationId: req.query.id || null,
-    isLoginPage: false
+    isLoginPage: false,
+    activePage: 'messages',
   });
 });
 
-// ── GET /notifications ─────────────────────────────────
 router.get('/notifications', requireAuth, (req, res) => {
-  res.render(VIEWS.NOTIFICATIONS, {
+  return res.render(VIEWS.NOTIFICATIONS, {
     title: `Notifications${TITLE_SEPARATOR}${APP_NAME}`,
-    isLoginPage: false
+    isLoginPage: false,
+    activePage: 'notifications',
   });
 });
 
-// ── GET /favorites ─────────────────────────────────────
 router.get('/favorites', requireAuth, (req, res) => {
-  res.render(VIEWS.FAVORITES, {
+  return res.render(VIEWS.FAVORITES, {
     title: `Favorites${TITLE_SEPARATOR}${APP_NAME}`,
     isLoginPage: false,
-    activePage: 'favorites'
+    activePage: 'favorites',
   });
 });
 
-// ── GET /admin/disputes ────────────────────────────────
 router.get('/admin/disputes', requireAuth, requireAdminPage, (req, res) => {
-  res.render(VIEWS.ADMIN_DISPUTES, {
+  return res.render(VIEWS.ADMIN_DISPUTES, {
     title: `Disputes${TITLE_SEPARATOR}${APP_NAME}`,
-    isLoginPage: false
+    isLoginPage: false,
   });
 });
 
-// ── GET /dashboard ───────────────────────────────────────────── 
-// Admin-only dashboard
 router.get('/dashboard', requireAuth, requireAdminPage, pageController.getDashboard);
-
-// ── GET /dashboard-seller ────────────────────────────────────────
-// Seller/user dashboard - accessible to all authenticated users
 router.get('/dashboard-seller', requireAuth, pageController.getDashboard);
-
-// ── GET /orders-seller ───────────────────────────────────
 router.get('/orders-seller', requireAuth, pageController.getSellerOrders);
-
-// ── GET /revenue ───────────────────────────────────────────
 router.get('/revenue', requireAuth, pageController.getRevenue);
 
 module.exports = router;

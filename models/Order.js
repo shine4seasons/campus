@@ -45,6 +45,7 @@ const OrderSchema = new mongoose.Schema(
     // Snapshot giá tại thời điểm đặt hàng
     // (tránh thay đổi khi seller edit price sau)
     priceSnapshot: { type: Number, required: true },
+    quantity: { type: Number, required: true, min: 1, default: 1 },
 
     deliveryMode: {
       type: String,

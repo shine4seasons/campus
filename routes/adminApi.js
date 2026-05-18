@@ -16,6 +16,12 @@ router.patch('/reports/:id', adminCtrl.updateReport);
 
 router.get('/products', adminCtrl.getProducts);
 
+// Payouts
+router.get('/payouts', adminCtrl.getPayouts);
+router.post('/payouts/:id/approve', adminCtrl.approvePayout);
+router.post('/payouts/:id/mark-paid', adminCtrl.markPayoutPaid);
+router.post('/payouts/:id/reject', adminCtrl.rejectPayout);
+
 // Stats
 router.get('/stats', adminCtrl.getStats);
 router.get('/analytics', adminCtrl.getAnalytics);

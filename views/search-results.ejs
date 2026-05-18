@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { extraCss: 'search-results.css' }) %>
+  <link rel="stylesheet" href="/css/index.css">
+  <link rel="stylesheet" href="/css/rating.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+
+  <%
+    const categoryMap = Object.fromEntries((CATEGORIES || []).map(cat => [cat.slug, cat.name]));
+    const sortOptions = [
+      { value: 'relevance', label: 'Most relevant' },
+      { value: 'newest', label: 'Newest first' },
+      { value: 'price-asc', label: 'Price: low to high' },
+      { value: 'price-desc', label: 'Price: high to low' },
+      { value: 'rating', label: 'Top rated' }
+    ];
+    const conditionOptions = [
+      { value: '', label: 'Any condition' },
+      { value: 'new', label: 'New' },
+      { value: 'like-new', label: 'Like new' },
+      { value: 'good', label: 'Good' },
+      { value: 'fair', label: 'Fair' }
+    ];
+    function categoryLabel(slug) {
+      return (categoryMap[slug] || slug || 'Other').replace(/&amp;/g, '&');
+    }
+    function conditionLabel(value) {
+      const map = { new: 'New', 'like-new': 'Like new', good: 'Good', fair: 'Fair' };
+      return map[value] || value || 'Unknown';
+    }
+    function pageUrl(nextPage) {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('q', searchQuery);
+      if (searchCategory) params.set('category', searchCategory);
+      if (searchCondition) params.set('condition', searchCondition);
+      if (minPrice !== '') params.set('minPrice', minPrice);
+      if (maxPrice !== '') params.set('maxPrice', maxPrice);
+      if (searchSort) params.set('sort', searchSort);
+      params.set('page', nextPage);
+      return `/search?${params.toString()}`;
+    }
+  %>
+
+  <main class="search-page">
+    <section class="search-hero">
+      <div class="search-hero-inner">
+        <div class="search-copy">
+          <span class="search-kicker">Search results</span>
+          <h1>
+            <% if (searchQuery) { %>
+              Results for "<%= searchQuery %>"
+            <% } else if (searchCategory) { %>
+              Browse <%= categoryLabel(searchCategory) %>
+            <% } else { %>
+              Browse all products
+            <% } %>
+          </h1>
+          <p>
+            <%= total %> product<%= total === 1 ? '' : 's' %>
+            <% if (searchCategory) { %>
+              in <strong><%= categoryLabel(searchCategory) %></strong>
+            <% } %>
+          </p>
+        </div>
+
+        <form class="search-panel" method="get" action="/search">
+          <label class="search-field">
+            <span>Keyword</span>
+            <input type="text" name="q" value="<%= searchQuery %>" placeholder="Search for items...">
+          </label>
+
+          <label class="search-field">
+            <span>Category</span>
+            <select name="category">
+              <option value="">All categories</option>
+              <% CATEGORIES.forEach(cat => { %>
+                <option value="<%= cat.slug %>" <%= searchCategory === cat.slug ? 'selected' : '' %>><%= cat.name.replace(/&amp;/g, '&') %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label class="search-field">
+            <span>Sort</span>
+            <select name="sort">
+              <% sortOptions.forEach(option => { %>
+                <% if (option.value !== 'relevance' || searchQuery) { %>
+                  <option value="<%= option.value %>" <%= searchSort === option.value ? 'selected' : '' %>><%= option.label %></option>
+                <% } %>
+              <% }) %>
+            </select>
+          </label>
+
+          <label class="search-field">
+            <span>Condition</span>
+            <select name="condition">
+              <% conditionOptions.forEach(option => { %>
+                <option value="<%= option.value %>" <%= searchCondition === option.value ? 'selected' : '' %>><%= option.label %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <div class="search-price-grid">
+            <label class="search-field">
+              <span>Min price</span>
+              <input type="number" name="minPrice" min="0" step="1000" value="<%= minPrice %>" placeholder="0">
+            </label>
+
+            <label class="search-field">
+              <span>Max price</span>
+              <input type="number" name="maxPrice" min="0" step="1000" value="<%= maxPrice %>" placeholder="2000000">
+            </label>
+          </div>
+
+          <div class="search-actions">
+            <button type="submit" class="search-submit">Update results</button>
+            <a href="/search" class="search-reset">Clear all</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="search-results-section">
+      <div class="search-results-toolbar">
+        <div class="search-summary">
+          <strong><%= total %></strong> result<%= total === 1 ? '' : 's' %>
+          <% if (pagination.totalPages > 1) { %>
+            <span>Page <%= pagination.page %> of <%= pagination.totalPages %></span>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (activeFilters.hasQuery || activeFilters.hasCategory || activeFilters.hasCondition || activeFilters.hasMinPrice || activeFilters.hasMaxPrice) { %>
+        <div class="search-active-filters">
+          <% if (activeFilters.hasQuery) { %>
+            <span class="search-chip">Query: <strong><%= searchQuery %></strong></span>
+          <% } %>
+          <% if (activeFilters.hasCategory) { %>
+            <span class="search-chip">Category: <strong><%= categoryLabel(searchCategory) %></strong></span>
+          <% } %>
+          <% if (activeFilters.hasCondition) { %>
+            <span class="search-chip">Condition: <strong><%= conditionLabel(searchCondition) %></strong></span>
+          <% } %>
+          <% if (activeFilters.hasMinPrice) { %>
+            <span class="search-chip">From: <strong><%= Number(minPrice).toLocaleString('en-US') %> ₫</strong></span>
+          <% } %>
+          <% if (activeFilters.hasMaxPrice) { %>
+            <span class="search-chip">To: <strong><%= Number(maxPrice).toLocaleString('en-US') %> ₫</strong></span>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (!products.length) { %>
+        <div class="search-empty-state">
+          <div class="search-empty-icon">
+            <i data-lucide="search-x"></i>
+          </div>
+          <h2>No products found</h2>
+          <p>Try a different keyword or switch to another category.</p>
+        </div>
+      <% } else { %>
+        <div class="products-grid search-products-grid">
+          <% products.forEach(product => { %>
+            <a class="product-card" href="/products/<%= product._id %>">
+              <div class="product-img-placeholder">
+                <% if (product.images && product.images[0]) { %>
+                  <img src="<%= product.images[0] %>" alt="<%= product.title %>">
+                <% } else { %>
+                  <div class="search-card-fallback">
+                    <i data-lucide="package"></i>
+                  </div>
+                <% } %>
+                <div class="product-cta">View details →</div>
+              </div>
+              <div class="product-body">
+                <div class="product-price"><%= Number(product.price || 0).toLocaleString('en-US') %> ₫</div>
+                <div class="product-name"><%= product.title %></div>
+                <div class="search-card-meta">
+                  <div class="search-card-row">
+                    <span class="product-category"><%= categoryLabel(product.category) %></span>
+                    <% if (product.ratingCount > 0) { %>
+                      <span class="product-rating-row">★ <%= Number(product.ratingAverage || 0).toFixed(1) %> (<%= product.ratingCount %>)</span>
+                    <% } else { %>
+                      <span class="product-rating-row search-new-product">New product</span>
+                    <% } %>
+                  </div>
+                  <span class="product-condition condition-<%= product.condition %>"><%= conditionLabel(product.condition) %></span>
+                  <div class="search-stock"><%= typeof product.quantity === 'number' ? product.quantity : 1 %> available</div>
+                </div>
+                <div class="product-footer">
+                  <div class="product-seller">
+                    <% if (product.seller && product.seller.avatar) { %>
+                      <img class="seller-avatar" src="<%= product.seller.avatar %>" alt="<%= product.seller.nickname || product.seller.name %>">
+                    <% } else { %>
+                      <div class="seller-avatar seller-avatar-fallback"><%= ((product.seller && (product.seller.nickname || product.seller.name) || 'U')[0] || 'U').toUpperCase() %></div>
+                    <% } %>
+                    <span class="seller-name"><%= (product.seller && (product.seller.nickname || product.seller.name)) || 'Unknown seller' %></span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+
+        <% if (pagination.totalPages > 1) { %>
+          <nav class="search-pagination" aria-label="Search results pagination">
+            <% if (pagination.hasPrev) { %>
+              <a href="<%= pageUrl(pagination.page - 1) %>" class="page-link">Previous</a>
+            <% } else { %>
+              <span class="page-link disabled">Previous</span>
+            <% } %>
+
+            <span class="page-status">Page <%= pagination.page %> / <%= pagination.totalPages %></span>
+
+            <% if (pagination.hasNext) { %>
+              <a href="<%= pageUrl(pagination.page + 1) %>" class="page-link">Next</a>
+            <% } else { %>
+              <span class="page-link disabled">Next</span>
+            <% } %>
+          </nav>
+        <% } %>
+      <% } %>
+    </section>
+  </main>
+
+  <script>
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

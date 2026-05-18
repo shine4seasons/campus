@@ -6,6 +6,7 @@
   <title><%= title %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/notifications-page.css">
 </head>
@@ -17,13 +18,13 @@
     <header class="notif-header">
       <div>
         <h1 class="notif-title">
-          🔔 Notifications
+          Notifications
           <span class="notif-count-badge" id="notif-count-badge"></span>
         </h1>
         <p class="notif-sub">Stay updated with orders, messages, and reviews</p>
       </div>
       <button class="notif-mark-all" id="mark-all-btn" onclick="markAllRead()" disabled>
-        ✓ Mark all as read
+        Mark all as read
       </button>
     </header>
 
@@ -56,12 +57,23 @@
     let totalPages = 1;
 
     const TYPE_COLORS = {
-      order:   { color: '#1B5EFF', bg: '#EBF0FF', emoji: '📦' },
-      message: { color: '#10B981', bg: '#D1FAE5', emoji: '💬' },
-      rating:  { color: '#F59E0B', bg: '#FEF3C7', emoji: '⭐' },
-      system:  { color: '#7C3AED', bg: '#F3E8FF', emoji: '📢' },
-      info:    { color: '#6B7280', bg: '#F3F4F6', emoji: 'ℹ️' },
+      order:   { color: '#1B5EFF', bg: '#EBF0FF', icon: 'box' },
+      message: { color: '#10B981', bg: '#D1FAE5', icon: 'message' },
+      rating:  { color: '#F59E0B', bg: '#FEF3C7', icon: 'star' },
+      system:  { color: '#7C3AED', bg: '#F3E8FF', icon: 'bell' },
+      info:    { color: '#6B7280', bg: '#F3F4F6', icon: 'info' },
     };
+
+    function getIconSVG(type) {
+      const icons = {
+        box: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+        message: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 10.26 24 10.27 17.18 16.31 20.09 24.5 12 18.45 3.91 24.5 6.82 16.31 0 10.27 8.91 10.26 12 2"/></svg>',
+        bell: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+        info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      return icons[type] || icons.info;
+    }
 
     function escapeHtml(s) {
       return String(s == null ? '' : s)
@@ -92,8 +104,8 @@
       return ''
         + '<div class="notif-item ' + unreadClass + '" data-id="' + escapeHtml(n._id) + '">'
         +   (isRead ? '' : '<span class="notif-unread-dot"></span>')
-        +   '<div class="notif-icon" style="background:' + meta.bg + ';color:' + meta.color + ';font-size:18px;">'
-        +     meta.emoji
+        +   '<div class="notif-icon" style="background:' + meta.bg + ';color:' + meta.color + ';display:flex;align-items:center;justify-content:center;">'
+        +     getIconSVG(meta.icon)
         +   '</div>'
         +   '<div class="notif-body">'
         +     '<div class="notif-row">'
@@ -209,7 +221,13 @@
         e.stopPropagation();
         const id = delBtn.dataset.id;
         const item = delBtn.closest('.notif-item');
-        if (!confirm('Delete this notification?')) return;
+        const confirmed = await showConfirm({
+          title: 'Delete Notification',
+          message: 'Delete this notification?',
+          confirmText: 'Delete',
+          type: 'danger'
+        });
+        if (!confirmed) return;
         try {
           const res = await fetch('/api/notifications/' + id, { method: 'DELETE', credentials: 'include' });
           const json = await res.json();

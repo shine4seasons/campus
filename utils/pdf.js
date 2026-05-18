@@ -206,8 +206,8 @@ async function generateSystemReport(data) {
             doc.text('Total Registered Users:', 65, 185);
             doc.text(data.totalUsers.toLocaleString(), 200, 185, { bold: true });
             
-            doc.text('Active Listings:', 65, 205);
-            doc.text(data.activeListings.toLocaleString(), 200, 205);
+            doc.text('Active Products:', 65, 205);
+            doc.text((data.activeProducts || 0).toLocaleString(), 200, 205);
 
             doc.text('Monthly Revenue (GMV):', 300, 185);
             doc.fillColor('#16a34a').text(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(data.gmvThisMonth), 430, 185);

@@ -1,16 +1,15 @@
 <header class="topbar">
 	<div class="topbar-left">
-		<a href="/" class="nav-brand" style="margin-left: 0; padding-left: 0;">
-			<img src="/img/logo.png" alt="Campus Logo" style="height: 60px; width: auto; object-fit: contain; transform: scale(1.5); transform-origin: left center; margin-left: 10px;">
-			<div style="display:none;">Campus Marketplace</div>
+		<button class="tb-toggle-sidebar" id="sidebar-toggle" title="Toggle Sidebar">
+			<i data-lucide="menu"></i>
+		</button>
+		<a href="/" class="nav-brand">
+			<img src="/img/logo.png" alt="Campus Marketplace" class="nav-logo-img">
 		</a>
+
 	</div>
 
 	<div class="topbar-center">
-		<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-			<div class="pg-title" id="pgTitle"></div>
-			<div class="pg-sub" id="pgSub"></div>
-		</div>
 		<div class="tb-search">
 			<svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 			<input type="text" id="topbar-search-input" placeholder="Search functions, pages..." autocomplete="off">
@@ -60,7 +59,12 @@
 		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
 	</div>
 </header>
-
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+	if (typeof lucide !== 'undefined') {
+		lucide.createIcons();
+	}
+</script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
     window.SOCKET_USER_ID = '<%= user ? user._id : "" %>';

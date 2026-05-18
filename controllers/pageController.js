@@ -1,8 +1,10 @@
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Payment = require('../models/Payment');
 const Rating = require('../models/Rating');
 const User = require('../models/User');
-const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
+const Wallet = require('../models/Wallet');
+const { ORDER_STATUS, PRODUCT_STATUS, PRODUCT_CONDITIONS } = require('../config/appConstants');
 
 const { incrementViews } = require('../utils/viewCounter');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR, LIMITS, ERROR_MESSAGES } = require('../config/pageConstants');
@@ -37,24 +39,6 @@ exports.getProduct = async (req, res) => {
     // Increment view count asynchronously
     incrementViews(productId).catch(err => console.error('View increment error:', err));
 
-    // --- Mode-based access control ---
-    const currentUser = res.locals.user;
-    const mode = res.locals.mode; // 'buyer' or 'seller'
-
-    if (currentUser && currentUser.role !== 'admin') {
-      const isOwner = String(product.seller._id) === String(currentUser._id);
-
-      // Seller mode: Can ONLY see own products
-      if (mode === 'seller' && !isOwner) {
-        return res.redirect('/dashboard-seller'); // Redirect to their own dashboard
-      }
-
-      // Buyer mode: Can ONLY see others' products
-      if (mode === 'buyer' && isOwner) {
-        return res.redirect('/my-products'); // Redirect to their own products list
-      }
-    }
-
     // Get related products
     const relatedProducts = await getRelatedProducts(product, LIMITS.RELATED_PRODUCTS);
 
@@ -66,6 +50,104 @@ exports.getProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Product page error:', error.message);
+    res.status(500).render(VIEWS.NOT_FOUND, {
+      title: 'Error',
+      isLoginPage: false
+    });
+  }
+};
+
+exports.getSearchResults = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = 12;
+    const q = String(req.query.q || '').trim();
+    const category = String(req.query.category || '').trim();
+    const condition = String(req.query.condition || '').trim();
+    const minPrice = Number.parseInt(req.query.minPrice, 10);
+    const maxPrice = Number.parseInt(req.query.maxPrice, 10);
+    const allowedSorts = new Set(['relevance', 'newest', 'price-asc', 'price-desc', 'rating']);
+    const rawSort = String(req.query.sort || (q ? 'relevance' : 'newest')).trim();
+    const sort = allowedSorts.has(rawSort) ? rawSort : (q ? 'relevance' : 'newest');
+
+    const filter = {
+      status: PRODUCT_STATUS.ACTIVE,
+      $or: [{ quantity: { $gt: 0 } }, { quantity: { $exists: false } }]
+    };
+
+    if (category) filter.category = category;
+    if (PRODUCT_CONDITIONS.includes(condition)) filter.condition = condition;
+    if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+      filter.price = {};
+      if (Number.isFinite(minPrice)) filter.price.$gte = minPrice;
+      if (Number.isFinite(maxPrice)) filter.price.$lte = maxPrice;
+    }
+    if (res.locals.user) filter.seller = { $ne: res.locals.user._id };
+
+    const queryFilter = q ? { ...filter, $text: { $search: q } } : filter;
+
+    let productQuery;
+    if (q && sort === 'relevance') {
+      productQuery = Product.find(queryFilter, { score: { $meta: 'textScore' } })
+        .sort({ score: { $meta: 'textScore' } });
+    } else {
+      const sortMap = {
+        newest: { createdAt: -1 },
+        'price-asc': { price: 1, createdAt: -1 },
+        'price-desc': { price: -1, createdAt: -1 },
+        rating: { ratingAverage: -1, ratingCount: -1, createdAt: -1 }
+      };
+
+      productQuery = Product.find(queryFilter).sort(sortMap[sort] || sortMap.newest);
+    }
+
+    const skip = (page - 1) * limit;
+    const [products, total] = await Promise.all([
+      productQuery
+        .skip(skip)
+        .limit(limit)
+        .populate('seller', 'name nickname avatar university rating ratingCount totalSales')
+        .lean(),
+      Product.countDocuments(queryFilter)
+    ]);
+
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const categoryMeta = CATEGORIES.find(item => item.slug === category) || null;
+    const titleBits = [];
+
+    if (q) titleBits.push(`"${q}"`);
+    if (categoryMeta) titleBits.push(categoryMeta.name.replace(/&amp;/g, '&'));
+
+    res.render(VIEWS.SEARCH_RESULTS, {
+      title: `${titleBits.length ? `Search ${titleBits.join(' · ')}` : 'Search'}${TITLE_SEPARATOR}${APP_NAME}`,
+      isLoginPage: false,
+      activePage: 'search',
+      CATEGORIES,
+      products,
+      searchQuery: q,
+      searchCategory: category,
+      searchCondition: condition,
+      minPrice: Number.isFinite(minPrice) ? minPrice : '',
+      maxPrice: Number.isFinite(maxPrice) ? maxPrice : '',
+      searchSort: sort,
+      total,
+      activeFilters: {
+        hasQuery: Boolean(q),
+        hasCategory: Boolean(category),
+        hasCondition: Boolean(condition),
+        hasMinPrice: Number.isFinite(minPrice),
+        hasMaxPrice: Number.isFinite(maxPrice)
+      },
+      pagination: {
+        page,
+        limit,
+        totalPages,
+        hasPrev: page > 1,
+        hasNext: page < totalPages
+      }
+    });
+  } catch (error) {
+    console.error('Search results page error:', error.message);
     res.status(500).render(VIEWS.NOT_FOUND, {
       title: 'Error',
       isLoginPage: false
@@ -85,7 +167,8 @@ exports.getMyProducts = async (req, res) => {
     res.render(VIEWS.MY_PRODUCTS, {
       title: `My products${TITLE_SEPARATOR}${APP_NAME}`,
       products,
-      isLoginPage: false
+      isLoginPage: false,
+      activePage: 'products'
     });
   } catch (error) {
     console.error('My products page error:', error.message);
@@ -122,7 +205,8 @@ exports.getSellPage = async (req, res) => {
     title,
     editProduct,
     isLoginPage: false,
-    CATEGORIES
+    CATEGORIES,
+    activePage: 'products'
   });
 };
 
@@ -140,7 +224,8 @@ exports.getProfile = async (req, res) => {
       products,
       isLoginPage: false,
       isOwnProfile: true,
-      viewingUser: null
+      viewingUser: null,
+      activePage: 'profile'
     });
   } catch (error) {
     console.error('Profile page error:', error.message);
@@ -245,9 +330,9 @@ exports.getDashboard = async (req, res) => {
       const newUsersLastMonth = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }, banned: { $ne: true } });
       const totalUsersDelta = newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(0) : 0;
 
-      const activeListings = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
-      const activeListingsYesterday = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE, createdAt: { $lt: yesterday } });
-      const activeListingsDelta = activeListings - activeListingsYesterday;
+      const activeProducts = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
+      const activeProductsYesterday = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE, createdAt: { $lt: yesterday } });
+      const activeProductsDelta = activeProducts - activeProductsYesterday;
 
       const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: startOfMonth } });
       const ordersLastMonth = await Order.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } });
@@ -268,8 +353,8 @@ exports.getDashboard = async (req, res) => {
 
       const stats = {
         totalUsers: { value: totalUsers, delta: totalUsersDelta },
-        totalListings: { value: await Product.countDocuments({}) },
-        activeListings: { value: activeListings, delta: activeListingsDelta },
+        totalProducts: { value: await Product.countDocuments({}) },
+        activeProducts: { value: activeProducts, delta: activeProductsDelta },
         ordersThisMonth: { value: ordersThisMonth, delta: ordersDelta },
         gmvThisMonth: { value: gmvThisMonth, delta: gmvDelta }
       };
@@ -301,7 +386,7 @@ exports.getDashboard = async (req, res) => {
         isLoginPage: false,
         CATEGORIES,
         isSuperAdmin: user.role === 'admin',
-        stats: { totalUsers: { value: 0, delta: 0 }, activeListings: { value: 0, delta: 0 }, ordersThisMonth: { value: 0, delta: 0 }, gmvThisMonth: { value: 0, delta: 0 } },
+        stats: { totalUsers: { value: 0, delta: 0 }, activeProducts: { value: 0, delta: 0 }, ordersThisMonth: { value: 0, delta: 0 }, gmvThisMonth: { value: 0, delta: 0 } },
         topSellers: [],
         initialSection: 'aDash'
       });
@@ -312,7 +397,7 @@ exports.getDashboard = async (req, res) => {
   try {
     const sellerId = user._id;
 
-    // 1. Active listings
+    // 1. Active products
     const activeCount = await Product.countDocuments({ seller: sellerId, status: PRODUCT_STATUS.ACTIVE });
 
     // 2. Orders awaiting confirmation
@@ -336,8 +421,12 @@ exports.getDashboard = async (req, res) => {
     ]);
     const totalRevenue = totalRevRes[0]?.total || 0;
 
-    // 5. Sold counts
-    const soldCount = await Product.countDocuments({ seller: sellerId, status: PRODUCT_STATUS.SOLD });
+    // 5. Sold item count
+    const soldAgg = await Order.aggregate([
+      { $match: { seller: sellerId, status: { $ne: ORDER_STATUS.CANCELLED } } },
+      { $group: { _id: null, total: { $sum: '$quantity' } } }
+    ]);
+    const soldCount = soldAgg[0]?.total || 0;
 
     // 6. Recent ratings
     const recentRatings = await Rating.find({ ratedEntity: 'user', entityId: sellerId })
@@ -346,18 +435,26 @@ exports.getDashboard = async (req, res) => {
       .populate('rater', 'name nickname')
       .lean();
 
+    // 7. Wallet
+    let wallet = await Wallet.findOne({ user: sellerId }).lean();
+    if (!wallet) {
+      wallet = { availableBalance: 0, pendingBalance: 0, totalSales: 0 };
+    }
+
     return res.render(VIEWS.DASHBOARD_SELLER, {
       title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
       isLoginPage: false,
       isSeller: user.role === 'seller',
       stats: {
-        activeListings: activeCount,
+        activeProducts: activeCount,
         pendingOrders: pendingCount,
         monthRevenue: monthRevenue,
         totalRevenue: totalRevenue,
         totalSold: soldCount
       },
-      recentRatings
+      wallet,
+      recentRatings,
+      activePage: 'dashboard'
     });
 
   } catch (error) {
@@ -366,7 +463,7 @@ exports.getDashboard = async (req, res) => {
       title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
       isLoginPage: false,
       isSeller: user.role === 'seller',
-      stats: { activeListings: 0, pendingOrders: 0, monthRevenue: 0, totalSold: 0 },
+      stats: { activeProducts: 0, pendingOrders: 0, monthRevenue: 0, totalSold: 0 },
       recentRatings: []
     });
   }
@@ -394,7 +491,8 @@ exports.getSellerOrders = async (req, res) => {
       title: `Orders${TITLE_SEPARATOR}${APP_NAME}`,
       orders,
       productsWithCounts,
-      isLoginPage: false
+      isLoginPage: false,
+      activePage: 'seller-orders'
     });
   } catch (error) {
     console.error('Seller orders page error:', error.message);
@@ -412,7 +510,8 @@ exports.getRevenue = async (req, res) => {
   try {
     res.render(VIEWS.REVENUE, {
       title: `Revenue${TITLE_SEPARATOR}${APP_NAME}`,
-      isLoginPage: false
+      isLoginPage: false,
+      activePage: 'revenue'
     });
   } catch (error) {
     console.error('Revenue page error:', error.message);
@@ -453,7 +552,8 @@ exports.getBuyerOrders = async (req, res) => {
       title: `My Orders${TITLE_SEPARATOR}${APP_NAME}`,
       orders,
       statusCounts,
-      isLoginPage: false
+      isLoginPage: false,
+      activePage: 'orders'
     });
   } catch (error) {
     console.error('Buyer orders page error:', error.message);
@@ -489,6 +589,11 @@ exports.getOrderTracking = async (req, res) => {
       .populate('dispute.resolvedBy', 'name nickname')
       .lean();
 
+    const payment = await Payment.findOne({ order: orderId })
+      .sort({ createdAt: -1 })
+      .select('_id status amount expiredAt paidAt paymentCode sepayQrUrl qrUrl')
+      .lean();
+
     if (!order) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',
@@ -511,9 +616,11 @@ exports.getOrderTracking = async (req, res) => {
     res.render(VIEWS.ORDER_TRACKING, {
       title: `Order Tracking${TITLE_SEPARATOR}${APP_NAME}`,
       order,
+      payment,
       isBuyer,
       isSeller,
-      isLoginPage: false
+      isLoginPage: false,
+      activePage: 'orders'
     });
   } catch (error) {
     console.error('Order tracking page error:', error.message);

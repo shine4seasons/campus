@@ -4,29 +4,11 @@
     sbInitials = user.name.split(' ').map(function(n){ return n[0]; }).slice(0,2).join('').toUpperCase();
   }
 %>
-<aside class="sidebar">
+<aside class="sidebar glass">
+  
+
 
   <%# ── Mode toggle (buyer / seller) ─────────────────── %>
-  <% if (typeof user === 'undefined' || (user && user.role !== 'admin')) { %>
-  <div class="sb-toggle-wrap">
-    <div class="mode-pill">
-      <div class="mode-pill-track" id="mode-pill-track"></div>
-      <button class="mode-pill-btn" id="mode-buyer-btn" onclick="setMode('buyer')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-        </svg>
-        Buyer
-      </button>
-      <button class="mode-pill-btn" id="mode-seller-btn" onclick="setMode('seller')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-        Seller
-      </button>
-    </div>
-  </div>
-  <% } %>
-
   <%# ── Navigation ────────────────────────────────────── %>
   <nav class="sb-nav">
 
@@ -58,6 +40,10 @@
       <div class="nav-item" onclick="goAdmin('/admin/orders','aOrders',this)">
         <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
         Orders
+      </div>
+      <div class="nav-item" onclick="goAdmin('/admin/payouts','aPayouts',this)">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" /></svg>
+        Payouts
       </div>
       <a class="nav-item" href="/admin/disputes">
         <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -127,7 +113,7 @@
 
       <div class="sb-section">
         <span class="sb-group-label">My Store</span>
-        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'listings') ? ' active' : '' %>" href="/my-products">
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'products') ? ' active' : '' %>" href="/my-products">
           <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
           My Products
         </a>
@@ -152,34 +138,81 @@
 
   <%# ── Footer ──────────────────────────────────────── %>
   <div class="sb-footer">
-    <div class="sb-avatar" id="sbAvatar">
-      <% if (typeof user !== 'undefined' && user && user.avatar) { %>
-        <img src="<%= user.avatar %>" alt="<%= user.name %>">
-      <% } else { %>
-        <%= sbInitials %>
-      <% } %>
-    </div>
-    <div class="sb-user-info">
-      <a href="/profile" class="sb-uname" id="sbName">
-        <%= (typeof user !== 'undefined' && user && user.name) ? user.name : 'Login' %>
-      </a>
-      <div class="sb-urole" id="sbRole">
-        <% if (typeof user !== 'undefined' && user && user.role) { %>
-          <span class="sb-role-dot"></span>
-          <%= user.role === 'admin' ? 'Admin' : (user.role === 'seller' ? 'Seller' : 'Buyer') %>
-        <% } %>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div class="sb-user-menu">
+        <button type="button" class="sb-user-card sb-user-trigger premium-card glass<%= (typeof activePage !== 'undefined' && activePage === 'profile') ? ' active' : '' %>" id="sb-user-trigger" aria-haspopup="menu" aria-expanded="false">
+          <div class="sb-avatar" id="sbAvatar">
+            <% if (user.avatar) { %>
+              <img src="<%= user.avatar %>" alt="<%= user.name %>">
+            <% } else { %>
+              <%= sbInitials %>
+            <% } %>
+          </div>
+          <div class="sb-user-info">
+            <div class="sb-uname" id="sbName"><%= user.name %></div>
+            <div class="sb-urole" id="sbRole">
+              <span class="sb-role-dot"></span>
+              <%= user.role === 'admin' ? 'Admin workspace' : 'Open workspace menu' %>
+            </div>
+          </div>
+          <div class="sb-user-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7 15 5 5 5-5"></path>
+              <path d="m7 9 5-5 5 5"></path>
+            </svg>
+          </div>
+        </button>
+
+        <div class="sb-user-dropdown" id="sb-user-dropdown" role="menu" aria-labelledby="sb-user-trigger">
+          <a href="/profile" class="sb-dropdown-item" role="menuitem">
+            <i data-lucide="user-round"></i>
+            Profile
+          </a>
+
+          <% if (user.role !== 'admin') { %>
+            <div class="sb-dropdown-divider"></div>
+            <button type="button" class="sb-dropdown-item workspace-switch-item" id="workspace-browse-btn" data-mode="buyer" role="menuitem">
+              <i data-lucide="shopping-bag"></i>
+              <span>Browse workspace</span>
+              <span class="sb-dropdown-tag">Buyer</span>
+            </button>
+            <button type="button" class="sb-dropdown-item workspace-switch-item" id="workspace-manage-btn" data-mode="seller" role="menuitem">
+              <i data-lucide="store"></i>
+              <span>Manage workspace</span>
+              <span class="sb-dropdown-tag">Seller</span>
+            </button>
+          <% } %>
+
+          <div class="sb-dropdown-divider"></div>
+          <button type="button" id="logout-btn" class="sb-dropdown-item danger" role="menuitem">
+            <i data-lucide="log-out"></i>
+            Sign out
+          </button>
+        </div>
       </div>
-    </div>
-    <button id="logout-btn" class="sb-logout" title="Sign out">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-    </button>
+    <% } else { %>
+      <a href="/login" class="sb-user-card premium-card glass">
+        <div class="sb-avatar" id="sbAvatar"><%= sbInitials %></div>
+        <div class="sb-user-info">
+          <div class="sb-uname" id="sbName">Sign In</div>
+          <div class="sb-urole">to sell items</div>
+        </div>
+      </a>
+    <% } %>
   </div>
 
 </aside>
+
+<div id="switch-modal-backdrop" class="switch-modal-backdrop">
+  <div class="switch-modal" role="dialog" aria-modal="true">
+    <h3>Buyer-only page</h3>
+    <p>This page is available for buyers. Switch to buyer mode to continue.</p>
+    <div class="actions">
+      <button class="btn ghost" id="switch-cancel">Stay</button>
+      <button class="btn primary" id="switch-confirm">Switch to buyer</button>
+    </div>
+  </div>
+</div>
 
 <!-- Mobile toggle & backdrop -->
 <button id="sb-mobile-toggle" class="sb-mobile-toggle" aria-label="Toggle sidebar">
@@ -204,8 +237,9 @@
       } catch (e) {}
       const PATHS = {
         aDash:'/admin', aAnalytics:'/admin/analytics', aUsers:'/admin/users',
-        aProducts:'/admin/products', aOrders:'/admin/orders', aReports:'/admin/reports',
-        aSettings:'/admin/settings', sDash:'/dashboard', sListings:'/my-products',
+        aProducts:'/admin/products', aOrders:'/admin/orders', aPayouts:'/admin/payouts',
+        aReports:'/admin/reports',
+        aSettings:'/admin/settings', sDash:'/dashboard', sProducts:'/my-products',
         sOrders:'/orders-seller', sRevenue:'/revenue', sMessages:'/messages', sProfile:'/profile'
       };
       if (el && el.classList) {
@@ -236,15 +270,10 @@
   function applyMode(mode) {
     document.body.classList.remove('mode-buyer', 'mode-seller');
     document.body.classList.add('mode-' + mode);
-    const buyerBtn = document.getElementById('mode-buyer-btn');
-    const sellerBtn = document.getElementById('mode-seller-btn');
-    const track = document.getElementById('mode-pill-track');
-    if (buyerBtn) buyerBtn.classList.toggle('active', mode === 'buyer');
-    if (sellerBtn) sellerBtn.classList.toggle('active', mode === 'seller');
-    if (track) {
-      track.style.transform = mode === 'seller' ? 'translateX(100%)' : 'translateX(0)';
-      track.dataset.mode = mode;
-    }
+    const browseBtn = document.getElementById('workspace-browse-btn');
+    const manageBtn = document.getElementById('workspace-manage-btn');
+    if (browseBtn) browseBtn.classList.toggle('active', mode === 'buyer');
+    if (manageBtn) manageBtn.classList.toggle('active', mode === 'seller');
   }
 
   window.setMode = function (mode) {
@@ -259,6 +288,50 @@
   try { document.body.classList.add('has-sidebar'); } catch(e) {}
 
   document.addEventListener('DOMContentLoaded', () => {
+    const userTrigger = document.getElementById('sb-user-trigger');
+    const userDropdown = document.getElementById('sb-user-dropdown');
+    const browseWorkspaceBtn = document.getElementById('workspace-browse-btn');
+    const manageWorkspaceBtn = document.getElementById('workspace-manage-btn');
+
+    function closeUserDropdown() {
+      if (!userTrigger || !userDropdown) return;
+      userTrigger.setAttribute('aria-expanded', 'false');
+      userDropdown.classList.remove('open');
+    }
+
+    if (userTrigger && userDropdown) {
+      userTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = userDropdown.classList.toggle('open');
+        userTrigger.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!userTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
+          closeUserDropdown();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeUserDropdown();
+      });
+    }
+
+    if (browseWorkspaceBtn) {
+      browseWorkspaceBtn.addEventListener('click', () => {
+        closeUserDropdown();
+        window.setMode('buyer');
+      });
+    }
+
+    if (manageWorkspaceBtn) {
+      manageWorkspaceBtn.addEventListener('click', () => {
+        closeUserDropdown();
+        window.setMode('seller');
+      });
+    }
+
     // Show correct nav group
     (function updateNavByMode() {
       const mode = localStorage.getItem(STORAGE_KEY) || 'buyer';
@@ -275,30 +348,22 @@
     })();
 
     // Buyer-only page modal
-    let switchModalBackdrop = document.getElementById('switch-modal-backdrop');
-    if (!switchModalBackdrop) {
-      switchModalBackdrop = document.createElement('div');
-      switchModalBackdrop.id = 'switch-modal-backdrop';
-      switchModalBackdrop.className = 'switch-modal-backdrop';
-      switchModalBackdrop.innerHTML = `
-        <div class="switch-modal" role="dialog" aria-modal="true">
-          <h3>Buyer-only page</h3>
-          <p>This page is available for buyers. Switch to buyer mode to continue.</p>
-          <div class="actions">
-            <button class="btn ghost" id="switch-cancel">Stay</button>
-            <button class="btn primary" id="switch-confirm">Switch to buyer</button>
-          </div>
-        </div>`;
-      document.body.appendChild(switchModalBackdrop);
-    }
+    const switchModalBackdrop = document.getElementById('switch-modal-backdrop');
 
     function showSwitchModal(targetHref) {
-      switchModalBackdrop.style.display = 'flex';
+      if (!switchModalBackdrop) return;
+      switchModalBackdrop.classList.add('show');
       const cancel = document.getElementById('switch-cancel');
       const confirm = document.getElementById('switch-confirm');
-      function hide() { switchModalBackdrop.style.display = 'none'; cancel.removeEventListener('click', onCancel); confirm.removeEventListener('click', onConfirm); }
+      
+      function hide() { 
+        switchModalBackdrop.classList.remove('show'); 
+        cancel.removeEventListener('click', onCancel); 
+        confirm.removeEventListener('click', onConfirm); 
+      }
       function onCancel() { hide(); }
       function onConfirm() { hide(); window.setMode('buyer'); if (targetHref) window.location.href = targetHref; }
+      
       cancel.addEventListener('click', onCancel);
       confirm.addEventListener('click', onConfirm);
     }
@@ -398,12 +463,47 @@
         const isDashboardPath = window.location.pathname.startsWith('/dashboard') ||
           window.location.pathname.startsWith('/dashboard-seller') ||
           window.location.pathname.startsWith('/dashboard-admin');
-        const pgTitle = document.querySelector('.pg-title');
-        const isDashboardTitle = pgTitle && /dashboard/i.test(pgTitle.textContent || '');
-        toggle.style.display = (isDashboardPath || isDashboardTitle) && window.innerWidth > 760 ? 'none' : '';
+        toggle.style.display = isDashboardPath && window.innerWidth > 760 ? 'none' : '';
       }
       updateToggleVisibility();
       window.addEventListener('resize', updateToggleVisibility);
+
+      function updateHashActive() {
+        const hash = window.location.hash;
+        document.querySelectorAll('.nav-link.buyer-only').forEach(a => {
+          const aHash = a.getAttribute('href').split('#')[1];
+          if (aHash && hash === '#' + aHash) a.classList.add('active');
+          else if (!aHash && !hash && a.getAttribute('href') === '/') a.classList.add('active');
+          else if (a.classList.contains('buyer-only')) a.classList.remove('active');
+        });
+      }
+      window.addEventListener('hashchange', updateHashActive);
+      updateHashActive();
+    }
+
+    // --- Sidebar Toggle Logic (Persistent) ---
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const STORAGE_KEY_SIDEBAR = 'campus_sidebar_collapsed';
+    
+    function setSidebarCollapsed(collapsed) {
+      if (collapsed) {
+        document.body.classList.add('sidebar-collapsed');
+      } else {
+        document.body.classList.remove('sidebar-collapsed');
+      }
+      localStorage.setItem(STORAGE_KEY_SIDEBAR, collapsed ? 'true' : 'false');
+    }
+
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+        setSidebarCollapsed(!isCollapsed);
+      });
+    }
+
+    // Initialize state from storage
+    if (localStorage.getItem(STORAGE_KEY_SIDEBAR) === 'true') {
+      document.body.classList.add('sidebar-collapsed');
     }
   });
 })();

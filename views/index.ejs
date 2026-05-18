@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Campus Marketplace — Buy &amp; Sell Student Goods</title>
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/index.css">
   <link rel="stylesheet" href="/css/rating.css">
@@ -28,9 +29,19 @@
           <p class="hero-sub">Thousands of second-hand items — from textbooks and electronics to everyday essentials.</p>
 
           <div class="search-wrap" id="search-wrap">
-            <select class="search-select" id="search-cat">
+            <select class="search-select-native" id="search-cat" aria-hidden="true" tabindex="-1">
               <option value="">All categories</option>
             </select>
+            <div class="search-cat-combobox" id="search-cat-combobox">
+              <button type="button" class="search-cat-btn" id="search-cat-btn" aria-haspopup="listbox" aria-expanded="false">
+                <span class="search-cat-icon" id="search-cat-icon">
+                  <i data-lucide="layout-grid"></i>
+                </span>
+                <span class="search-cat-label" id="search-cat-label">All categories</span>
+                <i data-lucide="chevron-down" class="search-cat-chevron"></i>
+              </button>
+              <div class="search-cat-menu" id="search-cat-menu" role="listbox"></div>
+            </div>
             <input class="search-input" type="text" id="search-input" placeholder="Search for items..." autocomplete="off">
             <button class="search-btn" onclick="handleSearch()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -104,7 +115,7 @@
           <div class="section-header fade-up">
             <div class="section-label">Featured today</div>
             <h2>Latest products</h2>
-            <p>Browse the freshest listings from your campus community</p>
+            <p>Browse the newest products from your campus community</p>
           </div>
 
           <!-- Toolbar: filters + sort -->
@@ -131,7 +142,7 @@
             </div>
           </div>
 
-          <div class="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5" id="products-grid"></div>
+          <div class="products-grid" id="products-grid"></div>
 
           <div class="load-more-wrap fade-up">
             <button class="btn-load-more" onclick="loadMore()">
@@ -197,7 +208,7 @@
               <% if (user) { %>
                 <a href="/sell" class="cta-btn cta-btn-primary">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Post a listing
+                  Post a product
                 </a>
                 <a href="#featured" class="cta-btn cta-btn-ghost">Browse instead</a>
               <% } else { %>
@@ -236,7 +247,7 @@
               <h4>Account</h4>
               <% if (user) { %>
                 <a href="/profile">My profile</a>
-                <a href="/my-products">My listings</a>
+                <a href="/my-products">My products</a>
                 <a href="/orders-buyer">My orders</a>
                 <a href="/messages">Messages</a>
               <% } else { %>
@@ -268,8 +279,11 @@
 
       <script>
 
-        // Populate search category select
-        document.getElementById('search-cat').innerHTML = '<option value="">All categories</option>' + CATEGORIES.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+        const DEFAULT_SEARCH_CATEGORY_OPTIONS = [
+          { slug: '', name: 'All categories', lucideIcon: 'layout-grid' },
+          ...CATEGORIES
+        ];
+        let SEARCH_CATEGORY_OPTIONS = [...DEFAULT_SEARCH_CATEGORY_OPTIONS];
 
         // Color theme per category (subtle pastel accents)
         const CAT_COLORS = {
@@ -301,6 +315,17 @@
         window.currentFilteredProducts = [];
         window.displayCount = 12;
         const PER_PAGE = 12;
+        const searchInput = document.getElementById('search-input');
+        const searchDropdown = document.getElementById('search-dropdown');
+        const searchWrap = document.getElementById('search-wrap');
+        const searchCatSelect = document.getElementById('search-cat');
+        const searchCatCombobox = document.getElementById('search-cat-combobox');
+        const searchCatBtn = document.getElementById('search-cat-btn');
+        const searchCatMenu = document.getElementById('search-cat-menu');
+        const searchCatLabel = document.getElementById('search-cat-label');
+        const searchCatIcon = document.getElementById('search-cat-icon');
+        let suggestActiveIdx = -1;
+        let suggestList = [];
 
         async function fetchProducts() {
           try {
@@ -316,17 +341,93 @@
               image: (p.images && p.images[0]) || null,
               icon: ICON_SVG[p.category] || ICON_SVG.other,
               seller: (p.seller && (p.seller.nickname || p.seller.name)) || 'Unknown',
+              sellerAvatar: (p.seller && p.seller.avatar) || '',
               desc: p.description || '',
               ratingAverage: p.ratingAverage || 0,
-              ratingCount: p.ratingCount || 0
+              ratingCount: p.ratingCount || 0,
+              quantity: typeof p.quantity === 'number' ? p.quantity : 1
             }));
+            buildSearchCategoryOptions(window.ALL_PRODUCTS);
             window.currentFilteredProducts = window.ALL_PRODUCTS;
             renderProducts(window.ALL_PRODUCTS);
             updateCategoryCounts();
+            renderSearchCategoryMenu();
+            setSearchCategory(searchCatSelect.value || '');
           } catch (err) {
             console.error('Error loading products:', err);
+            buildSearchCategoryOptions([]);
+            renderSearchCategoryMenu();
+            setSearchCategory(searchCatSelect.value || '');
             renderProducts([]);
           }
+        }
+
+        function decodeHtmlEntities(value) {
+          const textarea = document.createElement('textarea');
+          textarea.innerHTML = value || '';
+          return textarea.value;
+        }
+
+        function humanizeCategorySlug(slug) {
+          return String(slug || '')
+            .split('-')
+            .filter(Boolean)
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+        }
+
+        function escapeHtml(s) {
+          return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function buildSearchCategoryOptions(products = []) {
+          const knownMap = new Map(DEFAULT_SEARCH_CATEGORY_OPTIONS.map(cat => [cat.slug, { ...cat }]));
+          const counts = new Map();
+
+          products.forEach(product => {
+            const slug = String(product.category || '').trim();
+            if (!slug) return;
+            counts.set(slug, (counts.get(slug) || 0) + 1);
+            if (!knownMap.has(slug)) {
+              knownMap.set(slug, {
+                slug,
+                name: humanizeCategorySlug(slug),
+                lucideIcon: 'tag'
+              });
+            }
+          });
+
+          const baseOptions = DEFAULT_SEARCH_CATEGORY_OPTIONS.map(cat => ({
+            ...cat,
+            name: decodeHtmlEntities(cat.name),
+            count: cat.slug ? (counts.get(cat.slug) || 0) : products.length
+          }));
+
+          const extraOptions = Array.from(knownMap.values())
+            .filter(cat => cat.slug && !DEFAULT_SEARCH_CATEGORY_OPTIONS.some(defaultCat => defaultCat.slug === cat.slug))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(cat => ({
+              ...cat,
+              name: decodeHtmlEntities(cat.name),
+              count: counts.get(cat.slug) || 0
+            }));
+
+          SEARCH_CATEGORY_OPTIONS = [...baseOptions, ...extraOptions];
+
+          if (!searchCatSelect) return;
+
+          if (!SEARCH_CATEGORY_OPTIONS.some(cat => cat.slug === searchCatSelect.value)) {
+            searchCatSelect.value = '';
+          }
+
+          searchCatSelect.innerHTML = SEARCH_CATEGORY_OPTIONS.map(cat =>
+            `<option value="${cat.slug}">${escapeHtml(cat.name)}</option>`
+          ).join('');
+        }
+
+        function getCategoryDisplayName(slug) {
+          const found = SEARCH_CATEGORY_OPTIONS.find(cat => cat.slug === slug);
+          return found ? found.name : humanizeCategorySlug(slug);
         }
 
         function updateCategoryCounts() {
@@ -338,6 +439,7 @@
           });
         }
 
+        buildSearchCategoryOptions([]);
         fetchProducts();
 
         // Fade-up animation
@@ -347,11 +449,53 @@
         document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
         // ── Search + Autocomplete ─────────────────────────────────────────
-        const searchInput = document.getElementById('search-input');
-        const searchDropdown = document.getElementById('search-dropdown');
-        const searchWrap = document.getElementById('search-wrap');
-        let suggestActiveIdx = -1;
-        let suggestList = [];
+        function renderSearchCategoryMenu() {
+          searchCatMenu.innerHTML = SEARCH_CATEGORY_OPTIONS.map(cat => `
+            <button type="button" class="search-cat-option${cat.slug === searchCatSelect.value ? ' selected' : ''}" data-value="${cat.slug}" role="option" aria-selected="${cat.slug === searchCatSelect.value ? 'true' : 'false'}">
+              <span class="search-cat-option-icon"><i data-lucide="${cat.lucideIcon || 'tag'}"></i></span>
+              <span class="search-cat-option-text">
+                <span class="search-cat-option-name">${cat.name}</span>
+                <span class="search-cat-option-meta">${typeof cat.count === 'number' ? cat.count : 0} ${cat.slug ? 'products' : 'total'}</span>
+              </span>
+              <i data-lucide="check" class="search-cat-check"></i>
+            </button>
+          `).join('');
+          if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [searchCatMenu, searchCatIcon] });
+        }
+
+        function setSearchCategory(value) {
+          const cat = SEARCH_CATEGORY_OPTIONS.find(c => c.slug === value) || SEARCH_CATEGORY_OPTIONS[0];
+          searchCatSelect.value = cat.slug;
+          searchCatLabel.textContent = cat.name;
+          searchCatIcon.innerHTML = `<i data-lucide="${cat.lucideIcon || 'tag'}"></i>`;
+          renderSearchCategoryMenu();
+          if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [searchCatIcon] });
+          searchCatSelect.dispatchEvent(new Event('change'));
+        }
+
+        function closeSearchCategoryMenu() {
+          searchCatCombobox.classList.remove('open');
+          searchCatBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        function openSearchCategoryMenu() {
+          searchCatCombobox.classList.add('open');
+          searchCatBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        renderSearchCategoryMenu();
+        searchCatBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (searchCatCombobox.classList.contains('open')) closeSearchCategoryMenu();
+          else openSearchCategoryMenu();
+        });
+        searchCatMenu.addEventListener('click', e => {
+          const option = e.target.closest('.search-cat-option');
+          if (!option) return;
+          setSearchCategory(option.dataset.value || '');
+          closeSearchCategoryMenu();
+          searchInput.focus();
+        });
 
         function renderSuggestions(items) {
           suggestList = items;
@@ -371,7 +515,7 @@
                 <div class="sg-thumb">${thumb}</div>
                 <div class="sg-info">
                   <div class="sg-title">${escapeHtml(p.title)}</div>
-                  <div class="sg-meta">${CATEGORY_LABELS[p.category] || p.category} · ${formatPrice(p.price)}</div>
+                  <div class="sg-meta">${getCategoryDisplayName(p.category)} · ${formatPrice(p.price)}</div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8890B0" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
@@ -383,10 +527,6 @@
             </div>
           `;
           searchDropdown.classList.add('show');
-        }
-
-        function escapeHtml(s) {
-          return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         function updateSuggestions() {
@@ -430,6 +570,37 @@
           if (searchInput.value.trim()) updateSuggestions();
         });
 
+        searchCatBtn.addEventListener('keydown', e => {
+          if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openSearchCategoryMenu();
+            const firstOption = searchCatMenu.querySelector('.search-cat-option');
+            if (firstOption) firstOption.focus();
+          } else if (e.key === 'Escape') {
+            closeSearchCategoryMenu();
+          }
+        });
+
+        searchCatMenu.addEventListener('keydown', e => {
+          const options = Array.from(searchCatMenu.querySelectorAll('.search-cat-option'));
+          if (!options.length) return;
+          const currentIndex = options.indexOf(document.activeElement);
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, options.length - 1);
+            options[nextIndex].focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+            options[prevIndex].focus();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeSearchCategoryMenu();
+            searchCatBtn.focus();
+          }
+        });
+
         // Keyboard navigation
         searchInput.addEventListener('keydown', e => {
           const open = searchDropdown.classList.contains('show');
@@ -469,6 +640,7 @@
 
         // Close when clicking outside
         document.addEventListener('click', e => {
+          if (!searchCatCombobox.contains(e.target)) closeSearchCategoryMenu();
           if (!searchWrap.contains(e.target)) hideSuggestions();
         });
 
@@ -478,15 +650,12 @@
         });
 
         window.handleSearch = function () {
-          const q = document.getElementById('search-input').value.toLowerCase();
+          const q = document.getElementById('search-input').value.trim();
           const cat = document.getElementById('search-cat').value;
-          let filtered = window.ALL_PRODUCTS;
-          if (cat) filtered = filtered.filter(p => p.category === cat);
-          if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
-          window.currentFilteredProducts = filtered;
-          window.displayCount = PER_PAGE;
-          renderProducts(filtered);
-          document.getElementById('featured').scrollIntoView({ behavior: 'smooth' });
+          const params = new URLSearchParams();
+          if (q) params.set('q', q);
+          if (cat) params.set('category', cat);
+          window.location.href = '/search' + (params.toString() ? `?${params.toString()}` : '');
         };
 
         window.setFilter = function (btn, filter) {
@@ -543,27 +712,46 @@
             return;
           }
           const visible = products.slice(0, window.displayCount);
-          grid.innerHTML = visible.map(p =>
-            '<div class="product-card" onclick="openProduct(\'' + p.id + '\')">' +
-            '<div class="product-img-placeholder">' +
-            (p.image
-              ? '<img src="' + p.image + '" alt="' + p.title + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">'
-              : '<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.35;">' + p.icon.replace(/width="28" height="28"/, 'width="7vw" height="7vw"') + '</div>'
-            ) +
-            '</div>' +
-            '<div class="product-body">' +
-            '<div class="product-category">' + (CATEGORY_LABELS[p.category] || p.category) + '</div>' +
-            conditionLabel(p.condition) +
-            '<div class="product-name">' + p.title + '</div>' +
-            '<div class="product-rating-row" style="display:flex;align-items:center;gap:6px;margin:8px 0;">' +
-            renderStars(p.ratingAverage, 14) +
-            (p.ratingCount > 0 ? '<span class="rating-count" style="margin-left:2px">(' + p.ratingCount + ')</span>' : '<span class="rating-count" style="margin-left:2px">(No reviews)</span>') +
-            '</div>' +
-            '<div class="product-footer">' +
-            '<div class="product-price">' + formatPrice(p.price) + '</div>' +
-            '<div class="product-seller"><div class="seller-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;">' + p.seller[0] + '</div>' + p.seller + '</div>' +
-            '</div></div></div>'
-          ).join('');
+          grid.innerHTML = visible.map(p => {
+            const ratingHtml = p.ratingCount > 0 
+              ? `<span class="product-rating-row">⭐ ${p.ratingAverage.toFixed(1)} (${p.ratingCount})</span>`
+              : `<span class="product-rating-row" style="color:var(--primary); font-weight:600;">New product</span>`;
+            
+            const categoryName = getCategoryDisplayName(p.category);
+            const sellerAvatarHtml = p.sellerAvatar
+              ? `<img class="seller-avatar" src="${escapeHtml(p.sellerAvatar)}" alt="${escapeHtml(p.seller)}">`
+              : `<div class="seller-avatar" style="display:flex; align-items:center; justify-content:center; background:var(--primary-light); color:var(--primary); font-size:10px; font-weight:800;">${escapeHtml(p.seller[0].toUpperCase())}</div>`;
+
+            return `
+              <div class="product-card" onclick="openProduct('${p.id}')">
+                <div class="product-img-placeholder">
+                  ${p.image 
+                    ? `<img src="${p.image}" alt="${escapeHtml(p.title)}">`
+                    : `<div style="opacity:0.3;">${p.icon.replace(/width="28" height="28"/, 'width="48" height="48"')}</div>`
+                  }
+                  <div class="product-cta">View details →</div>
+                </div>
+                <div class="product-body">
+                  <div class="product-price">${formatPrice(p.price)}</div>
+                  <div class="product-name">${escapeHtml(p.title)}</div>
+                  <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="product-category">${categoryName}</span>
+                      <span style="color:var(--border); font-size:10px;">•</span>
+                      ${ratingHtml}
+                    </div>
+                    ${conditionLabel(p.condition)}
+                    <div style="font-size:12px;color:var(--text-3);font-weight:700;">${typeof p.quantity === 'number' ? p.quantity : 1} available</div>
+                  </div>
+                  <div class="product-footer">
+                    <div class="product-seller">
+                      ${sellerAvatarHtml}
+                      <span class="seller-name">${escapeHtml(p.seller)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+          }).join('');
 
           const loadMoreWrap = document.querySelector('.load-more-wrap');
           if (loadMoreWrap) loadMoreWrap.style.display = window.displayCount < products.length ? 'flex' : 'none';

@@ -1,11 +1,14 @@
 require('dotenv').config();
-const express      = require('express');
-const path         = require('path');
+
+const express = require('express');
+const http = require('http');
+const path = require('path');
 const cookieParser = require('cookie-parser');
 
-const connectDB    = require('./config/database');
-const passport     = require('./config/passport');
-const injectUser   = require('./middleware/locals');
+const connectDB = require('./config/database');
+const passport = require('./config/passport');
+const injectUser = require('./middleware/locals');
+const { renderNotFound, renderServerError } = require('./utils/pageResponses');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/products');
@@ -16,7 +19,6 @@ const checkoutRoutes = require('./routes/checkoutRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminApiRoutes = require('./routes/adminApi');
 const orderApiRoutes = require('./routes/orderApiRoutes');
-const orderPageRoutes = require('./routes/orderPageRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const ratingRoutes = require('./routes/ratingRoutes');
 
@@ -33,6 +35,41 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(injectUser);
+app.use((req, res, next) => {
+  const originalRender = res.render.bind(res);
+
+  res.render = (view, locals = {}, callback) => {
+    let renderLocals = locals;
+    let renderCallback = callback;
+
+    if (typeof renderLocals === 'function') {
+      renderCallback = renderLocals;
+      renderLocals = {};
+    }
+
+    if (view === '404' && res.statusCode >= 500) {
+      return originalRender('error', {
+        ...renderLocals,
+        title: 'Error - Campus Marketplace',
+        message: 'An unexpected error occurred. Please try again.',
+        isLoginPage: false,
+      }, renderCallback);
+    }
+
+    if (view === '404' && res.statusCode === 403) {
+      return originalRender('error', {
+        ...renderLocals,
+        title: 'Forbidden - Campus Marketplace',
+        message: 'You do not have permission to access this page.',
+        isLoginPage: false,
+      }, renderCallback);
+    }
+
+    return originalRender(view, renderLocals, renderCallback);
+  };
+
+  return next();
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -43,26 +80,35 @@ app.use('/api/orders', orderApiRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/checkout', orderPageRoutes);
 app.use('/', pageRoutes);
-app.use('/checkout',     checkoutRoutes);
-app.use('/admin',        adminRoutes);
-app.use('/api/admin',    adminApiRoutes);
+app.use('/checkout', checkoutRoutes);
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/wallet', require('./routes/walletRoutes'));
+app.use('/admin', adminRoutes);
+app.use('/api/admin', adminApiRoutes);
 
-app.use((req, res) => {
-  res.status(404).render('404', { title: '404 — Not Found' });
+app.use((req, res) => renderNotFound(res));
+
+app.use((err, req, res, next) => {
+  console.error('[app] unhandled error:', err);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  return renderServerError(res);
 });
 
 const PORT = process.env.PORT || 5000;
-const http = require('http');
 const server = http.createServer(app);
 
-// Initialize socket server
 try {
   const { init } = require('./utils/socketServer');
   init(server);
-} catch (e) {
-  console.error('Socket init error:', e.message);
+} catch (error) {
+  console.error('Socket init error:', error.message);
 }
 
-server.listen(PORT, () => console.log(`Server running → http://localhost:${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});

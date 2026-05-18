@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orders — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
 </head>
@@ -15,13 +16,39 @@
 
 <main class="main">
   <div class="content">
+    <header class="page-heading">
+      <div class="page-heading-copy">
+        <h1 class="page-heading-title" id="pageTitle">Seller Orders</h1>
+        <p class="page-heading-sub" id="pageSub">Manage buyer orders & fulfillment</p>
+      </div>
+    </header>
 
     <!-- ── SECTION: Orders ── -->
+      <%
+        const statusCounts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+        if (typeof orders !== 'undefined' && orders) {
+          orders.forEach(function(o) {
+            statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+          });
+        }
+      %>
       <div class="status-counters">
-        <div class="status-count-card" style="border-top-color:#d97706"><div class="sc-label">Pending</div><div class="sc-val" style="color:#d97706">2</div></div>
-        <div class="status-count-card" style="border-top-color:#2563eb"><div class="sc-label">Confirmed</div><div class="sc-val" style="color:#2563eb">3</div></div>
-        <div class="status-count-card" style="border-top-color:#16a34a"><div class="sc-label">Completed</div><div class="sc-val" style="color:#16a34a">23</div></div>
-        <div class="status-count-card" style="border-top-color:#dc2626"><div class="sc-label">Cancelled</div><div class="sc-val" style="color:#dc2626">2</div></div>
+        <div class="status-count-card">
+          <div class="sc-label">Pending</div>
+          <div class="sc-val" style="color: var(--amber);"><%= statusCounts.pending %></div>
+        </div>
+        <div class="status-count-card">
+          <div class="sc-label">Confirmed</div>
+          <div class="sc-val" style="color: var(--primary);"><%= statusCounts.confirmed %></div>
+        </div>
+        <div class="status-count-card">
+          <div class="sc-label">Completed</div>
+          <div class="sc-val" style="color: var(--green);"><%= statusCounts.completed %></div>
+        </div>
+        <div class="status-count-card">
+          <div class="sc-label">Cancelled</div>
+          <div class="sc-val" style="color: var(--red);"><%= statusCounts.cancelled %></div>
+        </div>
       </div>
       <!-- Products that have orders (owned by the current seller) -->
       <% if (typeof productsWithCounts !== 'undefined' && productsWithCounts && productsWithCounts.length) { %>
@@ -29,7 +56,7 @@
           <div class="card-head" style="margin-bottom:8px">
             <div>
               <div class="card-title">Products with orders</div>
-              <div class="card-sub">Your listings that have been ordered</div>
+              <div class="card-sub">Your products that have been ordered</div>
             </div>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -65,10 +92,10 @@
         </div>
         <table>
           <thead>
-            <tr><th>Order ID</th><th>Product</th><th>Buyer</th><th>Price</th><th>Delivery</th><th>Payment</th><th>Note</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Order ID</th><th>Product</th><th>Buyer</th><th>Qty</th><th>Price</th><th>Delivery</th><th>Payment</th><th>Note</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody id="ordersTableBody">
-            <tr><td colspan="9" class="empty">Loading orders...</td></tr>
+            <tr><td colspan="10" class="empty">Loading orders...</td></tr>
           </tbody>
         </table>
         <div class="pagination"></div>
@@ -87,7 +114,7 @@ let currentFilter = '';
 async function loadSellerOrders(page = 1) {
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="9" class="empty">Loading orders...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="10" class="empty">Loading orders...</td></tr>';
 
   try {
     const params = new URLSearchParams({ page, limit: 10, role: 'seller' });
@@ -97,12 +124,12 @@ async function loadSellerOrders(page = 1) {
     const json = await res.json();
     
     if (!json.success) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load orders.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load orders.</td></tr>';
       return;
     }
     const orders = json.data || [];
     if (!orders.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">No orders found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">No orders found.</td></tr>';
       return;
     }
     
@@ -114,9 +141,10 @@ async function loadSellerOrders(page = 1) {
           <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">${order._id.toString().slice(-8).toUpperCase()}</td>
           <td>${order.product?.title || '—'}</td>
           <td><a href="/user/${order.buyer?._id}" style="color:#1B5EFF;text-decoration:none;">${order.buyer?.nickname || order.buyer?.name || '—'}</a></td>
+          <td>${order.quantity || 1}</td>
           <td>${price}</td>
           <td style="color:var(--t2)">${order.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
-          <td style="color:var(--t2)">${order.paymentMode === 'card' ? 'Card' : 'Cash'}</td>
+          <td style="color:var(--t2)">${order.paymentMode === 'qr' ? 'QR' : (order.paymentMode === 'card' ? 'Card' : 'Cash')}</td>
           <td style="color:var(--t3);font-size:12px">${order.note || '—'}</td>
           <td><span class="badge ${statusClass}">${order.status}</span></td>
           <td>
@@ -139,7 +167,7 @@ async function loadSellerOrders(page = 1) {
     const countEl = document.querySelector('.tbl-count');
     if (countEl) countEl.textContent = `${json.pagination?.total || orders.length} orders total`;
   } catch(err) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Failed to load orders.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load orders.</td></tr>';
     console.error('Failed to fetch seller orders:', err);
   }
 }

@@ -5,210 +5,223 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Orders — Campus Marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/dashboard.css">
-  <link rel="stylesheet" href="/css/orders.css">
-  <link rel="stylesheet" href="/css/rating.css">
   <style>
     .order-card {
       display: flex;
-      gap: 16px;
-      padding: 16px;
+      gap: 24px;
+      padding: 24px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 12px;
-      background: var(--bg1);
-      transition: all 0.2s ease;
+      border-top: 4px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
     .order-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 2px 8px rgba(27, 94, 255, 0.1);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .order-card[data-status="pending"] { border-top-color: var(--amber); }
+    .order-card[data-status="confirmed"] { border-top-color: var(--primary); }
+    .order-card[data-status="completed"] { border-top-color: var(--green); }
+    .order-card[data-status="cancelled"] { border-top-color: var(--red); }
+    .order-card-image-wrap {
+      width: 120px;
+      height: 120px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
     }
     .order-card-image {
-      width: 100px;
-      height: 100px;
-      border-radius: 6px;
-      object-fit: cover;
-      background: var(--bg2);
-      flex-shrink: 0;
-    }
-    .order-card-content {
-      flex: 1;
-      min-width: 0;
-    }
-    .order-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-    }
-    .order-card-title {
-      font-weight: 700;
-      font-size: 14px;
-      color: var(--t1);
-      max-width: 400px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .order-card-id {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--t3);
-      margin-top: 4px;
-    }
-    .order-card-details {
-      display: flex;
-      gap: 24px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .order-detail-item {
-      font-size: 13px;
-      color: var(--t2);
-    }
-    .order-detail-label {
-      color: var(--t3);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
-    .order-detail-value {
-      font-weight: 600;
-      color: var(--t1);
-      font-size: 13px;
-    }
-    .order-seller {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-    }
-    .order-seller-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .order-seller-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .order-seller-name {
-      color: var(--t1);
-      font-weight: 600;
+
+    .order-grid {
+      display: grid;
+      grid-template-columns: 1fr 180px 180px 140px;
+      gap: 24px;
+      flex: 1;
+      min-width: 0;
     }
-    .order-card-footer {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 12px;
-      flex-wrap: wrap;
+    @media (max-width: 1200px) {
+      .order-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
     }
-    .order-actions {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-      flex-wrap: wrap;
+    @media (max-width: 768px) {
+      .order-grid {
+        grid-template-columns: 1fr;
+      }
     }
-    .btn-track {
-      padding: 8px 16px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+
+    .order-col-header {
+      font-size: var(--fs-xs);
+      font-weight: 800;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .order-title {
+      font-weight: 800;
+      font-size: var(--fs-base);
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.4;
+      display: block;
       text-decoration: none;
+    }
+    .order-title:hover {
+      color: var(--primary);
+    }
+    .order-id {
+      font-family: 'DM Mono', monospace;
+      font-size: var(--fs-xs);
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    .order-meta-text {
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .order-seller-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .order-seller-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    .order-seller-name {
+      font-size: var(--fs-sm);
+      font-weight: 700;
+      color: var(--text-2);
+    }
+
+    .order-price {
+      font-size: var(--fs-lg);
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      background: var(--surface-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .badge-pending {
+      background: #FFF7ED; color: #D97706; border: 1px solid rgba(217, 119, 6, 0.12);
+    }
+    .badge-confirmed {
+      background: #EFF6FF; color: #2563EB; border: 1px solid rgba(37, 99, 235, 0.12);
+    }
+    .badge-completed {
+      background: #ECFDF5; color: #059669; border: 1px solid rgba(5, 150, 105, 0.12);
+    }
+    .badge-cancelled {
+      background: #FEF2F2; color: #DC2626; border: 1px solid rgba(220, 38, 38, 0.12);
+    }
+
+    .order-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-track {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: var(--fs-xs);
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.2s;
     }
     .btn-track:hover {
       background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(27, 94, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(29, 106, 229, 0.2);
     }
     .btn-cancel {
-      padding: 8px 16px;
-      background: var(--bg2);
-      color: var(--t1);
+      background: var(--surface-2);
+      color: var(--text-2);
+      padding: 8px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: var(--fs-xs);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
     .btn-cancel:hover {
-      background: var(--danger);
-      color: white;
-      border-color: var(--danger);
+      background: var(--red-light);
+      color: var(--red);
+      border-color: var(--red);
     }
-    .btn-cancel:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .badge {
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .badge-pending {
-      background: rgba(217, 119, 6, 0.1);
-      color: #d97706;
-    }
-    .badge-confirmed {
-      background: rgba(37, 99, 235, 0.1);
-      color: #2563eb;
-    }
-    .badge-completed {
-      background: rgba(22, 163, 74, 0.1);
-      color: #16a34a;
-    }
-    .badge-cancelled {
-      background: rgba(220, 38, 38, 0.1);
-      color: #dc2626;
-    }
+
     .status-counters {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
     }
     .status-count-card {
-      padding: 16px;
+      padding: 24px;
       border: 1px solid var(--border);
-      border-top: 3px solid;
-      border-radius: 8px;
-      background: var(--bg1);
-      text-align: center;
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+      text-align: left;
+    }
+    .status-count-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
     }
     .sc-label {
-      font-size: 12px;
-      color: var(--t2);
+      font-size: var(--fs-xs);
+      font-weight: 800;
+      color: var(--text-3);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
     }
     .sc-val {
-      font-size: 28px;
-      font-weight: 700;
+      font-size: var(--fs-3xl);
+      font-weight: 800;
+      line-height: 1.1;
     }
+
     .filter-pills {
       display: flex;
       gap: 8px;
@@ -216,15 +229,15 @@
       flex-wrap: wrap;
     }
     .f-pill {
-      padding: 8px 14px;
+      padding: 8px 18px;
       border: 1px solid var(--border);
-      background: transparent;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
+      background: var(--surface);
+      border-radius: 999px;
+      font-size: var(--fs-xs);
+      font-weight: 700;
       cursor: pointer;
-      color: var(--t2);
-      transition: all 0.2s ease;
+      color: var(--text-2);
+      transition: all 0.2s;
     }
     .f-pill:hover {
       border-color: var(--primary);
@@ -232,23 +245,14 @@
     }
     .f-pill.on {
       background: var(--primary);
-      color: white;
+      color: #fff;
       border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(29, 106, 229, 0.25);
     }
+
     .empty-state {
       text-align: center;
-      padding: 48px 24px;
-      color: var(--t2);
-    }
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-    .empty-state-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--t1);
-      margin-bottom: 8px;
+      padding: 60px 20px;
     }
   </style>
 </head>
@@ -258,29 +262,28 @@
 
 <main class="main">
   <div class="content">
-    <!-- ── SECTION: Buyer Orders ── -->
-    <div style="margin-bottom: 24px">
-      <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px">My Orders</h1>
-      <p style="color: var(--t2); font-size: 14px">Track and manage your purchases</p>
+    <div style="margin-bottom: 32px">
+      <h1 style="font-size: 32px; font-weight: 900; color: var(--t1); letter-spacing: -0.03em; margin-bottom: 8px">My Orders</h1>
+      <p style="color: var(--t3); font-size: 15px; font-weight: 500;">Track and manage your purchases</p>
     </div>
 
     <!-- Status counters -->
     <div class="status-counters">
-      <div class="status-count-card" style="border-top-color:#d97706">
+      <div class="status-count-card">
         <div class="sc-label">Pending</div>
-        <div class="sc-val" style="color:#d97706"><%= typeof statusCounts !== 'undefined' ? statusCounts.pending : 0 %></div>
+        <div class="sc-val" style="color: var(--amber);"><%= typeof statusCounts !== 'undefined' ? statusCounts.pending : 0 %></div>
       </div>
-      <div class="status-count-card" style="border-top-color:#2563eb">
+      <div class="status-count-card">
         <div class="sc-label">Confirmed</div>
-        <div class="sc-val" style="color:#2563eb"><%= typeof statusCounts !== 'undefined' ? statusCounts.confirmed : 0 %></div>
+        <div class="sc-val" style="color: var(--primary);"><%= typeof statusCounts !== 'undefined' ? statusCounts.confirmed : 0 %></div>
       </div>
-      <div class="status-count-card" style="border-top-color:#16a34a">
+      <div class="status-count-card">
         <div class="sc-label">Completed</div>
-        <div class="sc-val" style="color:#16a34a"><%= typeof statusCounts !== 'undefined' ? statusCounts.completed : 0 %></div>
+        <div class="sc-val" style="color: var(--green);"><%= typeof statusCounts !== 'undefined' ? statusCounts.completed : 0 %></div>
       </div>
-      <div class="status-count-card" style="border-top-color:#dc2626">
+      <div class="status-count-card">
         <div class="sc-label">Cancelled</div>
-        <div class="sc-val" style="color:#dc2626"><%= typeof statusCounts !== 'undefined' ? statusCounts.cancelled : 0 %></div>
+        <div class="sc-val" style="color: var(--red);"><%= typeof statusCounts !== 'undefined' ? statusCounts.cancelled : 0 %></div>
       </div>
     </div>
 
@@ -293,101 +296,85 @@
       <button class="f-pill" data-status="cancelled">Cancelled</button>
     </div>
 
-    <!-- Orders list -->
-    <div style="margin-top: 24px">
+    <div style="margin-top: 32px">
       <% if (!orders || !orders.length) { %>
-        <div class="card" style="padding: 32px">
-          <div class="empty-state" style="text-align:center;padding:24px 12px;">
-            <div class="empty-state-icon"><i data-lucide="package" style="width:56px;height:56px;margin:0 auto 12px;stroke:#8890B0;"></i></div>
-            <div class="empty-state-title" style="font-size:18px;font-weight:700;color:#0D0F1A;margin-bottom:6px;">No orders yet</div>
-            <p style="color:#8890B0;margin-bottom:18px;">Discover great deals from fellow students and place your first order.</p>
-            <a href="/" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1B5EFF,#5B8AFF);color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:600;box-shadow:0 4px 12px rgba(27,94,255,0.25);">
-              <i data-lucide="search" style="width:16px;height:16px;"></i> Browse products
-            </a>
-          </div>
+        <div class="card empty-state">
+          <i data-lucide="package" style="width:64px;height:64px;margin:0 auto 20px;stroke:var(--t3);opacity:0.5;"></i>
+          <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;">No orders yet</h3>
+          <p style="color:var(--t3);margin-bottom:24px;">Discover great deals and place your first order.</p>
+          <a href="/" class="btn-track" style="display:inline-flex; padding: 12px 24px;">Browse products</a>
         </div>
       <% } else { %>
         <div id="ordersList">
           <% orders.forEach(function(order){ %>
             <div class="order-card" data-order-id="<%= order._id %>" data-status="<%= order.status %>">
-              <div>
+              <div class="order-card-image-wrap">
                 <% if (order.product && order.product.images && order.product.images.length) { %>
                   <img src="<%= order.product.images[0] %>" alt="Product" class="order-card-image" />
                 <% } else { %>
-                  <div class="order-card-image" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--t2);font-weight:700">P</div>
+                  <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--t3);font-weight:800;font-size:24px;">P</div>
                 <% } %>
               </div>
               
-              <div class="order-card-content">
-                <div class="order-card-header">
-                  <div>
-                    <div class="order-card-title"><%= order.product && order.product.title ? order.product.title : 'Product' %></div>
-                    <div class="order-card-id">Order #<%= String(order._id).substring(0, 8).toUpperCase() %></div>
-                  </div>
-                  <span class="badge <%= 'badge-' + (order.status === 'pending' ? 'pending' : (order.status === 'confirmed' ? 'confirmed' : (order.status === 'completed' ? 'completed' : (order.status === 'cancelled' ? 'cancelled' : 'pending')))) %>">
-                    <%= order.status %>
-                  </span>
-                </div>
-
-                <div class="order-card-details">
-                  <div class="order-detail-item">
-                    <div class="order-detail-label">Seller</div>
-                    <div class="order-seller">
-                      <div class="order-seller-avatar">
-                        <% if (order.seller && order.seller.avatar) { %>
-                          <img src="<%= order.seller.avatar %>" alt="<%= order.seller.name %>" />
-                        <% } else { %>
-                          <%= (order.seller && order.seller.name) ? order.seller.name.charAt(0).toUpperCase() : 'S' %>
-                        <% } %>
-                      </div>
-                      <span class="order-seller-name">
-                        <%= order.seller && order.seller.nickname ? order.seller.nickname : (order.seller && order.seller.name ? order.seller.name : 'Unknown') %>
-                      </span>
-                      <div style="display:flex;align-items:center;gap:2px;margin-top:2px">
-                        <%- renderStars(order.seller.rating || 5, 10) %>
-                        <span style="font-size:11px;font-weight:600"><%= (order.seller.rating || 5).toFixed(1) %></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="order-detail-item">
-                    <div class="order-detail-label">Price</div>
-                    <div class="order-detail-value">
-                      <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || (order.product && order.product.price) || 0) %>
-                    </div>
-                  </div>
-
-                  <div class="order-detail-item">
-                    <div class="order-detail-label">Delivery</div>
-                    <div class="order-detail-value">
-                      <%= order.deliveryMode === 'ship' ? 'Shipping' : 'Pickup' %>
-                    </div>
-                  </div>
-
-                  <div class="order-detail-item">
-                    <div class="order-detail-label">Payment</div>
-                    <div class="order-detail-value">
-                      <%= order.paymentMode === 'card' ? 'Card' : 'Cash' %>
-                    </div>
-                  </div>
-
-                  <div class="order-detail-item">
-                    <div class="order-detail-label">Ordered</div>
-                    <div class="order-detail-value">
-                      <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                    </div>
+              <div class="order-grid">
+                <!-- Group 1: Product -->
+                <div>
+                  <div class="order-col-header">Product Info</div>
+                  <a href="/products/<%= order.product?._id %>" class="order-title"><%= order.product?.title || 'Untitled Product' %></a>
+                  <div class="order-id">#<%= String(order._id).substring(0, 8).toUpperCase() %></div>
+                  <div class="order-meta-text" style="color:var(--t3); margin-top:8px;">
+                    <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
                   </div>
                 </div>
 
-                <div class="order-card-footer">
-                  <div class="order-actions">
-                    <a href="/orders/tracking/<%= order._id %>" class="btn-track">
-                      <i data-lucide="map-pin" style="width:14px;height:14px;"></i> Track Order
-                    </a>
-                    <% if (order.status === 'pending') { %>
-                      <button class="btn-cancel" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
-                    <% } %>
+                <!-- Group 2: Seller -->
+                <div>
+                  <div class="order-col-header">Seller</div>
+                  <div class="order-seller-info">
+                    <div class="order-seller-avatar">
+                      <% if (order.seller?.avatar) { %>
+                        <img src="<%= order.seller.avatar %>" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
+                      <% } else { %>
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; background:var(--primary-light); color:var(--primary);">
+                          <%= (order.seller?.name || 'S')[0].toUpperCase() %>
+                        </div>
+                      <% } %>
+                    </div>
+                    <div class="order-seller-name"><%= order.seller?.nickname || order.seller?.name || 'Unknown' %></div>
                   </div>
+                  <div style="display:flex; align-items:center; gap:6px; margin-top:8px; color:#fbbf24;">
+                    <i data-lucide="star" style="width:14px; height:14px; fill:currentColor;"></i>
+                    <span style="font-size:13px; font-weight:800; color:var(--t2);"><%= (order.seller?.rating || 5).toFixed(1) %></span>
+                  </div>
+                </div>
+
+                <!-- Group 3: Transaction -->
+                <div>
+                  <div class="order-col-header">Transaction</div>
+                  <div class="order-price">
+                    <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || order.product?.price || 0) %>
+                  </div>
+                  <div class="order-meta-text">
+                    <span style="opacity:0.6;font-weight:500;">qty</span> <%= order.quantity || 1 %>
+                  </div>
+                  <div class="order-meta-text">
+                    <span style="opacity:0.6;font-weight:500;">via</span> <%= order.paymentMode === 'qr' ? 'QR Transfer' : (order.paymentMode === 'card' ? 'Card' : 'Cash') %>
+                  </div>
+                  <div class="order-meta-text" style="color:var(--success); margin-top:4px;">
+                    <%= order.deliveryMode === 'ship' ? '🚚 Shipping' : '📍 Pickup' %>
+                  </div>
+                </div>
+
+                <!-- Group 4: Actions -->
+                <div class="order-actions">
+                  <div class="order-col-header">Status</div>
+                  <div style="margin-bottom:12px;">
+                    <span class="badge <%= 'badge-' + (order.status || 'pending') %>"><%= order.status %></span>
+                  </div>
+                  <a href="/orders/tracking/<%= order._id %>" class="btn-track">Track Order</a>
+                  <% if (order.status === 'pending') { %>
+                    <button class="btn-cancel" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -395,7 +382,6 @@
         </div>
       <% } %>
     </div>
-
   </div>
 </main>
 
@@ -404,15 +390,10 @@
   document.querySelectorAll('.f-pill').forEach(pill => {
     pill.addEventListener('click', function() {
       const status = this.dataset.status;
-      
-      // Update active pill
       document.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
       this.classList.add('on');
-
-      // Filter orders
       const ordersList = document.getElementById('ordersList');
       if (!ordersList) return;
-
       const cards = ordersList.querySelectorAll('.order-card');
       cards.forEach(card => {
         if (status === 'all' || card.dataset.status === status) {
@@ -424,8 +405,8 @@
     });
   });
 
-  // Cancel order function
   async function cancelOrder(orderId) {
+    if (typeof showConfirm !== 'function') return;
     const confirmed = await showConfirm({
       title: 'Cancel Order',
       message: 'Are you sure you want to cancel this order?',
@@ -433,30 +414,23 @@
       type: 'danger'
     });
     if (!confirmed) return;
-
     try {
-      const response = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })
       });
-
-      const data = await response.json();
-
+      const data = await res.json();
       if (data.success) {
-        showToast('Order cancelled successfully', 'ok');
-        setTimeout(() => location.reload(), 1000);
+        if (typeof showToast === 'function') showToast('Order cancelled', 'ok');
+        setTimeout(() => location.reload(), 800);
       } else {
-        showToast(data.message || 'Failed to cancel order', 'err');
+        if (typeof showToast === 'function') showToast(data.message || 'Failed', 'err');
       }
-    } catch (error) {
-      console.error('Cancel order error:', error);
-      showToast(error.message, 'err');
+    } catch (e) {
+      if (typeof showToast === 'function') showToast('Error', 'err');
     }
   }
 </script>
-
 </body>
 </html>
