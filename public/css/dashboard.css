@@ -1301,14 +1301,6 @@ tbody a:hover {
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .main {
-    margin-left: 0;
-  }
-
   .content {
     padding-left: 16px;
     padding-right: 16px;

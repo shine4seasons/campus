@@ -15,6 +15,7 @@ Program date baseline: 2026-05-22
 2. `docs/validation-coverage-matrix.md` for `KPI-VAL-01`.
 3. API error contract checks (`app.js` global mapper + targeted controller audit) for `KPI-ERR-01`.
 4. Concurrency/idempotency checklist + test evidence for `KPI-DB-01`.
+5. `docs/perf-endpoint-matrix.example.json` + `scripts/benchmark-p95.js` meaningful-run checks for authenticated `PERF-201` measurements.
 
 ## Daily update template
 

@@ -485,19 +485,19 @@
             createElement('div', { className: 'product-price', text: formatPrice(product.price) }),
             createElement('div', { className: 'product-name', text: product.title }),
             createElement('div', {
-              style: { display: 'flex', flexDirection: 'column', gap: '4px' },
+              className: 'product-meta-stack',
               children: [
                 createElement('div', {
-                  style: { display: 'flex', alignItems: 'center', gap: '8px' },
+                  className: 'product-meta-row',
                   children: [
                     createElement('span', { className: 'product-category', text: product.categoryName }),
-                    createElement('span', { style: { color: 'var(--border)', fontSize: '10px' }, text: '•' }),
+                    createElement('span', { className: 'product-meta-dot', text: '•' }),
                     ratingNode
                   ]
                 }),
                 createConditionPill(product.condition),
                 createElement('div', {
-                  style: { fontSize: '12px', color: 'var(--text-3)', fontWeight: '700' },
+                  className: 'product-stock',
                   text: `${typeof product.quantity === 'number' ? product.quantity : 1} available`
                 })
               ]

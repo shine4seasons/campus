@@ -10,6 +10,10 @@ function findConversationByParticipants(buyerId, sellerId) {
   return Conversation.findOne({ participants: { $all: [buyerId, sellerId] } });
 }
 
+function findConversationByIdForUser(conversationId, userId) {
+  return Conversation.findOne({ _id: conversationId, participants: userId });
+}
+
 function createConversation({ buyerId, sellerId, productId }) {
   return Conversation.create({
     participants: [buyerId, sellerId],
@@ -40,6 +44,17 @@ function findMessagesByConversationId(conversationId) {
     .lean();
 }
 
+async function countUnreadMessagesByConversationIds({ conversationIds, userId }) {
+  if (!conversationIds.length) return {};
+
+  const counts = await Message.aggregate([
+    { $match: { conversationId: { $in: conversationIds }, isRead: false, sender: { $ne: userId } } },
+    { $group: { _id: '$conversationId', count: { $sum: 1 } } },
+  ]).catch(() => []);
+
+  return Object.fromEntries(counts.map((item) => [String(item._id), item.count]));
+}
+
 function markMessagesAsRead({ conversationId, userId }) {
   return Message.updateMany(
     { conversationId, sender: { $ne: userId }, isRead: false },
@@ -64,10 +79,12 @@ function findMessageByIdWithSender(messageId) {
 module.exports = {
   findProductById,
   findConversationByParticipants,
+  findConversationByIdForUser,
   createConversation,
   countConversationsForUser,
   findConversationsForUser,
   findMessagesByConversationId,
+  countUnreadMessagesByConversationIds,
   markMessagesAsRead,
   createMessage,
   findMessageByIdWithSender

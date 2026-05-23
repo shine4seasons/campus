@@ -12,6 +12,11 @@ Status: In progress
    - supports optional explicit status allowlist checks
 2. `scripts/collect-runtime-evidence.js` default concurrency args now include explicit error-rate expectation.
 3. `scripts/test-hardening-controls.js` now includes DB-201 checks for runtime harness safety guards.
+4. `scripts/verify-concurrency-invariants.js` now verifies seeded post-run data invariants for:
+   - `order-create`
+   - `payment-paid`
+   - `payout-refund`
+5. `scripts/collect-runtime-evidence.js` can now persist a `concurrency-invariants-*.json` artifact when `EVIDENCE_VERIFY_ARGS` is provided.
 
 ## Verification in current local environment
 
@@ -27,4 +32,4 @@ This is expected in current local context and is now correctly reported as failu
    - payment replay/idempotency
    - payout reject refund replay
    - wallet payout threshold races
-2. Need persisted post-run invariant checks in evidence artifacts.
+2. Need final runtime executions that produce non-empty invariant artifacts against a reachable app + DB.

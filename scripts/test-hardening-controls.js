@@ -160,6 +160,8 @@ function runSecurityEndpointRateLimitChecks() {
 
 function runDbRuntimeHarnessChecks() {
   const runtime = read('scripts/test-concurrency-runtime.js');
+  const verifier = read('scripts/verify-concurrency-invariants.js');
+  const collector = read('scripts/collect-runtime-evidence.js');
   check(
     'DB-201 runtime harness detects unreachable target',
     runtime.includes('unreachable_target_or_all_requests_failed')
@@ -172,6 +174,37 @@ function runDbRuntimeHarnessChecks() {
     'DB-201 runtime harness supports status allowlist',
     runtime.includes('allowStatuses') && runtime.includes('disallowed_status_observed')
   );
+  check(
+    'DB-201 invariant verifier covers key scenarios',
+    includesAll(verifier, ['order-create', 'payment-paid', 'payout-refund', 'PAYMENT_PAID:', 'PAYOUT_REJECT_REFUND:'])
+  );
+  check(
+    'DB-201 runtime evidence collector persists invariant artifacts',
+    includesAll(collector, ['EVIDENCE_VERIFY_ARGS', 'verify-concurrency-invariants.js', 'concurrency-invariants-'])
+  );
+}
+
+function runPerformanceHarnessChecks() {
+  const benchmark = read('scripts/benchmark-p95.js');
+  const budgets = read('scripts/evaluate-p95-budgets.js');
+  check(
+    'PERF-201 benchmark supports endpoint matrix overrides',
+    includesAll(benchmark, ['BENCH_ENDPOINT_MATRIX_JSON', 'BENCH_ENDPOINT_MATRIX_FILE', 'successP95', 'authOnlyStatuses', 'disallowedStatuses'])
+  );
+  const matrixRenderer = read('scripts/render-perf-matrix.js');
+  const localRunner = read('scripts/run-local-perf-benchmark.js');
+  check(
+    'PERF-201 matrix renderer exists for local authenticated runs',
+    includesAll(matrixRenderer, ['BENCH_BUYER_COOKIE', 'BENCH_ADMIN_COOKIE', '/api/admin/reports', 'perf-endpoint-matrix.local.json'])
+  );
+  check(
+    'PERF-201 local orchestrator exists',
+    includesAll(localRunner, ['render-perf-matrix.js', 'benchmark-p95.js', 'evaluate-p95-budgets.js', 'BENCH_BASELINE_ARTIFACT'])
+  );
+  check(
+    'PERF-201 budget evaluator rejects non-meaningful runs',
+    includesAll(budgets, ['auth_only_responses', 'disallowed_status_observed', 'successP95', 'meaningful'])
+  );
 }
 
 function main() {
@@ -181,6 +214,7 @@ function main() {
   runApiContractChecks();
   runSecurityEndpointRateLimitChecks();
   runDbRuntimeHarnessChecks();
+  runPerformanceHarnessChecks();
 
   if (failed > 0) {
     console.error(`\nHardening controls test failed: ${failed} check(s) failed.`);

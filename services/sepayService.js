@@ -1,9 +1,13 @@
 const axios = require('axios');
+const http = require('http');
+const https = require('https');
 
 const SEPAY_BASE_URL = (process.env.SEPAY_API_URL || 'https://userapi.sepay.vn/v2').replace(/\/+$/, '');
 const SEPAY_API_KEY = process.env.SEPAY_API_KEY;
 const SEPAY_QR_ACC = process.env.SEPAY_QR_ACC || process.env.SEPAY_ACCOUNT_NUMBER;
 const SEPAY_QR_BANK = process.env.SEPAY_QR_BANK || process.env.SEPAY_BANK_CODE || 'BIDV';
+const SEPAY_TIMEOUT_MS = Number.parseInt(process.env.SEPAY_TIMEOUT_MS || '', 10) || 10000;
+const SEPAY_TX_CACHE_TTL_MS = Number.parseInt(process.env.SEPAY_TX_CACHE_TTL_MS || '', 10) || 5000;
 
 const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
 const suppressMissingKeyWarn = process.env.SEPAY_SUPPRESS_WARN === '1';
@@ -17,12 +21,13 @@ const sepayClient = axios.create({
     Authorization: `Bearer ${SEPAY_API_KEY}`,
     'Content-Type': 'application/json'
   },
-  timeout: 10000
+  timeout: SEPAY_TIMEOUT_MS,
+  httpAgent: new http.Agent({ keepAlive: true }),
+  httpsAgent: new https.Agent({ keepAlive: true })
 });
 
-const TX_CACHE_TTL_MS = 5000;
 let txCache = { at: 0, key: '', data: [] };
-let txInFlight = null;
+const txInFlightByKey = new Map();
 
 const formatError = (action, err) => {
   if (err.response && err.response.data) {
@@ -90,24 +95,25 @@ exports.getRecentTransactions = async (page = 1, perPage = 100) => {
 exports.getRecentTransactionsCached = async (page = 1, perPage = 100) => {
   const key = `${page}:${perPage}`;
   const now = Date.now();
-  if (txCache.key === key && now - txCache.at < TX_CACHE_TTL_MS) {
+  if (txCache.key === key && now - txCache.at < SEPAY_TX_CACHE_TTL_MS) {
     return txCache.data;
   }
 
-  if (txInFlight) {
-    return txInFlight;
+  if (txInFlightByKey.has(key)) {
+    return txInFlightByKey.get(key);
   }
 
-  txInFlight = exports.getRecentTransactions(page, perPage)
+  const pending = exports.getRecentTransactions(page, perPage)
     .then((data) => {
       txCache = { at: Date.now(), key, data };
       return data;
     })
     .finally(() => {
-      txInFlight = null;
+      txInFlightByKey.delete(key);
     });
 
-  return txInFlight;
+  txInFlightByKey.set(key, pending);
+  return pending;
 };
 
 exports.findMatchingTransaction = (payment, transactions) => {

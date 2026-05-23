@@ -1,5 +1,6 @@
 const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
 const pageRepository = require('../repositories/pageRepository');
+const pageService = require('../services/pageService');
 
 const { incrementViews } = require('../utils/viewCounter');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR, LIMITS, ERROR_MESSAGES } = require('../config/pageConstants');
@@ -239,49 +240,18 @@ exports.getUserProfile = async (req, res, next) => {
  * /dashboard-seller: For all authenticated users
  */
 exports.getDashboard = async (req, res, next) => {
-  const user = res.locals.user;
-  if (!user) return res.redirect('/login');
-
-  // If accessed via /dashboard (not /dashboard-seller), show admin dashboard
-  // The /dashboard route has requireAdminPage middleware, so only admins reach here
-  if (req.path === '/dashboard' || req.baseUrl === '/dashboard') {
-    try {
-      // Fetch data for admin dashboard (consistent with adminRoutes.js)
-      const { stats, topSellers } = await pageRepository.getAdminDashboardSnapshot();
-
-      return res.render(VIEWS.DASHBOARD_ADMIN, {
-        title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-        isLoginPage: false,
-        CATEGORIES,
-        isSuperAdmin: user.role === 'admin',
-        stats,
-        topSellers,
-        initialSection: 'aDash'
-      });
-    } catch (err) {
-      console.error('Admin dashboard error:', err.message);
-      return next(err);
-    }
-  }
-
-  // Seller dashboard logic: Fetch stats for initial render
   try {
-    const sellerId = user._id;
-
-    const { stats, wallet, recentRatings } = await pageRepository.getSellerDashboardSnapshot(sellerId);
-
-    return res.render(VIEWS.DASHBOARD_SELLER, {
-      title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-      isLoginPage: false,
-      isSeller: user.role === 'seller',
-      stats,
-      wallet,
-      recentRatings,
-      activePage: 'dashboard'
+    const viewModel = await pageService.getDashboardViewModel({
+      user: res.locals.user,
+      path: req.path,
+      baseUrl: req.baseUrl
     });
-
+    if (viewModel.redirectTo) {
+      return res.redirect(viewModel.redirectTo);
+    }
+    return res.render(viewModel.view, viewModel.locals);
   } catch (error) {
-    console.error('Seller dashboard error:', error.message);
+    console.error('Dashboard page error:', error.message);
     return next(error);
   }
 };
@@ -291,21 +261,8 @@ exports.getDashboard = async (req, res, next) => {
  */
 exports.getSellerOrders = async (req, res, next) => {
   try {
-    const sellerId = res.locals.user._id;
-
-    // Get orders with populated data
-    const orders = await pageRepository.findSellerOrders(sellerId);
-
-    // Get product order counts
-    const productsWithCounts = await pageRepository.getProductOrderCounts(sellerId);
-
-    res.render(VIEWS.ORDERS_SELLER, {
-      title: `Orders${TITLE_SEPARATOR}${APP_NAME}`,
-      orders,
-      productsWithCounts,
-      isLoginPage: false,
-      activePage: 'seller-orders'
-    });
+    const viewModel = await pageService.getSellerOrdersViewModel(res.locals.user._id);
+    res.render(VIEWS.ORDERS_SELLER, viewModel);
   } catch (error) {
     console.error('Seller orders page error:', error.message);
     return next(error);
@@ -333,30 +290,8 @@ exports.getRevenue = async (req, res, next) => {
  */
 exports.getBuyerOrders = async (req, res, next) => {
   try {
-    const buyerId = res.locals.user._id;
-
-    // Get orders with populated data
-    const orders = await pageRepository.findBuyerOrders(buyerId);
-
-    // Count orders by status
-    const statusCounts = {
-      [ORDER_STATUS.PENDING]: 0,
-      [ORDER_STATUS.CONFIRMED]: 0,
-      [ORDER_STATUS.COMPLETED]: 0,
-      [ORDER_STATUS.CANCELLED]: 0
-    };
-
-    orders.forEach(order => {
-      statusCounts[order.status]++;
-    });
-
-    res.render(VIEWS.ORDERS_BUYER, {
-      title: `My Orders${TITLE_SEPARATOR}${APP_NAME}`,
-      orders,
-      statusCounts,
-      isLoginPage: false,
-      activePage: 'orders'
-    });
+    const viewModel = await pageService.getBuyerOrdersViewModel(res.locals.user._id);
+    res.render(VIEWS.ORDERS_BUYER, viewModel);
   } catch (error) {
     console.error('Buyer orders page error:', error.message);
     return next(error);
@@ -368,50 +303,25 @@ exports.getBuyerOrders = async (req, res, next) => {
  */
 exports.getOrderTracking = async (req, res, next) => {
   try {
-    const orderId = req.params.orderId;
-    const userId = res.locals.user._id;
-
-    // Validate order ID format
-    if (!orderId || !orderId.match(/^[0-9a-fA-F]{24}$/)) {
+    const viewModel = await pageService.getOrderTrackingViewModel({
+      orderId: req.params.orderId,
+      actor: res.locals.user
+    });
+    res.render(VIEWS.ORDER_TRACKING, viewModel);
+  } catch (error) {
+    console.error('Order tracking page error:', error.message);
+    if (error.status === 404) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',
         isLoginPage: false
       });
     }
-
-    const order = await pageRepository.findOrderTrackingDetail(orderId);
-    const payment = await pageRepository.findLatestPaymentForOrder(orderId);
-
-    if (!order) {
-      return res.status(404).render(VIEWS.NOT_FOUND, {
-        title: '404 — Not Found',
-        isLoginPage: false
-      });
-    }
-
-    // Check authorization - only buyer, seller, or admin can view order details
-    const isBuyer = String(order.buyer._id) === String(userId);
-    const isSeller = String(order.seller._id) === String(userId);
-    const isAdmin = res.locals.user.role === 'admin';
-
-    if (!isBuyer && !isSeller && !isAdmin) {
+    if (error.status === 403) {
       return res.status(403).render(VIEWS.NOT_FOUND, {
         title: 'Forbidden',
         isLoginPage: false
       });
     }
-
-    res.render(VIEWS.ORDER_TRACKING, {
-      title: `Order Tracking${TITLE_SEPARATOR}${APP_NAME}`,
-      order,
-      payment,
-      isBuyer,
-      isSeller,
-      isLoginPage: false,
-      activePage: 'orders'
-    });
-  } catch (error) {
-    console.error('Order tracking page error:', error.message);
     return next(error);
   }
 };

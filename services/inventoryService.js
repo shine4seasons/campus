@@ -1,30 +1,28 @@
-const Product = require('../models/Product');
-const User = require('../models/User');
 const { PRODUCT_STATUS } = require('../config/appConstants');
 const logger = require('../utils/logger');
+const productRepository = require('../repositories/productRepository');
+const userRepository = require('../repositories/userRepository');
 
 async function releaseProductForOrder(order, { session } = {}) {
   const quantity = order?.quantity || 1;
   const updateOptions = session ? { session } : {};
 
-  await Product.findByIdAndUpdate(
-    order.product,
-    {
-      $inc: { quantity },
-      $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
-    },
-    updateOptions
-  );
+  await productRepository.restoreProductReservation({
+    productId: order.product,
+    quantity,
+    activeStatus: PRODUCT_STATUS.ACTIVE,
+    options: updateOptions
+  });
 
   const settled = await Promise.allSettled([
-    User.findByIdAndUpdate(
+    userRepository.incrementUserById(
       order.seller,
-      { $inc: { totalSales: -quantity } },
+      { totalSales: -quantity },
       updateOptions
     ),
-    User.findByIdAndUpdate(
+    userRepository.incrementUserById(
       order.buyer,
-      { $inc: { totalOrders: -1 } },
+      { totalOrders: -1 },
       updateOptions
     )
   ]);

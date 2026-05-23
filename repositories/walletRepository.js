@@ -17,6 +17,18 @@ function createWalletTransaction(data, session = null) {
   return transaction.save({ session });
 }
 
+function createWalletTransactions(entries, session = null) {
+  return WalletTransaction.create(entries, session ? { session } : undefined);
+}
+
+function upsertWalletForUser(userId, update, options = {}) {
+  return Wallet.findOneAndUpdate(
+    { user: userId },
+    update,
+    { new: true, upsert: true, ...options }
+  );
+}
+
 function findTransactionsByWallet(walletId, limit = 50) {
   return WalletTransaction.find({ wallet: walletId })
     .sort('-createdAt')
@@ -34,6 +46,8 @@ module.exports = {
   findWalletByUser,
   createPayoutRequest,
   createWalletTransaction,
+  createWalletTransactions,
+  upsertWalletForUser,
   findTransactionsByWallet,
   findPayoutRequestsByUser
 };

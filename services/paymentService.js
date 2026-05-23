@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
-const Payment = require('../models/Payment');
-const Order = require('../models/Order');
-const Wallet = require('../models/Wallet');
-const WalletTransaction = require('../models/WalletTransaction');
 const { ORDER_STATUS, PAYMENT_STATUS, USER_ROLES } = require('../config/appConstants');
 const { sendNotification } = require('../utils/notifService');
 const sepayService = require('./sepayService');
 const { releaseProductForOrder } = require('./inventoryService');
 const logger = require('../utils/logger');
+const paymentRepository = require('../repositories/paymentRepository');
+const orderRepository = require('../repositories/orderRepository');
+const walletRepository = require('../repositories/walletRepository');
 
 class DomainError extends Error {
   constructor(status, message, payload) {
@@ -20,21 +19,11 @@ class DomainError extends Error {
 
 async function cancelOrderAndRestoreStock(orderId) {
   const now = new Date();
-  const order = await Order.findOneAndUpdate(
-    { _id: orderId, status: { $ne: ORDER_STATUS.CANCELLED } },
-    {
-      $set: { status: ORDER_STATUS.CANCELLED, cancelledAt: now },
-      $push: {
-        timeline: {
-          event: ORDER_STATUS.CANCELLED,
-          actor: null,
-          at: now,
-          note: 'Payment session expired'
-        }
-      }
-    },
-    { new: true }
-  );
+  const order = await orderRepository.cancelOrderIfNotCancelled({
+    orderId,
+    now,
+    note: 'Payment session expired'
+  });
   if (!order) return;
   await releaseProductForOrder(order);
 }
@@ -55,51 +44,37 @@ async function processPaidPayment({
       };
       if (bankTransactionId) paymentSet.bankTransactionId = bankTransactionId;
 
-      const payment = await Payment.findOneAndUpdate(
-        { _id: paymentId, status: PAYMENT_STATUS.PENDING },
-        { $set: paymentSet },
-        { new: true, session }
-      );
+      const payment = await paymentRepository.markPaymentPaid({
+        paymentId,
+        paymentSet,
+        session
+      });
 
       if (!payment) {
         result.alreadyProcessed = true;
         return;
       }
 
-      const order = await Order.findByIdAndUpdate(
-        payment.order,
-        {
-          $set: { status: ORDER_STATUS.PENDING },
-          $push: {
-            timeline: {
-              event: ORDER_STATUS.PENDING,
-              actor: null,
-              at: new Date(),
-              note: paidNote
-            }
-          }
-        },
-        { new: true, session }
-      );
+      const order = await orderRepository.updateOrderAfterPayment({
+        orderId: payment.order,
+        paidNote,
+        session
+      });
 
       if (!order) {
         throw new DomainError(404, 'Order not found for payment');
       }
 
-      const wallet = await Wallet.findOneAndUpdate(
-        { user: payment.seller },
-        {
-          $inc: { pendingBalance: payment.amount },
-          $setOnInsert: {
-            user: payment.seller,
-            availableBalance: 0,
-            totalSales: 0
-          }
-        },
-        { new: true, upsert: true, session }
-      );
+      const wallet = await walletRepository.upsertWalletForUser(payment.seller, {
+        $inc: { pendingBalance: payment.amount },
+        $setOnInsert: {
+          user: payment.seller,
+          availableBalance: 0,
+          totalSales: 0
+        }
+      }, { session });
 
-      await WalletTransaction.create([{
+      await walletRepository.createWalletTransactions([{
         wallet: wallet._id,
         user: payment.seller,
         type: 'DEPOSIT',
@@ -109,7 +84,7 @@ async function processPaidPayment({
         referenceId: order._id,
         referenceType: 'Order',
         idempotencyKey: `PAYMENT_PAID:${payment._id}`
-      }], { session });
+      }], session);
 
       result.payment = payment;
       result.order = order;
@@ -122,7 +97,7 @@ async function processPaidPayment({
 }
 
 exports.getPaymentStatus = async function getPaymentStatus({ paymentId, buyerId }) {
-  const payment = await Payment.findOne({ _id: paymentId, buyer: buyerId });
+  const payment = await paymentRepository.findBuyerPaymentById(paymentId, buyerId);
   if (!payment) throw new DomainError(404, 'Payment not found');
 
   const status = payment.status === PAYMENT_STATUS.PENDING && new Date() > payment.expiredAt
@@ -137,7 +112,7 @@ exports.webhook = async function webhook({ paymentCode, amount, status }) {
     throw new DomainError(400, 'Ignored status');
   }
 
-  const payment = await Payment.findOne({ paymentCode });
+  const payment = await paymentRepository.findPaymentByCode(paymentCode);
   if (!payment) throw new DomainError(404, 'Payment not found');
 
   if (!Number.isFinite(normalizedAmount) || payment.amount !== normalizedAmount) {
@@ -168,10 +143,7 @@ exports.webhook = async function webhook({ paymentCode, amount, status }) {
 };
 
 exports.checkPaymentViaSePay = async function checkPaymentViaSePay({ paymentId, actor }) {
-  const payment = await Payment.findById(paymentId)
-    .populate('order')
-    .populate('buyer', 'name nickname avatar email')
-    .populate('seller', 'name nickname avatar email');
+  const payment = await paymentRepository.findPaymentWithRelationsById(paymentId);
 
   if (!payment) {
     throw new DomainError(404, 'Payment not found', {
@@ -198,10 +170,7 @@ exports.checkPaymentViaSePay = async function checkPaymentViaSePay({ paymentId, 
   }
 
   if (new Date() > payment.expiredAt) {
-    await Payment.updateOne(
-      { _id: payment._id, status: PAYMENT_STATUS.PENDING },
-      { $set: { status: PAYMENT_STATUS.EXPIRED } }
-    );
+    await paymentRepository.markPaymentExpired(payment._id);
 
     if (payment.order) {
       await cancelOrderAndRestoreStock(payment.order._id);
@@ -223,10 +192,7 @@ exports.checkPaymentViaSePay = async function checkPaymentViaSePay({ paymentId, 
     return { success: true, status: PAYMENT_STATUS.PENDING, message: 'Waiting for payment...' };
   }
 
-  const isDuplicate = await Payment.findOne({
-    bankTransactionId: matchedTransaction.id,
-    _id: { $ne: paymentId }
-  });
+  const isDuplicate = await paymentRepository.findDuplicateBankTransaction(matchedTransaction.id, paymentId);
 
   if (isDuplicate) {
     logger.warn('payment.sepay_tx_duplicate', { transactionId: matchedTransaction.id, paymentId: String(paymentId) });
@@ -248,7 +214,7 @@ exports.checkPaymentViaSePay = async function checkPaymentViaSePay({ paymentId, 
   }
 
   if (processed.alreadyProcessed) {
-    const latest = await Payment.findById(payment._id).select('status paidAt').lean();
+    const latest = await paymentRepository.findPaymentStatusSnapshot(payment._id);
     return {
       success: true,
       status: latest?.status || PAYMENT_STATUS.PAID,

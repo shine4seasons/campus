@@ -82,6 +82,99 @@ function findProductByIdWithSeller(productId) {
     .lean();
 }
 
+function findProductById(productId) {
+  return Product.findById(productId);
+}
+
+function findProductOwnershipSnapshot(productId) {
+  return Product.findById(productId).select('seller status quantity price title').lean();
+}
+
+function claimActiveStock({ productId, buyerId, quantity, soldStatus, activeStatus }) {
+  return Product.findOneAndUpdate(
+    {
+      _id: productId,
+      status: activeStatus,
+      seller: { $ne: buyerId },
+      $or: [
+        { quantity: { $gte: quantity } },
+        ...(quantity === 1 ? [{ quantity: { $exists: false } }] : [])
+      ]
+    },
+    [
+      {
+        $set: {
+          quantity: { $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] },
+          status: {
+            $cond: [
+              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
+              soldStatus,
+              activeStatus
+            ]
+          },
+          buyer: {
+            $cond: [
+              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
+              buyerId,
+              '$buyer'
+            ]
+          },
+          soldAt: {
+            $cond: [
+              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
+              new Date(),
+              '$soldAt'
+            ]
+          }
+        }
+      }
+    ],
+    { new: true }
+  );
+}
+
+function reclaimReservedProduct({ productId, buyerId, quantity, activeStatus, soldStatus }) {
+  return Product.findOneAndUpdate(
+    { _id: productId, status: activeStatus, quantity: { $gte: quantity } },
+    [
+      {
+        $set: {
+          quantity: { $subtract: ['$quantity', quantity] },
+          status: {
+            $cond: [
+              { $lte: [{ $subtract: ['$quantity', quantity] }, 0] },
+              soldStatus,
+              activeStatus
+            ]
+          },
+          buyer: {
+            $cond: [
+              { $lte: [{ $subtract: ['$quantity', quantity] }, 0] },
+              buyerId,
+              '$buyer'
+            ]
+          },
+          soldAt: {
+            $cond: [
+              { $lte: [{ $subtract: ['$quantity', quantity] }, 0] },
+              new Date(),
+              '$soldAt'
+            ]
+          }
+        }
+      }
+    ],
+    { new: true }
+  );
+}
+
+function restoreProductReservation({ productId, quantity, activeStatus, options = {} }) {
+  return Product.findByIdAndUpdate(productId, {
+    $inc: { quantity: quantity || 1 },
+    $set: { status: activeStatus, buyer: null, soldAt: null }
+  }, options);
+}
+
 function createProductForSeller({ sellerId, payload }) {
   return Product.create({
     ...payload,
@@ -145,6 +238,10 @@ async function findFavoritesForUser({ userId, page = 1, limit = 12 }) {
   };
 }
 
+function findFavoriteUserIdsByProductId(productId) {
+  return Favorite.find({ product: productId }).select('user').lean();
+}
+
 async function findFavoriteIdsForUser(userId) {
   const favorites = await Favorite.find({ user: userId }).select('product').lean();
   return favorites.map((favorite) => String(favorite.product));
@@ -155,6 +252,11 @@ module.exports = {
   buildActiveProductFilter,
   findProductsForFeed,
   findProductByIdWithSeller,
+  findProductById,
+  findProductOwnershipSnapshot,
+  claimActiveStock,
+  reclaimReservedProduct,
+  restoreProductReservation,
   createProductForSeller,
   incrementSellerSalesPlaceholder,
   incrementSellerSales,
@@ -164,5 +266,6 @@ module.exports = {
   createFavorite,
   updateInterestedCount,
   findFavoritesForUser,
-  findFavoriteIdsForUser
+  findFavoriteIdsForUser,
+  findFavoriteUserIdsByProductId
 };

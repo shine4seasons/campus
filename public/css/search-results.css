@@ -7,7 +7,7 @@
 }
 
 body.sidebar-collapsed .search-page {
-  margin-left: 84px;
+  margin-left: 0;
 }
 
 .search-hero {
@@ -165,6 +165,7 @@ body.sidebar-collapsed .search-page {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .search-summary {
@@ -203,6 +204,14 @@ body.sidebar-collapsed .search-page {
 
 .search-products-grid .product-card {
   text-decoration: none;
+  min-width: 0;
+}
+
+.search-products-grid .product-body,
+.search-products-grid .product-seller,
+.search-products-grid .seller-name,
+.search-card-meta {
+  min-width: 0;
 }
 
 .search-card-fallback {
@@ -311,9 +320,20 @@ body.sidebar-collapsed .search-page {
   pointer-events: none;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .search-products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .search-hero-inner,
+  .search-results-section {
+    width: min(100%, calc(100% - 8px));
+  }
+
+  .search-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -335,9 +355,40 @@ body.sidebar-collapsed .search-page {
   .search-hero-inner {
     grid-template-columns: 1fr;
   }
+}
 
-  .search-products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 760px) {
+  .search-copy,
+  .search-panel {
+    border-radius: 22px;
+  }
+
+  .search-copy {
+    padding: 22px 20px;
+  }
+
+  .search-panel {
+    padding: 18px;
+  }
+
+  .search-results-toolbar,
+  .search-summary,
+  .search-pagination {
+    align-items: flex-start;
+  }
+
+  .search-pagination {
+    justify-content: stretch;
+  }
+
+  .page-link,
+  .page-status {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .page-status {
+    text-align: left;
   }
 }
 
@@ -353,6 +404,15 @@ body.sidebar-collapsed .search-page {
 
   .search-products-grid {
     grid-template-columns: 1fr;
+  }
+
+  .search-active-filters {
+    gap: 8px;
+  }
+
+  .search-chip {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .search-pagination {

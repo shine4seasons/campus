@@ -1134,6 +1134,10 @@ body.has-sidebar {
   border: none;
 }
 
+.sb-mobile-toggle[hidden] {
+  display: none !important;
+}
+
 .sb-mobile-toggle svg {
   width: 20px;
   height: 20px;
@@ -1150,10 +1154,17 @@ body.has-sidebar {
     display: flex;
   }
 
+  .tb-toggle-sidebar {
+    display: none;
+  }
+
   .sidebar {
     transform: translateX(-110%);
     transition: transform 0.28s ease;
     display: flex;
+    width: min(86vw, 320px);
+    max-width: calc(100vw - 24px);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
   }
 
   body.sb-open {
@@ -1191,7 +1202,7 @@ body.has-sidebar {
   body.has-sidebar .page-wrap,
   body.has-sidebar .detail-layout,
   body.has-sidebar .form-layout {
-    margin-left: 0;
+    margin-left: 0 !important;
   }
 }
 

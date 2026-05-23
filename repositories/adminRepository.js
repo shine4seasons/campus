@@ -59,6 +59,10 @@ function updateUserBanStatus(userId, banned) {
   return User.findByIdAndUpdate(userId, { $set: { banned: !!banned } }, { new: true }).lean();
 }
 
+function findActiveUserIds() {
+  return User.find({ banned: { $ne: true } }).select('_id').lean();
+}
+
 async function findAdminOrders({ status, page = 1, limit = 25 }) {
   const filter = {};
   if (status) filter.status = status;
@@ -529,6 +533,7 @@ module.exports = {
   PAYOUT_STATUS,
   findAdminUsers,
   updateUserBanStatus,
+  findActiveUserIds,
   findAdminOrders,
   findAdminProducts,
   getAdminStatsSummary,

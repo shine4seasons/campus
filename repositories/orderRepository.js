@@ -112,6 +112,69 @@ function findOrderForDispute(orderId) {
   return Order.findById(orderId);
 }
 
+function createOrder(data) {
+  return Order.create(data);
+}
+
+function findOrderById(orderId) {
+  return Order.findById(orderId);
+}
+
+function linkConversation(orderId, conversationId) {
+  return Order.findByIdAndUpdate(orderId, { conversation: conversationId });
+}
+
+function deleteOrderById(orderId) {
+  return Order.findByIdAndDelete(orderId);
+}
+
+function updateOrderStatusWithTimeline({ orderId, prevStatus, setFields, timeline }) {
+  return Order.findOneAndUpdate(
+    { _id: orderId, status: prevStatus },
+    {
+      $set: setFields,
+      $push: { timeline }
+    },
+    { new: true }
+  );
+}
+
+function cancelOrderIfNotCancelled({ orderId, now, note }) {
+  return Order.findOneAndUpdate(
+    { _id: orderId, status: { $ne: ORDER_STATUS.CANCELLED } },
+    {
+      $set: { status: ORDER_STATUS.CANCELLED, cancelledAt: now },
+      $push: {
+        timeline: {
+          event: ORDER_STATUS.CANCELLED,
+          actor: null,
+          at: now,
+          note
+        }
+      }
+    },
+    { new: true }
+  );
+}
+
+function updateOrderAfterPayment({ orderId, paidNote, session }) {
+  return Order.findByIdAndUpdate(
+    orderId,
+    {
+      $set: { status: ORDER_STATUS.PENDING },
+      $push: {
+        timeline: {
+          event: ORDER_STATUS.PENDING,
+          actor: null,
+          at: new Date(),
+          note: paidNote
+        }
+      }
+    },
+    { new: true, session }
+  );
+}
+
 function openDisputeOnOrder({ orderId, dispute, actorId, note }) {
   const now = dispute.openedAt;
   return Order.findOneAndUpdate(
@@ -194,6 +257,13 @@ module.exports = {
   findOrderDetailById,
   getOrderAnalyticsForUser,
   findOrderForDispute,
+  createOrder,
+  findOrderById,
+  linkConversation,
+  deleteOrderById,
+  updateOrderStatusWithTimeline,
+  cancelOrderIfNotCancelled,
+  updateOrderAfterPayment,
   openDisputeOnOrder,
   resolveDisputeOnOrder,
   findDisputes

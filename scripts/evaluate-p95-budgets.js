@@ -42,19 +42,34 @@ function evaluateRun(tag, run) {
         pass: false,
         reason: 'missing_endpoint',
         p95: null,
+        successP95: null,
         errorRate: 1,
         budget: limit
       };
     }
-    const p95Ok = Number.isFinite(row.p95) && row.p95 <= limit.p95Ms;
+    const targetP95 = Number.isFinite(row.successP95) ? row.successP95 : row.p95;
+    const p95Ok = Number.isFinite(targetP95) && targetP95 <= limit.p95Ms;
     const errorRate = rate(Number(row.errors || 0), Number(row.samples || 0));
     const errorOk = errorRate <= limit.maxErrorRate;
+    const meaningfulOk = row.meaningful !== false;
+    let reason = 'ok';
+    if (!meaningfulOk) {
+      if (row.authOnlyStatuses) reason = 'auth_only_responses';
+      else if (Array.isArray(row.disallowedStatuses) && row.disallowedStatuses.length > 0) reason = 'disallowed_status_observed';
+      else reason = 'no_success_samples';
+    } else if (!p95Ok) {
+      reason = 'p95_budget_exceeded';
+    } else if (!errorOk) {
+      reason = 'error_budget_exceeded';
+    }
     return {
       endpoint,
-      pass: p95Ok && errorOk,
-      reason: p95Ok && errorOk ? 'ok' : (!p95Ok ? 'p95_budget_exceeded' : 'error_budget_exceeded'),
+      pass: p95Ok && errorOk && meaningfulOk,
+      reason,
       p95: row.p95,
+      successP95: row.successP95 ?? null,
       errorRate,
+      meaningful: meaningfulOk,
       budget: limit
     };
   });
@@ -97,7 +112,7 @@ function writeOutputs(baselinePath, currentPath, baselineEval, currentEval) {
     ''
   ];
   currentEval.checks.forEach((c) => {
-    lines.push(`- ${c.endpoint}: pass=${c.pass}, p95=${c.p95}, errorRate=${formatPct(c.errorRate)}, budget(p95<=${c.budget.p95Ms}, error<=${formatPct(c.budget.maxErrorRate)})`);
+    lines.push(`- ${c.endpoint}: pass=${c.pass}, reason=${c.reason}, p95=${c.p95}, successP95=${c.successP95}, errorRate=${formatPct(c.errorRate)}, meaningful=${c.meaningful}, budget(p95<=${c.budget.p95Ms}, error<=${formatPct(c.budget.maxErrorRate)})`);
   });
   fs.writeFileSync(mdOut, `${lines.join('\n')}\n`, 'utf8');
 

@@ -4,7 +4,7 @@
     sbInitials = user.name.split(' ').map(function(n){ return n[0]; }).slice(0,2).join('').toUpperCase();
   }
 %>
-<aside class="sidebar glass">
+<aside class="sidebar glass" id="sb-sidebar">
   
 
 
@@ -215,7 +215,7 @@
 </div>
 
 <!-- Mobile toggle & backdrop -->
-<button id="sb-mobile-toggle" class="sb-mobile-toggle" aria-label="Toggle sidebar">
+<button id="sb-mobile-toggle" class="sb-mobile-toggle" aria-label="Toggle sidebar" aria-controls="sb-sidebar" aria-expanded="false" type="button">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
@@ -453,59 +453,119 @@
       }, true);
     }
 
-    // Mobile toggle
     const toggle = document.getElementById('sb-mobile-toggle');
     const backdrop = document.getElementById('sb-backdrop');
-    if (toggle) {
-      toggle.addEventListener('click', () => document.body.classList.toggle('sb-open'));
-      if (backdrop) backdrop.addEventListener('click', () => document.body.classList.remove('sb-open'));
-
-      function updateToggleVisibility() {
-        const isDashboardPath = window.location.pathname.startsWith('/dashboard') ||
-          window.location.pathname.startsWith('/dashboard-seller') ||
-          window.location.pathname.startsWith('/dashboard-admin');
-        toggle.style.display = isDashboardPath && window.innerWidth > 760 ? 'none' : '';
-      }
-      updateToggleVisibility();
-      window.addEventListener('resize', updateToggleVisibility);
-
-      function updateHashActive() {
-        const hash = window.location.hash;
-        document.querySelectorAll('.nav-link.buyer-only').forEach(a => {
-          const aHash = a.getAttribute('href').split('#')[1];
-          if (aHash && hash === '#' + aHash) a.classList.add('active');
-          else if (!aHash && !hash && a.getAttribute('href') === '/') a.classList.add('active');
-          else if (a.classList.contains('buyer-only')) a.classList.remove('active');
-        });
-      }
-      window.addEventListener('hashchange', updateHashActive);
-      updateHashActive();
-    }
-
-    // --- Sidebar Toggle Logic (Persistent) ---
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const STORAGE_KEY_SIDEBAR = 'campus_sidebar_collapsed';
-    
-    function setSidebarCollapsed(collapsed) {
-      if (collapsed) {
-        document.body.classList.add('sidebar-collapsed');
-      } else {
-        document.body.classList.remove('sidebar-collapsed');
+    const MOBILE_SIDEBAR_BREAKPOINT = 900;
+
+    function isMobileSidebarViewport() {
+      return window.innerWidth <= MOBILE_SIDEBAR_BREAKPOINT;
+    }
+
+    function syncSidebarToggleState() {
+      const isDrawerOpen = document.body.classList.contains('sb-open');
+      const isDesktopCollapsed = document.body.classList.contains('sidebar-collapsed');
+
+      if (toggle) {
+        toggle.hidden = !isMobileSidebarViewport();
+        toggle.setAttribute('aria-expanded', String(isDrawerOpen));
+        toggle.setAttribute('aria-label', isDrawerOpen ? 'Close sidebar' : 'Open sidebar');
       }
+
+      if (sidebarToggle) {
+        const isExpanded = isMobileSidebarViewport() ? isDrawerOpen : !isDesktopCollapsed;
+        const sidebarActionLabel = isMobileSidebarViewport()
+          ? (isDrawerOpen ? 'Close sidebar' : 'Open sidebar')
+          : (isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        sidebarToggle.setAttribute('aria-expanded', String(isExpanded));
+        sidebarToggle.setAttribute('aria-label', sidebarActionLabel);
+        sidebarToggle.setAttribute('title', sidebarActionLabel);
+      }
+    }
+
+    function openMobileSidebar() {
+      if (!isMobileSidebarViewport()) return;
+      document.body.classList.add('sb-open');
+      syncSidebarToggleState();
+    }
+
+    function closeMobileSidebar() {
+      document.body.classList.remove('sb-open');
+      syncSidebarToggleState();
+    }
+
+    function setSidebarCollapsed(collapsed) {
+      if (isMobileSidebarViewport()) {
+        if (collapsed) closeMobileSidebar();
+        else openMobileSidebar();
+        return;
+      }
+
+      document.body.classList.toggle('sidebar-collapsed', collapsed);
       localStorage.setItem(STORAGE_KEY_SIDEBAR, collapsed ? 'true' : 'false');
+      syncSidebarToggleState();
+    }
+
+    function applySidebarStateForViewport() {
+      if (isMobileSidebarViewport()) {
+        document.body.classList.remove('sidebar-collapsed');
+      } else {
+        closeMobileSidebar();
+        document.body.classList.toggle('sidebar-collapsed', localStorage.getItem(STORAGE_KEY_SIDEBAR) === 'true');
+      }
+      syncSidebarToggleState();
+    }
+
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        if (document.body.classList.contains('sb-open')) closeMobileSidebar();
+        else openMobileSidebar();
+      });
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener('click', closeMobileSidebar);
     }
 
     if (sidebarToggle) {
       sidebarToggle.addEventListener('click', () => {
+        if (isMobileSidebarViewport()) {
+          if (document.body.classList.contains('sb-open')) closeMobileSidebar();
+          else openMobileSidebar();
+          return;
+        }
+
         const isCollapsed = document.body.classList.contains('sidebar-collapsed');
         setSidebarCollapsed(!isCollapsed);
       });
     }
 
-    // Initialize state from storage
-    if (localStorage.getItem(STORAGE_KEY_SIDEBAR) === 'true') {
-      document.body.classList.add('sidebar-collapsed');
+    function updateHashActive() {
+      const hash = window.location.hash;
+      document.querySelectorAll('.nav-link.buyer-only').forEach(a => {
+        const aHash = a.getAttribute('href').split('#')[1];
+        if (aHash && hash === '#' + aHash) a.classList.add('active');
+        else if (!aHash && !hash && a.getAttribute('href') === '/') a.classList.add('active');
+        else if (a.classList.contains('buyer-only')) a.classList.remove('active');
+      });
     }
+
+    window.addEventListener('hashchange', updateHashActive);
+    updateHashActive();
+
+    document.addEventListener('click', (e) => {
+      const sidebarAction = e.target.closest && e.target.closest('.sidebar a, .sidebar .nav-item');
+      if (!sidebarAction || !isMobileSidebarViewport()) return;
+      closeMobileSidebar();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMobileSidebar();
+    });
+
+    window.addEventListener('resize', applySidebarStateForViewport);
+    applySidebarStateForViewport();
   });
 })();
 </script>

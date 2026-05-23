@@ -1,0 +1,47 @@
+{
+  "/api/products": {
+    "method": "GET",
+    "allowStatuses": [
+      "200"
+    ],
+    "successStatuses": [
+      "200"
+    ]
+  },
+  "/api/chat": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<buyer_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": [
+      "200"
+    ],
+    "successStatuses": [
+      "200"
+    ]
+  },
+  "/api/orders": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<buyer_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": [
+      "200"
+    ],
+    "successStatuses": [
+      "200"
+    ]
+  },
+  "/api/admin/reports": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<admin_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": [
+      "200"
+    ],
+    "successStatuses": [
+      "200"
+    ]
+  }
+}

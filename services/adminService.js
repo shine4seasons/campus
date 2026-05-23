@@ -1,6 +1,6 @@
-const User = require('../models/User');
 const { sendNotification } = require('../utils/notifService');
 const { NOTIFICATION_TYPES } = require('../config/appConstants');
+const adminRepository = require('../repositories/adminRepository');
 
 const BATCH_SIZE = 100;
 
@@ -8,7 +8,7 @@ async function broadcastSystemAnnouncement({ senderId, message }) {
   const announcement = String(message || '').trim();
   if (!announcement) return { recipients: 0 };
 
-  const users = await User.find({ banned: { $ne: true } }).select('_id').lean();
+  const users = await adminRepository.findActiveUserIds();
   if (users.length === 0) return { recipients: 0 };
 
   for (let i = 0; i < users.length; i += BATCH_SIZE) {

@@ -1,11 +1,3 @@
-const Order = require('../models/Order');
-const Product = require('../models/Product');
-const User = require('../models/User');
-const Message = require('../models/Message');
-const Payment = require('../models/Payment');
-const Wallet = require('../models/Wallet');
-const WalletTransaction = require('../models/WalletTransaction');
-
 const { findOrCreateConversation } = require('../controllers/chat/conversation');
 const {
   ORDER_STATUS,
@@ -21,6 +13,12 @@ const {
 const sepayService = require('./sepayService');
 const { releaseProductForOrder } = require('./inventoryService');
 const logger = require('../utils/logger');
+const orderRepository = require('../repositories/orderRepository');
+const productRepository = require('../repositories/productRepository');
+const paymentRepository = require('../repositories/paymentRepository');
+const walletRepository = require('../repositories/walletRepository');
+const chatRepository = require('../repositories/chatRepository');
+const userRepository = require('../repositories/userRepository');
 
 class DomainError extends Error {
   constructor(status, message) {
@@ -54,8 +52,8 @@ function normalizeCreateOrderInput(dto = {}) {
 
 async function adjustCounters({ sellerId, buyerId, quantityDelta, orderDelta }) {
   const settled = await Promise.allSettled([
-    User.findByIdAndUpdate(sellerId, { $inc: { totalSales: quantityDelta } }),
-    User.findByIdAndUpdate(buyerId, { $inc: { totalOrders: orderDelta } })
+    userRepository.incrementUserById(sellerId, { totalSales: quantityDelta }),
+    userRepository.incrementUserById(buyerId, { totalOrders: orderDelta })
   ]);
   settled
     .filter((r) => r.status === 'rejected')
@@ -69,46 +67,13 @@ async function adjustCounters({ sellerId, buyerId, quantityDelta, orderDelta }) 
 }
 
 async function claimStock({ productId, buyerId, quantity }) {
-  return Product.findOneAndUpdate(
-    {
-      _id: productId,
-      status: PRODUCT_STATUS.ACTIVE,
-      seller: { $ne: buyerId },
-      $or: [
-        { quantity: { $gte: quantity } },
-        ...(quantity === 1 ? [{ quantity: { $exists: false } }] : [])
-      ]
-    },
-    [
-      {
-        $set: {
-          quantity: { $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] },
-          status: {
-            $cond: [
-              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
-              PRODUCT_STATUS.SOLD,
-              PRODUCT_STATUS.ACTIVE
-            ]
-          },
-          buyer: {
-            $cond: [
-              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
-              buyerId,
-              '$buyer'
-            ]
-          },
-          soldAt: {
-            $cond: [
-              { $lte: [{ $subtract: [{ $ifNull: ['$quantity', 1] }, quantity] }, 0] },
-              new Date(),
-              '$soldAt'
-            ]
-          }
-        }
-      }
-    ],
-    { new: true }
-  );
+  return productRepository.claimActiveStock({
+    productId,
+    buyerId,
+    quantity,
+    soldStatus: PRODUCT_STATUS.SOLD,
+    activeStatus: PRODUCT_STATUS.ACTIVE
+  });
 }
 
 async function restoreOrderStockByOrder(orderLikeDoc) {
@@ -117,38 +82,13 @@ async function restoreOrderStockByOrder(orderLikeDoc) {
 
 async function reclaimOrderStockByOrder(orderLikeDoc) {
   const quantityToReserve = orderLikeDoc.quantity || 1;
-  const reclaimedProduct = await Product.findOneAndUpdate(
-    { _id: orderLikeDoc.product, status: PRODUCT_STATUS.ACTIVE, quantity: { $gte: quantityToReserve } },
-    [
-      {
-        $set: {
-          quantity: { $subtract: ['$quantity', quantityToReserve] },
-          status: {
-            $cond: [
-              { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
-              PRODUCT_STATUS.SOLD,
-              PRODUCT_STATUS.ACTIVE
-            ]
-          },
-          buyer: {
-            $cond: [
-              { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
-              orderLikeDoc.buyer,
-              '$buyer'
-            ]
-          },
-          soldAt: {
-            $cond: [
-              { $lte: [{ $subtract: ['$quantity', quantityToReserve] }, 0] },
-              new Date(),
-              '$soldAt'
-            ]
-          }
-        }
-      }
-    ],
-    { new: true }
-  );
+  const reclaimedProduct = await productRepository.reclaimReservedProduct({
+    productId: orderLikeDoc.product,
+    buyerId: orderLikeDoc.buyer,
+    quantity: quantityToReserve,
+    activeStatus: PRODUCT_STATUS.ACTIVE,
+    soldStatus: PRODUCT_STATUS.SOLD
+  });
 
   if (!reclaimedProduct) {
     throw new DomainError(409, 'Not enough quantity available to reopen this order');
@@ -180,7 +120,7 @@ async function createSePayPayment({ order, buyerId, sellerId, orderTotal }) {
       expiredAt: new Date(Date.now() + 15 * 60000)
     };
     if (sepayPayment.sepayPaymentId) paymentData.sepayPaymentId = sepayPayment.sepayPaymentId;
-    return Payment.create(paymentData);
+    return paymentRepository.createPayment(paymentData);
   } catch (err) {
     throw new DomainError(503, `Cannot create SePay QR: ${err.message}`);
   }
@@ -204,10 +144,11 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
       payText +
       (note.trim() ? `\nNote: ${note.trim()}` : '');
 
-    const msg = await Message.create({
+    const msg = await chatRepository.createMessage({
       conversationId: conv._id,
       sender: buyerId,
       text: autoMsg,
+      imageUrl: null,
       isRead: false
     });
 
@@ -215,7 +156,7 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
       const { getIO } = require('../utils/socketServer');
       const io = getIO();
       if (io) {
-        const populatedMsg = await Message.findById(msg._id).populate('sender', 'name nickname avatar').lean();
+        const populatedMsg = await chatRepository.findMessageByIdWithSender(msg._id);
         io.to(`conv_${String(conv._id)}`).emit('message', populatedMsg);
       }
     } catch (e) {
@@ -225,7 +166,7 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
     conv.lastMessage = `New order - ${product.title}`;
     conv.updatedAt = new Date();
     await conv.save();
-    await Order.findByIdAndUpdate(order._id, { conversation: conv._id });
+    await orderRepository.linkConversation(order._id, conv._id);
 
     const { sendNotification } = require('../utils/notifService');
     await sendNotification({
@@ -247,8 +188,8 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
 async function rollbackCreateOrder({ order, claimedProduct, quantity }) {
   if (order) {
     try {
-      await Payment.deleteMany({ order: order._id });
-      await Order.findByIdAndDelete(order._id);
+      await paymentRepository.deletePaymentsByOrder(order._id);
+      await orderRepository.deleteOrderById(order._id);
     } catch (cleanupErr) {
       console.error('[checkout] order cleanup failed:', cleanupErr.message);
     }
@@ -256,9 +197,10 @@ async function rollbackCreateOrder({ order, claimedProduct, quantity }) {
 
   if (claimedProduct) {
     try {
-      await Product.findByIdAndUpdate(claimedProduct._id, {
-        $inc: { quantity: order?.quantity || quantity || 1 },
-        $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
+      await productRepository.restoreProductReservation({
+        productId: claimedProduct._id,
+        quantity: order?.quantity || quantity || 1,
+        activeStatus: PRODUCT_STATUS.ACTIVE
       });
     } catch (rollbackErr) {
       console.error('[checkout] rollback failed:', rollbackErr);
@@ -297,7 +239,7 @@ exports.createOrder = async function createOrder({ buyer, dto }) {
     });
 
     if (!claimedProduct) {
-      const existing = await Product.findById(normalized.productId).select('seller status quantity').lean();
+      const existing = await productRepository.findProductOwnershipSnapshot(normalized.productId);
       if (!existing) throw new DomainError(404, 'Product not found');
       if (String(existing.seller) === String(buyerId)) throw new DomainError(400, 'You cannot purchase your own product');
       if ((existing.quantity || 0) < normalized.quantity) throw new DomainError(409, 'Not enough quantity available');
@@ -309,7 +251,7 @@ exports.createOrder = async function createOrder({ buyer, dto }) {
     const isQrPayment = normalized.paymentMode === 'qr';
     const initialStatus = isQrPayment ? ORDER_STATUS.PENDING_PAYMENT : ORDER_STATUS.PENDING;
 
-    order = await Order.create({
+    order = await orderRepository.createOrder({
       product: normalized.productId,
       buyer: buyerId,
       seller: sellerId,
@@ -367,7 +309,7 @@ exports.createOrder = async function createOrder({ buyer, dto }) {
 
 exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, status }) {
   const uid = String(actor._id);
-  const order = await Order.findById(orderId);
+  const order = await orderRepository.findOrderById(orderId);
   if (!order) throw new DomainError(404, 'Order not found');
 
   const isSeller = String(order.seller) === uid;
@@ -401,21 +343,17 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
     [ORDER_STATUS.PENDING]: 'Order reopened to pending',
   };
 
-  const updatedOrder = await Order.findOneAndUpdate(
-    { _id: order._id, status: prevStatus },
-    {
-      $set: updates,
-      $push: {
-        timeline: {
-          event: status,
-          actor: actor._id,
-          at: now,
-          note: noteByStatus[status] || `Status changed to ${status}`
-        }
-      }
-    },
-    { new: true }
-  );
+  const updatedOrder = await orderRepository.updateOrderStatusWithTimeline({
+    orderId: order._id,
+    prevStatus,
+    setFields: updates,
+    timeline: {
+      event: status,
+      actor: actor._id,
+      at: now,
+      note: noteByStatus[status] || `Status changed to ${status}`
+    }
+  });
 
   if (!updatedOrder) {
     throw new DomainError(409, 'Order status was changed by another request. Please refresh and try again.');
@@ -439,18 +377,14 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
           walletInc.pendingBalance = -amount;
         }
 
-        const wallet = await Wallet.findOneAndUpdate(
-          { user: updatedOrder.seller },
-          {
-            $inc: walletInc,
-            $setOnInsert: {
-              user: updatedOrder.seller
-            }
-          },
-          { new: true, upsert: true }
-        );
+        const wallet = await walletRepository.upsertWalletForUser(updatedOrder.seller, {
+          $inc: walletInc,
+          $setOnInsert: {
+            user: updatedOrder.seller
+          }
+        });
 
-        await WalletTransaction.create({
+        await walletRepository.createWalletTransaction({
           wallet: wallet._id,
           user: updatedOrder.seller,
           type: 'DEPOSIT',
@@ -471,7 +405,7 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
     const { sendNotification } = require('../utils/notifService');
     const recipientId = isSeller ? updatedOrder.buyer : updatedOrder.seller;
     const statusText = status === ORDER_STATUS.CONFIRMED ? 'has been confirmed' : (status === ORDER_STATUS.COMPLETED ? 'has been completed' : (status === ORDER_STATUS.CANCELLED ? 'has been cancelled' : `moved to "${status}"`));
-    const prod = await Product.findById(updatedOrder.product);
+    const prod = await productRepository.findProductById(updatedOrder.product);
 
     let msg = `Your order for "${prod.title}" ${statusText}`;
     if (status === ORDER_STATUS.COMPLETED) {

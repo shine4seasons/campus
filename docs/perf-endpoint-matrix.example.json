@@ -1,0 +1,36 @@
+{
+  "_notes": {
+    "usage": "Copy this file or run `npm.cmd run bench:p95:matrix` to generate a local matrix from env cookies.",
+    "buyerCookieEnv": "BENCH_BUYER_COOKIE",
+    "adminCookieEnv": "BENCH_ADMIN_COOKIE"
+  },
+  "/api/products": {
+    "method": "GET",
+    "allowStatuses": ["200"],
+    "successStatuses": ["200"]
+  },
+  "/api/chat": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<buyer_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": ["200"],
+    "successStatuses": ["200"]
+  },
+  "/api/orders": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<buyer_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": ["200"],
+    "successStatuses": ["200"]
+  },
+  "/api/admin/reports": {
+    "method": "GET",
+    "headers": {
+      "cookie": "token=<admin_jwt>; csrf=<csrf>"
+    },
+    "allowStatuses": ["200"],
+    "successStatuses": ["200"]
+  }
+}

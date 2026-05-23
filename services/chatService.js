@@ -1,23 +1,19 @@
-const Conversation = require('../models/Conversation');
-const Message = require('../models/Message');
+const chatRepository = require('../repositories/chatRepository');
 
 async function getConversationForUser(conversationId, userId) {
-  return Conversation.findOne({ _id: conversationId, participants: userId });
+  return chatRepository.findConversationByIdForUser(conversationId, userId);
 }
 
 async function enrichConversationsForUser(convs, userId) {
-  const ids = convs.map((c) => c._id);
-  const counts = ids.length > 0
-    ? await Message.aggregate([
-      { $match: { conversationId: { $in: ids }, isRead: false, sender: { $ne: userId } } },
-      { $group: { _id: '$conversationId', count: { $sum: 1 } } },
-    ]).catch(() => [])
-    : [];
-  const byConv = Object.fromEntries(counts.map((c) => [String(c._id), c.count]));
+  const ids = convs.map((conversation) => conversation._id);
+  const unreadByConversation = await chatRepository.countUnreadMessagesByConversationIds({
+    conversationIds: ids,
+    userId
+  });
 
   return convs.map((c) => {
     const copy = { ...c };
-    copy.unreadCount = byConv[String(c._id)] || 0;
+    copy.unreadCount = unreadByConversation[String(c._id)] || 0;
     copy.isSellerConversation = !!(c.product && String(c.product.seller) === String(userId));
     copy.partner = (c.participants || []).find((p) => String(p._id) !== String(userId))
       || (c.participants && c.participants[0]) || null;
