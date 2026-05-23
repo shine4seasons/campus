@@ -1,0 +1,42 @@
+name: Hardening Gates
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  hardening:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Smoke tests
+        run: npm run test
+
+      - name: Hardening controls
+        run: npm run test:hardening
+
+      - name: Security integration lite
+        run: npm run test:security:lite
+
+      - name: Security ownership lite
+        run: npm run test:security:ownership
+
+      - name: Security checks
+        run: npm run security-check

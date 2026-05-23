@@ -1,6 +1,48 @@
 /**
  * Rating utility functions for submitting, displaying, and managing ratings
  */
+const { createElement, createSvgElement } = window.AppUtils || {};
+
+function createStarSvg(size, fill) {
+  return createSvgElement('svg', {
+    xmlns: 'http://www.w3.org/2000/svg',
+    width: String(size),
+    height: String(size),
+    viewBox: '0 0 24 24',
+    fill,
+    stroke: 'currentColor',
+    'stroke-width': '2',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+  }, [
+    createSvgElement('polygon', { points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' })
+  ]);
+}
+
+function createStarsNode(score, size = 16) {
+  const fragment = document.createDocumentFragment();
+  const fullStars = Math.floor(score);
+  const hasHalf = score % 1 >= 0.5;
+
+  for (let i = 1; i <= 5; i += 1) {
+    const isFilled = i <= fullStars;
+    const isHalf = i === fullStars + 1 && hasHalf;
+    const star = createElement('span', {
+      className: isFilled ? 'star star-filled' : (isHalf ? 'star star-half' : 'star star-empty'),
+      style: {
+        width: `${size}px`,
+        height: `${size}px`,
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        color: isFilled || isHalf ? '#fbbf24' : '#CBD5E1'
+      }
+    });
+    star.appendChild(createStarSvg(size, isFilled ? 'currentColor' : 'none'));
+    fragment.appendChild(star);
+  }
+
+  return fragment;
+}
 
 /**
  * Display star rating
@@ -9,17 +51,12 @@ function renderStars(score, size = 16) {
   const fullStars = Math.floor(score);
   const hasHalf = score % 1 >= 0.5;
   let html = '';
-
-  for (let i = 1; i <= 5; i++) {
-    if (i <= fullStars) {
-      html += `<span class="star star-filled" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;color:#fbbf24;"><svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
-    } else if (i === fullStars + 1 && hasHalf) {
-      html += `<span class="star star-half" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;color:#fbbf24;"><svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77" fill="currentColor"></path></svg></span>`;
-    } else {
-      html += `<span class="star star-empty" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;color:#CBD5E1;"><svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
-    }
+  for (let i = 1; i <= 5; i += 1) {
+    const className = i <= fullStars ? 'star star-filled' : (i === fullStars + 1 && hasHalf ? 'star star-half' : 'star star-empty');
+    const color = i <= fullStars || (i === fullStars + 1 && hasHalf) ? '#fbbf24' : '#CBD5E1';
+    const fill = i <= fullStars ? 'currentColor' : 'none';
+    html += `<span class="${className}" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;color:${color};"><svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
   }
-
   return html;
 }
 
@@ -27,10 +64,9 @@ function renderStars(score, size = 16) {
  * Display rating component with score and count
  */
 function displayRating(score, count = 0) {
-  const stars = renderStars(score);
   return `
     <div class="rating-display">
-      <div class="stars">${stars}</div>
+      <div class="stars">${renderStars(score)}</div>
       <span class="rating-value">${parseFloat(score).toFixed(1)}</span>
       <span class="rating-count">${count} ${count === 1 ? 'review' : 'reviews'}</span>
     </div>
@@ -41,22 +77,12 @@ function displayRating(score, count = 0) {
  * Create interactive star rating input
  */
 function createRatingInput(onStarClick, initialScore = 0) {
-  let hoveredScore = 0;
-
   let html = '<div class="rating-input">';
-  for (let i = 1; i <= 5; i++) {
-    html += `
-      <span class="star star-empty" 
-            data-score="${i}"
-            onmouseenter="updateRatingHover(this, ${i})"
-            onmouseleave="clearRatingHover()"
-            onclick="selectRating(this, ${i})"
-            style="width:24px;height:24px;display:inline-block;cursor:pointer;color:#CBD5E1;"
-      ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
-    `;
+  for (let i = 1; i <= 5; i += 1) {
+    const selectedClass = initialScore >= i ? ' star-filled selected' : ' star-empty';
+    html += `<span class="star${selectedClass}" data-score="${i}" onmouseenter="updateRatingHover(this, ${i})" onmouseleave="clearRatingHover()" onclick="selectRating(this, ${i})" style="width:24px;height:24px;display:inline-block;cursor:pointer;color:#CBD5E1;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
   }
   html += '</div>';
-
   return html;
 }
 
@@ -79,38 +105,55 @@ async function loadRatings(entityType, entityId, containerId) {
     if (!container) return;
 
     if (!data.data || data.data.length === 0) {
-      container.innerHTML = '<p style="color: var(--t2); font-size: 13px;">No ratings yet</p>';
+      container.replaceChildren(createElement('p', { style: { color: 'var(--t2)', fontSize: '13px' }, text: 'No ratings yet' }));
       return;
     }
 
-    let html = '';
-    data.data.forEach(rating => {
+    container.replaceChildren(...data.data.map((rating) => {
       const date = new Date(rating.createdAt).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
       });
+      const avatar = createElement('div', { className: 'rating-item-avatar' });
+      if (rating.rater.avatar) {
+        avatar.appendChild(createElement('img', {
+          attrs: {
+            src: rating.rater.avatar,
+            alt: rating.rater.nickname || rating.rater.name || 'rating avatar'
+          }
+        }));
+      } else {
+        avatar.textContent = String(rating.rater.name || '?').charAt(0).toUpperCase();
+      }
+      const scoreWrap = createElement('div', { className: 'rating-item-score' });
+      scoreWrap.appendChild(createStarsNode(rating.score, 14));
 
-      html += `
-        <div class="rating-item">
-          <div class="rating-item-header">
-            <div class="rating-item-author">
-              <div class="rating-item-avatar">
-                ${rating.rater.avatar ? `<img src="${rating.rater.avatar}" />` : rating.rater.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div class="rating-item-name">${rating.rater.nickname || rating.rater.name}</div>
-                <div class="rating-item-date">${date}</div>
-              </div>
-            </div>
-            <div class="rating-item-score">${renderStars(rating.score, 14)}</div>
-          </div>
-          ${rating.comment ? `<div class="rating-item-comment">${escapeHtml(rating.comment)}</div>` : ''}
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
+      return createElement('div', {
+        className: 'rating-item',
+        children: [
+          createElement('div', {
+            className: 'rating-item-header',
+            children: [
+              createElement('div', {
+                className: 'rating-item-author',
+                children: [
+                  avatar,
+                  createElement('div', {
+                    children: [
+                      createElement('div', { className: 'rating-item-name', text: rating.rater.nickname || rating.rater.name }),
+                      createElement('div', { className: 'rating-item-date', text: date })
+                    ]
+                  })
+                ]
+              }),
+              scoreWrap
+            ]
+          }),
+          rating.comment ? createElement('div', { className: 'rating-item-comment', text: rating.comment }) : null
+        ].filter(Boolean)
+      });
+    }));
   } catch (error) {
     console.error('Error loading ratings:', error);
   }
@@ -135,38 +178,49 @@ async function loadRatingStats(entityType, entityId, containerId) {
     if (!container) return;
 
     const { distribution, total, average } = data.data;
-    
-    // Add summary header
-    let html = `
-      <div class="rating-stats-header" style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-        <div class="rating-average-value" style="font-size:32px;font-weight:800;color:var(--t1);">${parseFloat(average).toFixed(1)}</div>
-        <div class="rating-average-stars">
-          <div>${renderStars(average, 18)}</div>
-          <div style="font-size:13px;color:var(--t2);margin-top:2px;">Based on ${total} ${total === 1 ? 'review' : 'reviews'}</div>
-        </div>
-      </div>
-      <div class="rating-distribution">
-    `;
+    const starsWrap = createElement('div');
+    starsWrap.appendChild(createStarsNode(average, 18));
+    const distributionWrap = createElement('div', { className: 'rating-distribution' });
 
-    for (let i = 5; i >= 1; i--) {
+    for (let i = 5; i >= 1; i -= 1) {
       const count = distribution[i] || 0;
       const percentage = total > 0 ? (count / total) * 100 : 0;
-
-      html += `
-        <div class="rating-dist-item">
-          <div class="rating-dist-label">
-            ${i} <span style="color:#fbbf24;margin-left:2px">★</span>
-          </div>
-          <div class="rating-dist-bar">
-            <div class="rating-dist-fill" style="width: ${percentage}%"></div>
-          </div>
-          <div class="rating-dist-count">${count}</div>
-        </div>
-      `;
+      distributionWrap.appendChild(createElement('div', {
+        className: 'rating-dist-item',
+        children: [
+          createElement('div', {
+            className: 'rating-dist-label',
+            children: [
+              document.createTextNode(String(i)),
+              createElement('span', { style: { color: '#fbbf24', marginLeft: '2px' }, text: '★' })
+            ]
+          }),
+          createElement('div', {
+            className: 'rating-dist-bar',
+            children: [createElement('div', { className: 'rating-dist-fill', style: { width: `${percentage}%` } })]
+          }),
+          createElement('div', { className: 'rating-dist-count', text: count })
+        ]
+      }));
     }
 
-    html += '</div>';
-    container.innerHTML = html;
+    container.replaceChildren(
+      createElement('div', {
+        className: 'rating-stats-header',
+        style: { display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' },
+        children: [
+          createElement('div', { className: 'rating-average-value', style: { fontSize: '32px', fontWeight: '800', color: 'var(--t1)' }, text: parseFloat(average).toFixed(1) }),
+          createElement('div', {
+            className: 'rating-average-stars',
+            children: [
+              starsWrap,
+              createElement('div', { style: { fontSize: '13px', color: 'var(--t2)', marginTop: '2px' }, text: `Based on ${total} ${total === 1 ? 'review' : 'reviews'}` })
+            ]
+          })
+        ]
+      }),
+      distributionWrap
+    );
   } catch (error) {
     console.error('Error loading rating stats:', error);
   }
@@ -190,14 +244,12 @@ async function submitRating(entityType, entityId, score, comment = '') {
   try {
     const response = await fetch('/api/ratings', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
         entityType,
         entityId,
-        score: parseInt(score),
+        score: parseInt(score, 10),
         comment: comment.trim().substring(0, 500)
       })
     });
@@ -244,14 +296,9 @@ async function deleteRating(entityType, entityId) {
   try {
     const response = await fetch('/api/ratings', {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({
-        entityType,
-        entityId
-      })
+      body: JSON.stringify({ entityType, entityId })
     });
 
     const data = await response.json();
@@ -313,7 +360,7 @@ function updateRatingHover(element, score) {
 function clearRatingHover() {
   const selected = document.querySelector('.rating-input .star.selected');
   if (!selected) {
-    document.querySelectorAll('.rating-input .star').forEach(star => {
+    document.querySelectorAll('.rating-input .star').forEach((star) => {
       star.classList.add('star-empty');
       star.classList.remove('star-filled');
     });
@@ -346,7 +393,8 @@ function selectRating(element, score) {
  * Utility: Escape HTML
  */
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
+    return window.AppUtils.escapeHtml(text);
+  }
+  return String(text ?? '');
 }

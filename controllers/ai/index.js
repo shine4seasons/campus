@@ -1,5 +1,6 @@
 const { categoryLabels, conditionContext, buildPrompt } = require('./constants');
 const OpenAI = require('openai');
+const { badRequest, serviceUnavailable } = require('../../utils/errors');
 
 // AI provider: 'groq' (default, OpenAI-compatible) or 'gemini'.
 const AI_PROVIDER = (process.env.AI_PROVIDER || 'groq').toLowerCase();
@@ -12,8 +13,35 @@ const groq = process.env.GROQ_API_KEY
   ? new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' })
   : null;
 
+const AI_CACHE_TTL_MS = 60000;
+const AI_CACHE_MAX = 100;
+const aiCache = new Map();
+const aiInFlight = new Map();
+
+function getDescribeCacheKey(input) {
+  return JSON.stringify(input);
+}
+
+function getCachedDescription(key) {
+  const hit = aiCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > AI_CACHE_TTL_MS) {
+    aiCache.delete(key);
+    return null;
+  }
+  return hit.value;
+}
+
+function setCachedDescription(key, value) {
+  aiCache.set(key, { at: Date.now(), value });
+  if (aiCache.size > AI_CACHE_MAX) {
+    const firstKey = aiCache.keys().next().value;
+    if (firstKey) aiCache.delete(firstKey);
+  }
+}
+
 async function generateWithGroq({ prompt, imageUrl, maxTokens }) {
-  if (!groq) throw new Error('GROQ_API_KEY is not configured in .env');
+  if (!groq) throw serviceUnavailable('AI provider is not configured');
 
   const userContent = imageUrl
     ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageUrl } }]
@@ -45,7 +73,7 @@ async function fetchImageAsInlineData(url) {
 }
 
 async function generateWithGemini({ prompt, imageUrl, maxTokens }) {
-  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured in .env');
+  if (!process.env.GEMINI_API_KEY) throw serviceUnavailable('AI provider is not configured');
 
   const parts = [{ text: prompt }];
   if (imageUrl) {
@@ -68,10 +96,17 @@ async function generateWithGemini({ prompt, imageUrl, maxTokens }) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 }
 
-const describeProduct = async (req, res) => {
+const describeProduct = async (req, res, next) => {
   try {
     const { title, category, condition, price, location, imageUrl, tone, language } = req.body;
-    if (!title) return res.status(400).json({ success: false, message: 'Title is required' });
+    if (!title) throw badRequest('Title is required');
+    if (imageUrl && typeof imageUrl === 'string') {
+      try {
+        new URL(imageUrl);
+      } catch {
+        throw badRequest('Invalid image URL');
+      }
+    }
 
     const requestedWords = Number(req.body.targetWords);
     const targetWords = Math.min(140, Math.max(60, Number.isFinite(requestedWords) ? requestedWords : 100));
@@ -90,25 +125,51 @@ const describeProduct = async (req, res) => {
       language,
       targetWords,
     };
+    const cacheKey = getDescribeCacheKey({
+      ...promptInput,
+      imageUrl: imageUrl || '',
+      provider: AI_PROVIDER
+    });
+    const cached = getCachedDescription(cacheKey);
+    if (cached) {
+      return res.json({ success: true, description: cached, cached: true });
+    }
+    if (aiInFlight.has(cacheKey)) {
+      const pendingResult = await aiInFlight.get(cacheKey);
+      return res.json({ success: true, description: pendingResult, cached: true });
+    }
+
     const prompt = buildPrompt({ ...promptInput, hasImage: Boolean(imageUrl) });
+
+    const compute = (async () => {
+      let description;
+      try {
+        description = AI_PROVIDER === 'gemini'
+          ? await generateWithGemini({ prompt, imageUrl, maxTokens })
+          : await generateWithGroq({ prompt, imageUrl, maxTokens });
+      } catch (err) {
+        if (!imageUrl || AI_PROVIDER !== 'groq') throw err;
+        console.warn('Groq vision failed, retrying text-only:', err.message);
+        const textOnlyPrompt = buildPrompt({ ...promptInput, hasImage: false });
+        description = await generateWithGroq({ prompt: textOnlyPrompt, imageUrl: '', maxTokens });
+      }
+      return description;
+    })();
+    aiInFlight.set(cacheKey, compute);
 
     let description;
     try {
-      description = AI_PROVIDER === 'gemini'
-        ? await generateWithGemini({ prompt, imageUrl, maxTokens })
-        : await generateWithGroq({ prompt, imageUrl, maxTokens });
-    } catch (err) {
-      if (!imageUrl || AI_PROVIDER !== 'groq') throw err;
-      console.warn('Groq vision failed, retrying text-only:', err.message);
-      const textOnlyPrompt = buildPrompt({ ...promptInput, hasImage: false });
-      description = await generateWithGroq({ prompt: textOnlyPrompt, imageUrl: '', maxTokens });
+      description = await compute;
+    } finally {
+      aiInFlight.delete(cacheKey);
     }
 
-    if (!description) return res.status(500).json({ success: false, message: 'AI did not return any result' });
+    if (!description) throw serviceUnavailable('AI service did not return any result');
+    setCachedDescription(cacheKey, description);
     res.json({ success: true, description });
   } catch (err) {
     console.error('AI error:', err.message);
-    res.status(500).json({ success: false, message: err.message || 'AI service error' });
+    return next(err);
   }
 };
 

@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { extraCss: 'search-results.css' }) %>
-  <link rel="stylesheet" href="/css/index.css">
-  <link rel="stylesheet" href="/css/rating.css">
+  <%- include('partials/head', { pageTitle: typeof title !== 'undefined' ? title : 'Campus Marketplace', pageStyles: ['search-results', 'index', 'rating'] }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>

@@ -1,4 +1,4 @@
-<script src="/js/categories.js"></script>
+<script defer src="/js/categories.js"></script>
 <script>
   /* NOTE: PAGE_META removed — titles/subs/cta are read from
      section `data-*` attributes when available, with a small
@@ -10,6 +10,53 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     el.classList.add('active');
     showSection(id);
+  }
+
+  function escHtml(value) {
+    if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
+      return window.AppUtils.escapeHtml(value);
+    }
+    return String(value == null ? '' : value)
+      .replace(/[&<>"'`]/g, function (char) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '`': '&#96;'
+        }[char];
+      });
+  }
+
+  function sanitizeObjectId(value) {
+    const id = String(value == null ? '' : value).trim();
+    return /^[a-fA-F0-9]{24}$/.test(id) ? id : '';
+  }
+
+  function toSafeNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function clearChildren(node) {
+    if (!node) return;
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function appendLegendItems(container, items) {
+    if (!container) return;
+    clearChildren(container);
+    items.forEach((item) => {
+      const wrap = document.createElement('span');
+      wrap.className = 'leg-item';
+      const dot = document.createElement('span');
+      dot.className = 'leg-dot';
+      dot.style.background = item.color;
+      wrap.appendChild(dot);
+      wrap.appendChild(document.createTextNode(`${item.label} - ${toSafeNumber(item.percent)}%`));
+      container.appendChild(wrap);
+    });
   }
 
   function showSection(id) {
@@ -126,12 +173,46 @@
     const wrap = document.getElementById('toast-wrap');
     const t = document.createElement('div');
     t.className = 'toast ' + type;
-    const icons = {
-      ok: '<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
-      err: '<svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-      info: '<svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    const NS = 'http://www.w3.org/2000/svg';
+    const mkSvg = () => {
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      return svg;
     };
-    t.innerHTML = (icons[type] || '') + msg;
+    if (type === 'ok') {
+      const svg = mkSvg();
+      svg.setAttribute('stroke-width', '2.5');
+      const p = document.createElementNS(NS, 'polyline');
+      p.setAttribute('points', '20 6 9 17 4 12');
+      svg.appendChild(p);
+      t.appendChild(svg);
+    } else if (type === 'err') {
+      const svg = mkSvg();
+      svg.setAttribute('stroke-width', '2.5');
+      const l1 = document.createElementNS(NS, 'line');
+      l1.setAttribute('x1', '18'); l1.setAttribute('y1', '6'); l1.setAttribute('x2', '6'); l1.setAttribute('y2', '18');
+      const l2 = document.createElementNS(NS, 'line');
+      l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
+      svg.appendChild(l1);
+      svg.appendChild(l2);
+      t.appendChild(svg);
+    } else if (type === 'info') {
+      const svg = mkSvg();
+      svg.setAttribute('stroke-width', '2');
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '10');
+      const l1 = document.createElementNS(NS, 'line');
+      l1.setAttribute('x1', '12'); l1.setAttribute('y1', '8'); l1.setAttribute('x2', '12'); l1.setAttribute('y2', '12');
+      const l2 = document.createElementNS(NS, 'line');
+      l2.setAttribute('x1', '12'); l2.setAttribute('y1', '16'); l2.setAttribute('x2', '12.01'); l2.setAttribute('y2', '16');
+      svg.appendChild(c);
+      svg.appendChild(l1);
+      svg.appendChild(l2);
+      t.appendChild(svg);
+    }
+    t.appendChild(document.createTextNode(String(msg == null ? '' : msg)));
     wrap.appendChild(t);
     setTimeout(() => {
       t.style.opacity = '0';
@@ -287,8 +368,10 @@
           });
           const dlvLeg = document.getElementById('dlvLegend');
           if (dlvLeg) {
-            dlvLeg.innerHTML = `<span class="leg-item"><span class="leg-dot" style="background:${BLUE}"></span>Pickup &mdash; ${dlvPct[0]}%</span>
-            <span class="leg-item"><span class="leg-dot" style="background:${GREEN}"></span>Ship &mdash; ${dlvPct[1]}%</span>`;
+            appendLegendItems(dlvLeg, [
+              { color: BLUE, label: 'Pickup', percent: dlvPct[0] },
+              { color: GREEN, label: 'Ship', percent: dlvPct[1] },
+            ]);
           }
 
           const pay = d.payment || [0, 0];
@@ -300,8 +383,10 @@
           });
           const payLeg = document.getElementById('payLegend');
           if (payLeg) {
-            payLeg.innerHTML = `<span class="leg-item"><span class="leg-dot" style="background:${AMBER}"></span>Cash &mdash; ${payPct[0]}%</span>
-            <span class="leg-item"><span class="leg-dot" style="background:${PURPLE}"></span>Card &mdash; ${payPct[1]}%</span>`;
+            appendLegendItems(payLeg, [
+              { color: AMBER, label: 'Cash', percent: payPct[0] },
+              { color: PURPLE, label: 'Card', percent: payPct[1] },
+            ]);
           }
 
           const sts = d.orderStatus || [0, 0, 0, 0];
@@ -313,10 +398,12 @@
           });
           const stsLeg = document.getElementById('orderStsLegend');
           if (stsLeg) {
-            stsLeg.innerHTML = `<span class="leg-item"><span class="leg-dot" style="background:${GREEN}"></span>Completed &mdash; ${stsPct[0]}%</span>
-            <span class="leg-item"><span class="leg-dot" style="background:${BLUE}"></span>Confirmed &mdash; ${stsPct[1]}%</span>
-            <span class="leg-item"><span class="leg-dot" style="background:${AMBER}"></span>Pending &mdash; ${stsPct[2]}%</span>
-            <span class="leg-item"><span class="leg-dot" style="background:${RED}"></span>Cancelled &mdash; ${stsPct[3]}%</span>`;
+            appendLegendItems(stsLeg, [
+              { color: GREEN, label: 'Completed', percent: stsPct[0] },
+              { color: BLUE, label: 'Confirmed', percent: stsPct[1] },
+              { color: AMBER, label: 'Pending', percent: stsPct[2] },
+              { color: RED, label: 'Cancelled', percent: stsPct[3] },
+            ]);
           }
 
         } catch (e) {
@@ -359,10 +446,11 @@
 
           const sCatLegend = document.getElementById('sCatLegend');
           if (sCatLegend && cat.labels.length > 0 && cat.data.some(v => v > 0)) {
-            sCatLegend.innerHTML = cat.labels.map((lbl, i) => {
-              const pct = Math.round((cat.data[i] / totalCat) * 100);
-              return `<span class="leg-item"><span class="leg-dot" style="background:${catColors[i] || '#ccc'}"></span>${lbl} ${pct}%</span>`;
-            }).join('');
+            appendLegendItems(sCatLegend, cat.labels.map((lbl, i) => ({
+              color: catColors[i] || '#ccc',
+              label: lbl,
+              percent: Math.round((toSafeNumber(cat.data[i]) / totalCat) * 100)
+            })));
           }
         } catch (e) {
           console.error(e);
@@ -407,18 +495,49 @@
             const orders = hisJson.data || [];
             const tbody = document.getElementById('revHistoryTbody');
             if (tbody) {
+              clearChildren(tbody);
               if (orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--t2);padding:20px 0;">No completed orders.</td></tr>`;
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 5;
+                td.style.textAlign = 'center';
+                td.style.color = 'var(--t2)';
+                td.style.padding = '20px 0';
+                td.textContent = 'No completed orders.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
               } else {
-                tbody.innerHTML = orders.map(o => `
-                   <tr>
-                     <td><strong>${o.product?.title || 'deleted products'}</strong></td>
-                     <td style="color:var(--t2)">${o.buyer?.name || o.buyer?.nickname || 'Guest'}</td>
-                     <td style="color:var(--t2)">${new Date(o.createdAt).toLocaleDateString()}</td>
-                     <td style="font-weight:700;color:#16a34a">${new Intl.NumberFormat('en-US').format(o.priceSnapshot)} VND</td>
-                     <td style="color:var(--t2)">${o.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
-                   </tr>
-                 `).join('');
+                orders.forEach((o) => {
+                  const tr = document.createElement('tr');
+                  const tdTitle = document.createElement('td');
+                  const strong = document.createElement('strong');
+                  strong.textContent = o.product?.title || 'deleted products';
+                  tdTitle.appendChild(strong);
+                  tr.appendChild(tdTitle);
+
+                  const tdBuyer = document.createElement('td');
+                  tdBuyer.style.color = 'var(--t2)';
+                  tdBuyer.textContent = o.buyer?.name || o.buyer?.nickname || 'Guest';
+                  tr.appendChild(tdBuyer);
+
+                  const tdDate = document.createElement('td');
+                  tdDate.style.color = 'var(--t2)';
+                  tdDate.textContent = new Date(o.createdAt).toLocaleDateString();
+                  tr.appendChild(tdDate);
+
+                  const tdPrice = document.createElement('td');
+                  tdPrice.style.fontWeight = '700';
+                  tdPrice.style.color = '#16a34a';
+                  tdPrice.textContent = `${new Intl.NumberFormat('en-US').format(o.priceSnapshot)} VND`;
+                  tr.appendChild(tdPrice);
+
+                  const tdDelivery = document.createElement('td');
+                  tdDelivery.style.color = 'var(--t2)';
+                  tdDelivery.textContent = o.deliveryMode === 'ship' ? 'Ship' : 'Pickup';
+                  tr.appendChild(tdDelivery);
+
+                  tbody.appendChild(tr);
+                });
               }
             }
           }
@@ -433,42 +552,90 @@
   function renderPagination(containerSelector, pagination, fnName) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
+    clearChildren(container);
     if (!pagination || pagination.total === 0) {
-      container.innerHTML = '<span class="pg-info">Showing 0 / 0</span>';
+      const info = document.createElement('span');
+      info.className = 'pg-info';
+      info.textContent = 'Showing 0 / 0';
+      container.appendChild(info);
       return;
     }
 
-    const { page, limit, total, totalPages } = pagination;
+    const page = Math.max(1, toSafeNumber(pagination.page, 1));
+    const limit = Math.max(1, toSafeNumber(pagination.limit, 1));
+    const total = Math.max(0, toSafeNumber(pagination.total, 0));
+    const totalPages = Math.max(1, toSafeNumber(pagination.totalPages, 1));
     const start = (page - 1) * limit + 1;
     const end = Math.min(page * limit, total);
+    const safeFnName = String(fnName || '').replace(/[^A-Za-z0-9_$.]/g, '');
 
-    let html = `<span class="pg-info">Showing ${start}–${end} / ${total}</span>`;
-    html += `<button class="pg-btn" ${page <= 1 ? 'disabled' : ''} onclick="${fnName}(${page - 1})"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+    const invokePage = (p) => {
+      const fn = window[safeFnName];
+      if (typeof fn === 'function') fn(p);
+    };
+
+    const info = document.createElement('span');
+    info.className = 'pg-info';
+    info.textContent = `Showing ${start}-${end} / ${total}`;
+    container.appendChild(info);
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pg-btn';
+    prevBtn.disabled = page <= 1;
+    prevBtn.textContent = '<';
+    prevBtn.addEventListener('click', () => invokePage(page - 1));
+    container.appendChild(prevBtn);
 
     const startP = Math.max(1, page - 2);
     const endP = Math.min(totalPages, Math.max(startP + 4, 5));
     const realStartP = Math.max(1, endP - 4);
 
     if (realStartP > 1) {
-      html += `<button class="pg-btn" onclick="${fnName}(1)">1</button>`;
-      if (realStartP > 2) html += `<button class="pg-btn" disabled>…</button>`;
+      const first = document.createElement('button');
+      first.className = 'pg-btn';
+      first.textContent = '1';
+      first.addEventListener('click', () => invokePage(1));
+      container.appendChild(first);
+      if (realStartP > 2) {
+        const dots = document.createElement('button');
+        dots.className = 'pg-btn';
+        dots.disabled = true;
+        dots.textContent = '...';
+        container.appendChild(dots);
+      }
     }
 
     for (let i = realStartP; i <= endP; i++) {
-      html += `<button class="pg-btn ${i === page ? 'active' : ''}" onclick="${fnName}(${i})">${i}</button>`;
+      const btn = document.createElement('button');
+      btn.className = `pg-btn ${i === page ? 'active' : ''}`.trim();
+      btn.textContent = String(i);
+      btn.addEventListener('click', () => invokePage(i));
+      container.appendChild(btn);
     }
 
     if (endP < totalPages) {
-      if (endP < totalPages - 1) html += `<button class="pg-btn" disabled>…</button>`;
-      html += `<button class="pg-btn" onclick="${fnName}(${totalPages})">${totalPages}</button>`;
+      if (endP < totalPages - 1) {
+        const dots = document.createElement('button');
+        dots.className = 'pg-btn';
+        dots.disabled = true;
+        dots.textContent = '...';
+        container.appendChild(dots);
+      }
+      const last = document.createElement('button');
+      last.className = 'pg-btn';
+      last.textContent = String(totalPages);
+      last.addEventListener('click', () => invokePage(totalPages));
+      container.appendChild(last);
     }
 
-    html += `<button class="pg-btn" ${page >= totalPages ? 'disabled' : ''} onclick="${fnName}(${page + 1})"><svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>`;
-
-    container.innerHTML = html;
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pg-btn';
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.textContent = '>';
+    nextBtn.addEventListener('click', () => invokePage(page + 1));
+    container.appendChild(nextBtn);
   }
-
-  function initAdminData(id) {
+function initAdminData(id) {
     if (id === 'aUsers' && typeof loadUsers === 'function') loadUsers(1);
     if (id === 'aProducts') fetchAdminProducts(1);
     if (id === 'aOrders' && typeof loadOrders === 'function') { loadOrders(1); fetchAdminOrderCounts(); }
@@ -540,14 +707,36 @@
         const catList = document.getElementById('adminCategoriesList');
         const catCount = document.getElementById('adminCatCount');
         if (catList) {
+          clearChildren(catList);
           if (labels.length === 0) {
-            catList.innerHTML = `<div style="padding:10px;text-align:center;color:var(--t2);">No categories found.</div>`;
+            const empty = document.createElement('div');
+            empty.style.padding = '10px';
+            empty.style.textAlign = 'center';
+            empty.style.color = 'var(--t2)';
+            empty.textContent = 'No categories found.';
+            catList.appendChild(empty);
           } else {
-            catList.innerHTML = labels.map((lbl, idx) => `
-                    <div class="list-item">
-                      <div class="li-info"><div class="li-name">${lbl}</div><div class="li-sub">${data[idx]} products</div></div>
-                      <button class="act-btn danger" onclick="showToast('Category editing is currently disabled', 'info')">Hide</button>
-                    </div>`).join('');
+            labels.forEach((lbl, idx) => {
+              const item = document.createElement('div');
+              item.className = 'list-item';
+              const info = document.createElement('div');
+              info.className = 'li-info';
+              const name = document.createElement('div');
+              name.className = 'li-name';
+              name.textContent = lbl;
+              const sub = document.createElement('div');
+              sub.className = 'li-sub';
+              sub.textContent = `${Number(data[idx]) || 0} products`;
+              info.appendChild(name);
+              info.appendChild(sub);
+              const btn = document.createElement('button');
+              btn.className = 'act-btn danger';
+              btn.textContent = 'Hide';
+              btn.addEventListener('click', () => showToast('Category editing is currently disabled', 'info'));
+              item.appendChild(info);
+              item.appendChild(btn);
+              catList.appendChild(item);
+            });
           }
         }
         if (catCount) catCount.textContent = labels.length;
@@ -567,17 +756,44 @@
 
         const sysStats = document.getElementById('adminSysStats');
         if (sysStats) {
-          sysStats.innerHTML = `
-              <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Database size</span><span style="font-weight:600">${dbSize}</span></div>
-              <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Storage (images)</span><span style="font-weight:600">${storage}</span></div>
-              <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">API requests/day</span><span style="font-weight:600">${new Intl.NumberFormat('en-US').format(rps)}</span></div>
-              <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Uptime</span><span style="font-weight:600;color:#16a34a">99.99%</span></div>
-              <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-                <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:12px;" onclick="syncSellerRatings()">
-                  <svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12c0-4.4 3.6-8 8-8 3.3 0 6.2 2 7.4 4.9M22 12c0 4.4-3.6 8-8 8-3.3 0-6.2-2-7.4-4.9"/></svg>
-                  Sync Seller Ratings
-                </button>
-              </div>`;
+          clearChildren(sysStats);
+          const rows = [
+            ['Database size', dbSize],
+            ['Storage (images)', storage],
+            ['API requests/day', new Intl.NumberFormat('en-US').format(rps)],
+            ['Uptime', '99.99%']
+          ];
+          rows.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            const l = document.createElement('span');
+            l.style.color = 'var(--t2)';
+            l.textContent = label;
+            const v = document.createElement('span');
+            v.style.fontWeight = '600';
+            if (label === 'Uptime') v.style.color = '#16a34a';
+            v.textContent = value;
+            row.appendChild(l);
+            row.appendChild(v);
+            sysStats.appendChild(row);
+          });
+
+          const wrap = document.createElement('div');
+          wrap.style.marginTop = '20px';
+          wrap.style.paddingTop = '16px';
+          wrap.style.borderTop = '1px solid var(--border)';
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-outline';
+          btn.style.width = '100%';
+          btn.style.justifyContent = 'center';
+          btn.style.fontSize = '12px';
+          btn.textContent = 'Sync Seller Ratings';
+          btn.addEventListener('click', () => {
+            if (typeof window.syncSellerRatings === 'function') window.syncSellerRatings();
+          });
+          wrap.appendChild(btn);
+          sysStats.appendChild(wrap);
         }
       }
     } catch (e) {
@@ -645,25 +861,71 @@
       const products = (json.data || []);
       const tbody = document.querySelector('#aProducts table tbody');
       if (!tbody) return;
-      tbody.innerHTML = products.map(p => {
+      clearChildren(tbody);
+      products.forEach((p) => {
+        const productId = sanitizeObjectId(p._id);
         const productStatus = p.reported ? 'reported' : (p.status || 'hidden');
         const badgeClass = productStatus === 'active' ? 'badge-active' : productStatus === 'sold' ? 'badge-sold' : productStatus === 'hidden' ? 'badge-hidden' : 'badge-reported';
-        return `
-          <tr>
-            <td><strong>${p.title}</strong></td>
-            <td style="color:var(--t2)">${p.seller?.name || p.seller?.nickname || ''}</td>
-            <td style="color:var(--t2)">${p.category || ''}</td>
-            <td>${new Intl.NumberFormat('en-US').format(p.price)} VND</td>
-            <td>${p.views || 0}</td>
-            <td>${p.interested || 0}</td>
-            <td><span class="badge ${badgeClass}">${productStatus}</span></td>
-            <td style="color:var(--t2);font-size:12px">${new Date(p.createdAt).toLocaleDateString()}</td>
-            <td><div class="tbl-actions"><a class="act-btn primary" href="/products/${p._id}">View</a>
-              ${productStatus === 'active' ? `<button class="act-btn danger" onclick="adminProductAction('${p._id}','hide')">Hide</button>` : `<button class="act-btn success" onclick="adminProductAction('${p._id}','restore')">Restore</button>`}
-              <button class="act-btn" onclick="adminProductAction('${p._id}','delete')">Delete</button>
-            </div></td>
-          </tr>`;
-      }).join('');
+        const sellerName = p.seller?.name || p.seller?.nickname || '';
+        const productTitle = p.title || '';
+        const categoryName = p.category || '';
+        const viewHref = productId ? `/products/${encodeURIComponent(productId)}` : '#';
+        const tr = document.createElement('tr');
+        const tdTitle = document.createElement('td');
+        const strong = document.createElement('strong');
+        strong.textContent = productTitle;
+        tdTitle.appendChild(strong);
+        tr.appendChild(tdTitle);
+        const tdSeller = document.createElement('td');
+        tdSeller.style.color = 'var(--t2)';
+        tdSeller.textContent = sellerName;
+        tr.appendChild(tdSeller);
+        const tdCategory = document.createElement('td');
+        tdCategory.style.color = 'var(--t2)';
+        tdCategory.textContent = categoryName;
+        tr.appendChild(tdCategory);
+        const tdPrice = document.createElement('td');
+        tdPrice.textContent = `${new Intl.NumberFormat('en-US').format(p.price)} VND`;
+        tr.appendChild(tdPrice);
+        const tdViews = document.createElement('td');
+        tdViews.textContent = String(p.views || 0);
+        tr.appendChild(tdViews);
+        const tdInterested = document.createElement('td');
+        tdInterested.textContent = String(p.interested || 0);
+        tr.appendChild(tdInterested);
+        const tdStatus = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = `badge ${badgeClass}`;
+        statusBadge.textContent = productStatus;
+        tdStatus.appendChild(statusBadge);
+        tr.appendChild(tdStatus);
+        const tdDate = document.createElement('td');
+        tdDate.style.color = 'var(--t2)';
+        tdDate.style.fontSize = '12px';
+        tdDate.textContent = new Date(p.createdAt).toLocaleDateString();
+        tr.appendChild(tdDate);
+        const tdActions = document.createElement('td');
+        const actions = document.createElement('div');
+        actions.className = 'tbl-actions';
+        const viewA = document.createElement('a');
+        viewA.className = 'act-btn primary';
+        viewA.href = viewHref;
+        viewA.textContent = 'View';
+        actions.appendChild(viewA);
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = `act-btn ${productStatus === 'active' ? 'danger' : 'success'}`;
+        toggleBtn.textContent = productStatus === 'active' ? 'Hide' : 'Restore';
+        toggleBtn.addEventListener('click', () => adminProductAction(productId, productStatus === 'active' ? 'hide' : 'restore'));
+        actions.appendChild(toggleBtn);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'act-btn';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => adminProductAction(productId, 'delete'));
+        actions.appendChild(deleteBtn);
+        tdActions.appendChild(actions);
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+      });
       renderPagination('#aProducts .pagination', json.pagination, 'fetchAdminProducts');
     } catch (e) { console.error(e); }
   }
@@ -738,3 +1000,5 @@
     _bootDashboard();
   }
 </script>
+
+

@@ -3,3 +3,7 @@ node_modules/
 server/.env
 public/css/tailwind.css
 .claude/
+.vscode/
+scratch/
+tmp_*.html
+docs/index-snapshots/

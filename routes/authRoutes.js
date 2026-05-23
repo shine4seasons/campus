@@ -2,7 +2,10 @@ const router = require('express').Router();
 const passport = require('passport');
 const { googleCallback, getMe, logout, refresh, updateProfile } = require('../controllers/auth');
 const { protect } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { emptyBodySchema, authUpdateProfileSchema } = require('../validation/mutateSchemas');
 const { AUTH_ROUTES, OAUTH_FAILURE_REDIRECT, PASSPORT_STRATEGIES } = require('../config/authConstants');
+const { getAuthCookieOptions } = require('../utils/authSecurity');
 
 // Step 1: Redirect to Google OAuth
 router.get(AUTH_ROUTES.GOOGLE, passport.authenticate(PASSPORT_STRATEGIES.GOOGLE, { session: false }));
@@ -21,32 +24,27 @@ router.get(
 router.get(AUTH_ROUTES.ME, protect, getMe);
 
 // Logout user
-router.post(AUTH_ROUTES.LOGOUT, logout);
+router.post(AUTH_ROUTES.LOGOUT, validate(emptyBodySchema), logout);
 
 // Refresh authentication token
-router.post(AUTH_ROUTES.REFRESH, refresh);
+router.post(AUTH_ROUTES.REFRESH, validate(emptyBodySchema), refresh);
 
 // Update user profile from onboarding
-router.patch(AUTH_ROUTES.UPDATE_PROFILE, protect, updateProfile);
+router.patch(AUTH_ROUTES.UPDATE_PROFILE, protect, validate(authUpdateProfileSchema), updateProfile);
 
 // Development-only dev-login bypass for testing and visual auditing
 if (process.env.NODE_ENV === 'development') {
   router.get('/dev-login', async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).send('userId is required');
-    
+
     const jwt = require('jsonwebtoken');
     const token = jwt.sign({ sub: userId.toString() }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE || '7d',
     });
-    
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    
+
+    res.cookie('token', token, getAuthCookieOptions());
+
     // Set campus_mode cookie to buyer/seller/admin based on role
     const User = require('../models/User');
     const user = await User.findById(userId);

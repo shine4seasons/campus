@@ -27,6 +27,14 @@ module.exports = function verifyWebhookSecret(req, res, next) {
     req.get('x-webhook-secret');
 
   if (!providedSecret || !safeEqual(providedSecret, expectedSecret)) {
+    const ip = req.get('x-forwarded-for') || req.ip || req.socket?.remoteAddress || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+    console.warn('[security] suspicious_webhook_access', {
+      ip: String(ip).split(',')[0].trim(),
+      path: req.originalUrl || req.url,
+      method: req.method,
+      userAgent
+    });
     return res.status(401).json({
       success: false,
       message: 'Invalid webhook signature',

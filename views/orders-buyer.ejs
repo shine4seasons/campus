@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Orders — Campus Marketplace</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
+  <%- include('partials/head', { pageTitle: 'My Orders - Campus Marketplace', pageStyles: ['dashboard'] }) %>
   <style>
     .order-card {
       display: flex;
@@ -385,52 +378,6 @@
   </div>
 </main>
 
-<script>
-  // Filter functionality
-  document.querySelectorAll('.f-pill').forEach(pill => {
-    pill.addEventListener('click', function() {
-      const status = this.dataset.status;
-      document.querySelectorAll('.f-pill').forEach(p => p.classList.remove('on'));
-      this.classList.add('on');
-      const ordersList = document.getElementById('ordersList');
-      if (!ordersList) return;
-      const cards = ordersList.querySelectorAll('.order-card');
-      cards.forEach(card => {
-        if (status === 'all' || card.dataset.status === status) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    });
-  });
-
-  async function cancelOrder(orderId) {
-    if (typeof showConfirm !== 'function') return;
-    const confirmed = await showConfirm({
-      title: 'Cancel Order',
-      message: 'Are you sure you want to cancel this order?',
-      confirmText: 'Yes, Cancel',
-      type: 'danger'
-    });
-    if (!confirmed) return;
-    try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'cancelled' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (typeof showToast === 'function') showToast('Order cancelled', 'ok');
-        setTimeout(() => location.reload(), 800);
-      } else {
-        if (typeof showToast === 'function') showToast(data.message || 'Failed', 'err');
-      }
-    } catch (e) {
-      if (typeof showToast === 'function') showToast('Error', 'err');
-    }
-  }
-</script>
+<script defer src="/js/pages/orders-buyer.js"></script>
 </body>
 </html>

@@ -70,6 +70,12 @@ const PRODUCT_CONDITIONS = Object.freeze([
 
 const DELIVERY_MODES = Object.freeze(['pickup', 'ship']);
 const PAYMENT_MODES = Object.freeze(['cash', 'qr']);
+const PAYMENT_STATUS = Object.freeze({
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  EXPIRED: 'EXPIRED',
+  FAILED: 'FAILED',
+});
 
 const TRANSITIONS = Object.freeze({
   seller: {
@@ -92,6 +98,7 @@ module.exports = {
   PRODUCT_CONDITIONS,
   DELIVERY_MODES,
   PAYMENT_MODES,
+  PAYMENT_STATUS,
   TRANSITIONS,
   DISPUTE_STATUS,
   DISPUTE_CATEGORIES,

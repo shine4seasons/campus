@@ -434,6 +434,7 @@
 
     // Admin: restrict navigation
     const _USER_ROLE = <%- JSON.stringify(typeof user !== 'undefined' && user && user.role ? user.role : '') %>;
+    window.APP_USER_CONTEXT = Object.assign({}, window.APP_USER_CONTEXT || {}, { role: _USER_ROLE || 'buyer' });
     if (_USER_ROLE === 'admin') {
       document.addEventListener('click', function (e) {
         const a = e.target.closest && e.target.closest('a');

@@ -1,10 +1,5 @@
-const Product = require('../models/Product');
-const Order = require('../models/Order');
-const Payment = require('../models/Payment');
-const Rating = require('../models/Rating');
-const User = require('../models/User');
-const Wallet = require('../models/Wallet');
-const { ORDER_STATUS, PRODUCT_STATUS, PRODUCT_CONDITIONS } = require('../config/appConstants');
+const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
+const pageRepository = require('../repositories/pageRepository');
 
 const { incrementViews } = require('../utils/viewCounter');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR, LIMITS, ERROR_MESSAGES } = require('../config/pageConstants');
@@ -13,7 +8,7 @@ const { CATEGORIES } = require('../public/js/categories');
 /**
  * Get product details with related products
  */
-exports.getProduct = async (req, res) => {
+exports.getProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
 
@@ -25,9 +20,7 @@ exports.getProduct = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(productId)
-      .populate('seller', 'name nickname avatar university rating ratingCount totalSales createdAt')
-      .lean();
+    const product = await pageRepository.findPageProductById(productId);
 
     if (!product || product.status === PRODUCT_STATUS.HIDDEN) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
@@ -40,7 +33,11 @@ exports.getProduct = async (req, res) => {
     incrementViews(productId).catch(err => console.error('View increment error:', err));
 
     // Get related products
-    const relatedProducts = await getRelatedProducts(product, LIMITS.RELATED_PRODUCTS);
+    const relatedProducts = await pageRepository.findRelatedProducts({
+      category: product.category,
+      excludeProductId: product._id,
+      limit: LIMITS.RELATED_PRODUCTS
+    });
 
     res.render(VIEWS.PRODUCT, {
       title: `${product.title}${TITLE_SEPARATOR}${APP_NAME}`,
@@ -50,66 +47,21 @@ exports.getProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Product page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
-exports.getSearchResults = async (req, res) => {
+exports.getSearchResults = async (req, res, next) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = 12;
-    const q = String(req.query.q || '').trim();
-    const category = String(req.query.category || '').trim();
-    const condition = String(req.query.condition || '').trim();
-    const minPrice = Number.parseInt(req.query.minPrice, 10);
-    const maxPrice = Number.parseInt(req.query.maxPrice, 10);
-    const allowedSorts = new Set(['relevance', 'newest', 'price-asc', 'price-desc', 'rating']);
-    const rawSort = String(req.query.sort || (q ? 'relevance' : 'newest')).trim();
-    const sort = allowedSorts.has(rawSort) ? rawSort : (q ? 'relevance' : 'newest');
-
-    const filter = {
-      status: PRODUCT_STATUS.ACTIVE,
-      $or: [{ quantity: { $gt: 0 } }, { quantity: { $exists: false } }]
-    };
-
-    if (category) filter.category = category;
-    if (PRODUCT_CONDITIONS.includes(condition)) filter.condition = condition;
-    if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
-      filter.price = {};
-      if (Number.isFinite(minPrice)) filter.price.$gte = minPrice;
-      if (Number.isFinite(maxPrice)) filter.price.$lte = maxPrice;
-    }
-    if (res.locals.user) filter.seller = { $ne: res.locals.user._id };
-
-    const queryFilter = q ? { ...filter, $text: { $search: q } } : filter;
-
-    let productQuery;
-    if (q && sort === 'relevance') {
-      productQuery = Product.find(queryFilter, { score: { $meta: 'textScore' } })
-        .sort({ score: { $meta: 'textScore' } });
-    } else {
-      const sortMap = {
-        newest: { createdAt: -1 },
-        'price-asc': { price: 1, createdAt: -1 },
-        'price-desc': { price: -1, createdAt: -1 },
-        rating: { ratingAverage: -1, ratingCount: -1, createdAt: -1 }
-      };
-
-      productQuery = Product.find(queryFilter).sort(sortMap[sort] || sortMap.newest);
-    }
-
-    const skip = (page - 1) * limit;
-    const [products, total] = await Promise.all([
-      productQuery
-        .skip(skip)
-        .limit(limit)
-        .populate('seller', 'name nickname avatar university rating ratingCount totalSales')
-        .lean(),
-      Product.countDocuments(queryFilter)
-    ]);
+    const searchResult = await pageRepository.findSearchProducts({
+      query: req.query,
+      page,
+      limit,
+      currentUserId: res.locals.user && res.locals.user._id
+    });
+    const { products, total, sort, q, category, condition, minPrice, maxPrice } = searchResult;
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);
     const categoryMeta = CATEGORIES.find(item => item.slug === category) || null;
@@ -148,21 +100,16 @@ exports.getSearchResults = async (req, res) => {
     });
   } catch (error) {
     console.error('Search results page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
 /**
  * Get user's products for my-products page
  */
-exports.getMyProducts = async (req, res) => {
+exports.getMyProducts = async (req, res, next) => {
   try {
-    const products = await Product.find({ seller: res.locals.user._id })
-      .sort('-createdAt')
-      .lean();
+    const products = await pageRepository.findProductsBySeller(res.locals.user._id);
 
     res.render(VIEWS.MY_PRODUCTS, {
       title: `My products${TITLE_SEPARATOR}${APP_NAME}`,
@@ -172,23 +119,20 @@ exports.getMyProducts = async (req, res) => {
     });
   } catch (error) {
     console.error('My products page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
 /**
  * Get sell page with optional edit product
  */
-exports.getSellPage = async (req, res) => {
+exports.getSellPage = async (req, res, next) => {
   const editId = req.query.id;
   let editProduct = null;
 
   if (editId) {
     try {
-      const product = await Product.findById(editId).lean();
+      const product = await pageRepository.findSellEditProduct(editId);
       if (product && String(product.seller) === String(res.locals.user._id)) {
         editProduct = product;
       }
@@ -201,23 +145,25 @@ exports.getSellPage = async (req, res) => {
     ? `Edit product${TITLE_SEPARATOR}${APP_NAME}`
     : `Post a product${TITLE_SEPARATOR}${APP_NAME}`;
 
-  res.render(VIEWS.SELL, {
-    title,
-    editProduct,
-    isLoginPage: false,
-    CATEGORIES,
-    activePage: 'products'
-  });
+  try {
+    return res.render(VIEWS.SELL, {
+      title,
+      editProduct,
+      isLoginPage: false,
+      CATEGORIES,
+      activePage: 'products'
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 /**
  * Get profile page with user's products
  */
-exports.getProfile = async (req, res) => {
+exports.getProfile = async (req, res, next) => {
   try {
-    const products = await Product.find({ seller: res.locals.user._id })
-      .sort('-createdAt')
-      .lean();
+    const products = await pageRepository.findProductsBySeller(res.locals.user._id);
 
     res.render(VIEWS.PROFILE, {
       title: `My Profile${TITLE_SEPARATOR}${APP_NAME}`,
@@ -229,20 +175,14 @@ exports.getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('Profile page error:', error.message);
-    res.render(VIEWS.PROFILE, {
-      title: `My Profile${TITLE_SEPARATOR}${APP_NAME}`,
-      products: [],
-      isLoginPage: false,
-      isOwnProfile: true,
-      viewingUser: null
-    });
+    return next(error);
   }
 };
 
 /**
  * Get public user profile by user ID
  */
-exports.getUserProfile = async (req, res) => {
+exports.getUserProfile = async (req, res, next) => {
   try {
     const userId = req.params.userId;
     const currentUser = res.locals.user;
@@ -267,9 +207,7 @@ exports.getUserProfile = async (req, res) => {
       ? '_id name nickname avatar email university bio rating ratingCount totalSales createdAt banned role'
       : '_id name nickname avatar university bio rating ratingCount totalSales createdAt';
 
-    const viewingUser = await User.findById(userId)
-      .select(selectFields)
-      .lean();
+    const viewingUser = await pageRepository.findPublicProfileUserById(userId, isAdmin);
 
     if (!viewingUser) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
@@ -279,13 +217,7 @@ exports.getUserProfile = async (req, res) => {
     }
 
     // Admin can see all products (including hidden/sold), regular users only see active
-    const productFilter = isAdmin
-      ? { seller: userId }
-      : { seller: userId, status: PRODUCT_STATUS.ACTIVE };
-
-    const products = await Product.find(productFilter)
-      .sort('-createdAt')
-      .lean();
+    const products = await pageRepository.findPublicProfileProducts({ userId, isAdmin });
 
     res.render(VIEWS.PROFILE, {
       title: `${viewingUser.nickname || viewingUser.name}${TITLE_SEPARATOR}${APP_NAME}`,
@@ -297,10 +229,7 @@ exports.getUserProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('User profile page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
@@ -309,7 +238,7 @@ exports.getUserProfile = async (req, res) => {
  * /dashboard: Admin-only (protected by requireAdminPage middleware)
  * /dashboard-seller: For all authenticated users
  */
-exports.getDashboard = async (req, res) => {
+exports.getDashboard = async (req, res, next) => {
   const user = res.locals.user;
   if (!user) return res.redirect('/login');
 
@@ -318,57 +247,7 @@ exports.getDashboard = async (req, res) => {
   if (req.path === '/dashboard' || req.baseUrl === '/dashboard') {
     try {
       // Fetch data for admin dashboard (consistent with adminRoutes.js)
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      // 1. Stats
-      const totalUsers = await User.countDocuments({ banned: { $ne: true } });
-      const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfMonth }, banned: { $ne: true } });
-      const newUsersLastMonth = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }, banned: { $ne: true } });
-      const totalUsersDelta = newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(0) : 0;
-
-      const activeProducts = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
-      const activeProductsYesterday = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE, createdAt: { $lt: yesterday } });
-      const activeProductsDelta = activeProducts - activeProductsYesterday;
-
-      const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: startOfMonth } });
-      const ordersLastMonth = await Order.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } });
-      const ordersDelta = ordersLastMonth > 0 ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth * 100).toFixed(0) : 0;
-
-      const gmvThisMonthResult = await Order.aggregate([
-        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfMonth } } },
-        { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
-      ]);
-      const gmvThisMonth = gmvThisMonthResult[0]?.total || 0;
-
-      const gmvLastMonthResult = await Order.aggregate([
-        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfLastMonth, $lt: startOfMonth } } },
-        { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
-      ]);
-      const gmvLastMonth = gmvLastMonthResult[0]?.total || 0;
-      const gmvDelta = gmvLastMonth > 0 ? ((gmvThisMonth - gmvLastMonth) / gmvLastMonth * 100).toFixed(0) : 0;
-
-      const stats = {
-        totalUsers: { value: totalUsers, delta: totalUsersDelta },
-        totalProducts: { value: await Product.countDocuments({}) },
-        activeProducts: { value: activeProducts, delta: activeProductsDelta },
-        ordersThisMonth: { value: ordersThisMonth, delta: ordersDelta },
-        gmvThisMonth: { value: gmvThisMonth, delta: gmvDelta }
-      };
-
-      // 2. Top sellers
-      const topSellers = await Order.aggregate([
-        { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfMonth } } },
-        { $group: { _id: '$seller', totalRevenue: { $sum: '$priceSnapshot' }, totalOrders: { $sum: 1 } } },
-        { $sort: { totalRevenue: -1 } },
-        { $limit: 5 },
-        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'sellerInfo' } },
-        { $unwind: '$sellerInfo' },
-        { $project: { _id: 0, sellerId: '$_id', name: { $ifNull: ['$sellerInfo.nickname', '$sellerInfo.name'] }, university: '$sellerInfo.university', rating: '$sellerInfo.rating', totalRevenue: 1, totalOrders: 1 } }
-      ]);
+      const { stats, topSellers } = await pageRepository.getAdminDashboardSnapshot();
 
       return res.render(VIEWS.DASHBOARD_ADMIN, {
         title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
@@ -381,15 +260,7 @@ exports.getDashboard = async (req, res) => {
       });
     } catch (err) {
       console.error('Admin dashboard error:', err.message);
-      return res.render(VIEWS.DASHBOARD_ADMIN, {
-        title: `Admin Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-        isLoginPage: false,
-        CATEGORIES,
-        isSuperAdmin: user.role === 'admin',
-        stats: { totalUsers: { value: 0, delta: 0 }, activeProducts: { value: 0, delta: 0 }, ordersThisMonth: { value: 0, delta: 0 }, gmvThisMonth: { value: 0, delta: 0 } },
-        topSellers: [],
-        initialSection: 'aDash'
-      });
+      return next(err);
     }
   }
 
@@ -397,61 +268,13 @@ exports.getDashboard = async (req, res) => {
   try {
     const sellerId = user._id;
 
-    // 1. Active products
-    const activeCount = await Product.countDocuments({ seller: sellerId, status: PRODUCT_STATUS.ACTIVE });
-
-    // 2. Orders awaiting confirmation
-    const pendingCount = await Order.countDocuments({ seller: sellerId, status: ORDER_STATUS.PENDING });
-
-    // 3. Revenue
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Monthly revenue
-    const revenueRes = await Order.aggregate([
-      { $match: { seller: sellerId, status: ORDER_STATUS.COMPLETED, completedAt: { $gte: startOfMonth } } },
-      { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
-    ]);
-    const monthRevenue = revenueRes[0]?.total || 0;
-
-    // Total revenue
-    const totalRevRes = await Order.aggregate([
-      { $match: { seller: sellerId, status: ORDER_STATUS.COMPLETED } },
-      { $group: { _id: null, total: { $sum: '$priceSnapshot' } } }
-    ]);
-    const totalRevenue = totalRevRes[0]?.total || 0;
-
-    // 5. Sold item count
-    const soldAgg = await Order.aggregate([
-      { $match: { seller: sellerId, status: { $ne: ORDER_STATUS.CANCELLED } } },
-      { $group: { _id: null, total: { $sum: '$quantity' } } }
-    ]);
-    const soldCount = soldAgg[0]?.total || 0;
-
-    // 6. Recent ratings
-    const recentRatings = await Rating.find({ ratedEntity: 'user', entityId: sellerId })
-      .sort('-createdAt')
-      .limit(5)
-      .populate('rater', 'name nickname')
-      .lean();
-
-    // 7. Wallet
-    let wallet = await Wallet.findOne({ user: sellerId }).lean();
-    if (!wallet) {
-      wallet = { availableBalance: 0, pendingBalance: 0, totalSales: 0 };
-    }
+    const { stats, wallet, recentRatings } = await pageRepository.getSellerDashboardSnapshot(sellerId);
 
     return res.render(VIEWS.DASHBOARD_SELLER, {
       title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
       isLoginPage: false,
       isSeller: user.role === 'seller',
-      stats: {
-        activeProducts: activeCount,
-        pendingOrders: pendingCount,
-        monthRevenue: monthRevenue,
-        totalRevenue: totalRevenue,
-        totalSold: soldCount
-      },
+      stats,
       wallet,
       recentRatings,
       activePage: 'dashboard'
@@ -459,33 +282,22 @@ exports.getDashboard = async (req, res) => {
 
   } catch (error) {
     console.error('Seller dashboard error:', error.message);
-    return res.render(VIEWS.DASHBOARD_SELLER, {
-      title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
-      isLoginPage: false,
-      isSeller: user.role === 'seller',
-      stats: { activeProducts: 0, pendingOrders: 0, monthRevenue: 0, totalSold: 0 },
-      recentRatings: []
-    });
+    return next(error);
   }
 };
 
 /**
  * Get seller orders with product statistics
  */
-exports.getSellerOrders = async (req, res) => {
+exports.getSellerOrders = async (req, res, next) => {
   try {
     const sellerId = res.locals.user._id;
 
     // Get orders with populated data
-    const orders = await Order.find({ seller: sellerId })
-      .sort('-createdAt')
-      .populate('product', 'title images price category condition location')
-      .populate('buyer', 'name nickname avatar phone rating ratingCount')
-      .populate('seller', 'name nickname avatar phone')
-      .lean();
+    const orders = await pageRepository.findSellerOrders(sellerId);
 
     // Get product order counts
-    const productsWithCounts = await getProductOrderCounts(sellerId);
+    const productsWithCounts = await pageRepository.getProductOrderCounts(sellerId);
 
     res.render(VIEWS.ORDERS_SELLER, {
       title: `Orders${TITLE_SEPARATOR}${APP_NAME}`,
@@ -496,17 +308,14 @@ exports.getSellerOrders = async (req, res) => {
     });
   } catch (error) {
     console.error('Seller orders page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
 /**
  * Get revenue page (placeholder for future implementation)
  */
-exports.getRevenue = async (req, res) => {
+exports.getRevenue = async (req, res, next) => {
   try {
     res.render(VIEWS.REVENUE, {
       title: `Revenue${TITLE_SEPARATOR}${APP_NAME}`,
@@ -515,26 +324,19 @@ exports.getRevenue = async (req, res) => {
     });
   } catch (error) {
     console.error('Revenue page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
 /**
  * Get buyer's orders (for /orders page)
  */
-exports.getBuyerOrders = async (req, res) => {
+exports.getBuyerOrders = async (req, res, next) => {
   try {
     const buyerId = res.locals.user._id;
 
     // Get orders with populated data
-    const orders = await Order.find({ buyer: buyerId })
-      .sort('-createdAt')
-      .populate('product', 'title images price category')
-      .populate('seller', 'name nickname avatar phone location rating ratingCount')
-      .lean();
+    const orders = await pageRepository.findBuyerOrders(buyerId);
 
     // Count orders by status
     const statusCounts = {
@@ -557,17 +359,14 @@ exports.getBuyerOrders = async (req, res) => {
     });
   } catch (error) {
     console.error('Buyer orders page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
 /**
  * Get order tracking page with map
  */
-exports.getOrderTracking = async (req, res) => {
+exports.getOrderTracking = async (req, res, next) => {
   try {
     const orderId = req.params.orderId;
     const userId = res.locals.user._id;
@@ -580,19 +379,8 @@ exports.getOrderTracking = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId)
-      .populate('product', 'title images price category location')
-      .populate('buyer', 'name nickname avatar phone location')
-      .populate('seller', 'name nickname avatar phone location rating ratingCount')
-      .populate('timeline.actor', 'name nickname avatar')
-      .populate('dispute.openedBy', 'name nickname avatar')
-      .populate('dispute.resolvedBy', 'name nickname')
-      .lean();
-
-    const payment = await Payment.findOne({ order: orderId })
-      .sort({ createdAt: -1 })
-      .select('_id status amount expiredAt paidAt paymentCode sepayQrUrl qrUrl')
-      .lean();
+    const order = await pageRepository.findOrderTrackingDetail(orderId);
+    const payment = await pageRepository.findLatestPaymentForOrder(orderId);
 
     if (!order) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
@@ -624,61 +412,7 @@ exports.getOrderTracking = async (req, res) => {
     });
   } catch (error) {
     console.error('Order tracking page error:', error.message);
-    res.status(500).render(VIEWS.NOT_FOUND, {
-      title: 'Error',
-      isLoginPage: false
-    });
+    return next(error);
   }
 };
 
-// Helper functions
-
-
-/**
- * Get related products for a given product
- */
-async function getRelatedProducts(product, limit) {
-  try {
-    return await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-      status: PRODUCT_STATUS.ACTIVE
-    })
-      .sort('-views')
-      .limit(limit)
-      .lean();
-  } catch (error) {
-    console.error('Related products fetch error:', error.message);
-    return [];
-  }
-}
-
-/**
- * Get product order counts for a seller
- */
-async function getProductOrderCounts(sellerId) {
-  try {
-    const aggregation = await Order.aggregate([
-      { $match: { seller: sellerId } },
-      { $group: { _id: '$product', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    if (!aggregation.length) return [];
-
-    const productIds = aggregation.map(a => a._id);
-    const products = await Product.find({ _id: { $in: productIds } })
-      .select('title images price')
-      .lean();
-
-    const productMap = new Map(products.map(p => [String(p._id), p]));
-
-    return aggregation.map(a => ({
-      product: productMap.get(String(a._id)) || { _id: a._id, title: 'Deleted product' },
-      count: a.count
-    }));
-  } catch (error) {
-    console.error('Product order counts error:', error.message);
-    return [];
-  }
-}

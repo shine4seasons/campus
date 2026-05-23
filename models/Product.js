@@ -35,14 +35,12 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(PRODUCT_STATUS),
       default: PRODUCT_STATUS.ACTIVE,
-      index: true,
     },
 
 
     reported: {
       type: Boolean,
       default: false,
-      index: true,
     },
 
     // AI generated description (Feature 4)
@@ -75,8 +73,8 @@ const ProductSchema = new mongoose.Schema(
 ProductSchema.index({ title: 'text', description: 'text' }, { weights: { title: 3, description: 1 } });
 
 // Compound index hay dùng: lọc active + sort by date
-ProductSchema.index({ status: 1, createdAt: -1 });
-ProductSchema.index({ category: 1, status: 1 });
-ProductSchema.index({ seller: 1, status: 1 });
+ProductSchema.index({ status: 1, createdAt: -1 }, { name: 'status_createdAt' });
+ProductSchema.index({ category: 1, status: 1 }, { name: 'category_status' });
+ProductSchema.index({ seller: 1, status: 1 }, { name: 'seller_status' });
 
 module.exports = mongoose.model('Product', ProductSchema);

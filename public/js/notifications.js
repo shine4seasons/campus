@@ -1,3 +1,23 @@
+function escHtml(value) {
+    if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
+        return window.AppUtils.escapeHtml(value);
+    }
+    return String(value == null ? '' : value);
+}
+
+function clearNode(node) {
+    if (!node) return;
+    while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function setEmptyState(container, text) {
+    clearNode(container);
+    const div = document.createElement('div');
+    div.className = 'notif-empty';
+    div.textContent = text;
+    container.appendChild(div);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const notifBtn = document.getElementById('notif-btn');
     const notifDropdown = document.getElementById('notif-dropdown');
@@ -73,13 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderNotifications(data.notifications);
             }
         } catch (err) {
-            notifList.innerHTML = '<div class="notif-empty">Could not load notifications.</div>';
+            setEmptyState(notifList, 'Could not load notifications.');
         }
     }
 
     function prependNotification(notif) {
         if (notifList.querySelector('.notif-empty')) {
-            notifList.innerHTML = '';
+            clearNode(notifList);
         }
         const item = createNotifElement(notif);
         notifList.insertBefore(item, notifList.firstChild);
@@ -87,31 +107,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderNotifications(notifications) {
         if (!notifications || notifications.length === 0) {
-            notifList.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+            setEmptyState(notifList, 'No notifications yet.');
             return;
         }
 
-        notifList.innerHTML = '';
+        clearNode(notifList);
         notifications.forEach(notif => {
             notifList.appendChild(createNotifElement(notif));
         });
-    }
-
-    function escHtml(str) {
-        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     function createNotifElement(notif) {
         const div = document.createElement('a');
         div.href = notif.link || 'javascript:void(0)';
         div.className = `notif-item ${notif.isRead ? '' : 'unread'}`;
-        div.innerHTML = `
-            <div class="notif-content">
-                <div class="notif-title">${escHtml(notif.title)}</div>
-                <div class="notif-msg">${escHtml(notif.message)}</div>
-                <div class="notif-time">${formatTime(notif.createdAt)}</div>
-            </div>
-        `;
+        const content = document.createElement('div');
+        content.className = 'notif-content';
+        const title = document.createElement('div');
+        title.className = 'notif-title';
+        title.textContent = notif.title || '';
+        const msg = document.createElement('div');
+        msg.className = 'notif-msg';
+        msg.textContent = notif.message || '';
+        const time = document.createElement('div');
+        time.className = 'notif-time';
+        time.textContent = formatTime(notif.createdAt);
+        content.appendChild(title);
+        content.appendChild(msg);
+        content.appendChild(time);
+        div.appendChild(content);
         div.addEventListener('click', async (e) => {
             if (!notif.isRead) {
                 await markAsRead(notif._id);
@@ -162,12 +186,37 @@ window.showToast = function(msg, type = 'ok') {
 
     const t = document.createElement('div');
     t.className = 'toast ' + type;
-    const icons = {
-        ok:   '<svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>',
-        err:  '<svg viewBox="0 0 24 24" stroke-width="2.5" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-        info: '<svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-    };
-    t.innerHTML = (icons[type] || '') + `<span>${msg}</span>`;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    if (type === 'info') {
+        svg.setAttribute('stroke-width', '2');
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '10');
+        const l1 = document.createElementNS(NS, 'line');
+        l1.setAttribute('x1', '12'); l1.setAttribute('y1', '8'); l1.setAttribute('x2', '12'); l1.setAttribute('y2', '12');
+        const l2 = document.createElementNS(NS, 'line');
+        l2.setAttribute('x1', '12'); l2.setAttribute('y1', '16'); l2.setAttribute('x2', '12.01'); l2.setAttribute('y2', '16');
+        svg.appendChild(c); svg.appendChild(l1); svg.appendChild(l2);
+    } else if (type === 'err') {
+        svg.setAttribute('stroke-width', '2.5');
+        const l1 = document.createElementNS(NS, 'line');
+        l1.setAttribute('x1', '18'); l1.setAttribute('y1', '6'); l1.setAttribute('x2', '6'); l1.setAttribute('y2', '18');
+        const l2 = document.createElementNS(NS, 'line');
+        l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
+        svg.appendChild(l1); svg.appendChild(l2);
+    } else {
+        svg.setAttribute('stroke-width', '2.5');
+        const p = document.createElementNS(NS, 'polyline');
+        p.setAttribute('points', '20 6 9 17 4 12');
+        svg.appendChild(p);
+    }
+    t.appendChild(svg);
+    const span = document.createElement('span');
+    span.textContent = String(msg == null ? '' : msg);
+    t.appendChild(span);
     wrap.appendChild(t);
 
     setTimeout(() => {
@@ -190,20 +239,33 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
 
         const modal = document.createElement('div');
         modal.className = 'custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="custom-modal">
-                <div class="custom-modal-header">
-                    <span class="custom-modal-title">${title || 'Confirm'}</span>
-                </div>
-                <div class="custom-modal-body">
-                    <p>${message}</p>
-                </div>
-                <div class="custom-modal-footer">
-                    <button class="modal-btn-cancel">${cancelText}</button>
-                    <button class="modal-btn-confirm ${type === 'danger' ? 'danger' : ''}">${confirmText}</button>
-                </div>
-            </div>
-        `;
+        const modalBox = document.createElement('div');
+        modalBox.className = 'custom-modal';
+        const header = document.createElement('div');
+        header.className = 'custom-modal-header';
+        const titleEl = document.createElement('span');
+        titleEl.className = 'custom-modal-title';
+        titleEl.textContent = title || 'Confirm';
+        header.appendChild(titleEl);
+        const body = document.createElement('div');
+        body.className = 'custom-modal-body';
+        const p = document.createElement('p');
+        p.textContent = message || '';
+        body.appendChild(p);
+        const footer = document.createElement('div');
+        footer.className = 'custom-modal-footer';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'modal-btn-cancel';
+        cancelBtn.textContent = cancelText;
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = `modal-btn-confirm ${type === 'danger' ? 'danger' : ''}`.trim();
+        confirmBtn.textContent = confirmText;
+        footer.appendChild(cancelBtn);
+        footer.appendChild(confirmBtn);
+        modalBox.appendChild(header);
+        modalBox.appendChild(body);
+        modalBox.appendChild(footer);
+        modal.appendChild(modalBox);
 
         container.appendChild(modal);
 
@@ -216,8 +278,8 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
             }, 200);
         };
 
-        modal.querySelector('.modal-btn-confirm').onclick = () => close(true);
-        modal.querySelector('.modal-btn-cancel').onclick = () => close(false);
+        confirmBtn.onclick = () => close(true);
+        cancelBtn.onclick = () => close(false);
         modal.onclick = (e) => { if (e.target === modal) close(false); };
     });
 };

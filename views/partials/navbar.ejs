@@ -59,20 +59,22 @@
 		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
 	</div>
 </header>
-<script src="https://unpkg.com/lucide@latest"></script>
+<script defer src="/vendor/lucide-0.460.0.min.js"></script>
 <script>
-	if (typeof lucide !== 'undefined') {
-		lucide.createIcons();
-	}
+	document.addEventListener('DOMContentLoaded', function () {
+		if (typeof lucide !== 'undefined') {
+			lucide.createIcons();
+		}
+	});
 </script>
-<script src="/socket.io/socket.io.js"></script>
+<script defer src="/socket.io/socket.io.js"></script>
 <script>
     window.SOCKET_USER_ID = '<%= user ? user._id : "" %>';
 </script>
 <div id="toast-wrap"></div>
 <div id="modal-container"></div>
-<script src="/js/notifications.js"></script>
-<script src="/js/chat-dropdown.js"></script>
-<script src="/js/search.js"></script>
+<script defer src="/js/notifications.js"></script>
+<script defer src="/js/chat-dropdown.js"></script>
+<script defer src="/js/search.js"></script>
 
 

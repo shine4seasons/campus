@@ -4,7 +4,7 @@ const { USER_ROLES } = require('../config/appConstants');
 
 const UserSchema = new mongoose.Schema(
   {
-    googleId: { type: String, required: true, unique: true, index: true },
+    googleId: { type: String, required: true, unique: true },
     email:    { type: String, required: true, unique: true, lowercase: true },
     name:     { type: String, required: true },
     avatar:   { type: String, default: null },
@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema(
     isNewUser: { type: Boolean, default: true },
 
     // Admin controls
-    banned: { type: Boolean, default: false, index: true },
+    banned: { type: Boolean, default: false },
 
     // ── Stats ──────────────────────────────────────────
     rating:      { type: Number, default: 5.0, min: 0, max: 5 },

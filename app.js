@@ -1,4 +1,6 @@
 require('dotenv').config();
+const { validateEnv } = require('./config/env');
+validateEnv();
 
 const express = require('express');
 const http = require('http');
@@ -8,7 +10,10 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database');
 const passport = require('./config/passport');
 const injectUser = require('./middleware/locals');
+const { issueCsrfCookie, csrfGuard } = require('./middleware/csrf');
+const { applySecurityHeaders, monitorAuthzFailures, limitAuth } = require('./middleware/security');
 const { renderNotFound, renderServerError } = require('./utils/pageResponses');
+const { mapError } = require('./utils/errors');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/products');
@@ -32,9 +37,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(applySecurityHeaders);
+app.use(issueCsrfCookie);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passport.initialize());
 app.use(injectUser);
+app.use(monitorAuthzFailures);
 app.use((req, res, next) => {
   const originalRender = res.render.bind(res);
 
@@ -71,6 +79,21 @@ app.use((req, res, next) => {
   return next();
 });
 
+app.use([
+  '/api/auth',
+  '/api/orders',
+  '/api/products',
+  '/api/ratings',
+  '/api/chat',
+  '/api/payments',
+  '/api/wallet',
+  '/api/admin',
+  '/api/report',
+  '/api/notifications',
+  '/api/upload',
+  '/api/ai'
+], csrfGuard);
+app.use('/api/auth', limitAuth);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -90,13 +113,27 @@ app.use('/api/admin', adminApiRoutes);
 app.use((req, res) => renderNotFound(res));
 
 app.use((err, req, res, next) => {
-  console.error('[app] unhandled error:', err);
+  if (res.headersSent) return next(err);
 
-  if (res.headersSent) {
-    return next(err);
+  const { status, message, code, details } = mapError(err);
+  if (status >= 500) {
+    console.error('[app] unhandled error:', err);
   }
 
-  return renderServerError(res);
+  if (req.path.startsWith('/api/')) {
+    const payload = {
+      success: false,
+      message,
+      code,
+    };
+    if (status < 500 && details) {
+      payload.details = details;
+    }
+    return res.status(status).json(payload);
+  }
+
+  if (status >= 500) return renderServerError(res);
+  return renderNotFound(res);
 });
 
 const PORT = process.env.PORT || 5000;

@@ -1,43 +1,15 @@
 const router = require('express').Router();
-const Report = require('../models/Report');
 const { protect } = require('../middleware/auth');
-const mongoose = require('mongoose');
+const { validate } = require('../middleware/validate');
+const { limitReportSubmit } = require('../middleware/security');
+const { reportCreateSchema } = require('../validation/mutateSchemas');
+const Report = require('../models/Report');
 
 // POST /api/report - Create a report
-router.post('/', protect, async (req, res) => {
+router.post('/', limitReportSubmit, protect, validate(reportCreateSchema), async (req, res, next) => {
   try {
     const { targetType, targetId, reason, content } = req.body;
     const reporterId = req.user._id;
-
-    // Validate input
-    if (!targetType || !targetId || !reason) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }
-
-    if (!['product', 'user'].includes(targetType)) {
-      return res.status(400).json({ success: false, message: 'Invalid target type' });
-    }
-
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(targetId)) {
-      return res.status(400).json({ success: false, message: 'Invalid target ID format' });
-    }
-
-    const validReasons = [
-      'inappropriate-content',
-      'offensive-language',
-      'fraud-scam',
-      'counterfeit-item',
-      'damaged-item',
-      'misleading-description',
-      'fake-account',
-      'suspicious-behavior',
-      'other'
-    ];
-
-    if (!validReasons.includes(reason)) {
-      return res.status(400).json({ success: false, message: 'Invalid reason' });
-    }
 
     // Check if user already reported this target
     const existingReport = await Report.findOne({
@@ -68,7 +40,7 @@ router.post('/', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Report creation error:', error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 });
 

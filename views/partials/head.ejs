@@ -1,11 +1,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= title || 'Campus Marketplace' %></title>
+<title><%= typeof pageTitle !== 'undefined' ? pageTitle : (typeof title !== 'undefined' ? title : 'Campus Marketplace') %></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="/css/tailwind.css">
 <link rel="stylesheet" href="/css/shared.css">
 <link rel="stylesheet" href="/css/main.css">
-<% if (typeof extraCss !== 'undefined' && extraCss) { %>
-<link rel="stylesheet" href="/css/<%= extraCss %>">
-<% } %>
+<% const styles = Array.isArray(pageStyles) ? pageStyles : (typeof extraCss !== 'undefined' && extraCss ? [extraCss.replace(/\.css$/, '')] : []); %>
+<% styles.forEach((styleName) => { %>
+<link rel="stylesheet" href="/css/<%= styleName %>.css">
+<% }) %>
+<script defer src="/js/utils.js"></script>

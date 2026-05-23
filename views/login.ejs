@@ -1,12 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — Campus Marketplace</title>
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/login.css">
+  <%- include('partials/head', { pageTitle: 'Login - Campus Marketplace', pageStyles: ['login'] }) %>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -217,89 +212,7 @@
   </div>
 </div>
 
-<script>
-  // ── Google button ──────────────────────────────────
-  document.getElementById('google-btn').addEventListener('click', function () {
-    this.classList.add('loading');
-    window.location.href = '/api/auth/google';
-  });
-
-  // ── Submit profile (Step 2) ────────────────────────
-  // httpOnly cookie sent automatically — no token needed
-  window.submitProfile = async function () {
-    const nickname   = document.getElementById('f-nickname').value.trim();
-    const university = document.getElementById('f-university').value.trim();
-    const phone      = document.getElementById('f-phone').value.trim();
-    const studentId  = document.getElementById('f-student-id').value.trim();
-    const bio        = document.getElementById('f-bio').value.trim();
-
-    let ok = true;
-    ['f-nickname', 'f-university'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) { el.classList.add('has-error'); ok = false; }
-      else el.classList.remove('has-error');
-    });
-    if (!ok) return;
-
-    const btn = document.getElementById('btn-submit');
-    btn.disabled = true;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 0.7s linear infinite"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="2"/></svg> Saving...';
-
-    try {
-      const res = await fetch('/api/auth/profile', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname, phone, university, studentId, bio, profileComplete: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed');
-      showSuccess('Profile saved. Redirecting to homepage...');
-    } catch (err) {
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Finish &amp; Go to homepage';
-      const errEl = document.getElementById('step2-error');
-      document.getElementById('step2-error-text').textContent = err.message || 'Unable to save profile. Please try again.';
-      errEl.style.display = 'flex';
-    }
-  };
-
-  window.skipProfile = async function () {
-    try {
-      await fetch('/api/auth/profile', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileComplete: true }),
-      });
-    } catch {}
-    document.getElementById('success-msg').textContent = "You can complete your profile later in Settings.";
-    showSuccess();
-  };
-
-  function showSuccess(msg) {
-    if (msg) document.getElementById('success-msg').textContent = msg;
-    document.getElementById('success-flash').classList.add('show');
-    setTimeout(() => { window.location.href = '/'; }, 1600);
-  }
-
-  // Initialize all icons on page
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  // Show error toast if redirect error is banned
-  const urlParams = new URLSearchParams(window.location.search);
-  const errorParam = urlParams.get('error');
-  if (errorParam === 'banned') {
-    if (!document.getElementById('toast-wrap')) {
-      const wrap = document.createElement('div');
-      wrap.id = 'toast-wrap';
-      document.body.appendChild(wrap);
-    }
-    if (typeof showToast === 'function') {
-      showToast('This account has been banned.', 'err');
-    }
-  }
-</script>
+<script defer src="/js/pages/login.js"></script>
 
 </body>
 </html>

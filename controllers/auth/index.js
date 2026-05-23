@@ -1,6 +1,12 @@
 const jwt  = require('jsonwebtoken');
-const User = require('../../models/User');
+const crypto = require('crypto');
 const { ALLOWED_PROFILE_FIELDS } = require('./constants');
+const authRepository = require('../../repositories/authRepository');
+const {
+  getAuthCookieOptions,
+  getCsrfCookieOptions,
+  shouldAllowRefresh
+} = require('../../utils/authSecurity');
 
 const signToken = (userId) =>
   jwt.sign({ sub: userId.toString() }, process.env.JWT_SECRET, {
@@ -8,11 +14,21 @@ const signToken = (userId) =>
   });
 
 const sendTokenCookie = (res, token) => {
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge:   7 * 24 * 60 * 60 * 1000,
+  res.cookie('token', token, getAuthCookieOptions());
+  res.cookie('csrf', crypto.randomBytes(24).toString('hex'), getCsrfCookieOptions());
+};
+
+const clearAuthCookies = (res) => {
+  // Keep cookie options aligned with issue options so clearCookie targets the same cookie shape.
+  res.clearCookie('token', {
+    httpOnly: getAuthCookieOptions().httpOnly,
+    secure: getAuthCookieOptions().secure,
+    sameSite: getAuthCookieOptions().sameSite
+  });
+  res.clearCookie('csrf', {
+    httpOnly: getCsrfCookieOptions().httpOnly,
+    secure: getCsrfCookieOptions().secure,
+    sameSite: getCsrfCookieOptions().sameSite
   });
 };
 
@@ -21,7 +37,7 @@ const googleCallback = async (req, res) => {
   const token = signToken(req.user._id);
   sendTokenCookie(res, token);
 
-  const user = await User.findById(req.user._id);
+  const user = await authRepository.findUserById(req.user._id);
   const isProfileComplete = user?.profileComplete || false;
 
   const redirectPath = !isProfileComplete
@@ -38,21 +54,13 @@ const getMe = (req, res) => {
 
 // POST /api/auth/logout
 const logout = (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
+  clearAuthCookies(res);
   res.json({ success: true });
 };
 
 // Clear auth cookie and redirect to login (used by server-rendered pages)
 const logoutRedirect = (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
+  clearAuthCookies(res);
   res.redirect('/login');
 };
 
@@ -61,30 +69,36 @@ const refresh = (req, res) => {
   const old = req.cookies?.token;
   if (!old) return res.status(401).json({ success: false });
   try {
-    const { sub } = jwt.verify(old, process.env.JWT_SECRET);
+    const decoded = jwt.verify(old, process.env.JWT_SECRET);
+    const refreshPolicy = shouldAllowRefresh(decoded);
+    if (!refreshPolicy.ok) {
+      return res.status(401).json({
+        success: false,
+        code: refreshPolicy.reason,
+        message: 'Refresh denied by token rotation policy'
+      });
+    }
+    const { sub } = decoded;
     const newToken = signToken(sub);
     sendTokenCookie(res, newToken);
     res.json({ success: true, token: newToken });
   } catch {
-    res.clearCookie('token').status(401).json({ success: false });
+    clearAuthCookies(res);
+    res.status(401).json({ success: false });
   }
 };
 
 // PATCH /api/auth/profile
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   const updates = {};
   ALLOWED_PROFILE_FIELDS.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
 
   try {
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { $set: updates },
-      { new: true, runValidators: true }
-    ).select('-__v -googleId');
+    const user = await authRepository.updateUserProfileById(req.user._id, updates);
 
     res.json({ success: true, data: user });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 

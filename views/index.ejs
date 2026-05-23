@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campus Marketplace — Buy &amp; Sell Student Goods</title>
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/index.css">
-  <link rel="stylesheet" href="/css/rating.css">
+  <%- include('partials/head', { pageTitle: 'Campus Marketplace - Buy & Sell Student Goods', pageStyles: ['index', 'rating'] }) %>
 </head>
 
 <body>
@@ -43,7 +36,7 @@
               <div class="search-cat-menu" id="search-cat-menu" role="listbox"></div>
             </div>
             <input class="search-input" type="text" id="search-input" placeholder="Search for items..." autocomplete="off">
-            <button class="search-btn" onclick="handleSearch()">
+            <button class="search-btn" data-action="search-submit">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -121,11 +114,11 @@
           <!-- Toolbar: filters + sort -->
           <div class="featured-toolbar fade-up">
             <div class="filter-bar" id="filter-bar">
-              <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">
+              <button class="filter-btn active" data-filter="all">
                 <i data-lucide="layout-grid" width="14" height="14"></i> All
               </button>
               <% CATEGORIES.forEach(cat=> { %>
-                <button class="filter-btn" data-filter="<%= cat.slug %>" onclick="setFilter(this,'<%= cat.slug %>')">
+                <button class="filter-btn" data-filter="<%= cat.slug %>">
                   <i data-lucide="<%= cat.lucideIcon %>" width="14" height="14"></i>
                   <%= cat.name.replace(/&amp;/g, '&' ) %>
                 </button>
@@ -133,7 +126,7 @@
             </div>
             <div class="sort-wrap">
               <label class="sort-label">Sort by</label>
-              <select class="sort-select" id="sort-select" onchange="applySort()">
+              <select class="sort-select" id="sort-select">
                 <option value="newest">Newest first</option>
                 <option value="price-asc">Price: low → high</option>
                 <option value="price-desc">Price: high → low</option>
@@ -142,10 +135,11 @@
             </div>
           </div>
 
+          <div id="catalog-state" style="display:none; text-align:center; padding:32px 12px; color:var(--text-3);"></div>
           <div class="products-grid" id="products-grid"></div>
 
           <div class="load-more-wrap fade-up">
-            <button class="btn-load-more" onclick="loadMore()">
+            <button class="btn-load-more" data-action="load-more">
               Load more products
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9" />
@@ -272,507 +266,13 @@
 
       <div id="toast-container"></div>
 
-      <!-- Lucide Icons CDN -->
-      <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-      <script src="/js/categories.js"></script>
-      <script src="/js/rating.js"></script>
-
+      <script defer src="/js/categories.js"></script>
       <script>
-
-        const DEFAULT_SEARCH_CATEGORY_OPTIONS = [
-          { slug: '', name: 'All categories', lucideIcon: 'layout-grid' },
-          ...CATEGORIES
-        ];
-        let SEARCH_CATEGORY_OPTIONS = [...DEFAULT_SEARCH_CATEGORY_OPTIONS];
-
-        // Color theme per category (subtle pastel accents)
-        const CAT_COLORS = {
-          'books':        { bg:'#FEF3C7', icon:'#92400E' },  // amber
-          'electronics':  { bg:'#DBEAFE', icon:'#1E40AF' },  // blue
-          'clothing':     { bg:'#FCE7F3', icon:'#9D174D' },  // pink
-          'furniture':    { bg:'#D1FAE5', icon:'#065F46' },  // emerald
-          'daily-needs':  { bg:'#FED7AA', icon:'#9A3412' },  // orange
-          'sports':       { bg:'#E0E7FF', icon:'#3730A3' },  // indigo
-          'gaming':       { bg:'#F3E8FF', icon:'#6B21A8' },  // purple
-          'other':        { bg:'#E5E7EB', icon:'#374151' },  // gray
+        window.INDEX_PAGE_CONFIG = {
+          isAuth: <%= !!user %>
         };
-
-        // Render categories
-        document.getElementById('cat-grid').innerHTML = CATEGORIES.map(c => {
-          const col = CAT_COLORS[c.slug] || CAT_COLORS.other;
-          return '<div class="cat-card" data-cat="' + c.slug + '" onclick="filterByCategory(\'' + c.slug + '\')">' +
-            '<div class="cat-icon-wrap" style="background:' + col.bg + ';color:' + col.icon + ';">' + c.icon.replace(/stroke="currentColor"/, 'stroke="' + col.icon + '"').replace(/width="28" height="28"/, 'width="22" height="22"') + '</div>' +
-            '<div class="cat-name">' + c.name + '</div>' +
-            '<div class="cat-count">Loading…</div>' +
-          '</div>';
-        }).join('');
-
-        // Authentication state
-        const IS_AUTH = <%= !!user %>;
-
-        // Product state
-        window.ALL_PRODUCTS = [];
-        window.currentFilteredProducts = [];
-        window.displayCount = 12;
-        const PER_PAGE = 12;
-        const searchInput = document.getElementById('search-input');
-        const searchDropdown = document.getElementById('search-dropdown');
-        const searchWrap = document.getElementById('search-wrap');
-        const searchCatSelect = document.getElementById('search-cat');
-        const searchCatCombobox = document.getElementById('search-cat-combobox');
-        const searchCatBtn = document.getElementById('search-cat-btn');
-        const searchCatMenu = document.getElementById('search-cat-menu');
-        const searchCatLabel = document.getElementById('search-cat-label');
-        const searchCatIcon = document.getElementById('search-cat-icon');
-        let suggestActiveIdx = -1;
-        let suggestList = [];
-
-        async function fetchProducts() {
-          try {
-            const res = await fetch('/api/products?limit=100', { credentials: 'include' });
-            const json = await res.json();
-            const products = json.data || [];
-            window.ALL_PRODUCTS = products.map(p => ({
-              id: p._id,
-              title: p.title,
-              category: p.category,
-              price: p.price,
-              condition: p.condition,
-              image: (p.images && p.images[0]) || null,
-              icon: ICON_SVG[p.category] || ICON_SVG.other,
-              seller: (p.seller && (p.seller.nickname || p.seller.name)) || 'Unknown',
-              sellerAvatar: (p.seller && p.seller.avatar) || '',
-              desc: p.description || '',
-              ratingAverage: p.ratingAverage || 0,
-              ratingCount: p.ratingCount || 0,
-              quantity: typeof p.quantity === 'number' ? p.quantity : 1
-            }));
-            buildSearchCategoryOptions(window.ALL_PRODUCTS);
-            window.currentFilteredProducts = window.ALL_PRODUCTS;
-            renderProducts(window.ALL_PRODUCTS);
-            updateCategoryCounts();
-            renderSearchCategoryMenu();
-            setSearchCategory(searchCatSelect.value || '');
-          } catch (err) {
-            console.error('Error loading products:', err);
-            buildSearchCategoryOptions([]);
-            renderSearchCategoryMenu();
-            setSearchCategory(searchCatSelect.value || '');
-            renderProducts([]);
-          }
-        }
-
-        function decodeHtmlEntities(value) {
-          const textarea = document.createElement('textarea');
-          textarea.innerHTML = value || '';
-          return textarea.value;
-        }
-
-        function humanizeCategorySlug(slug) {
-          return String(slug || '')
-            .split('-')
-            .filter(Boolean)
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(' ');
-        }
-
-        function escapeHtml(s) {
-          return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-
-        function buildSearchCategoryOptions(products = []) {
-          const knownMap = new Map(DEFAULT_SEARCH_CATEGORY_OPTIONS.map(cat => [cat.slug, { ...cat }]));
-          const counts = new Map();
-
-          products.forEach(product => {
-            const slug = String(product.category || '').trim();
-            if (!slug) return;
-            counts.set(slug, (counts.get(slug) || 0) + 1);
-            if (!knownMap.has(slug)) {
-              knownMap.set(slug, {
-                slug,
-                name: humanizeCategorySlug(slug),
-                lucideIcon: 'tag'
-              });
-            }
-          });
-
-          const baseOptions = DEFAULT_SEARCH_CATEGORY_OPTIONS.map(cat => ({
-            ...cat,
-            name: decodeHtmlEntities(cat.name),
-            count: cat.slug ? (counts.get(cat.slug) || 0) : products.length
-          }));
-
-          const extraOptions = Array.from(knownMap.values())
-            .filter(cat => cat.slug && !DEFAULT_SEARCH_CATEGORY_OPTIONS.some(defaultCat => defaultCat.slug === cat.slug))
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(cat => ({
-              ...cat,
-              name: decodeHtmlEntities(cat.name),
-              count: counts.get(cat.slug) || 0
-            }));
-
-          SEARCH_CATEGORY_OPTIONS = [...baseOptions, ...extraOptions];
-
-          if (!searchCatSelect) return;
-
-          if (!SEARCH_CATEGORY_OPTIONS.some(cat => cat.slug === searchCatSelect.value)) {
-            searchCatSelect.value = '';
-          }
-
-          searchCatSelect.innerHTML = SEARCH_CATEGORY_OPTIONS.map(cat =>
-            `<option value="${cat.slug}">${escapeHtml(cat.name)}</option>`
-          ).join('');
-        }
-
-        function getCategoryDisplayName(slug) {
-          const found = SEARCH_CATEGORY_OPTIONS.find(cat => cat.slug === slug);
-          return found ? found.name : humanizeCategorySlug(slug);
-        }
-
-        function updateCategoryCounts() {
-          document.querySelectorAll('.cat-card').forEach(card => {
-            const slug = card.dataset.cat;
-            const count = window.ALL_PRODUCTS.filter(p => p.category === slug).length;
-            const el = card.querySelector('.cat-count');
-            if (el) el.textContent = count > 0 ? count + (count === 1 ? ' item' : ' items') : 'None yet';
-          });
-        }
-
-        buildSearchCategoryOptions([]);
-        fetchProducts();
-
-        // Fade-up animation
-        const observer = new IntersectionObserver(entries => {
-          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-        }, { threshold: 0.12 });
-        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-        // ── Search + Autocomplete ─────────────────────────────────────────
-        function renderSearchCategoryMenu() {
-          searchCatMenu.innerHTML = SEARCH_CATEGORY_OPTIONS.map(cat => `
-            <button type="button" class="search-cat-option${cat.slug === searchCatSelect.value ? ' selected' : ''}" data-value="${cat.slug}" role="option" aria-selected="${cat.slug === searchCatSelect.value ? 'true' : 'false'}">
-              <span class="search-cat-option-icon"><i data-lucide="${cat.lucideIcon || 'tag'}"></i></span>
-              <span class="search-cat-option-text">
-                <span class="search-cat-option-name">${cat.name}</span>
-                <span class="search-cat-option-meta">${typeof cat.count === 'number' ? cat.count : 0} ${cat.slug ? 'products' : 'total'}</span>
-              </span>
-              <i data-lucide="check" class="search-cat-check"></i>
-            </button>
-          `).join('');
-          if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [searchCatMenu, searchCatIcon] });
-        }
-
-        function setSearchCategory(value) {
-          const cat = SEARCH_CATEGORY_OPTIONS.find(c => c.slug === value) || SEARCH_CATEGORY_OPTIONS[0];
-          searchCatSelect.value = cat.slug;
-          searchCatLabel.textContent = cat.name;
-          searchCatIcon.innerHTML = `<i data-lucide="${cat.lucideIcon || 'tag'}"></i>`;
-          renderSearchCategoryMenu();
-          if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [searchCatIcon] });
-          searchCatSelect.dispatchEvent(new Event('change'));
-        }
-
-        function closeSearchCategoryMenu() {
-          searchCatCombobox.classList.remove('open');
-          searchCatBtn.setAttribute('aria-expanded', 'false');
-        }
-
-        function openSearchCategoryMenu() {
-          searchCatCombobox.classList.add('open');
-          searchCatBtn.setAttribute('aria-expanded', 'true');
-        }
-
-        renderSearchCategoryMenu();
-        searchCatBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          if (searchCatCombobox.classList.contains('open')) closeSearchCategoryMenu();
-          else openSearchCategoryMenu();
-        });
-        searchCatMenu.addEventListener('click', e => {
-          const option = e.target.closest('.search-cat-option');
-          if (!option) return;
-          setSearchCategory(option.dataset.value || '');
-          closeSearchCategoryMenu();
-          searchInput.focus();
-        });
-
-        function renderSuggestions(items) {
-          suggestList = items;
-          suggestActiveIdx = -1;
-          if (!items.length) {
-            searchDropdown.innerHTML = '<div class="search-empty">No matching items — press Enter to search anyway</div>';
-            searchDropdown.classList.add('show');
-            return;
-          }
-          const cat = document.getElementById('search-cat').value;
-          searchDropdown.innerHTML = items.map((p, i) => {
-            const thumb = p.image
-              ? `<img src="${p.image}" alt="">`
-              : `<div class="sg-thumb-placeholder">${p.icon.replace(/width="28" height="28"/, 'width="18" height="18"')}</div>`;
-            return `
-              <div class="search-suggest" data-idx="${i}" data-id="${p.id}">
-                <div class="sg-thumb">${thumb}</div>
-                <div class="sg-info">
-                  <div class="sg-title">${escapeHtml(p.title)}</div>
-                  <div class="sg-meta">${getCategoryDisplayName(p.category)} · ${formatPrice(p.price)}</div>
-                </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8890B0" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-              </div>
-            `;
-          }).join('') + `
-            <div class="search-footer" data-action="search-all">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              See all results for "<strong>${escapeHtml(searchInput.value)}</strong>"
-            </div>
-          `;
-          searchDropdown.classList.add('show');
-        }
-
-        function updateSuggestions() {
-          const q = searchInput.value.trim().toLowerCase();
-          const cat = document.getElementById('search-cat').value;
-          if (!q) { hideSuggestions(); return; }
-          let pool = window.ALL_PRODUCTS || [];
-          if (cat) pool = pool.filter(p => p.category === cat);
-          // Score: title startsWith > title includes > desc includes
-          const scored = [];
-          pool.forEach(p => {
-            const title = (p.title || '').toLowerCase();
-            const desc  = (p.desc  || '').toLowerCase();
-            if (title.startsWith(q))      scored.push([p, 3]);
-            else if (title.includes(q))   scored.push([p, 2]);
-            else if (desc.includes(q))    scored.push([p, 1]);
-          });
-          scored.sort((a, b) => b[1] - a[1]);
-          renderSuggestions(scored.slice(0, 6).map(s => s[0]));
-        }
-
-        function hideSuggestions() {
-          searchDropdown.classList.remove('show');
-          suggestList = [];
-          suggestActiveIdx = -1;
-        }
-
-        function highlightSuggestion(idx) {
-          const items = searchDropdown.querySelectorAll('.search-suggest');
-          items.forEach((el, i) => el.classList.toggle('active', i === idx));
-          if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
-        }
-
-        // Debounced input handler
-        let suggestTimer;
-        searchInput.addEventListener('input', () => {
-          clearTimeout(suggestTimer);
-          suggestTimer = setTimeout(updateSuggestions, 120);
-        });
-        searchInput.addEventListener('focus', () => {
-          if (searchInput.value.trim()) updateSuggestions();
-        });
-
-        searchCatBtn.addEventListener('keydown', e => {
-          if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openSearchCategoryMenu();
-            const firstOption = searchCatMenu.querySelector('.search-cat-option');
-            if (firstOption) firstOption.focus();
-          } else if (e.key === 'Escape') {
-            closeSearchCategoryMenu();
-          }
-        });
-
-        searchCatMenu.addEventListener('keydown', e => {
-          const options = Array.from(searchCatMenu.querySelectorAll('.search-cat-option'));
-          if (!options.length) return;
-          const currentIndex = options.indexOf(document.activeElement);
-
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            const nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, options.length - 1);
-            options[nextIndex].focus();
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            const prevIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
-            options[prevIndex].focus();
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            closeSearchCategoryMenu();
-            searchCatBtn.focus();
-          }
-        });
-
-        // Keyboard navigation
-        searchInput.addEventListener('keydown', e => {
-          const open = searchDropdown.classList.contains('show');
-          if (e.key === 'Enter') {
-            if (open && suggestActiveIdx >= 0 && suggestList[suggestActiveIdx]) {
-              e.preventDefault();
-              window.openProduct(suggestList[suggestActiveIdx].id);
-              return;
-            }
-            handleSearch(); hideSuggestions();
-          } else if (e.key === 'ArrowDown' && open) {
-            e.preventDefault();
-            suggestActiveIdx = Math.min(suggestActiveIdx + 1, suggestList.length - 1);
-            highlightSuggestion(suggestActiveIdx);
-          } else if (e.key === 'ArrowUp' && open) {
-            e.preventDefault();
-            suggestActiveIdx = Math.max(suggestActiveIdx - 1, -1);
-            highlightSuggestion(suggestActiveIdx);
-          } else if (e.key === 'Escape') {
-            hideSuggestions();
-          }
-        });
-
-        // Click on suggestion
-        searchDropdown.addEventListener('click', e => {
-          const sug = e.target.closest('.search-suggest');
-          if (sug) {
-            window.openProduct(sug.dataset.id);
-            hideSuggestions();
-            return;
-          }
-          if (e.target.closest('[data-action="search-all"]')) {
-            handleSearch();
-            hideSuggestions();
-          }
-        });
-
-        // Close when clicking outside
-        document.addEventListener('click', e => {
-          if (!searchCatCombobox.contains(e.target)) closeSearchCategoryMenu();
-          if (!searchWrap.contains(e.target)) hideSuggestions();
-        });
-
-        // Refresh suggestions when category changes
-        document.getElementById('search-cat').addEventListener('change', () => {
-          if (searchInput.value.trim()) updateSuggestions();
-        });
-
-        window.handleSearch = function () {
-          const q = document.getElementById('search-input').value.trim();
-          const cat = document.getElementById('search-cat').value;
-          const params = new URLSearchParams();
-          if (q) params.set('q', q);
-          if (cat) params.set('category', cat);
-          window.location.href = '/search' + (params.toString() ? `?${params.toString()}` : '');
-        };
-
-        window.setFilter = function (btn, filter) {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const filtered = filter === 'all' ? window.ALL_PRODUCTS : window.ALL_PRODUCTS.filter(p => p.category === filter);
-          window.currentFilteredProducts = filtered;
-          window.displayCount = PER_PAGE;
-          renderProducts(filtered);
-        };
-
-        window.filterByCategory = function (slug) {
-          document.getElementById('featured').scrollIntoView({ behavior: 'smooth' });
-          const btn = document.querySelector('[data-filter="' + slug + '"]');
-          const filtered = window.ALL_PRODUCTS.filter(p => p.category === slug);
-          window.currentFilteredProducts = filtered;
-          window.displayCount = PER_PAGE;
-          if (btn) window.setFilter(btn, slug);
-          else renderProducts(filtered);
-        };
-
-        window.loadMore = function () {
-          window.displayCount += PER_PAGE;
-          renderProducts(window.currentFilteredProducts);
-        };
-
-        window.applySort = function () {
-          const sortBy = document.getElementById('sort-select').value;
-          const arr = [...window.currentFilteredProducts];
-          if (sortBy === 'price-asc')  arr.sort((a, b) => a.price - b.price);
-          if (sortBy === 'price-desc') arr.sort((a, b) => b.price - a.price);
-          if (sortBy === 'rating')     arr.sort((a, b) => (b.ratingAverage || 0) - (a.ratingAverage || 0));
-          // 'newest' uses original API order
-          window.currentFilteredProducts = arr;
-          renderProducts(arr);
-        };
-
-        function formatPrice(p) {
-          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(p);
-        }
-
-        function conditionLabel(c) {
-          const map = { new: 'New', 'like-new': 'Like new', good: 'Good', fair: 'Fair' };
-          return '<span class="product-condition condition-' + c + '">' + (map[c] || c) + '</span>';
-        }
-
-        function renderProducts(products) {
-          const grid = document.getElementById('products-grid');
-          if (!products.length) {
-            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-3);">' +
-              '<div style="display:flex;justify-content:center;margin-bottom:16px;opacity:0.4;">' +
-              '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-              '</div><p style="font-size:16px;font-weight:600;">No products found</p><p>Try a different keyword or browse another category.</p></div>';
-            return;
-          }
-          const visible = products.slice(0, window.displayCount);
-          grid.innerHTML = visible.map(p => {
-            const ratingHtml = p.ratingCount > 0 
-              ? `<span class="product-rating-row">⭐ ${p.ratingAverage.toFixed(1)} (${p.ratingCount})</span>`
-              : `<span class="product-rating-row" style="color:var(--primary); font-weight:600;">New product</span>`;
-            
-            const categoryName = getCategoryDisplayName(p.category);
-            const sellerAvatarHtml = p.sellerAvatar
-              ? `<img class="seller-avatar" src="${escapeHtml(p.sellerAvatar)}" alt="${escapeHtml(p.seller)}">`
-              : `<div class="seller-avatar" style="display:flex; align-items:center; justify-content:center; background:var(--primary-light); color:var(--primary); font-size:10px; font-weight:800;">${escapeHtml(p.seller[0].toUpperCase())}</div>`;
-
-            return `
-              <div class="product-card" onclick="openProduct('${p.id}')">
-                <div class="product-img-placeholder">
-                  ${p.image 
-                    ? `<img src="${p.image}" alt="${escapeHtml(p.title)}">`
-                    : `<div style="opacity:0.3;">${p.icon.replace(/width="28" height="28"/, 'width="48" height="48"')}</div>`
-                  }
-                  <div class="product-cta">View details →</div>
-                </div>
-                <div class="product-body">
-                  <div class="product-price">${formatPrice(p.price)}</div>
-                  <div class="product-name">${escapeHtml(p.title)}</div>
-                  <div style="display:flex; flex-direction:column; gap:4px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span class="product-category">${categoryName}</span>
-                      <span style="color:var(--border); font-size:10px;">•</span>
-                      ${ratingHtml}
-                    </div>
-                    ${conditionLabel(p.condition)}
-                    <div style="font-size:12px;color:var(--text-3);font-weight:700;">${typeof p.quantity === 'number' ? p.quantity : 1} available</div>
-                  </div>
-                  <div class="product-footer">
-                    <div class="product-seller">
-                      ${sellerAvatarHtml}
-                      <span class="seller-name">${escapeHtml(p.seller)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>`;
-          }).join('');
-
-          const loadMoreWrap = document.querySelector('.load-more-wrap');
-          if (loadMoreWrap) loadMoreWrap.style.display = window.displayCount < products.length ? 'flex' : 'none';
-        }
-
-        window.openProduct = function (id) {
-          if (!IS_AUTH) {
-            const t = document.getElementById('toast-container');
-            const el = document.createElement('div');
-            el.className = 'toast error';
-            el.textContent = 'Please sign in to view product details';
-            t.appendChild(el);
-            setTimeout(() => { window.location.href = '/login'; }, 1200);
-            return;
-          }
-          window.location.href = '/products/' + id;
-        };
-
-        // Initialize Lucide icons for all static tags in HTML
-        lucide.createIcons();
       </script>
+      <script defer src="/js/pages/index.js"></script>
 </body>
 
 </html>

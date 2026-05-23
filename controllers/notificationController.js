@@ -1,68 +1,67 @@
-const Notification = require('../models/Notification');
+const notificationRepository = require('../repositories/notificationRepository');
 
-exports.getNotifications = async (req, res) => {
+exports.getNotifications = async (req, res, next) => {
   try {
     const page   = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit  = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
     const filter = req.query.filter || 'all';   // 'all' | 'unread' | 'order' | 'message' | 'rating' | 'system'
-
-    const query = { recipient: req.user._id };
-    if (filter === 'unread') query.isRead = false;
-    else if (['order','message','rating','system','info'].includes(filter)) query.type = filter;
-
-    const [notifications, total, unreadCount] = await Promise.all([
-      Notification.find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      Notification.countDocuments(query),
-      Notification.countDocuments({ recipient: req.user._id, isRead: false })
-    ]);
+    const result = await notificationRepository.findNotificationsForRecipient({
+      recipientId: req.user._id,
+      filter,
+      page,
+      limit
+    });
 
     res.json({
       success: true,
-      notifications,
-      unreadCount,
+      notifications: result.notifications,
+      unreadCount: result.unreadCount,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasMore: page * limit < total
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasMore: result.hasMore
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
-exports.markAsRead = async (req, res) => {
+exports.markAsRead = async (req, res, next) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    const updated = await notificationRepository.markNotificationAsRead({
+      notificationId: req.params.id,
+      recipientId: req.user._id
+    });
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
-exports.markAllAsRead = async (req, res) => {
+exports.markAllAsRead = async (req, res, next) => {
   try {
-    await Notification.updateMany(
-      { recipient: req.user._id, isRead: false },
-      { isRead: true }
-    );
+    await notificationRepository.markAllNotificationsAsRead(req.user._id);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
-exports.deleteNotification = async (req, res) => {
+exports.deleteNotification = async (req, res, next) => {
   try {
-    await Notification.deleteOne({ _id: req.params.id, recipient: req.user._id });
+    await notificationRepository.deleteNotificationForRecipient({
+      notificationId: req.params.id,
+      recipientId: req.user._id
+    });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
+

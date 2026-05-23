@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orders — Campus Marketplace</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
+  <%- include('partials/head', { pageTitle: 'Orders - Campus Marketplace', pageStyles: ['dashboard'] }) %>
 </head>
 <body>
 <%- include('partials/navbar') %>
@@ -108,128 +101,8 @@
 <div id="toast-wrap"></div>
 
 <script>window.INITIAL_SECTION = 'sOrders';</script>
-<script>
-let currentFilter = '';
+<script defer src="/js/pages/orders-seller.js"></script>
 
-async function loadSellerOrders(page = 1) {
-  const tbody = document.getElementById('ordersTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="10" class="empty">Loading orders...</td></tr>';
-
-  try {
-    const params = new URLSearchParams({ page, limit: 10, role: 'seller' });
-    if (currentFilter) params.append('status', currentFilter);
-    
-    const res = await fetch(`/api/orders?${params}`, { credentials: 'same-origin' });
-    const json = await res.json();
-    
-    if (!json.success) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load orders.</td></tr>';
-      return;
-    }
-    const orders = json.data || [];
-    if (!orders.length) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty">No orders found.</td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = orders.map(order => {
-      const price = new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(order.priceSnapshot || 0);
-      const statusClass = 'badge-' + (order.status || 'pending');
-      return `
-        <tr>
-          <td style="font-family:var(--mono);font-size:11px;color:var(--t2)">${order._id.toString().slice(-8).toUpperCase()}</td>
-          <td>${order.product?.title || '—'}</td>
-          <td><a href="/user/${order.buyer?._id}" style="color:#1B5EFF;text-decoration:none;">${order.buyer?.nickname || order.buyer?.name || '—'}</a></td>
-          <td>${order.quantity || 1}</td>
-          <td>${price}</td>
-          <td style="color:var(--t2)">${order.deliveryMode === 'ship' ? 'Ship' : 'Pickup'}</td>
-          <td style="color:var(--t2)">${order.paymentMode === 'qr' ? 'QR' : (order.paymentMode === 'card' ? 'Card' : 'Cash')}</td>
-          <td style="color:var(--t3);font-size:12px">${order.note || '—'}</td>
-          <td><span class="badge ${statusClass}">${order.status}</span></td>
-          <td>
-            <div class="tbl-actions">
-              <select class="order-status-select" data-order-id="${order._id}" data-prev="${order.status}">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>pending</option>
-                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>confirmed</option>
-                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>completed</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
-              </select>
-            </div>
-          </td>
-        </tr>`;
-    }).join('');
-    
-    if (typeof renderPagination === 'function') {
-      renderPagination('.tbl-wrap .pagination', json.pagination, 'loadSellerOrders');
-    }
-    
-    const countEl = document.querySelector('.tbl-count');
-    if (countEl) countEl.textContent = `${json.pagination?.total || orders.length} orders total`;
-  } catch(err) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load orders.</td></tr>';
-    console.error('Failed to fetch seller orders:', err);
-  }
-}
-
-// Order status dropdown handling
-const statusToClass = {
-  pending: 'badge-pending',
-  confirmed: 'badge-confirmed',
-  completed: 'badge-completed',
-  cancelled: 'badge-cancelled'
-};
-
-async function updateStatus(orderId, status, selectEl){
-  const original = selectEl.dataset.prev || selectEl.value;
-  selectEl.disabled = true;
-  try{
-    const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      credentials: 'same-origin',
-      body: JSON.stringify({status})
-    });
-    if(!res.ok) throw new Error('Request failed');
-    const row = selectEl.closest('tr');
-    const badge = row.querySelector('.badge');
-    if(badge){
-      badge.className = 'badge ' + (statusToClass[status] || 'badge-pending');
-      badge.textContent = status;
-    }
-    if (typeof showToast === 'function') showToast('Order updated to ' + status, 'ok');
-    selectEl.dataset.prev = status;
-  }catch(err){
-    selectEl.value = original;
-    if (typeof showToast === 'function') showToast('Failed to update order', 'err');
-  }finally{
-    selectEl.disabled = false;
-  }
-}
-
-document.addEventListener('change', function(e){
-  const sel = e.target.closest('.order-status-select');
-  if(!sel) return;
-  updateStatus(sel.dataset.orderId, sel.value, sel);
-});
-
-// Filter pills
-document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));
-    pill.classList.add('on');
-    const txt = pill.textContent.trim().toLowerCase();
-    if (txt === 'all') currentFilter = '';
-    else if (txt === 'needs action') currentFilter = 'pending';
-    else if (txt === 'in progress') currentFilter = 'confirmed';
-    else if (txt === 'completed') currentFilter = 'completed';
-    else currentFilter = txt;
-    loadSellerOrders(1);
-  });
-});
-
-document.addEventListener('DOMContentLoaded', () => loadSellerOrders(1));
-</script>
 <%- include('partials/dashboard-scripts') %>
 </body>
 </html>

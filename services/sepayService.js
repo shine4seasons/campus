@@ -5,7 +5,9 @@ const SEPAY_API_KEY = process.env.SEPAY_API_KEY;
 const SEPAY_QR_ACC = process.env.SEPAY_QR_ACC || process.env.SEPAY_ACCOUNT_NUMBER;
 const SEPAY_QR_BANK = process.env.SEPAY_QR_BANK || process.env.SEPAY_BANK_CODE || 'BIDV';
 
-if (!SEPAY_API_KEY) {
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
+const suppressMissingKeyWarn = process.env.SEPAY_SUPPRESS_WARN === '1';
+if (!SEPAY_API_KEY && !isTestEnv && !suppressMissingKeyWarn) {
   console.error('[SePay] CRITICAL: SEPAY_API_KEY is not set in environment variables');
 }
 
@@ -17,6 +19,10 @@ const sepayClient = axios.create({
   },
   timeout: 10000
 });
+
+const TX_CACHE_TTL_MS = 5000;
+let txCache = { at: 0, key: '', data: [] };
+let txInFlight = null;
 
 const formatError = (action, err) => {
   if (err.response && err.response.data) {
@@ -79,6 +85,29 @@ exports.getRecentTransactions = async (page = 1, perPage = 100) => {
     console.error(formatError('GetTransactions', err));
     throw err;
   }
+};
+
+exports.getRecentTransactionsCached = async (page = 1, perPage = 100) => {
+  const key = `${page}:${perPage}`;
+  const now = Date.now();
+  if (txCache.key === key && now - txCache.at < TX_CACHE_TTL_MS) {
+    return txCache.data;
+  }
+
+  if (txInFlight) {
+    return txInFlight;
+  }
+
+  txInFlight = exports.getRecentTransactions(page, perPage)
+    .then((data) => {
+      txCache = { at: Date.now(), key, data };
+      return data;
+    })
+    .finally(() => {
+      txInFlight = null;
+    });
+
+  return txInFlight;
 };
 
 exports.findMatchingTransaction = (payment, transactions) => {

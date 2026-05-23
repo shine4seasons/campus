@@ -15,6 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentConvId = null;
     let socket = null;
 
+    function clearNode(node) {
+        if (!node) return;
+        while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function setEmpty(container, text) {
+        clearNode(container);
+        const div = document.createElement('div');
+        div.className = 'notif-empty';
+        div.textContent = text;
+        container.appendChild(div);
+    }
+
+    function avatarNode(name, avatarUrl) {
+        const safeName = String(name || 'User');
+        const safeAvatarUrl = String(avatarUrl || '').trim();
+        if (safeAvatarUrl) {
+            const img = document.createElement('img');
+            img.src = safeAvatarUrl;
+            img.alt = safeName;
+            return img;
+        }
+        return document.createTextNode((safeName[0] || '?').toUpperCase());
+    }
+
+    function escHtml(value) {
+        if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
+            return window.AppUtils.escapeHtml(value);
+        }
+        return String(value == null ? '' : value);
+    }
+
     // --- Socket.io ---
     if (window.SOCKET_USER_ID) {
         // Reuse socket if io() is already initialized in notifications.js or index.ejs
@@ -62,10 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function showConversationList() {
         currentConvId = null;
-        chatTitle.textContent = 'Messages';
+        clearNode(chatTitle);
+        chatTitle.appendChild(document.createTextNode('Messages'));
         chatBackBtn.style.display = 'none';
         chatFooter.style.display = 'block';
-        chatBody.innerHTML = '<div class="notif-empty">Loading conversations...</div>';
+        setEmpty(chatBody, 'Loading conversations...');
 
         try {
             const res = await fetch('/api/chat');
@@ -74,20 +107,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderConversationList(data.data);
                 updateUnreadBadge(data.data);
             } else {
-                chatBody.innerHTML = '<div class="notif-empty">Error loading chats.</div>';
+                setEmpty(chatBody, 'Error loading chats.');
             }
         } catch (err) {
-            chatBody.innerHTML = '<div class="notif-empty">Could not connect to server.</div>';
+            setEmpty(chatBody, 'Could not connect to server.');
         }
     }
 
     function renderConversationList(convs) {
         const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
         const modeLabel = uiMode === 'seller' ? ' (Seller)' : ' (Buyer)';
-        chatTitle.innerHTML = `Messages <span style="font-size:11px; color:var(--t3); font-weight:500;">${modeLabel}</span>`;
+        clearNode(chatTitle);
+        chatTitle.appendChild(document.createTextNode('Messages'));
+        const modeSpan = document.createElement('span');
+        modeSpan.style.fontSize = '11px';
+        modeSpan.style.color = 'var(--t3)';
+        modeSpan.style.fontWeight = '500';
+        modeSpan.textContent = modeLabel;
+        chatTitle.appendChild(modeSpan);
 
         if (!convs || convs.length === 0) {
-            chatBody.innerHTML = '<div class="notif-empty">No conversations yet.</div>';
+            setEmpty(chatBody, 'No conversations yet.');
             return;
         }
 
@@ -98,29 +138,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (filtered.length === 0) {
-            chatBody.innerHTML = `<div class="notif-empty">No ${uiMode} messages.</div>`;
+            setEmpty(chatBody, `No ${uiMode} messages.`);
             return;
         }
 
-        chatBody.innerHTML = '';
+        clearNode(chatBody);
         filtered.forEach(c => {
             const item = document.createElement('div');
             item.className = `chat-item ${c.unreadCount > 0 ? 'unread' : ''}`;
             const partner = c.partner || {};
-            const avatar = partner.avatar ? `<img src="${partner.avatar}" alt="">` : (partner.nickname || partner.name || '?')[0];
-            const prodName = c.product ? c.product.title : 'Deleted Product';
-            
-            item.innerHTML = `
-                <div class="chat-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;">${avatar}</div>
-                <div class="chat-info">
-                    <div class="chat-top">
-                        <span class="chat-name">${partner.nickname || partner.name || 'User'}</span>
-                        <span class="chat-time">${formatTime(c.updatedAt)}</span>
-                    </div>
-                    <div class="chat-prod-name" style="font-size:11px; color:var(--t3); margin: 2px 0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 3l-7 3.27A2 2 0 0 0 5 8v8a2 2 0 0 0 1 1.73L11 21l7-3.27A2 2 0 0 0 21 16z"/><path d="M12 3v10"/></svg>${prodName}</div>
-                    <div class="chat-last">${c.lastMessage || 'No messages yet'}</div>
-                </div>
-            `;
+            const safePartnerName = partner.nickname || partner.name || 'User';
+            const safeProdName = c.product ? c.product.title : 'Deleted Product';
+            const safeLastMessage = c.lastMessage || 'No messages yet';
+
+            const av = document.createElement('div');
+            av.className = 'chat-avatar';
+            av.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+            av.style.color = '#fff';
+            av.appendChild(avatarNode(safePartnerName, partner.avatar));
+
+            const info = document.createElement('div');
+            info.className = 'chat-info';
+
+            const top = document.createElement('div');
+            top.className = 'chat-top';
+            const nm = document.createElement('span');
+            nm.className = 'chat-name';
+            nm.textContent = safePartnerName;
+            const tm = document.createElement('span');
+            tm.className = 'chat-time';
+            tm.textContent = formatTime(c.updatedAt);
+            top.appendChild(nm);
+            top.appendChild(tm);
+
+            const prod = document.createElement('div');
+            prod.className = 'chat-prod-name';
+            prod.style.fontSize = '11px';
+            prod.style.color = 'var(--t3)';
+            prod.style.margin = '2px 0';
+            prod.textContent = `📦 ${safeProdName}`;
+
+            const last = document.createElement('div');
+            last.className = 'chat-last';
+            last.textContent = safeLastMessage;
+
+            info.appendChild(top);
+            info.appendChild(prod);
+            info.appendChild(last);
+            item.appendChild(av);
+            item.appendChild(info);
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openConversation(c);
@@ -135,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatTitle.textContent = partnerName;
         chatBackBtn.style.display = 'flex';
         chatFooter.style.display = 'none';
-        chatBody.innerHTML = '<div class="notif-empty">Loading messages...</div>';
+        setEmpty(chatBody, 'Loading messages...');
 
         if (socket) {
             socket.emit('joinConv', currentConvId);
@@ -157,28 +223,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (err) {
-            chatBody.innerHTML = '<div class="notif-empty">Error loading messages.</div>';
+            setEmpty(chatBody, 'Error loading messages.');
         }
     }
 
     function renderMessagesView(messages) {
-        chatBody.innerHTML = `
-            <div class="chat-messages-container" id="chat-msgs-scroll">
-                ${messages.map(m => createMessageHTML(m)).join('')}
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-mini-input" id="chat-mini-input" placeholder="Type a message...">
-                <button class="chat-mini-send" id="chat-mini-send">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
-            </div>
-        `;
+        clearNode(chatBody);
+        const scroll = document.createElement('div');
+        scroll.className = 'chat-messages-container';
+        scroll.id = 'chat-msgs-scroll';
+        messages.forEach((m) => {
+            scroll.appendChild(createMessageNode(m));
+        });
+        const inputArea = document.createElement('div');
+        inputArea.className = 'chat-input-area';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'chat-mini-input';
+        input.id = 'chat-mini-input';
+        input.placeholder = 'Type a message...';
+        const sendBtn = document.createElement('button');
+        sendBtn.className = 'chat-mini-send';
+        sendBtn.id = 'chat-mini-send';
+        sendBtn.textContent = '➤';
+        inputArea.appendChild(input);
+        inputArea.appendChild(sendBtn);
+        chatBody.appendChild(scroll);
+        chatBody.appendChild(inputArea);
         
-        const scroll = document.getElementById('chat-msgs-scroll');
         scroll.scrollTop = scroll.scrollHeight;
-
-        const input = document.getElementById('chat-mini-input');
-        const sendBtn = document.getElementById('chat-mini-send');
 
         const sendMessage = async () => {
             const text = input.value.trim();
@@ -202,31 +275,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function escHtml(s) {
-        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
+            return window.AppUtils.escapeHtml(s);
+        }
+        return String(s == null ? '' : s);
     }
 
-    function createMessageHTML(m) {
+    function createMessageNode(m) {
         const isMe = String(m.sender._id || m.sender) === window.SOCKET_USER_ID;
-        const imageHtml = m.imageUrl
-            ? `<img class="chat-bubble-image" src="${escHtml(m.imageUrl)}" alt="Image" onclick="window.open('${escHtml(m.imageUrl)}','_blank')">`
-            : '';
-        const textHtml = m.text
-            ? `<div class="chat-bubble">${escHtml(m.text)}</div>`
-            : '';
-        return `
-            <div class="chat-msg-row ${isMe ? 'me' : 'them'}">
-                ${imageHtml}
-                ${textHtml}
-            </div>
-        `;
+        const row = document.createElement('div');
+        row.className = `chat-msg-row ${isMe ? 'me' : 'them'}`;
+        if (m.imageUrl) {
+            const img = document.createElement('img');
+            img.className = 'chat-bubble-image';
+            img.src = String(m.imageUrl);
+            img.alt = 'Image';
+            img.addEventListener('click', () => window.open(String(m.imageUrl), '_blank'));
+            row.appendChild(img);
+        }
+        if (m.text) {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.textContent = m.text;
+            row.appendChild(bubble);
+        }
+        return row;
     }
 
     function appendMessage(m) {
         const scroll = document.getElementById('chat-msgs-scroll');
         if (!scroll) return;
-        const div = document.createElement('div');
-        div.innerHTML = createMessageHTML(m);
-        scroll.appendChild(div.firstElementChild);
+        scroll.appendChild(createMessageNode(m));
         scroll.scrollTop = scroll.scrollHeight;
     }
 

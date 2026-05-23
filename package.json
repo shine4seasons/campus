@@ -1,11 +1,25 @@
 {
   "name": "campus-marketplace",
   "version": "1.0.0",
-  "description": "Campus Marketplace — Node.js + EJS",
+  "description": "Campus Marketplace - Node.js + EJS",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "lint": "node scripts/lint-js.js",
+    "test": "node scripts/test-smoke.js",
+    "test:hardening": "node scripts/test-hardening-controls.js",
+    "test:security:lite": "node scripts/test-security-integration-lite.js",
+    "test:security:rate:endpoints": "node scripts/test-security-rate-limit-endpoints.js",
+    "test:security:ownership": "node scripts/test-security-ownership-lite.js",
+    "test:concurrency:controls": "node scripts/test-concurrency-controls.js",
+    "test:concurrency:runtime": "node scripts/test-concurrency-runtime.js",
+    "bench:p95": "node scripts/benchmark-p95.js",
+    "bench:p95:budget": "node scripts/evaluate-p95-budgets.js",
+    "evidence:runtime": "node scripts/collect-runtime-evidence.js",
+    "test:gates": "npm run lint && npm run test && npm run test:hardening && npm run test:security:lite && npm run test:security:ownership && npm run test:concurrency:controls && npm run security-check",
+    "security-check": "node scripts/security-check.js",
+    "migrate:indexes": "node scripts/migrate-indexes.js",
     "build:css": "tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/tailwind.css --minify",
     "watch:css": "tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/tailwind.css --watch"
   },
@@ -22,10 +36,12 @@
     "openai": "^4.67.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
     "tailwindcss": "^3.4.19"
   }
 }
+

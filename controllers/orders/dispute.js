@@ -1,20 +1,19 @@
-const Order = require('../../models/Order');
-const Product = require('../../models/Product');
 const {
   ORDER_STATUS,
-  PRODUCT_STATUS,
   DISPUTE_STATUS,
   DISPUTE_CATEGORIES,
   DISPUTE_RESOLUTIONS,
   NOTIFICATION_TYPES,
   USER_ROLES,
 } = require('../../config/appConstants');
+const { releaseProductForOrder } = require('../../services/inventoryService');
+const orderRepository = require('../../repositories/orderRepository');
 
 // Statuses on which a party may open a dispute
 const DISPUTABLE_STATUSES = [ORDER_STATUS.CONFIRMED, ORDER_STATUS.COMPLETED];
 
 // POST /api/orders/:id/dispute — buyer or seller opens a dispute
-exports.openDispute = async (req, res) => {
+exports.openDispute = async (req, res, next) => {
   try {
     const { id } = req.params;
     const uid = String(req.user._id);
@@ -34,7 +33,7 @@ exports.openDispute = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Maximum 6 evidence images' });
     }
 
-    const order = await Order.findById(id);
+    const order = await orderRepository.findOrderForDispute(id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
     const isBuyer  = String(order.buyer)  === uid;
@@ -68,27 +67,12 @@ exports.openDispute = async (req, res) => {
     };
 
     // Atomic update: only succeeds if no open dispute exists
-    const updated = await Order.findOneAndUpdate(
-      {
-        _id: id,
-        $or: [
-          { dispute: null },
-          { 'dispute.status': { $in: [DISPUTE_STATUS.RESOLVED, DISPUTE_STATUS.REJECTED] } }
-        ]
-      },
-      {
-        $set: { dispute },
-        $push: {
-          timeline: {
-            event: 'dispute-opened',
-            actor: req.user._id,
-            at: now,
-            note: `Dispute opened by ${isBuyer ? 'buyer' : 'seller'}: ${trimReason.substring(0, 80)}`
-          }
-        }
-      },
-      { new: true }
-    );
+    const updated = await orderRepository.openDisputeOnOrder({
+      orderId: id,
+      dispute,
+      actorId: req.user._id,
+      note: `Dispute opened by ${isBuyer ? 'buyer' : 'seller'}: ${trimReason.substring(0, 80)}`
+    });
 
     if (!updated) {
       return res.status(409).json({ success: false, message: 'Could not open dispute — a dispute may already be active' });
@@ -113,12 +97,12 @@ exports.openDispute = async (req, res) => {
     res.status(201).json({ success: true, data: updated.dispute });
   } catch (err) {
     console.error('[dispute] openDispute:', err);
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // POST /api/orders/:id/dispute/resolve — admin only
-exports.resolveDispute = async (req, res) => {
+exports.resolveDispute = async (req, res, next) => {
   try {
     if (req.user.role !== USER_ROLES.ADMIN) {
       return res.status(403).json({ success: false, message: 'Admin only' });
@@ -132,7 +116,7 @@ exports.resolveDispute = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid resolution' });
     }
 
-    const order = await Order.findById(id);
+    const order = await orderRepository.findOrderForDispute(id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     if (!order.dispute) return res.status(400).json({ success: false, message: 'No dispute to resolve' });
     if (order.dispute.status === DISPUTE_STATUS.RESOLVED || order.dispute.status === DISPUTE_STATUS.REJECTED) {
@@ -158,21 +142,12 @@ exports.resolveDispute = async (req, res) => {
       extraTimelineNote += ' · Order refunded & cancelled';
     }
 
-    const updated = await Order.findOneAndUpdate(
-      { _id: id, 'dispute.status': { $in: [DISPUTE_STATUS.OPEN, DISPUTE_STATUS.IN_REVIEW] } },
-      {
-        $set: setFields,
-        $push: {
-          timeline: {
-            event: 'dispute-resolved',
-            actor: req.user._id,
-            at: now,
-            note: extraTimelineNote
-          }
-        }
-      },
-      { new: true }
-    );
+    const updated = await orderRepository.resolveDisputeOnOrder({
+      orderId: id,
+      setFields,
+      actorId: req.user._id,
+      note: extraTimelineNote
+    });
 
     if (!updated) {
       return res.status(409).json({ success: false, message: 'Dispute already resolved by another admin' });
@@ -181,9 +156,7 @@ exports.resolveDispute = async (req, res) => {
     // If buyer-favor refund: also release the product back to ACTIVE
     if (refund && resolution === DISPUTE_RESOLUTIONS.BUYER_FAVOR) {
       try {
-        await Product.findByIdAndUpdate(updated.product, {
-          $set: { status: PRODUCT_STATUS.ACTIVE, buyer: null, soldAt: null }
-        });
+        await releaseProductForOrder(updated);
       } catch (prodErr) {
         console.error('[dispute] product release error:', prodErr);
       }
@@ -218,12 +191,12 @@ exports.resolveDispute = async (req, res) => {
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error('[dispute] resolveDispute:', err);
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
 // GET /api/orders/disputes/all — admin list of all disputes
-exports.getAllDisputes = async (req, res) => {
+exports.getAllDisputes = async (req, res, next) => {
   try {
     if (req.user.role !== USER_ROLES.ADMIN) {
       return res.status(403).json({ success: false, message: 'Admin only' });
@@ -241,27 +214,22 @@ exports.getAllDisputes = async (req, res) => {
       filter['dispute.status'] = { $in: [DISPUTE_STATUS.RESOLVED, DISPUTE_STATUS.REJECTED] };
     }
 
-    const [orders, total] = await Promise.all([
-      Order.find(filter)
-        .sort({ 'dispute.openedAt': -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('product', 'title images price')
-        .populate('buyer', 'name nickname avatar')
-        .populate('seller', 'name nickname avatar')
-        .populate('dispute.openedBy', 'name nickname avatar')
-        .populate('dispute.resolvedBy', 'name nickname')
-        .lean(),
-      Order.countDocuments(filter)
-    ]);
+    const result = await orderRepository.findDisputes({ status, page, limit });
 
     res.json({
       success: true,
-      data: orders,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: page * limit < total }
+      data: result.orders,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasMore: result.hasMore
+      }
     });
   } catch (err) {
     console.error('[dispute] getAllDisputes:', err);
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
+

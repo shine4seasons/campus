@@ -1,5 +1,4 @@
-const jwt  = require('jsonwebtoken');
-const User = require('../models/User');
+const { userFromToken } = require('./resolveUser');
 
 const protect = async (req, res, next) => {
   const token =
@@ -10,17 +9,11 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ success: false, message: 'Not authenticated' });
   }
 
-  try {
-    const { sub } = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(sub).select('-__v').lean();
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'User no longer exists' });
-    }
-    next();
-  } catch (err) {
-    const msg = err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token';
-    res.status(401).json({ success: false, message: msg });
+  req.user = await userFromToken(token);
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
+  next();
 };
 
 const restrictTo = (...roles) => (req, res, next) => {

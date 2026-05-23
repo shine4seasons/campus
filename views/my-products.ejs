@@ -1,18 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>products — Campus Marketplace</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
-  <link rel="stylesheet" href="/css/rating.css">
+  <%- include('partials/head', { pageTitle: 'products - Campus Marketplace', pageStyles: ['dashboard', 'rating'] }) %>
 </head>
 
 <body>
@@ -85,11 +74,118 @@
       <%- include('partials/dashboard-scripts') %>
         <script>
           let currentFilter = '';
+          function createElementSafe(tagName, options = {}) {
+            const create = window.AppUtils?.createElement || function (tagName, options = {}) {
+              const element = document.createElement(tagName);
+              if (options.className) element.className = options.className;
+              if (Array.isArray(options.classes) && options.classes.length) {
+                element.classList.add(...options.classes.filter(Boolean));
+              }
+              if (options.text != null) element.textContent = String(options.text);
+              if (options.attrs) {
+                Object.entries(options.attrs).forEach(([name, value]) => {
+                  if (value == null) return;
+                  element.setAttribute(name, String(value));
+                });
+              }
+              if (options.dataset) {
+                Object.entries(options.dataset).forEach(([name, value]) => {
+                  if (value == null) return;
+                  element.dataset[name] = String(value);
+                });
+              }
+              if (options.style) {
+                Object.assign(element.style, options.style);
+              }
+              if (options.children) {
+                const children = Array.isArray(options.children) ? options.children : [options.children];
+                children.flat(Infinity).forEach((child) => {
+                  if (child == null || child === false) return;
+                  if (child instanceof Node) {
+                    element.appendChild(child);
+                  } else {
+                    element.appendChild(document.createTextNode(String(child)));
+                  }
+                });
+              }
+              return element;
+            };
+            return create(tagName, options);
+          }
+
+          function setTableMessage(tbody, message) {
+            const row = createElementSafe('tr');
+            row.appendChild(createElementSafe('td', {
+              className: 'empty',
+              attrs: { colspan: '10' },
+              text: message
+            }));
+            tbody.replaceChildren(row);
+          }
+
+          function createRatingDisplay(product) {
+            const cell = createElementSafe('span', {
+              style: { fontSize: '12px', color: 'var(--t2)' }
+            });
+            if (product.ratingCount > 0) {
+              const icon = createElementSafe('i', {
+                attrs: { 'data-lucide': 'star' },
+                style: {
+                  width: '12px',
+                  height: '12px',
+                  display: 'inline-block',
+                  verticalAlign: 'middle',
+                  marginRight: '2px',
+                  fill: 'currentColor'
+                }
+              });
+              cell.append(icon, document.createTextNode(` ${parseFloat(product.ratingAverage || 0).toFixed(1)} (${product.ratingCount})`));
+            } else {
+              cell.textContent = 'No ratings';
+            }
+            return cell;
+          }
+
+          function createProductRow(product) {
+            const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(product.price || 0);
+            const posted = new Date(product.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+            const status = product.status || 'active';
+            const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
+            const row = createElementSafe('tr');
+            const actionWrap = createElementSafe('div', { className: 'tbl-actions' });
+            const editBtn = createElementSafe('button', { className: 'act-btn primary', text: 'Edit' });
+            editBtn.addEventListener('click', () => {
+              window.location = `/sell?id=${product._id}`;
+            });
+            const toggleBtn = createElementSafe('button', {
+              className: 'act-btn danger',
+              text: status === 'hidden' ? 'Unhide' : 'Hide'
+            });
+            toggleBtn.addEventListener('click', () => {
+              toggleHide(product._id, status === 'hidden' ? 'active' : 'hidden');
+            });
+            actionWrap.append(editBtn, toggleBtn);
+
+            [
+              createElementSafe('td', { children: [createElementSafe('strong', { text: product.title || '' })] }),
+              createElementSafe('td', { style: { color: 'var(--t2)' }, text: product.category || '' }),
+              createElementSafe('td', { text: price }),
+              createElementSafe('td', { text: typeof product.quantity === 'number' ? product.quantity : 1 }),
+              createElementSafe('td', { text: product.views || 0 }),
+              createElementSafe('td', { text: product.interested || 0 }),
+              createElementSafe('td', { children: [createRatingDisplay(product)] }),
+              createElementSafe('td', { style: { color: 'var(--t2)', fontSize: '12px' }, text: posted }),
+              createElementSafe('td', { children: [createElementSafe('span', { className: `badge ${badgeClass}`, text: status })] }),
+              createElementSafe('td', { children: [actionWrap] })
+            ].forEach((cell) => row.appendChild(cell));
+
+            return row;
+          }
 
           async function loadProducts(page = 1) {
             const tbody = document.getElementById('my-products-tbody');
             if (!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="10" class="empty">Loading your products...</td></tr>';
+            setTableMessage(tbody, 'Loading your products...');
 
             try {
               const params = new URLSearchParams({ page, limit: 10 });
@@ -99,39 +195,19 @@
               const json = await res.json();
 
               if (!json.success) {
-                tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load products.</td></tr>';
+                setTableMessage(tbody, 'Failed to load products.');
                 return;
               }
               const products = json.data || [];
               if (!products.length) {
-                tbody.innerHTML = '<tr><td colspan="10" class="empty">No products found.</td></tr>';
+                setTableMessage(tbody, 'No products found.');
                 return;
               }
 
-              tbody.innerHTML = products.map(p => {
-                const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(p.price || 0);
-                const posted = new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-                const status = p.status || 'active';
-                const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
-                const ratingDisplay = p.ratingCount > 0 ? `<i data-lucide="star" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;fill:currentColor;"></i> ${parseFloat(p.ratingAverage || 0).toFixed(1)} (${p.ratingCount})` : 'No ratings';
-
-                return `
-        <tr>
-          <td><strong>${escapeHtml(p.title)}</strong></td>
-          <td style="color:var(--t2)">${escapeHtml(p.category || '')}</td>
-          <td>${price}</td>
-          <td>${typeof p.quantity === 'number' ? p.quantity : 1}</td>
-          <td>${p.views || 0}</td>
-          <td>${p.interested || 0}</td>
-          <td style="font-size:12px;color:var(--t2)">${ratingDisplay}</td>
-          <td style="color:var(--t2);font-size:12px">${posted}</td>
-          <td><span class="badge ${badgeClass}">${status}</span></td>
-          <td><div class="tbl-actions">
-            <button class="act-btn primary" onclick="window.location='/sell?id=${p._id}'">Edit</button>
-            <button class="act-btn danger" onclick="toggleHide('${p._id}', '${status === 'hidden' ? 'active' : 'hidden'}')">${status === 'hidden' ? 'Unhide' : 'Hide'}</button>
-          </div></td>
-        </tr>`;
-              }).join('');
+              tbody.replaceChildren(...products.map(createProductRow));
+              if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+              }
 
               if (typeof renderPagination === 'function') {
                 renderPagination('.tbl-wrap .pagination', json.pagination, 'loadProducts');
@@ -140,12 +216,10 @@
               const countEl = document.querySelector('.tbl-count');
               if (countEl) countEl.textContent = `${json.pagination?.total || products.length} products total`;
             } catch (err) {
-              tbody.innerHTML = '<tr><td colspan="10" class="empty">Failed to load products.</td></tr>';
+              setTableMessage(tbody, 'Failed to load products.');
               console.error('Failed to fetch my products:', err);
             }
           }
-
-          function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
           window.toggleHide = async function (productId, newStatus) {
             try {

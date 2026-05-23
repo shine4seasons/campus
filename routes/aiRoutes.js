@@ -1,8 +1,11 @@
 const router              = require('express').Router();
 const { protect }         = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { limitAiDescribe } = require('../middleware/security');
+const { aiDescribeSchema } = require('../validation/mutateSchemas');
 const { describeProduct } = require('../controllers/ai');
 
-// POST /api/ai/describe — sinh mô tả sản phẩm bằng AI
-router.post('/describe', protect, describeProduct);
+// POST /api/ai/describe � sinh m� t? s?n ph?m b?ng AI
+router.post('/describe', limitAiDescribe, protect, validate(aiDescribeSchema), describeProduct);
 
 module.exports = router;

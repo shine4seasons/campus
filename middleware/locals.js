@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { userFromToken } = require('./resolveUser');
 
 /**
  * Read the JWT from the httpOnly cookie and expose the user on res.locals.
@@ -35,11 +34,9 @@ const injectUser = async (req, res, next) => {
     return next();
   }
 
-  try {
-    const { sub } = jwt.verify(token, process.env.JWT_SECRET);
-    res.locals.user = await User.findById(sub).select('-__v').lean();
-    req.user = res.locals.user;
-  } catch {
+  res.locals.user = await userFromToken(token);
+  req.user = res.locals.user;
+  if (!res.locals.user) {
     res.clearCookie('token');
   }
 

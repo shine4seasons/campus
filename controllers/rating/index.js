@@ -1,12 +1,9 @@
-const mongoose = require('mongoose');
-const Rating = require('../../models/Rating');
-const Product = require('../../models/Product');
-const User = require('../../models/User');
+const ratingRepository = require('../../repositories/ratingRepository');
 
 /**
  * Submit or update rating for product or user
  */
-exports.submitRating = async (req, res) => {
+exports.submitRating = async (req, res, next) => {
   try {
     const { entityType, entityId, score, comment } = req.body;
     const raterId = req.user._id;
@@ -30,51 +27,34 @@ exports.submitRating = async (req, res) => {
 
     // Check if entity exists
     if (entityType === 'product') {
-      const product = await Product.findById(entityId);
+      const product = await ratingRepository.findProductById(entityId);
       if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     } else if (entityType === 'user') {
-      const user = await User.findById(entityId);
+      const user = await ratingRepository.findUserById(entityId);
       if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     // Find or create rating
-    let rating = await Rating.findOne({
-      ratedEntity: entityType,
-      entityId,
-      rater: raterId,
-    });
+    let rating = await ratingRepository.findRatingByEntityAndRater({ entityType, entityId, raterId });
 
     const isUpdate = !!rating;
 
     if (!rating) {
-      rating = new Rating({
-        ratedEntity: entityType,
-        entityId,
-        rater: raterId,
-      });
+      rating = ratingRepository.createRatingDocument({ entityType, entityId, raterId });
     }
-
-    // Store old score for update calculation
-    const oldScore = rating.score || 0;
 
     // Update rating
     rating.score = Math.round(score);
     rating.comment = (comment || '').trim().substring(0, 500);
     await rating.save();
 
-    // Update entity's rating stats
-    const allRatings = await Rating.find({
-      ratedEntity: entityType,
-      entityId,
-    });
-
-    const totalScore = allRatings.reduce((sum, r) => sum + r.score, 0);
-    const average = (totalScore / allRatings.length).toFixed(2);
+    // Update entity's rating stats in DB (no full document transfer)
+    const { average, ratingCount } = await ratingRepository.getRatingAggregate({ entityType, entityId });
 
     if (entityType === 'product') {
-      const product = await Product.findByIdAndUpdate(entityId, {
-        ratingAverage: average,
-        ratingCount: allRatings.length,
+      const product = await ratingRepository.updateProductRatingStats(entityId, {
+        average,
+        ratingCount,
       });
       
       // Update seller's rating based on all their products
@@ -82,9 +62,9 @@ exports.submitRating = async (req, res) => {
         await updateSellerRating(product.seller);
       }
     } else if (entityType === 'user') {
-      await User.findByIdAndUpdate(entityId, {
-        rating: average,
-        ratingCount: allRatings.length,
+      await ratingRepository.updateUserRatingStats(entityId, {
+        average,
+        ratingCount,
       });
     }
 
@@ -95,7 +75,7 @@ exports.submitRating = async (req, res) => {
       let targetName = 'you';
       
       if (entityType === 'product') {
-        const prod = await Product.findById(entityId);
+        const prod = await ratingRepository.findProductByIdForNotification(entityId);
         recipientId = prod.seller;
         targetName = `your product "${prod.title}"`;
       }
@@ -119,30 +99,23 @@ exports.submitRating = async (req, res) => {
     });
   } catch (error) {
     console.error('[rating] submitRating error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 async function updateSellerRating(sellerId) {
   try {
-    const products = await Product.find({ seller: sellerId, ratingCount: { $gt: 0 } });
-    
-    if (products.length === 0) {
+    const agg = await ratingRepository.getSellerRatingAggregate(sellerId);
+
+    if (!agg) {
       // If no products have ratings, we keep default 5.0
-      await User.findByIdAndUpdate(sellerId, {
-        rating: 5.0,
-        ratingCount: 0
-      });
+      await ratingRepository.resetUserRatingStats(sellerId);
       return; 
     }
 
-    const totalAverage = products.reduce((sum, p) => sum + p.ratingAverage, 0);
-    const totalCount = products.reduce((sum, p) => sum + p.ratingCount, 0);
-    const sellerAvg = (totalAverage / products.length).toFixed(2);
-
-    await User.findByIdAndUpdate(sellerId, {
-      rating: sellerAvg,
-      ratingCount: totalCount // Total number of individual reviews across all products
+    await ratingRepository.updateUserRatingStats(sellerId, {
+      average: agg.average,
+      ratingCount: agg.ratingCount
     });
   } catch (error) {
     console.error('Error updating seller rating:', error);
@@ -152,23 +125,54 @@ async function updateSellerRating(sellerId) {
 /**
  * Sync all sellers' ratings based on their products
  */
-exports.syncAllRatings = async (req, res) => {
+exports.syncAllRatings = async (req, res, next) => {
   try {
-    const users = await User.find({});
-    let count = 0;
+    const [allUsers, sellerAgg] = await Promise.all([
+      ratingRepository.findAllUserIds(),
+      ratingRepository.getSellerRatingAggregates(),
+    ]);
 
-    for (const user of users) {
-      await updateSellerRating(user._id);
-      count++;
+    const aggBySeller = new Map(
+      sellerAgg
+        .filter((row) => row && row._id)
+        .map((row) => [String(row._id), row])
+    );
+
+    if (allUsers.length > 0) {
+      const ops = allUsers.map((user) => {
+        const row = aggBySeller.get(String(user._id));
+        if (!row) {
+          return {
+            updateOne: {
+              filter: { _id: user._id },
+              update: { $set: { rating: 5.0, ratingCount: 0 } },
+            },
+          };
+        }
+
+        return {
+          updateOne: {
+            filter: { _id: user._id },
+            update: {
+              $set: {
+                rating: Number((row.avgRating || 0).toFixed(2)),
+                ratingCount: row.totalCount || 0,
+              },
+            },
+          },
+        };
+      });
+
+      await ratingRepository.bulkWriteUserRatings(ops);
     }
 
     res.json({
       success: true,
-      message: `Successfully synchronized ratings for ${count} users.`,
+      message: `Successfully synchronized ratings for ${allUsers.length} users.`,
     });
   } catch (error) {
     console.error('[rating] syncAllRatings error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
@@ -178,7 +182,7 @@ exports.updateSellerRating = updateSellerRating;
 /**
  * Get ratings for product or user
  */
-exports.getRatings = async (req, res) => {
+exports.getRatings = async (req, res, next) => {
   try {
     const { entityType, entityId } = req.query;
 
@@ -190,13 +194,7 @@ exports.getRatings = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid entity ID' });
     }
 
-    const ratings = await Rating.find({
-      ratedEntity: entityType,
-      entityId,
-    })
-      .sort('-createdAt')
-      .populate('rater', 'name nickname avatar')
-      .lean();
+    const ratings = await ratingRepository.findRatingsForEntity({ entityType, entityId });
 
     res.json({
       success: true,
@@ -204,14 +202,14 @@ exports.getRatings = async (req, res) => {
     });
   } catch (error) {
     console.error('[rating] getRatings error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 /**
  * Get user's rating for a product or user
  */
-exports.getUserRating = async (req, res) => {
+exports.getUserRating = async (req, res, next) => {
   try {
     const { entityType, entityId } = req.query;
     const raterId = req.user._id;
@@ -224,11 +222,7 @@ exports.getUserRating = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid entity ID' });
     }
 
-    const rating = await Rating.findOne({
-      ratedEntity: entityType,
-      entityId,
-      rater: raterId,
-    }).lean();
+    const rating = await ratingRepository.findUserRating({ entityType, entityId, raterId });
 
     res.json({
       success: true,
@@ -236,14 +230,14 @@ exports.getUserRating = async (req, res) => {
     });
   } catch (error) {
     console.error('[rating] getUserRating error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 /**
  * Get aggregate stats for product or user
  */
-exports.getRatingStats = async (req, res) => {
+exports.getRatingStats = async (req, res, next) => {
   try {
     const { entityType, entityId } = req.query;
 
@@ -255,23 +249,7 @@ exports.getRatingStats = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid entity ID' });
     }
 
-    const stats = await Rating.aggregate([
-      {
-        $match: {
-          ratedEntity: entityType,
-          entityId: new mongoose.Types.ObjectId(entityId),
-        },
-      },
-      {
-        $group: {
-          _id: '$score',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { _id: -1 },
-      },
-    ]);
+    const stats = await ratingRepository.getRatingDistribution({ entityType, entityId });
 
     // Build distribution object
     const distribution = {
@@ -300,14 +278,14 @@ exports.getRatingStats = async (req, res) => {
     });
   } catch (error) {
     console.error('[rating] getRatingStats error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
 
 /**
  * Delete rating
  */
-exports.deleteRating = async (req, res) => {
+exports.deleteRating = async (req, res, next) => {
   try {
     const { entityType, entityId } = req.body;
     const raterId = req.user._id;
@@ -316,57 +294,46 @@ exports.deleteRating = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid entity type' });
     }
 
-    const rating = await Rating.findOneAndDelete({
-      ratedEntity: entityType,
-      entityId,
-      rater: raterId,
-    });
+    const rating = await ratingRepository.deleteUserRating({ entityType, entityId, raterId });
 
     if (!rating) {
       return res.status(404).json({ success: false, message: 'Rating not found' });
     }
 
-    // Recalculate entity's rating stats
-    const allRatings = await Rating.find({
-      ratedEntity: entityType,
-      entityId,
-    });
+    // Recalculate entity's rating stats in DB (no full document transfer)
+    const { average, ratingCount } = await ratingRepository.getRatingAggregate({ entityType, entityId });
 
-    if (allRatings.length > 0) {
-      const totalScore = allRatings.reduce((sum, r) => sum + r.score, 0);
-      const average = (totalScore / allRatings.length).toFixed(2);
+    if (ratingCount > 0) {
 
       if (entityType === 'product') {
-        const product = await Product.findByIdAndUpdate(entityId, {
-          ratingAverage: average,
-          ratingCount: allRatings.length,
+        const product = await ratingRepository.updateProductRatingStats(entityId, {
+          average,
+          ratingCount,
         });
         if (product) await updateSellerRating(product.seller);
       } else if (entityType === 'user') {
-        await User.findByIdAndUpdate(entityId, {
-          rating: average,
-          ratingCount: allRatings.length,
+        await ratingRepository.updateUserRatingStats(entityId, {
+          average,
+          ratingCount,
         });
       }
     } else {
       // No ratings left, reset to default
       if (entityType === 'product') {
-        const product = await Product.findByIdAndUpdate(entityId, {
-          ratingAverage: 0,
+        const product = await ratingRepository.updateProductRatingStats(entityId, {
+          average: 0,
           ratingCount: 0,
         });
         if (product) await updateSellerRating(product.seller);
       } else if (entityType === 'user') {
-        await User.findByIdAndUpdate(entityId, {
-          rating: 5.0,
-          ratingCount: 0,
-        });
+        await ratingRepository.resetUserRatingStats(entityId);
       }
     }
 
     res.json({ success: true, message: 'Rating deleted successfully' });
   } catch (error) {
     console.error('[rating] deleteRating error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return next(error);
   }
 };
+

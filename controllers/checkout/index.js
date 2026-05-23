@@ -1,10 +1,10 @@
-const Payment = require('../../models/Payment');
-const Product = require('../../models/Product');
+const { PRODUCT_STATUS, PAYMENT_STATUS } = require('../../config/appConstants');
+const paymentRepository = require('../../repositories/paymentRepository');
+const { serviceUnavailable } = require('../../utils/errors');
 
-const getCheckoutPage = async (req, res) => {
+const getCheckoutPage = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.productId)
-      .populate('seller', 'name nickname avatar university phone');
+    const product = await paymentRepository.findCheckoutProductById(req.params.productId);
 
     if (!product) {
       return res.status(404).render('error', {
@@ -18,7 +18,7 @@ const getCheckoutPage = async (req, res) => {
       return res.redirect(`/products/${product._id}`);
     }
 
-    if (product.status === 'sold' || (typeof product.quantity === 'number' && product.quantity <= 0)) {
+    if (product.status === PRODUCT_STATUS.SOLD || (typeof product.quantity === 'number' && product.quantity <= 0)) {
       return res.redirect(`/products/${product._id}`);
     }
 
@@ -28,20 +28,13 @@ const getCheckoutPage = async (req, res) => {
       user: req.user,
     });
   } catch (error) {
-    console.error('[checkout] getCheckoutPage:', error);
-    return res.status(500).render('error', {
-      title: 'Checkout error - Campus Marketplace',
-      message: error.message,
-      user: req.user,
-    });
+    return next(error);
   }
 };
 
-const getPaymentPage = async (req, res) => {
+const getPaymentPage = async (req, res, next) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId)
-      .populate('order')
-      .populate('seller', 'name nickname');
+    const payment = await paymentRepository.findPaymentPageById(req.params.paymentId);
 
     if (!payment) {
       return res.status(404).render('error', {
@@ -59,7 +52,7 @@ const getPaymentPage = async (req, res) => {
       });
     }
 
-    if (payment.status === 'EXPIRED' || payment.status === 'FAILED') {
+    if (payment.status === PAYMENT_STATUS.EXPIRED || payment.status === PAYMENT_STATUS.FAILED) {
       return res.redirect(`/orders/tracking/${payment.order._id}`);
     }
 
@@ -73,11 +66,7 @@ const getPaymentPage = async (req, res) => {
 
     if (!qrUrl) {
       console.warn('[payment] QR URL missing for payment', payment._id);
-      return res.status(500).render('error', {
-        title: 'Payment QR unavailable - Campus Marketplace',
-        message: 'Payment QR could not be generated. Please contact support.',
-        user: req.user,
-      });
+      return next(serviceUnavailable('Payment QR could not be generated. Please contact support.'));
     }
 
     return res.render('payment', {
@@ -85,16 +74,11 @@ const getPaymentPage = async (req, res) => {
       payment,
       platformBank,
       qrUrl,
-      isAlreadyPaid: payment.status === 'PAID',
+      isAlreadyPaid: payment.status === PAYMENT_STATUS.PAID,
       user: req.user,
     });
   } catch (error) {
-    console.error('[checkout] getPaymentPage:', error);
-    return res.status(500).render('error', {
-      title: 'Payment error - Campus Marketplace',
-      message: error.message,
-      user: req.user,
-    });
+    return next(error);
   }
 };
 

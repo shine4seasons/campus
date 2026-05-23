@@ -439,3 +439,37 @@ GET /api/payments/:paymentId/check
 6. Set up alerts for failures
 
 See `SEPAY_POLLING_SETUP.md` for full setup guide.
+
+## Auth Security Policy Knobs
+
+Add these optional variables to tune cookie and token-rotation policy:
+
+```bash
+AUTH_COOKIE_MAX_AGE_MS=604800000
+AUTH_COOKIE_SAMESITE=lax
+FORCE_SECURE_COOKIES=false
+AUTH_REFRESH_ROTATE_WINDOW_SECONDS=86400
+AUTH_SESSION_MAX_AGE_SECONDS=2592000
+```
+
+Notes:
+- `AUTH_REFRESH_ROTATE_WINDOW_SECONDS` means refresh is only allowed when token expiry is within this window.
+- `AUTH_SESSION_MAX_AGE_SECONDS` limits total session age from token issue time.
+- Keep `FORCE_SECURE_COOKIES=true` in production behind HTTPS.
+
+## Startup Config Validation (CONF-201)
+
+The app now validates environment configuration at startup (`config/env.js`) and fails fast before DB connection if required config is invalid.
+
+Validation behavior:
+1. Core fields are always validated (`NODE_ENV`, `PORT`, `MONGODB_URI`, `JWT_SECRET`, `SERVER_URL`, `CLIENT_URL`).
+2. AI provider-specific keys are validated:
+   - `AI_PROVIDER=groq` requires `GROQ_API_KEY` (except `NODE_ENV=test`).
+   - `AI_PROVIDER=gemini` requires `GEMINI_API_KEY` (except `NODE_ENV=test`).
+3. Production-only required variables include:
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `SEPAY_API_KEY`, `SEPAY_WEBHOOK_SECRET`
+   - `SOCKET_ALLOWED_ORIGINS` (or valid `CLIENT_URL` fallback)
+
+If validation fails, startup exits with a clear `Environment validation failed: ...` error.

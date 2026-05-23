@@ -1,7 +1,5 @@
-const Wallet = require('../models/Wallet');
-const PayoutRequest = require('../models/PayoutRequest');
-const WalletTransaction = require('../models/WalletTransaction');
 const mongoose = require('mongoose');
+const walletRepository = require('../repositories/walletRepository');
 
 function sanitizeBankInfo(bankInfo = {}) {
   return {
@@ -15,7 +13,7 @@ function sanitizeBankInfo(bankInfo = {}) {
  * Submit a payout request
  * POST /api/wallet/payout-request
  */
-exports.submitPayoutRequest = async (req, res) => {
+exports.submitPayoutRequest = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -26,32 +24,34 @@ exports.submitPayoutRequest = async (req, res) => {
     const cleanBankInfo = sanitizeBankInfo(bankInfo);
 
     if (!Number.isFinite(payoutAmount) || payoutAmount < 50000) {
+      await session.abortTransaction();
       return res.status(400).json({ success: false, message: 'Minimum withdrawal is 50,000 VND' });
     }
     if (!cleanBankInfo.bankName || !cleanBankInfo.accountNumber || !cleanBankInfo.accountName) {
+      await session.abortTransaction();
       return res.status(400).json({ success: false, message: 'Bank account details are required' });
     }
 
-    const wallet = await Wallet.findOne({ user: userId }).session(session);
+    const wallet = await walletRepository.findWalletByUser(userId, session);
     if (!wallet || wallet.availableBalance < payoutAmount) {
+      await session.abortTransaction();
       return res.status(400).json({ success: false, message: 'Insufficient balance' });
     }
 
     // 1. Create payout request
-    const payout = new PayoutRequest({
+    const payout = await walletRepository.createPayoutRequest({
       user: userId,
       amount: payoutAmount,
       bankInfo: cleanBankInfo,
       status: 'PENDING'
-    });
-    await payout.save({ session });
+    }, session);
 
     // 2. Deduct from available balance
     wallet.availableBalance -= payoutAmount;
     await wallet.save({ session });
 
     // 3. Create transaction record
-    const transaction = new WalletTransaction({
+    await walletRepository.createWalletTransaction({
       wallet: wallet._id,
       user: userId,
       type: 'WITHDRAW',
@@ -60,8 +60,7 @@ exports.submitPayoutRequest = async (req, res) => {
       status: 'PENDING',
       referenceId: payout._id,
       referenceType: 'PayoutRequest'
-    });
-    await transaction.save({ session });
+    }, session);
 
     await session.commitTransaction();
     res.json({ success: true, message: 'Payout request submitted', data: payout });
@@ -69,7 +68,7 @@ exports.submitPayoutRequest = async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     console.error('[wallet] submitPayoutRequest:', err);
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   } finally {
     session.endSession();
   }
@@ -79,20 +78,18 @@ exports.submitPayoutRequest = async (req, res) => {
  * Get wallet transactions
  * GET /api/wallet/transactions
  */
-exports.getTransactions = async (req, res) => {
+exports.getTransactions = async (req, res, next) => {
   try {
-    const wallet = await Wallet.findOne({ user: req.user._id });
+    const wallet = await walletRepository.findWalletByUser(req.user._id);
     if (!wallet) {
       return res.json({ success: true, data: [] });
     }
 
-    const transactions = await WalletTransaction.find({ wallet: wallet._id })
-      .sort('-createdAt')
-      .limit(50);
+    const transactions = await walletRepository.findTransactionsByWallet(wallet._id, 50);
 
     res.json({ success: true, data: transactions });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
 
@@ -100,15 +97,13 @@ exports.getTransactions = async (req, res) => {
  * Get seller payout requests
  * GET /api/wallet/payout-requests
  */
-exports.getPayoutRequests = async (req, res) => {
+exports.getPayoutRequests = async (req, res, next) => {
   try {
-    const payouts = await PayoutRequest.find({ user: req.user._id })
-      .sort('-createdAt')
-      .limit(30)
-      .lean();
+    const payouts = await walletRepository.findPayoutRequestsByUser(req.user._id, 30);
 
     res.json({ success: true, data: payouts });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return next(err);
   }
 };
+

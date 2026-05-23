@@ -1,18 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Dashboard — Campus Marketplace</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
-  <link rel="stylesheet" href="/css/rating.css">
+  <%- include('partials/head', { pageTitle: 'Seller Dashboard - Campus Marketplace', pageStyles: ['dashboard', 'rating'] }) %>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
 
@@ -518,110 +507,9 @@
         </div>
       </div>
 
-      <script>
-        function openWithdrawModal() {
-          document.getElementById('withdrawModal').classList.add('show');
-        }
-        function closeWithdrawModal() {
-          document.getElementById('withdrawModal').classList.remove('show');
-        }
-        async function submitWithdraw() {
-          const amount = document.getElementById('withdrawAmount').value;
-          const bankName = document.getElementById('bankName').value;
-          const accountNumber = document.getElementById('accountNumber').value;
-          const accountName = document.getElementById('accountName').value;
-
-          if (!amount || amount < 50000) return showToast('Minimum withdrawal is 50,000 VND', 'err');
-          if (!bankName || !accountNumber || !accountName) return showToast('Please fill all bank details', 'err');
-
-          try {
-            const res = await fetch('/api/wallet/payout-request', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ amount, bankInfo: { bankName, accountNumber, accountName } })
-            });
-            const json = await res.json();
-            if (json.success) {
-              showToast('Payout request submitted successfully!', 'ok');
-              setTimeout(() => location.reload(), 900);
-            } else {
-              showToast('Error: ' + json.message, 'err');
-            }
-          } catch (err) {
-            showToast('Network error', 'err');
-          }
-        }
-
-        async function fetchTransactions() {
-          try {
-            const res = await fetch('/api/wallet/transactions');
-            const json = await res.json();
-            if (json.success && json.data.length > 0) {
-              const tbody = document.getElementById('walletTransactions');
-              tbody.innerHTML = json.data.map(t => `
-                <tr>
-                  <td style="font-size: 13px; color: var(--t2);">${new Date(t.createdAt).toLocaleDateString()}</td>
-                  <td><span class="badge ${t.amount >= 0 ? 'badge-completed' : 'badge-cancelled'}" style="font-size: 11px;">${t.type}</span></td>
-                  <td style="font-size: 13px;">${t.description}</td>
-                  <td style="font-weight: 700; color: ${t.amount >= 0 ? 'var(--success)' : 'var(--error)'}">${t.amount >= 0 ? '+' : ''}${new Intl.NumberFormat('vi-VN').format(t.amount)}</td>
-                </tr>
-              `).join('');
-            }
-          } catch (err) {
-            console.error('Fetch transactions error:', err);
-          }
-        }
-
-        async function fetchPayoutRequests() {
-          try {
-            const res = await fetch('/api/wallet/payout-requests');
-            const json = await res.json();
-            const tbody = document.getElementById('payoutRequestsTable');
-            if (!tbody) return;
-
-            if (!json.success || !json.data.length) {
-              tbody.innerHTML = `
-                <tr>
-                  <td colspan="4" style="text-align:center; padding: 32px; color: var(--t2);">No payout requests yet</td>
-                </tr>
-              `;
-              return;
-            }
-
-            const statusClass = {
-              PENDING: 'badge-pending',
-              PROCESSING: 'badge-pending',
-              PAID: 'badge-completed',
-              REJECTED: 'badge-cancelled'
-            };
-
-            tbody.innerHTML = json.data.map(p => `
-              <tr>
-                <td style="font-size: 13px; color: var(--t2);">${new Date(p.createdAt).toLocaleDateString()}</td>
-                <td style="font-weight: 700;">${new Intl.NumberFormat('vi-VN').format(p.amount)} VND</td>
-                <td style="font-size: 13px;">${p.bankInfo?.bankName || '—'}<br><span style="color: var(--t3);">${p.bankInfo?.accountNumber || ''}</span></td>
-                <td><span class="badge ${statusClass[p.status] || 'badge-pending'}" style="font-size: 11px;">${p.status}</span></td>
-              </tr>
-            `).join('');
-          } catch (err) {
-            console.error('Fetch payout requests error:', err);
-          }
-        }
-
-        window.showSection = function (id) {
-          const navItem = document.querySelector(`.nav-item[data-section="${id}"]`);
-          if (navItem) {
-            navItem.click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (id === 'sWallet') {
-              fetchTransactions();
-              fetchPayoutRequests();
-            }
-          }
-        }
-      </script>
+            <script defer src="/js/pages/dashboard-seller.js"></script>
       <script>window.INITIAL_SECTION = "<%= (typeof initialSection !== 'undefined' ? initialSection : 'sDash') %>";</script>
-      <script src="/js/rating.js"></script>
+      <script defer src="/js/rating.js"></script>
       <%- include('partials/dashboard-scripts') %>
 </body>
 

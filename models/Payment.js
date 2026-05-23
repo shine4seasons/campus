@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { PAYMENT_STATUS } = require('../config/appConstants');
 
 const PaymentSchema = new mongoose.Schema({
   // Order references
@@ -8,15 +9,20 @@ const PaymentSchema = new mongoose.Schema({
 
   // Payment amount and status
   amount: { type: Number, required: true },
-  status: { type: String, enum: ['PENDING', 'PAID', 'EXPIRED', 'FAILED'], default: 'PENDING', index: true },
+  status: {
+    type: String,
+    enum: Object.values(PAYMENT_STATUS),
+    default: PAYMENT_STATUS.PENDING,
+    index: true
+  },
 
   // Legacy payment code (for backward compatibility with VietQR)
-  paymentCode: { type: String, sparse: true, unique: true, index: true },
+  paymentCode: { type: String },
 
   // SePay-specific fields
   // sepayPaymentId: Unique identifier from SePay API for this payment
   // Used to match incoming transactions with our payment records
-  sepayPaymentId: { type: String, sparse: true, unique: true, index: true },
+  sepayPaymentId: { type: String },
 
   // sepayQrUrl: QR code image URL from SePay
   // Display this in frontend for buyer to scan
@@ -41,8 +47,18 @@ const PaymentSchema = new mongoose.Schema({
 
 // Only enforce uniqueness when these optional fields actually have string values.
 PaymentSchema.index(
+  { paymentCode: 1 },
+  {
+    name: 'uniq_paymentCode',
+    unique: true,
+    partialFilterExpression: { paymentCode: { $type: 'string' } }
+  }
+);
+
+PaymentSchema.index(
   { sepayPaymentId: 1 },
   {
+    name: 'uniq_sepayPaymentId',
     unique: true,
     partialFilterExpression: { sepayPaymentId: { $type: 'string' } }
   }
@@ -51,6 +67,7 @@ PaymentSchema.index(
 PaymentSchema.index(
   { bankTransactionId: 1 },
   {
+    name: 'uniq_bankTransactionId',
     unique: true,
     partialFilterExpression: { bankTransactionId: { $type: 'string' } }
   }

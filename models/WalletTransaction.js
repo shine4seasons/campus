@@ -8,7 +8,17 @@ const WalletTransactionSchema = new mongoose.Schema({
   status:        { type: String, enum: ['PENDING', 'COMPLETED', 'FAILED'], default: 'COMPLETED' },
   description:   { type: String, required: true },
   referenceId:   { type: mongoose.Schema.Types.ObjectId, default: null },
-  referenceType: { type: String, default: null }  // 'Order', 'PayoutRequest', etc.
+  referenceType: { type: String, default: null },  // 'Order', 'PayoutRequest', etc.
+  idempotencyKey:{ type: String, default: null }
 }, { timestamps: true });
+
+WalletTransactionSchema.index(
+  { idempotencyKey: 1 },
+  {
+    name: 'uniq_wallet_tx_idempotencyKey',
+    unique: true,
+    partialFilterExpression: { idempotencyKey: { $type: 'string' } }
+  }
+);
 
 module.exports = mongoose.model('WalletTransaction', WalletTransactionSchema);

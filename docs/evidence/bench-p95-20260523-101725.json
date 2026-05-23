@@ -1,0 +1,55 @@
+﻿{
+  "date": "2026-05-23T03:17:55.346Z",
+  "baseUrl": "http://127.0.0.1:5000",
+  "requestsPerEndpoint": 40,
+  "concurrency": 8,
+  "ok": false,
+  "results": [
+    {
+      "endpoint": "/api/products",
+      "samples": 0,
+      "errors": 40,
+      "statusCounts": {},
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "reachable": false
+    },
+    {
+      "endpoint": "/api/chat",
+      "samples": 40,
+      "errors": 0,
+      "statusCounts": {
+        "401": 40
+      },
+      "p50": 15,
+      "p95": 19,
+      "p99": 21,
+      "reachable": true
+    },
+    {
+      "endpoint": "/api/orders",
+      "samples": 40,
+      "errors": 0,
+      "statusCounts": {
+        "401": 40
+      },
+      "p50": 12,
+      "p95": 14,
+      "p99": 15,
+      "reachable": true
+    },
+    {
+      "endpoint": "/api/admin/reports",
+      "samples": 40,
+      "errors": 0,
+      "statusCounts": {
+        "401": 40
+      },
+      "p50": 13,
+      "p95": 15,
+      "p99": 15,
+      "reachable": true
+    }
+  ]
+}
