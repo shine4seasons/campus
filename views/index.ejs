@@ -18,7 +18,7 @@
             <span class="hero-eyebrow-dot"></span>
             For students, by students
           </div>
-          <h1>Buy &amp; sell <em>smarter</em><br>on campus</h1>
+          <h1>Buy & sell <em>smarter</em><br>on campus</h1>
           <p class="hero-sub">Thousands of second-hand items — from textbooks and electronics to everyday essentials.</p>
 
           <div class="search-wrap" id="search-wrap">
@@ -120,7 +120,7 @@
               <% CATEGORIES.forEach(cat=> { %>
                 <button class="filter-btn" data-filter="<%= cat.slug %>">
                   <i data-lucide="<%= cat.lucideIcon %>" width="14" height="14"></i>
-                  <%= cat.name.replace(/&amp;/g, '&' ) %>
+                  <%= cat.name %>
                 </button>
               <% }) %>
             </div>
@@ -232,18 +232,21 @@
             </div>
             <div class="footer-col">
               <h4>Explore</h4>
-              <a href="/?cat=books">Books &amp; Textbooks</a>
+              <a href="/?cat=books">Books & Textbooks</a>
               <a href="/?cat=electronics">Electronics</a>
               <a href="/?cat=clothing">Clothing</a>
-              <a href="/?cat=furniture">Furniture &amp; Dorm</a>
+              <a href="/?cat=furniture">Furniture & Dorm</a>
             </div>
             <div class="footer-col">
               <h4>Account</h4>
               <% if (user) { %>
-                <a href="/profile">My profile</a>
+                <a href="/profile" class="footer-link-icon"><i data-lucide="user-round"></i>My profile</a>
                 <a href="/my-products">My products</a>
                 <a href="/orders-buyer">My orders</a>
                 <a href="/messages">Messages</a>
+                <button type="button" class="footer-link-icon footer-link-btn danger" onclick="footerSignOut()">
+                  <i data-lucide="log-out"></i>Sign out
+                </button>
               <% } else { %>
                 <a href="/login">Sign in</a>
                 <a href="/login">Create account</a>
@@ -271,6 +274,13 @@
         window.INDEX_PAGE_CONFIG = {
           isAuth: <%= !!user %>
         };
+
+        async function footerSignOut() {
+          try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+          } catch (_) {}
+          window.location.href = '/';
+        }
       </script>
       <script defer src="/js/pages/index.js"></script>
 </body>

@@ -5,9 +5,10 @@
   position: sticky;
   top: 0;
   z-index: 200;
-  background: rgba(250, 250, 248, 0.88);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px) saturate(1.8);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
 }
 
 .nav-inner {
@@ -61,8 +62,9 @@
 }
 
 .nav-link:hover {
-  color: var(--text);
-  background: var(--surface-2);
+  color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: inset 0 0 0 1px rgba(27, 94, 255, 0.08);
 }
 
 .nav-actions {
@@ -73,7 +75,7 @@
 }
 
 .btn-sell {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #4F7DFF);
   color: #fff;
   padding: 8px 16px;
   border-radius: var(--radius-md);
@@ -85,7 +87,7 @@
 .btn-sell:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 106, 229, 0.3);
+  box-shadow: 0 10px 22px rgba(27, 94, 255, 0.24);
 }
 
 .btn-login {
@@ -106,6 +108,8 @@
   border-color: var(--primary);
   color: var(--primary);
   background: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 /* User Menu */
@@ -420,7 +424,8 @@ body.mode-seller .nav-item.active::before {
   padding: 12px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(16px) saturate(1.5);
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -565,7 +570,9 @@ body.mode-seller .nav-item.active::before {
 }
 
 .sb-dropdown-item:hover {
-  background: var(--surface-2);
+  background: #fff;
+  border-color: rgba(27, 94, 255, 0.28);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   color: var(--text);
 }
 
@@ -740,7 +747,7 @@ body.has-sidebar {
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  background: linear-gradient(180deg, #FFFFFF, var(--surface-3));
 }
 
 .dropdown-avatar {
@@ -907,6 +914,11 @@ body.has-sidebar {
   position: relative;
 }
 
+.tb-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-focus);
+}
+
 .search-results {
   position: absolute;
   top: calc(100% + 8px);
@@ -1005,8 +1017,11 @@ body.has-sidebar {
 }
 
 .tb-icon-btn:hover {
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--primary-light);
+  border-color: rgba(27, 94, 255, 0.24);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .tb-icon-btn svg {
@@ -1038,6 +1053,15 @@ body.has-sidebar {
 .content {
   flex: 1;
   padding: 24px 28px 40px;
+}
+
+.page-wrap,
+.profile-wrap,
+.notif-page,
+.pdp,
+.search-page,
+.co-layout {
+  isolation: isolate;
 }
 
 /* ── Forms ──────────────────────────────────── */

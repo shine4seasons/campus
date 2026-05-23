@@ -501,6 +501,45 @@
       .success-btns { grid-template-columns: 1fr; }
     }
 
+    /* Visual polish */
+    .co-card {
+      background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      border-color: rgba(218, 225, 240, 0.95);
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.065);
+    }
+
+    .co-card:hover {
+      border-color: rgba(27, 94, 255, 0.20);
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.09);
+    }
+
+    .method-tab,
+    .pay-tab {
+      background: linear-gradient(180deg, #FFFFFF, #FBFCFF);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset;
+    }
+
+    .method-tab:hover,
+    .pay-tab:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .method-tab.selected,
+    .pay-tab.selected {
+      background: linear-gradient(135deg, #EEF4FF, #F0FDF4);
+    }
+
+    .co-place-btn {
+      background: linear-gradient(135deg, #1B5EFF, #4F7DFF);
+      box-shadow: 0 12px 26px rgba(27, 94, 255, 0.24);
+    }
+
+    .co-bottom {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px) saturate(1.5);
+    }
+
     /* Ensure navbar fits at small narrow devices (<=480px) */
     @media (max-width: 480px) {
       .co-nav { padding: 0 8px; height: 52px; }

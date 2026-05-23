@@ -1182,8 +1182,8 @@ body {
 }
 @media (min-width: 901px) {
   body.has-sidebar .sell-header-inner {
-    margin-left: var(--sb-w);
-    max-width: calc(100vw - var(--sb-w));
+    margin-left: auto;
+    max-width: 1400px;
   }
 }
 .sell-back {
@@ -1212,8 +1212,8 @@ body {
 }
 @media (min-width: 901px) {
   body.has-sidebar .sell-layout {
-    margin-left: var(--sb-w);
-    max-width: calc(100vw - var(--sb-w));
+    margin-left: auto;
+    max-width: 1400px;
   }
 }
 @media (max-width: 1100px) {

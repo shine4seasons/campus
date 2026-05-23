@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: (editProduct ? 'Edit Product' : 'Post a Product') + ' - Campus Marketplace', pageStyles: [] }) %>
+  <%- include('partials/head', { pageTitle: (editProduct ? 'Edit Product' : 'Post a Product') + ' - Campus Marketplace', pageStyles: ['sell'] }) %>
   <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     .sell-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding-bottom: 80px;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0 0 80px;
+      transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 900px) {
+      .sell-container {
+        padding: 0 0 64px;
+      }
     }
 
     .sell-layout {
@@ -34,6 +42,7 @@
       margin-bottom: 24px;
       transition: all 0.3s ease;
       position: relative;
+      overflow: visible;
     }
 
     .sell-card.active {
@@ -563,6 +572,46 @@
       color: #8890B0;
       font-size: 12px;
       margin-top: 2px;
+    }
+
+    .sell-card,
+    .sell-actions-card,
+    .sell-preview-card,
+    .sell-tips-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98));
+      border-color: rgba(218, 225, 240, 0.95);
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    }
+
+    .sell-card:hover,
+    .sell-actions-card:hover,
+    .sell-preview-card:hover,
+    .sell-tips-card:hover {
+      border-color: rgba(27, 94, 255, 0.22);
+      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
+    }
+
+    .cond-opt:hover {
+      border-color: rgba(27, 94, 255, 0.42);
+      background: #F4F7FF;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .cond-opt.selected {
+      background: linear-gradient(135deg, #EEF4FF, #F0FDF4);
+      box-shadow: 0 10px 22px rgba(27, 94, 255, 0.12);
+    }
+
+    .btn-submit,
+    .sell-btn-primary {
+      background: linear-gradient(135deg, #1B5EFF, #4F7DFF);
+      box-shadow: 0 12px 26px rgba(27, 94, 255, 0.24);
+    }
+
+    .btn-submit:hover,
+    .sell-btn-primary:hover {
+      box-shadow: 0 16px 32px rgba(27, 94, 255, 0.30);
     }
   </style>
 </head>

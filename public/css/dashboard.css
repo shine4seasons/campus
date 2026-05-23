@@ -1510,3 +1510,46 @@ tbody a:hover {
   padding: 10px 18px;
   font-size: 14px;
 }
+
+/* Unified accent borders for admin/seller dashboard cards */
+.dashboard-page {
+  --dash-accent-rgb: 27, 94, 255; /* admin default */
+}
+
+.dashboard-page.dashboard-seller {
+  --dash-accent-rgb: 5, 150, 105;
+}
+
+.dashboard-page .stat-card {
+  border: 2px solid rgba(var(--dash-accent-rgb), 0.34);
+  border-top-width: 4px;
+}
+
+/* glass utility sets border with !important, so force dashboard accent here */
+.dashboard-page .stat-card.glass {
+  border: 2px solid rgba(var(--dash-accent-rgb), 0.34) !important;
+  border-top-width: 4px !important;
+}
+
+.dashboard-page .quick-card,
+.dashboard-page .card,
+.dashboard-page .tbl-wrap,
+.dashboard-page .status-count-card {
+  border: 2px solid rgba(var(--dash-accent-rgb), 0.30);
+}
+
+.dashboard-page .quick-card.glass,
+.dashboard-page .card.glass,
+.dashboard-page .tbl-wrap.glass,
+.dashboard-page .status-count-card.glass {
+  border: 2px solid rgba(var(--dash-accent-rgb), 0.30) !important;
+}
+
+.dashboard-page .quick-card:hover,
+.dashboard-page .card:hover,
+.dashboard-page .tbl-wrap:hover,
+.dashboard-page .status-count-card:hover,
+.dashboard-page .stat-card:hover {
+  border-color: rgba(var(--dash-accent-rgb), 0.58);
+  box-shadow: 0 10px 24px rgba(var(--dash-accent-rgb), 0.14);
+}

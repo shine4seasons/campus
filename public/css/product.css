@@ -3,12 +3,19 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 20px 120px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (min-width: 901px) {
   body.has-sidebar .pdp {
     margin-left: var(--sb-w);
     padding-left: 32px;
+  }
+  body.has-sidebar.sidebar-collapsed .pdp {
+    margin-left: 0;
+    max-width: 100vw;
+    padding-left: 24px;
+    padding-right: 24px;
   }
 }
 
@@ -526,52 +533,66 @@
 }
 
 /* Shared Product Card Design */
-.product-card {
+.pdp-similar .product-card {
   background: var(--surface);
   border-radius: 20px;
-  border: 1px solid var(--border);
+  border: 1.5px solid rgba(210, 218, 234, 0.95);
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
 }
 
-.product-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px -10px rgba(0,0,0,0.15);
-  border-color: var(--primary-light);
+.pdp-similar .product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  border-color: rgba(37, 99, 235, 0.34);
 }
 
-.product-img-placeholder {
+.pdp-similar .product-img-placeholder {
   aspect-ratio: 1/1;
   position: relative;
-  background: var(--surface-2);
+  background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));
+  overflow: hidden;
 }
 
-.product-img-placeholder img {
+.pdp-similar .product-img-placeholder img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease, filter 0.3s ease;
 }
 
-.product-cta {
+.pdp-similar .product-card:hover .product-img-placeholder img {
+  transform: scale(1.04);
+  filter: saturate(1.06);
+}
+
+.pdp-similar .product-cta {
   position: absolute;
-  inset: 0;
-  background: rgba(27, 94, 255, 0.85);
+  right: 12px;
+  bottom: 12px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(37, 99, 235, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 14px;
+  color: #1d3f78;
+  font-weight: 700;
+  font-size: 12px;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(4px);
+  transform: translateY(6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  backdrop-filter: blur(8px);
 }
 
-.product-card:hover .product-cta {
+.pdp-similar .product-card:hover .product-cta {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .product-body {

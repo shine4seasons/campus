@@ -3,25 +3,31 @@
 .order-card {
   display: flex;
   gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 12px;
-  background: var(--bg1);
-  transition: all 0.2s ease;
+  padding: 18px;
+  border: 1px solid rgba(226, 229, 240, 0.95);
+  border-top: 3px solid rgba(27, 94, 255, 0.18);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.055);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .order-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 2px 8px rgba(27, 94, 255, 0.1);
+  border-color: rgba(27, 94, 255, 0.34);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.10);
 }
 
 .order-card-image {
   width: 100px;
   height: 100px;
-  border-radius: 6px;
+  border-radius: 14px;
   object-fit: cover;
-  background: var(--bg2);
+  background:
+    linear-gradient(135deg, rgba(27,94,255,0.10), rgba(16,185,129,0.08)),
+    var(--bg2);
   flex-shrink: 0;
 }
 
@@ -128,10 +134,10 @@
 
 .btn-track {
   padding: 8px 16px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #4F7DFF);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -143,17 +149,16 @@
 }
 
 .btn-track:hover {
-  background: #1547cc;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(27, 94, 255, 0.3);
+  box-shadow: 0 10px 22px rgba(27, 94, 255, 0.28);
 }
 
 .btn-cancel {
   padding: 8px 16px;
-  background: var(--bg2);
+  background: linear-gradient(180deg, #FFFFFF, var(--surface-3));
   color: var(--t1);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -182,9 +187,10 @@
   padding: 16px;
   border: 1px solid var(--border);
   border-top: 3px solid;
-  border-radius: 8px;
-  background: var(--bg1);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
   text-align: center;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.055);
 }
 
 .sc-label {

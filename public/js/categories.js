@@ -12,13 +12,13 @@ const ICON_SVG = {
 
 // Category definitions
 const CATEGORIES = [
-  { icon: ICON_SVG.books,         name:'Books &amp; Textbooks',       slug:'books',        lucideIcon:'book-open'        },
-  { icon: ICON_SVG.electronics,   name:'Electronics &amp; Computers',  slug:'electronics',  lucideIcon:'monitor'          },
-  { icon: ICON_SVG.clothing,      name:'Clothing &amp; Fashion',       slug:'clothing',     lucideIcon:'shirt'            },
-  { icon: ICON_SVG.furniture,     name:'Furniture &amp; Dorm',         slug:'furniture',    lucideIcon:'sofa'             },
+  { icon: ICON_SVG.books,         name:'Books & Textbooks',       slug:'books',        lucideIcon:'book-open'        },
+  { icon: ICON_SVG.electronics,   name:'Electronics & Computers',  slug:'electronics',  lucideIcon:'monitor'          },
+  { icon: ICON_SVG.clothing,      name:'Clothing & Fashion',       slug:'clothing',     lucideIcon:'shirt'            },
+  { icon: ICON_SVG.furniture,     name:'Furniture & Dorm',         slug:'furniture',    lucideIcon:'sofa'             },
   { icon: ICON_SVG['daily-needs'],name:'Daily Essentials',             slug:'daily-needs',  lucideIcon:'shopping-bag'     },
-  { icon: ICON_SVG.sports,        name:'Sports &amp; Gym',             slug:'sports',       lucideIcon:'dumbbell'         },
-  { icon: ICON_SVG.gaming,        name:'Hobbies &amp; Entertainment',  slug:'gaming',       lucideIcon:'gamepad2'         },
+  { icon: ICON_SVG.sports,        name:'Sports & Gym',             slug:'sports',       lucideIcon:'dumbbell'         },
+  { icon: ICON_SVG.gaming,        name:'Hobbies & Entertainment',  slug:'gaming',       lucideIcon:'gamepad2'         },
   { icon: ICON_SVG.other,         name:'Other',                        slug:'other',        lucideIcon:'folder-open'      },
 ];
 

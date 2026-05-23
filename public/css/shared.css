@@ -24,11 +24,15 @@
   --bg:            #F4F5F7;
   --surface:       #FFFFFF;
   --surface-2:     #F0F2F6;
+  --surface-3:     #F8FAFC;
+  --border-light:  #EEF2F7;
 
   /* Shadows */
   --shadow-sm:     0 1px 4px rgba(26,26,46,0.06);
   --shadow-md:     0 4px 20px rgba(26,26,46,0.09);
   --shadow-lg:     0 12px 48px rgba(26,26,46,0.12);
+  --shadow-focus:  0 0 0 4px rgba(27, 94, 255, 0.14);
+  --shadow-lift:   0 18px 44px rgba(15, 23, 42, 0.12);
 
   /* Radius */
   --radius-sm:     6px;
@@ -79,6 +83,7 @@
   --bg1: var(--surface);
   --bg2: var(--surface-2);
   --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius: 12px;
 }
 
@@ -89,7 +94,10 @@ html { font-size: 16px; scroll-behavior: smooth; height: 100%; }
 body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 12% -10%, rgba(27, 94, 255, 0.10), transparent 26%),
+    radial-gradient(circle at 92% 0%, rgba(16, 185, 129, 0.08), transparent 24%),
+    linear-gradient(180deg, #F8FAFD 0%, var(--bg) 46%, #F7F9FC 100%);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -133,26 +141,32 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   font-size: var(--fs-base);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  border: 1px solid transparent;
+  position: relative;
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #4F7DFF);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(29, 106, 229, 0.25);
+  box-shadow: 0 10px 24px rgba(27, 94, 255, 0.24);
 }
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #3B6AF4);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(29, 106, 229, 0.3);
+  box-shadow: 0 14px 30px rgba(27, 94, 255, 0.28);
 }
 
 .btn-secondary {
-  background: var(--surface-2);
+  background: linear-gradient(180deg, #FFFFFF, var(--surface-3));
   color: var(--text);
   border: 1px solid var(--border);
 }
 .btn-secondary:hover {
-  background: var(--border);
+  background: #fff;
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .btn-ghost {
@@ -160,12 +174,14 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   color: var(--text-2);
 }
 .btn-ghost:hover {
-  background: var(--surface-2);
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .btn-danger {
-  background: var(--red);
+  background: linear-gradient(135deg, var(--red), #F97373);
   color: #fff;
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.18);
 }
 .btn-danger:hover {
   background: #b91c1c;
@@ -178,11 +194,12 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   padding: 20px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
 .premium-card {
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
@@ -235,7 +252,7 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   font-family: inherit;
   font-size: var(--fs-base);
   transition: all 0.2s;
-  background: var(--surface);
+  background: linear-gradient(180deg, #FFFFFF, #FBFCFF);
 }
 
 .form-control:focus, .form-input:focus {
@@ -531,21 +548,35 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   display: flex;
   flex-direction: column;
   height: 100%;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 6px 18px rgba(15, 23, 42, 0.04);
 }
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-2);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lift);
+  border-color: rgba(27, 94, 255, 0.38);
 }
 .product-img-placeholder {
   width: 100%;
   aspect-ratio: 4/3;
-  background: var(--surface-2);
+  background:
+    linear-gradient(135deg, rgba(27,94,255,0.08), rgba(16,185,129,0.08)),
+    var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+.product-card .product-img-placeholder img,
+.product-card .product-img img,
+.product-card .product-image img {
+  transition: transform 0.36s ease, filter 0.36s ease;
+}
+.product-card:hover .product-img-placeholder img,
+.product-card:hover .product-img img,
+.product-card:hover .product-image img {
+  transform: scale(1.045);
+  filter: saturate(1.06) contrast(1.02);
 }
 .product-img-placeholder img {
   width: 100%;
@@ -648,12 +679,12 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   font-weight: 600;
   border: 1.5px solid var(--border);
   color: var(--text-2);
-  background: var(--surface);
+  background: linear-gradient(180deg, #FFFFFF, var(--surface-3));
   cursor: pointer;
   transition: all 0.15s;
 }
-.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
-.filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,23,42,0.08); }
+.filter-btn.active { background: linear-gradient(135deg, var(--primary), #4F7DFF); color: #fff; border-color: transparent; box-shadow: 0 8px 18px rgba(27,94,255,0.22); }
 
 .f-pill {
   padding: 6px 12px;
@@ -666,7 +697,78 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   font-size: var(--fs-sm);
   transition: all 0.15s;
 }
-.f-pill.on, .f-pill.active { background: var(--primary); color: #fff; border-color: transparent; }
+.f-pill:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+.f-pill.on, .f-pill.active { background: linear-gradient(135deg, var(--primary), #4F7DFF); color: #fff; border-color: transparent; box-shadow: 0 8px 18px rgba(27,94,255,0.22); }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Global button tone refresh: reduce heavy blue+white CTA look */
+.btn-primary,
+.btn-contact,
+.buy-bar-buy,
+.co-place-btn,
+.sell-btn-primary,
+.btn-submit,
+.search-submit,
+.page-link,
+.btn-track,
+.chat-send-btn,
+.btn-save,
+.btn-new,
+.hero .search-btn,
+.btn-sell {
+  background: linear-gradient(180deg, #f4f8ff, #e8f0ff) !important;
+  color: #1e3a6f !important;
+  border: 1.5px solid rgba(37, 99, 235, 0.28) !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+.btn-primary:hover,
+.btn-contact:hover,
+.buy-bar-buy:hover,
+.co-place-btn:hover,
+.sell-btn-primary:hover,
+.btn-submit:hover,
+.search-submit:hover,
+.page-link:hover,
+.btn-track:hover,
+.chat-send-btn:hover,
+.btn-save:hover,
+.btn-new:hover,
+.hero .search-btn:hover,
+.btn-sell:hover {
+  background: linear-gradient(180deg, #eef5ff, #dfeaff) !important;
+  color: #183363 !important;
+  border-color: rgba(37, 99, 235, 0.44) !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12) !important;
+}
+
+.btn-primary:disabled,
+.btn-contact:disabled,
+.buy-bar-buy:disabled,
+.co-place-btn:disabled,
+.sell-btn-primary:disabled,
+.btn-submit:disabled,
+.search-submit:disabled,
+.page-link:disabled,
+.btn-track:disabled,
+.chat-send-btn:disabled,
+.btn-save:disabled,
+.btn-new:disabled,
+.hero .search-btn:disabled,
+.btn-sell:disabled {
+  background: #eef1f6 !important;
+  color: #8a94a6 !important;
+  border-color: #d9dfe8 !important;
+  box-shadow: none !important;
+}
 
 /* ── Utilities ───────────────────────────────── */
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
@@ -698,4 +800,3 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
-

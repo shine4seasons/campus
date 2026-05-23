@@ -377,24 +377,37 @@
     }
 
     .btn-message {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f4f8ff, #e8f0ff);
+      color: #1e3a6f;
       font-weight: 700;
       font-size: 13px;
-      border: none;
+      border: 1.5px solid rgba(37, 99, 235, 0.28);
       cursor: pointer;
       transition: all 0.2s;
+      text-decoration: none;
     }
 
     .btn-message:hover {
-      background: var(--primary-dark);
+      background: linear-gradient(180deg, #eef5ff, #dfeaff);
+      border-color: rgba(37, 99, 235, 0.44);
+      color: #183363;
       transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.1);
+    }
+
+    .btn-message svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      flex-shrink: 0;
     }
 
     .badge {
@@ -1062,7 +1075,8 @@
                                 </div>
                                 <div style="flex-shrink:0;">
                                   <a href="/messages?id=<%= order.conversation || '' %>" class="btn-message">
-                                    <i data-lucide="message-square" style="width:14px;height:14px;"></i> Message
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    Message
                                   </a>
                                 </div>
                               </div>
