@@ -93,7 +93,6 @@ async function processPaidPayment({
           $setOnInsert: {
             user: payment.seller,
             availableBalance: 0,
-            pendingBalance: 0,
             totalSales: 0
           }
         },

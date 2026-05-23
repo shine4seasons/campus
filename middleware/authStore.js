@@ -20,6 +20,13 @@ export const useAuthStore = create(
           // Sync với localStorage
           localStorage.setItem(STORAGE_KEYS.TOKEN, token);
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+          // Sync UI mode: prefer server cookie if present, else default to user.role
+          try {
+            const cookieMatch = document.cookie.match(/(?:^|; )campus_mode=([^;]+)/);
+            const cookieMode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+            const modeToSet = cookieMode || (user && user.role === 'seller' ? 'seller' : 'buyer');
+            localStorage.setItem('campus_mode', modeToSet);
+          } catch (e) {}
         } catch {
           set({ user: null, token: null, loading: false });
           localStorage.removeItem(STORAGE_KEYS.TOKEN);
@@ -45,6 +52,8 @@ export const useAuthStore = create(
         set({ user: null, token: null });
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
+        // Also clear UI mode so next login starts with server/cookie default
+        try { localStorage.removeItem('campus_mode'); } catch (e) {}
       },
 
       // Cập nhật user info (sau khi chỉnh sửa profile)

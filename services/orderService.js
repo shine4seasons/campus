@@ -444,10 +444,7 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
           {
             $inc: walletInc,
             $setOnInsert: {
-              user: updatedOrder.seller,
-              availableBalance: 0,
-              pendingBalance: 0,
-              totalSales: 0
+              user: updatedOrder.seller
             }
           },
           { new: true, upsert: true }

@@ -43,8 +43,8 @@ const createProduct = async (req, res, next) => {
       payload: {
         title,
         description,
-        price,
-        quantity,
+        price: Number(price),
+        quantity: Number(quantity),
         category,
         condition,
         images: images || [],
@@ -68,7 +68,8 @@ const updateProduct = async (req, res, next) => {
     const oldPrice = product.price;
     ALLOWED_UPDATE_FIELDS.forEach(k => {
       if (req.body[k] === undefined) return;
-      product.set(k, req.body[k]);
+      const value = (k === 'price' || k === 'quantity') ? Number(req.body[k]) : req.body[k];
+      product.set(k, value);
     });
 
     const priceDropped = req.body.price !== undefined && req.body.price < oldPrice;
