@@ -37,7 +37,7 @@ function renderProductBanner(convId, productData) {
     localStorage.setItem('conv_product_' + convId, JSON.stringify(productData));
   } catch {}
 
-  const priceStr = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(productData.price);
+  const priceStr = window.AppUtils.formatVND(productData.price);
   const condLabel = COND_LABEL[productData.condition] || productData.condition || '';
   const safeTitle = String(productData.title || '');
   const safeImage = String(productData.image || '').trim();

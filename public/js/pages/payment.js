@@ -100,6 +100,21 @@ window.goTrackAfterPaid = function () {
   window.location.href = TRACKING_URL;
 };
 
+document.addEventListener('click', function (event) {
+  const target = event.target.closest('[data-action]');
+  if (!target) return;
+
+  if (target.dataset.action === 'copy') {
+    window.copyToClipboard(target.dataset.copyValue || '');
+  }
+  if (target.dataset.action === 'go-home-after-paid') {
+    window.goHomeAfterPaid();
+  }
+  if (target.dataset.action === 'go-track-after-paid') {
+    window.goTrackAfterPaid();
+  }
+});
+
 setInterval(updateTimer, 1000);
 updateTimer();
 

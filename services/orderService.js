@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { findOrCreateConversation } = require('../controllers/chat/conversation');
 const {
   ORDER_STATUS,
@@ -50,10 +51,10 @@ function normalizeCreateOrderInput(dto = {}) {
   };
 }
 
-async function adjustCounters({ sellerId, buyerId, quantityDelta, orderDelta }) {
+async function adjustCounters({ sellerId, buyerId, quantityDelta, orderDelta, options = {} }) {
   const settled = await Promise.allSettled([
-    userRepository.incrementUserById(sellerId, { totalSales: quantityDelta }),
-    userRepository.incrementUserById(buyerId, { totalOrders: orderDelta })
+    userRepository.incrementUserById(sellerId, { totalSales: quantityDelta }, options),
+    userRepository.incrementUserById(buyerId, { totalOrders: orderDelta }, options)
   ]);
   settled
     .filter((r) => r.status === 'rejected')
@@ -66,13 +67,14 @@ async function adjustCounters({ sellerId, buyerId, quantityDelta, orderDelta }) 
     }));
 }
 
-async function claimStock({ productId, buyerId, quantity }) {
+async function claimStock({ productId, buyerId, quantity, options = {} }) {
   return productRepository.claimActiveStock({
     productId,
     buyerId,
     quantity,
     soldStatus: PRODUCT_STATUS.SOLD,
-    activeStatus: PRODUCT_STATUS.ACTIVE
+    activeStatus: PRODUCT_STATUS.ACTIVE,
+    options
   });
 }
 
@@ -104,7 +106,7 @@ async function reclaimOrderStockByOrder(orderLikeDoc) {
   return reclaimedProduct;
 }
 
-async function createSePayPayment({ order, buyerId, sellerId, orderTotal }) {
+async function createSePayPayment({ order, buyerId, sellerId, orderTotal, options = {} }) {
   const paymentCode = `SMP${String(order._id).toUpperCase()}`;
   try {
     const sepayPayment = await sepayService.createSePayPayment(order, orderTotal, paymentCode);
@@ -120,7 +122,7 @@ async function createSePayPayment({ order, buyerId, sellerId, orderTotal }) {
       expiredAt: new Date(Date.now() + 15 * 60000)
     };
     if (sepayPayment.sepayPaymentId) paymentData.sepayPaymentId = sepayPayment.sepayPaymentId;
-    return paymentRepository.createPayment(paymentData);
+    return paymentRepository.createPayment(paymentData, options);
   } catch (err) {
     throw new DomainError(503, `Cannot create SePay QR: ${err.message}`);
   }
@@ -160,7 +162,7 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
         io.to(`conv_${String(conv._id)}`).emit('message', populatedMsg);
       }
     } catch (e) {
-      console.error('Socket emit error (autoMsg):', e.message);
+      logger.error('orders.auto_message_socket_emit_failed', { err: e.message, orderId: String(order._id) });
     }
 
     conv.lastMessage = `New order - ${product.title}`;
@@ -180,38 +182,17 @@ async function createOrderConversation({ buyerId, sellerId, productId, product, 
 
     return conv;
   } catch (err) {
-    console.error('[checkout] Auto-message error:', err);
+    logger.error('orders.auto_message_failed', { err: err.message, stack: err.stack, orderId: order?._id ? String(order._id) : null });
     return null;
-  }
-}
-
-async function rollbackCreateOrder({ order, claimedProduct, quantity }) {
-  if (order) {
-    try {
-      await paymentRepository.deletePaymentsByOrder(order._id);
-      await orderRepository.deleteOrderById(order._id);
-    } catch (cleanupErr) {
-      console.error('[checkout] order cleanup failed:', cleanupErr.message);
-    }
-  }
-
-  if (claimedProduct) {
-    try {
-      await productRepository.restoreProductReservation({
-        productId: claimedProduct._id,
-        quantity: order?.quantity || quantity || 1,
-        activeStatus: PRODUCT_STATUS.ACTIVE
-      });
-    } catch (rollbackErr) {
-      console.error('[checkout] rollback failed:', rollbackErr);
-    }
   }
 }
 
 exports.createOrder = async function createOrder({ buyer, dto }) {
   let claimedProduct = null;
   let order = null;
+  let payment = null;
   let normalized;
+  const session = await mongoose.startSession();
 
   try {
     normalized = normalizeCreateOrderInput(dto);
@@ -232,59 +213,64 @@ exports.createOrder = async function createOrder({ buyer, dto }) {
       }
     }
 
-    claimedProduct = await claimStock({
-      productId: normalized.productId,
-      buyerId,
-      quantity: normalized.quantity
-    });
+    await session.withTransaction(async () => {
+      const txOptions = { session };
+      claimedProduct = await claimStock({
+        productId: normalized.productId,
+        buyerId,
+        quantity: normalized.quantity,
+        options: txOptions
+      });
 
-    if (!claimedProduct) {
-      const existing = await productRepository.findProductOwnershipSnapshot(normalized.productId);
-      if (!existing) throw new DomainError(404, 'Product not found');
-      if (String(existing.seller) === String(buyerId)) throw new DomainError(400, 'You cannot purchase your own product');
-      if ((existing.quantity || 0) < normalized.quantity) throw new DomainError(409, 'Not enough quantity available');
-      throw new DomainError(409, 'This product is already sold or unavailable');
-    }
+      if (!claimedProduct) {
+        const existing = await productRepository.findProductOwnershipSnapshot(normalized.productId);
+        if (!existing) throw new DomainError(404, 'Product not found');
+        if (String(existing.seller) === String(buyerId)) throw new DomainError(400, 'You cannot purchase your own product');
+        if ((existing.quantity || 0) < normalized.quantity) throw new DomainError(409, 'Not enough quantity available');
+        throw new DomainError(409, 'This product is already sold or unavailable');
+      }
 
-    const sellerId = claimedProduct.seller;
-    const orderTotal = claimedProduct.price * normalized.quantity;
-    const isQrPayment = normalized.paymentMode === 'qr';
-    const initialStatus = isQrPayment ? ORDER_STATUS.PENDING_PAYMENT : ORDER_STATUS.PENDING;
+      const sellerId = claimedProduct.seller;
+      const orderTotal = claimedProduct.price * normalized.quantity;
+      const isQrPayment = normalized.paymentMode === 'qr';
+      const initialStatus = isQrPayment ? ORDER_STATUS.PENDING_PAYMENT : ORDER_STATUS.PENDING;
 
-    order = await orderRepository.createOrder({
-      product: normalized.productId,
-      buyer: buyerId,
-      seller: sellerId,
-      priceSnapshot: orderTotal,
-      quantity: normalized.quantity,
-      deliveryMode: normalized.deliveryMode,
-      paymentMode: normalized.paymentMode,
-      note: normalized.note.trim().substring(0, 500),
-      shippingAddress: normalized.deliveryMode === 'ship' ? normalized.shippingAddress : null,
-      pickupLocation: normalized.deliveryMode === 'pickup' ? normalized.pickupLocation : null,
-      status: initialStatus,
-      timeline: [{
-        event: initialStatus,
-        actor: buyerId,
-        at: new Date(),
-        note: 'Order placed'
-      }]
-    });
+      order = await orderRepository.createOrder({
+        product: normalized.productId,
+        buyer: buyerId,
+        seller: sellerId,
+        priceSnapshot: orderTotal,
+        quantity: normalized.quantity,
+        deliveryMode: normalized.deliveryMode,
+        paymentMode: normalized.paymentMode,
+        note: normalized.note.trim().substring(0, 500),
+        shippingAddress: normalized.deliveryMode === 'ship' ? normalized.shippingAddress : null,
+        pickupLocation: normalized.deliveryMode === 'pickup' ? normalized.pickupLocation : null,
+        status: initialStatus,
+        timeline: [{
+          event: initialStatus,
+          actor: buyerId,
+          at: new Date(),
+          note: 'Order placed'
+        }]
+      }, txOptions);
 
-    const payment = isQrPayment
-      ? await createSePayPayment({ order, buyerId, sellerId, orderTotal })
-      : null;
+      payment = isQrPayment
+        ? await createSePayPayment({ order, buyerId, sellerId, orderTotal, options: txOptions })
+        : null;
 
-    adjustCounters({
-      sellerId,
-      buyerId,
-      quantityDelta: normalized.quantity,
-      orderDelta: 1
+      await adjustCounters({
+        sellerId,
+        buyerId,
+        quantityDelta: normalized.quantity,
+        orderDelta: 1,
+        options: txOptions
+      });
     });
 
     const conv = await createOrderConversation({
       buyerId,
-      sellerId,
+      sellerId: claimedProduct.seller,
       productId: normalized.productId,
       product: claimedProduct,
       order,
@@ -298,12 +284,9 @@ exports.createOrder = async function createOrder({ buyer, dto }) {
 
     return { order, payment, conversation: conv };
   } catch (err) {
-    await rollbackCreateOrder({
-      order,
-      claimedProduct,
-      quantity: normalized?.quantity || 1
-    });
     throw err;
+  } finally {
+    session.endSession();
   }
 };
 
@@ -343,17 +326,76 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
     [ORDER_STATUS.PENDING]: 'Order reopened to pending',
   };
 
-  const updatedOrder = await orderRepository.updateOrderStatusWithTimeline({
-    orderId: order._id,
-    prevStatus,
-    setFields: updates,
-    timeline: {
+  const timeline = {
       event: status,
       actor: actor._id,
       at: now,
       note: noteByStatus[status] || `Status changed to ${status}`
+  };
+
+  let updatedOrder;
+  if (status === ORDER_STATUS.COMPLETED && prevStatus !== ORDER_STATUS.COMPLETED) {
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        updatedOrder = await orderRepository.updateOrderStatusWithTimeline({
+          orderId: order._id,
+          prevStatus,
+          setFields: updates,
+          timeline,
+          session
+        });
+
+        if (!updatedOrder) return;
+
+        const amount = updatedOrder.priceSnapshot || 0;
+        if (amount > 0) {
+          const walletInc = {
+            availableBalance: amount,
+            totalSales: amount
+          };
+          if (updatedOrder.paymentMode === 'qr') {
+            walletInc.pendingBalance = -amount;
+          }
+
+          const wallet = await walletRepository.upsertWalletForUser(updatedOrder.seller, {
+            $inc: walletInc,
+            $setOnInsert: {
+              user: updatedOrder.seller
+            }
+          }, { session });
+
+          await walletRepository.createWalletTransaction({
+            wallet: wallet._id,
+            user: updatedOrder.seller,
+            type: 'DEPOSIT',
+            amount,
+            description: `Order #${updatedOrder._id.toString().slice(-8).toUpperCase()} completed`,
+            status: 'COMPLETED',
+            referenceId: updatedOrder._id,
+            referenceType: 'Order',
+            idempotencyKey: `ORDER_COMPLETE:${updatedOrder._id}`
+          }, session);
+        }
+      });
+    } catch (walletErr) {
+      logger.error('orders.wallet_settlement_failed', {
+        err: walletErr.message,
+        stack: walletErr.stack,
+        orderId: String(order._id)
+      });
+      throw walletErr;
+    } finally {
+      session.endSession();
     }
-  });
+  } else {
+    updatedOrder = await orderRepository.updateOrderStatusWithTimeline({
+      orderId: order._id,
+      prevStatus,
+      setFields: updates,
+      timeline
+    });
+  }
 
   if (!updatedOrder) {
     throw new DomainError(409, 'Order status was changed by another request. Please refresh and try again.');
@@ -363,42 +405,6 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
     await releaseProductForOrder(updatedOrder);
   } else if (prevStatus === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.CANCELLED) {
     await reclaimOrderStockByOrder(updatedOrder);
-  }
-
-  if (status === ORDER_STATUS.COMPLETED && prevStatus !== ORDER_STATUS.COMPLETED) {
-    try {
-      const amount = updatedOrder.priceSnapshot || 0;
-      if (amount > 0) {
-        const walletInc = {
-          availableBalance: amount,
-          totalSales: amount
-        };
-        if (updatedOrder.paymentMode === 'qr') {
-          walletInc.pendingBalance = -amount;
-        }
-
-        const wallet = await walletRepository.upsertWalletForUser(updatedOrder.seller, {
-          $inc: walletInc,
-          $setOnInsert: {
-            user: updatedOrder.seller
-          }
-        });
-
-        await walletRepository.createWalletTransaction({
-          wallet: wallet._id,
-          user: updatedOrder.seller,
-          type: 'DEPOSIT',
-          amount,
-          description: `Order #${updatedOrder._id.toString().slice(-8).toUpperCase()} completed`,
-          status: 'COMPLETED',
-          referenceId: updatedOrder._id,
-          referenceType: 'Order',
-          idempotencyKey: `ORDER_COMPLETE:${updatedOrder._id}`
-        });
-      }
-    } catch (walletErr) {
-      console.error('[orders] wallet settlement error:', walletErr.message);
-    }
   }
 
   try {
@@ -421,7 +427,11 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
       link: isSeller ? `/orders/tracking/${updatedOrder._id}` : '/orders-seller'
     });
   } catch (notifErr) {
-    console.error('Status change notification error:', notifErr);
+    logger.error('orders.status_notification_failed', {
+      err: notifErr.message,
+      stack: notifErr.stack,
+      orderId: String(updatedOrder._id)
+    });
   }
 
   return { order: updatedOrder, isSeller };

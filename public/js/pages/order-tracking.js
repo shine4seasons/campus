@@ -229,4 +229,13 @@
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
+
+  document.addEventListener('click', function (event) {
+    const target = event.target.closest('[data-action]');
+    if (!target) return;
+
+    if (target.dataset.action === 'open-dispute-modal') window.openDisputeModal();
+    if (target.dataset.action === 'close-dispute-modal') window.closeDisputeModal();
+    if (target.dataset.action === 'submit-dispute') window.submitDispute();
+  });
 })();

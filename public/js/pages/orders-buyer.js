@@ -42,3 +42,8 @@ window.cancelOrder = async function (orderId) {
     if (typeof showToast === 'function') showToast('Error', 'err');
   }
 };
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action="cancel-order"][data-order-id]');
+  if (button) window.cancelOrder(button.dataset.orderId);
+});

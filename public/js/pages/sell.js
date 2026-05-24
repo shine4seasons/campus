@@ -393,7 +393,7 @@
     document.getElementById('p-cat').textContent = category;
     document.getElementById('p-price').textContent = window.AppUtils && window.AppUtils.formatVND
       ? window.AppUtils.formatVND(price)
-      : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+      : `${Number(price || 0).toLocaleString('vi-VN')} VND`;
     document.getElementById('p-quantity').textContent = 'Stock: ' + quantity;
 
     let filled = 0;

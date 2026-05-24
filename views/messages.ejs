@@ -73,13 +73,23 @@
   </div>
 </main>
 
+  <%
+    function safeJson(value) {
+      return JSON.stringify(value)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+    }
+  %>
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    window.MESSAGES_PAGE_CONFIG = {
-      myUserId: <%- JSON.stringify(String(user._id)) %>,
-      currentConvId: <%- JSON.stringify(conversationId || '') %>,
-      userRole: <%- JSON.stringify(user && user.role ? user.role : 'buyer') %>
-    };
+    window.MESSAGES_PAGE_CONFIG = <%- safeJson({
+      myUserId: String(user._id),
+      currentConvId: conversationId || '',
+      userRole: user && user.role ? user.role : 'buyer'
+    }) %>;
   </script>
   <script defer src="/js/pages/messages.js"></script>
 </body>

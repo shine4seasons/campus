@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const adminRepository = require('../../repositories/adminRepository');
 const { broadcastSystemAnnouncement } = require('../../services/adminService');
 const { PRODUCT_STATUS, NOTIFICATION_TYPES } = require('../../config/appConstants');
+const logger = require('../../utils/logger');
 
 const { PAYOUT_STATUS } = adminRepository;
 
@@ -38,7 +39,7 @@ const toggleBan = async (req, res, next) => {
         link: '#'
       });
     } catch (notifErr) {
-      console.error('Ban notification error:', notifErr);
+      logger.error('admin.ban_notification_failed', { err: notifErr.message, stack: notifErr.stack, userId: String(uid) });
     }
 
     res.json({ success: true, data: user });
@@ -117,7 +118,7 @@ const hideProduct = async (req, res, next) => {
         link: `/products/${product._id}`
       });
     } catch (notifErr) {
-      console.error('Hide product notification error:', notifErr);
+      logger.error('admin.hide_product_notification_failed', { err: notifErr.message, stack: notifErr.stack, productId: String(product._id) });
     }
 
     res.json({ success: true, data: product });
@@ -143,7 +144,7 @@ const restoreProduct = async (req, res, next) => {
         link: `/products/${product._id}`
       });
     } catch (notifErr) {
-      console.error('Restore product notification error:', notifErr);
+      logger.error('admin.restore_product_notification_failed', { err: notifErr.message, stack: notifErr.stack, productId: String(product._id) });
     }
 
     res.json({ success: true, data: product });
@@ -231,7 +232,7 @@ const updateReport = async (req, res, next) => {
         link: '#'
       });
     } catch (notifErr) {
-      console.error('Report notification error:', notifErr);
+      logger.error('admin.report_notification_failed', { err: notifErr.message, stack: notifErr.stack, reportId: String(report._id) });
     }
 
     res.json({ success: true, data: report });
@@ -327,14 +328,14 @@ const approvePayout = async (req, res, next) => {
         link: '#'
       });
     } catch (notifErr) {
-      console.error('Payout approval notification error:', notifErr);
+      logger.error('admin.payout_approval_notification_failed', { err: notifErr.message, stack: notifErr.stack, payoutId: String(payout._id) });
     }
 
     await session.commitTransaction();
     res.json({ success: true, message: 'Payout request moved to processing', data: payout });
   } catch (err) {
     await session.abortTransaction();
-    console.error('[admin] approvePayout:', err);
+    logger.error('admin.approve_payout_failed', { err: err.message, stack: err.stack, payoutId: req.params.id });
     return next(err);
   } finally {
     session.endSession();
@@ -378,14 +379,14 @@ const markPayoutPaid = async (req, res, next) => {
         link: '#'
       });
     } catch (notifErr) {
-      console.error('Payout paid notification error:', notifErr);
+      logger.error('admin.payout_paid_notification_failed', { err: notifErr.message, stack: notifErr.stack, payoutId: String(payout._id) });
     }
 
     await session.commitTransaction();
     res.json({ success: true, message: 'Payout marked as paid', data: payout });
   } catch (err) {
     await session.abortTransaction();
-    console.error('[admin] markPayoutPaid:', err);
+    logger.error('admin.mark_payout_paid_failed', { err: err.message, stack: err.stack, payoutId: req.params.id });
     return next(err);
   } finally {
     session.endSession();
@@ -448,14 +449,14 @@ const rejectPayout = async (req, res, next) => {
         link: '#'
       });
     } catch (notifErr) {
-      console.error('Payout rejection notification error:', notifErr);
+      logger.error('admin.payout_rejection_notification_failed', { err: notifErr.message, stack: notifErr.stack, payoutId: String(payout._id) });
     }
 
     await session.commitTransaction();
     res.json({ success: true, message: 'Payout request rejected', data: payout });
   } catch (err) {
     await session.abortTransaction();
-    console.error('[admin] rejectPayout:', err);
+    logger.error('admin.reject_payout_failed', { err: err.message, stack: err.stack, payoutId: req.params.id });
     return next(err);
   } finally {
     session.endSession();

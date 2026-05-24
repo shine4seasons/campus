@@ -1,5 +1,5 @@
 (function () {
-  const { createElement } = window.AppUtils || {};
+  const { createElement, escapeHtml, formatVND } = window.AppUtils || {};
   const DEFAULT_SEARCH_CATEGORY_OPTIONS = [
     { slug: '', name: 'All categories', lucideIcon: 'layout-grid' },
     ...CATEGORIES
@@ -73,13 +73,6 @@
       .join(' ');
   }
 
-  function escapeHtml(value) {
-    if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-      return window.AppUtils.escapeHtml(value);
-    }
-    return String(value || '');
-  }
-
   function iconNode(iconName, size) {
     return createElement('i', {
       attrs: { 'data-lucide': iconName || 'tag' },
@@ -108,13 +101,6 @@
     return SEARCH_CATEGORY_OPTIONS.find((category) => category.slug === slug)
       || DEFAULT_SEARCH_CATEGORY_OPTIONS.find((category) => category.slug === slug)
       || { slug, name: humanizeCategorySlug(slug), lucideIcon: 'tag' };
-  }
-
-  function formatPrice(price) {
-    if (window.AppUtils && typeof window.AppUtils.formatVND === 'function') {
-      return window.AppUtils.formatVND(price);
-    }
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   }
 
   function mapProduct(product) {
@@ -360,7 +346,7 @@
           className: 'sg-info',
           children: [
             createElement('div', { className: 'sg-title', text: product.title }),
-            createElement('div', { className: 'sg-meta', text: `${getCategoryDisplayName(product.category)} - ${formatPrice(product.price)}` })
+            createElement('div', { className: 'sg-meta', text: `${getCategoryDisplayName(product.category)} - ${formatVND(product.price)}` })
           ]
         }),
         iconNode('chevron-right', 14)
@@ -482,7 +468,7 @@
         createElement('div', {
           className: 'product-body',
           children: [
-            createElement('div', { className: 'product-price', text: formatPrice(product.price) }),
+            createElement('div', { className: 'product-price', text: formatVND(product.price) }),
             createElement('div', { className: 'product-name', text: product.title }),
             createElement('div', {
               className: 'product-meta-stack',
@@ -784,6 +770,11 @@
     const loadMoreBtn = event.target.closest('[data-action="load-more"]');
     if (loadMoreBtn) {
       window.loadMore();
+      return;
+    }
+
+    if (event.target.closest('[data-action="footer-sign-out"]')) {
+      window.footerSignOut();
       return;
     }
 

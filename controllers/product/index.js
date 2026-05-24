@@ -2,6 +2,7 @@ const { ALLOWED_UPDATE_FIELDS } = require('./constants');
 const { PRODUCT_STATUS } = require('../../config/appConstants');
 const { ensureProductOwnerOrAdmin, notifyPriceDropFollowers } = require('../../services/productService');
 const productRepository = require('../../repositories/productRepository');
+const logger = require('../../utils/logger');
 
 const getProducts = async (req, res, next) => {
   try {
@@ -81,7 +82,11 @@ const updateProduct = async (req, res, next) => {
       try {
         await notifyPriceDropFollowers(product);
       } catch (notifErr) {
-        console.error('Price drop notification error:', notifErr);
+        logger.error('product.price_drop_notification_failed', {
+          err: notifErr.message,
+          stack: notifErr.stack,
+          productId: String(product._id)
+        });
       }
     }
 
@@ -235,4 +240,3 @@ module.exports = {
   getFavorites,
   getFavoriteIds
 };
-

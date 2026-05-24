@@ -112,7 +112,11 @@ function findOrderForDispute(orderId) {
   return Order.findById(orderId);
 }
 
-function createOrder(data) {
+async function createOrder(data, options = {}) {
+  if (options.session) {
+    const [order] = await Order.create([data], { session: options.session });
+    return order;
+  }
   return Order.create(data);
 }
 
@@ -120,22 +124,22 @@ function findOrderById(orderId) {
   return Order.findById(orderId);
 }
 
-function linkConversation(orderId, conversationId) {
-  return Order.findByIdAndUpdate(orderId, { conversation: conversationId });
+function linkConversation(orderId, conversationId, options = {}) {
+  return Order.findByIdAndUpdate(orderId, { conversation: conversationId }, options);
 }
 
-function deleteOrderById(orderId) {
-  return Order.findByIdAndDelete(orderId);
+function deleteOrderById(orderId, options = {}) {
+  return Order.findByIdAndDelete(orderId, options);
 }
 
-function updateOrderStatusWithTimeline({ orderId, prevStatus, setFields, timeline }) {
+function updateOrderStatusWithTimeline({ orderId, prevStatus, setFields, timeline, session = null }) {
   return Order.findOneAndUpdate(
     { _id: orderId, status: prevStatus },
     {
       $set: setFields,
       $push: { timeline }
     },
-    { new: true }
+    { new: true, ...(session ? { session } : {}) }
   );
 }
 

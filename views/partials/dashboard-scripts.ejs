@@ -12,23 +12,6 @@
     showSection(id);
   }
 
-  function escHtml(value) {
-    if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-      return window.AppUtils.escapeHtml(value);
-    }
-    return String(value == null ? '' : value)
-      .replace(/[&<>"'`]/g, function (char) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '`': '&#96;'
-        }[char];
-      });
-  }
-
   function sanitizeObjectId(value) {
     const id = String(value == null ? '' : value).trim();
     return /^[a-fA-F0-9]{24}$/.test(id) ? id : '';
@@ -66,10 +49,7 @@
 
     // Automatically highlight sidebar active element
     try {
-      const el = Array.from(document.querySelectorAll('.sb-nav .nav-item')).find(n => {
-        const onclick = n.getAttribute('onclick');
-        return onclick && onclick.includes(`'${id}'`);
-      });
+      const el = document.querySelector(`.sb-nav .nav-item[data-admin-section="${id}"]`);
       if (el) {
         document.querySelectorAll('.sb-nav .nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
@@ -280,7 +260,7 @@
                 { type: 'line', label: 'Orders', data: ordersData, borderColor: GREEN, borderWidth: 2, pointRadius: 4, pointBackgroundColor: GREEN, tension: .4, yAxisID: 'y2' },
               ],
             },
-            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display: false } }, x: X_NO_GRID } },
+            options: { ...BASE_OPTS, scales: { y: { ...AXIS_OPTS, ticks: { ...AXIS_OPTS.ticks, callback: v => window.AppUtils.formatVND(v) } }, y2: { position: 'right', ...AXIS_OPTS, grid: { display: false } }, x: X_NO_GRID } },
           });
 
           const defaultLabels = CATEGORIES.map(c => c.name.replace(/&amp;/g, '&'));
@@ -317,7 +297,7 @@
               if (!label || !valEl) return;
               if (label.includes('New users')) valEl.textContent = kpi.newUsers7d || 0;
               if (label.includes('Return rate')) valEl.textContent = (kpi.returnRate || 0) + '%';
-              if (label.includes('Avg order value')) valEl.textContent = kpi.avgOrderValue ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(kpi.avgOrderValue) : '0 VND';
+              if (label.includes('Avg order value')) valEl.textContent = window.AppUtils.formatVND(kpi.avgOrderValue || 0);
               if (label.includes('New products')) valEl.textContent = kpi.newProductsPerDay || 0;
             });
           }
@@ -468,7 +448,7 @@
 
             // 1. KPIs
             const kpi = d.kpi || { totalRevenue: 0, totalSold: 0, monthRevenue: 0, avgOrder: 0 };
-            const fmt = v => new Intl.NumberFormat('en-US').format(Math.round(v)) + ' VND';
+            const fmt = v => window.AppUtils.formatVND(Math.round(v));
             const kpiTotal = document.getElementById('revTotal');
             const kpiMonth = document.getElementById('revMonth');
             const kpiSold = document.getElementById('revSold');
@@ -528,7 +508,7 @@
                   const tdPrice = document.createElement('td');
                   tdPrice.style.fontWeight = '700';
                   tdPrice.style.color = '#16a34a';
-                  tdPrice.textContent = `${new Intl.NumberFormat('en-US').format(o.priceSnapshot)} VND`;
+                  tdPrice.textContent = window.AppUtils.formatVND(o.priceSnapshot);
                   tr.appendChild(tdPrice);
 
                   const tdDelivery = document.createElement('td');
@@ -760,7 +740,7 @@ function initAdminData(id) {
           const rows = [
             ['Database size', dbSize],
             ['Storage (images)', storage],
-            ['API requests/day', new Intl.NumberFormat('en-US').format(rps)],
+            ['API requests/day', Number(rps || 0).toLocaleString('en-US')],
             ['Uptime', '99.99%']
           ];
           rows.forEach(([label, value]) => {
@@ -834,7 +814,7 @@ function initAdminData(id) {
         if (label.includes('Total users')) valEl.textContent = (d.totalUsers || 0).toLocaleString();
         if (label.includes('Active products')) valEl.textContent = (d.activeProducts || 0).toLocaleString();
         if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth || 0).toLocaleString();
-        if (label.includes('GMV this month')) valEl.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(d.gmvThisMonth || 0);
+        if (label.includes('GMV this month')) valEl.textContent = window.AppUtils.formatVND(d.gmvThisMonth || 0);
       });
     } catch (e) { console.error(e); }
   }
@@ -885,7 +865,7 @@ function initAdminData(id) {
         tdCategory.textContent = categoryName;
         tr.appendChild(tdCategory);
         const tdPrice = document.createElement('td');
-        tdPrice.textContent = `${new Intl.NumberFormat('en-US').format(p.price)} VND`;
+        tdPrice.textContent = window.AppUtils.formatVND(p.price);
         tr.appendChild(tdPrice);
         const tdViews = document.createElement('td');
         tdViews.textContent = String(p.views || 0);

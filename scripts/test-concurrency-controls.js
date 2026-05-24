@@ -23,18 +23,21 @@ function includesAll(content, patterns) {
 
 function runDb001Checks() {
   const paymentService = read('services/paymentService.js');
+  const paymentRepository = read('repositories/paymentRepository.js');
+  const orderRepository = read('repositories/orderRepository.js');
   const orderService = read('services/orderService.js');
   const walletTxModel = read('models/WalletTransaction.js');
   const adminController = read('controllers/admin/index.js');
+  const adminRepository = read('repositories/adminRepository.js');
 
   check(
     'DB-001 payment expiry update is conditional',
-    includesAll(paymentService, ['updateOne', 'status: PAYMENT_STATUS.PENDING', 'PAYMENT_STATUS.EXPIRED'])
+    includesAll(paymentRepository, ['updateOne', "status: 'PENDING'", "status: 'EXPIRED'"])
   );
 
   check(
     'DB-001 order cancel path uses conditional status guard',
-    includesAll(paymentService, ['findOneAndUpdate', 'status: { $ne: ORDER_STATUS.CANCELLED }'])
+    includesAll(orderRepository, ['findOneAndUpdate', 'status: { $ne: ORDER_STATUS.CANCELLED }'])
   );
 
   check(
@@ -49,7 +52,7 @@ function runDb001Checks() {
 
   check(
     'DB-001 idempotency key for payout reject refund',
-    adminController.includes('PAYOUT_REJECT_REFUND:')
+    adminController.includes('PAYOUT_REJECT_REFUND:') || adminRepository.includes('PAYOUT_REJECT_REFUND:')
   );
 
   check(

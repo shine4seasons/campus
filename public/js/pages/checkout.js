@@ -1,5 +1,5 @@
 (function () {
-const { createElement, createSvgElement } = window.AppUtils || {};
+const { createElement, createSvgElement, formatVND } = window.AppUtils || {};
 const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
     const PRODUCT_ID = checkoutConfig.productId || '';
     const PRODUCT_PRICE = Number(checkoutConfig.productPrice || 0);
@@ -15,10 +15,6 @@ const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
     let successRedirectTimer = null;
 
     // ── Format helpers ──────────────────────────────────────────────────────
-    function formatVND(n) {
-      return new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(n);
-    }
-
     function getOrderQuantity() {
       const el = document.getElementById('order-quantity');
       const qty = Number.parseInt(el?.value, 10) || 1;
@@ -468,12 +464,32 @@ const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
 
     window.saveCheckoutLocation = function() {
       // simply close map; data is already written to hidden inputs and pickup-box-addr
-      toggleCheckoutMap(false);
+      window.toggleCheckoutMap(false);
     }
 
     document.getElementById('checkout-location-dropdown')?.addEventListener('click', function(event) {
       const item = event.target.closest('.dropdown-item[data-lat][data-lng][data-name]');
       if (!item) return;
       window.selectCheckoutLocation(Number(item.dataset.lat), Number(item.dataset.lng), decodeURIComponent(item.dataset.name || ''));
+    });
+
+    document.getElementById('order-quantity')?.addEventListener('input', updateTotals);
+
+    document.addEventListener('click', function(event) {
+      const target = event.target.closest('[data-action]');
+      if (!target) return;
+
+      const action = target.dataset.action;
+      if (action === 'select-delivery') window.selectDelivery(target.dataset.mode);
+      if (action === 'select-payment') window.selectPayment(target.dataset.mode);
+      if (action === 'open-map') window.toggleCheckoutMap(true, target.dataset.context || 'pickup');
+      if (action === 'close-map') window.toggleCheckoutMap(false);
+      if (action === 'geolocate') window.geolocateCheckout();
+      if (action === 'save-location') window.saveCheckoutLocation();
+      if (action === 'place-order') window.placeOrder();
+      if (action === 'close-confirm') window.closeConfirm();
+      if (action === 'confirm-place') window.confirmAndPlace();
+      if (action === 'go-home-now') window.goHomeNow();
+      if (action === 'go-order-tracking') window.goToOrderTracking();
     });
 })();

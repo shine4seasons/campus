@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <%- include('partials/head', { pageTitle: isOwnProfile ? 'My Profile - Campus Marketplace' : (viewingUser.nickname || viewingUser.name) + ' - Campus Marketplace', pageStyles: ['profile', 'rating'] }) %>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body>
@@ -70,7 +69,7 @@
                     </div>
                   <% } %>
                   <% if (user && !isViewingOwn) { %>
-                    <button class="btn-report-profile" onclick="showReportModal('user', '<%= profileUser._id %>')">
+                    <button class="btn-report-profile" data-action="show-report-modal" data-target-type="user" data-target-id="<%= profileUser._id %>">
                       <i data-lucide="flag"></i> Report this profile
                     </button>
                   <% } %>
@@ -122,8 +121,7 @@
                               <%= p.title %>
                             </div>
                             <div class="product-price">
-                              <%= new Intl.NumberFormat('en-US', { style:'currency', currency:'VND' }).format(p.price)
-                                %>
+                              <%= formatVND(p.price) %>
                             </div>
                             <% if (p.status==='sold' ) { %>
                               <span class="product-status sold">Sold</span>
@@ -223,7 +221,7 @@
                               </div>
                             </div>
                             <div class="mini-price">
-                              <%= new Intl.NumberFormat('en-US').format(p.price) %> <span style="font-size:10px; opacity:0.6;">VND</span>
+                              <%= formatVND(p.price) %>
                             </div>
                           </a>
                           <% }) %>
@@ -308,7 +306,7 @@
                 </div>
 
                 <div style="display:flex;align-items:center;gap:12px;padding-top:4px;">
-                  <button class="btn-save" id="btn-save" onclick="saveProfile()">
+                  <button class="btn-save" id="btn-save" data-action="save-profile">
 
                     Save changes
                   </button>
@@ -360,21 +358,31 @@
               </div>
 
               <div style="display:flex;gap:12px;">
-                <button onclick="closeReportModal()"
+                <button data-action="close-report-modal"
                   style="flex:1;padding:12px;border:1px solid #ddd;background:#fff;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.18s;">Cancel</button>
-                <button onclick="submitReport()"
+                <button data-action="submit-report"
                   style="flex:1;padding:12px;border:none;background:#dc2626;color:#fff;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.18s;">Submit
                   Report</button>
               </div>
             </div>
           </div>
 
+          <%
+            function safeJson(value) {
+              return JSON.stringify(value)
+                .replace(/</g, '\\u003c')
+                .replace(/>/g, '\\u003e')
+                .replace(/&/g, '\\u0026')
+                .replace(/\u2028/g, '\\u2028')
+                .replace(/\u2029/g, '\\u2029');
+            }
+          %>
           <script>
-            window.PROFILE_PAGE_CONFIG = {
-              isOwnProfile: <%= isOwnProfile ? 'true' : 'false' %>,
-              isViewingOwn: <%= isViewingOwn ? 'true' : 'false' %>,
-              viewingUserId: <%- JSON.stringify(String(profileUser._id)) %>
-            };
+            window.PROFILE_PAGE_CONFIG = <%- safeJson({
+              isOwnProfile: !!isOwnProfile,
+              isViewingOwn: !!isViewingOwn,
+              viewingUserId: String(profileUser._id)
+            }) %>;
           </script>
           <script defer src="/js/rating.js"></script>
           <script defer src="/js/pages/profile.js"></script>

@@ -345,7 +345,7 @@
                 <div>
                   <div class="order-col-header">Transaction</div>
                   <div class="order-price">
-                    <%= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || order.product?.price || 0) %>
+                    <%= formatVND(order.priceSnapshot || order.product?.price || 0) %>
                   </div>
                   <div class="order-meta-text">
                     <span style="opacity:0.6;font-weight:500;">qty</span> <%= order.quantity || 1 %>
@@ -366,7 +366,7 @@
                   </div>
                   <a href="/orders/tracking/<%= order._id %>" class="btn-track">Track Order</a>
                   <% if (order.status === 'pending') { %>
-                    <button class="btn-cancel" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <button class="btn-cancel" data-action="cancel-order" data-order-id="<%= order._id %>">Cancel Order</button>
                   <% } %>
                 </div>
               </div>

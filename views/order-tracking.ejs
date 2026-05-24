@@ -3,7 +3,6 @@
 <head>
   <%- include('partials/head', { pageTitle: 'Order Tracking - Campus Marketplace', pageStyles: ['dashboard', 'rating'] }) %>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .tracking-container {
       max-width: 1200px;
@@ -808,7 +807,7 @@
                       <div class="payment-resume-title">Complete your QR payment to continue this order</div>
                       <div class="payment-resume-sub">
                         Transfer exactly
-                        <strong><%= new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(payment.amount) %></strong>
+                        <strong><%= formatVND(payment.amount) %></strong>
                         using the existing payment session.
                       </div>
                     </div>
@@ -877,7 +876,7 @@
                   </div>
 
                   <% if (canDispute && !hasActiveDispute) { %>
-                    <button class="btn-report-problem" onclick="openDisputeModal()">
+                    <button class="btn-report-problem" data-action="open-dispute-modal">
                       <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Report a problem
                     </button>
                     <% } %>
@@ -957,8 +956,7 @@
                                   </a>
                                   <% } %>
                                     <span class="order-product-price">
-                                      <%= new Intl.NumberFormat('en-US', { style: 'currency' , currency: 'VND'
-                                        }).format(order.priceSnapshot) %>
+                                      <%= formatVND(order.priceSnapshot) %>
                                     </span>
                                     <div style="font-size:13px;color:var(--t3);font-weight:700;margin-top:-10px;">
                                       Quantity: <%= order.quantity || 1 %>
@@ -1128,20 +1126,30 @@
           <input type="file" id="dispute-evidence-input" accept="image/*" style="display:none">
 
           <div class="dispute-modal-actions">
-            <button type="button" class="cancel" onclick="closeDisputeModal()">Cancel</button>
-            <button type="button" class="submit" id="dispute-submit-btn" onclick="submitDispute()">Submit
+            <button type="button" class="cancel" data-action="close-dispute-modal">Cancel</button>
+            <button type="button" class="submit" id="dispute-submit-btn" data-action="submit-dispute">Submit
               report</button>
           </div>
         </div>
       </div>
 
+      <%
+        function safeJson(value) {
+          return JSON.stringify(value)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026')
+            .replace(/\u2028/g, '\\u2028')
+            .replace(/\u2029/g, '\\u2029');
+        }
+      %>
       <script>
-        window.ORDER_TRACKING_CONFIG = {
-          order: <%- JSON.stringify(order).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') %>,
-          isBuyer: <%= isBuyer %>,
-          isSeller: <%= isSeller %>,
-          orderId: '<%= String(order._id) %>'
-        };
+        window.ORDER_TRACKING_CONFIG = <%- safeJson({
+          order,
+          isBuyer,
+          isSeller,
+          orderId: String(order._id)
+        }) %>;
       </script>
       <script defer src="/js/pages/order-tracking.js"></script>
 

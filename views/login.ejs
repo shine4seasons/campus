@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <%- include('partials/head', { pageTitle: 'Login - Campus Marketplace', pageStyles: ['login'] }) %>
-  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <%- include('partials/navbar') %>
@@ -191,12 +190,12 @@
             placeholder="E.g.: 3rd-year CS student..."><%= user ? (user.bio || '') : '' %></textarea>
         </div>
 
-        <button class="btn-submit" id="btn-submit" onclick="submitProfile()">
+        <button class="btn-submit" id="btn-submit" data-action="submit-profile">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Finish &amp; Go to homepage
         </button>
 
-        <span class="skip-link" onclick="skipProfile()">Skip, I'll fill this in later <i data-lucide="arrow-right" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;"></i></span>
+        <span class="skip-link" data-action="skip-profile">Skip, I'll fill this in later <i data-lucide="arrow-right" style="width:14px;height:14px;vertical-align:middle;margin-left:4px;"></i></span>
       </div>
     </div>
 

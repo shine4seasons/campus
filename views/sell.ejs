@@ -4,7 +4,6 @@
   <%- include('partials/head', { pageTitle: (editProduct ? 'Edit Product' : 'Post a Product') + ' - Campus Marketplace', pageStyles: ['sell'] }) %>
   <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     .sell-container {
       width: 100%;
@@ -862,13 +861,23 @@
       </div>
     </main>
 
+        <%
+          function safeJson(value) {
+            return JSON.stringify(value)
+              .replace(/</g, '\\u003c')
+              .replace(/>/g, '\\u003e')
+              .replace(/&/g, '\\u0026')
+              .replace(/\u2028/g, '\\u2028')
+              .replace(/\u2029/g, '\\u2029');
+          }
+        %>
         <script>
-          window.SELL_PAGE_CONFIG = {
-            submitUrl: '<%= ep ? "/api/products/" + ep._id : "/api/products" %>',
-            submitMethod: '<%= ep ? "PATCH" : "POST" %>',
-            submitLabel: '<%= ep ? "Save Changes" : "Post Product Now" %>',
-            existingImages: <%- JSON.stringify(ep && ep.images ? ep.images : []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') %>
-          };
+          window.SELL_PAGE_CONFIG = <%- safeJson({
+            submitUrl: ep ? "/api/products/" + ep._id : "/api/products",
+            submitMethod: ep ? "PATCH" : "POST",
+            submitLabel: ep ? "Save Changes" : "Post Product Now",
+            existingImages: ep && ep.images ? ep.images : []
+          }) %>;
         </script>
         <script defer src="/js/pages/sell.js"></script>
 </body>

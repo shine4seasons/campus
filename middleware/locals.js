@@ -29,6 +29,9 @@ const injectUser = async (req, res, next) => {
     return html;
   };
 
+  res.locals.formatVND = (value) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0);
+
   const token = req.cookies?.token;
   if (!token) {
     return next();

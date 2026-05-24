@@ -8,6 +8,7 @@ const {
 } = require('../../config/appConstants');
 const { releaseProductForOrder } = require('../../services/inventoryService');
 const orderRepository = require('../../repositories/orderRepository');
+const logger = require('../../utils/logger');
 
 // Statuses on which a party may open a dispute
 const DISPUTABLE_STATUSES = [ORDER_STATUS.CONFIRMED, ORDER_STATUS.COMPLETED];
@@ -91,12 +92,12 @@ exports.openDispute = async (req, res, next) => {
         link: `/orders/tracking/${order._id}`
       });
     } catch (notifErr) {
-      console.error('[dispute] notification error:', notifErr);
+      logger.error('dispute.notification_failed', { err: notifErr.message, stack: notifErr.stack, orderId: String(order._id) });
     }
 
     res.status(201).json({ success: true, data: updated.dispute });
   } catch (err) {
-    console.error('[dispute] openDispute:', err);
+    logger.error('dispute.open_failed', { err: err.message, stack: err.stack, orderId: req.params.id });
     return next(err);
   }
 };
@@ -158,7 +159,7 @@ exports.resolveDispute = async (req, res, next) => {
       try {
         await releaseProductForOrder(updated);
       } catch (prodErr) {
-        console.error('[dispute] product release error:', prodErr);
+        logger.error('dispute.product_release_failed', { err: prodErr.message, stack: prodErr.stack, orderId: String(updated._id) });
       }
     }
 
@@ -185,12 +186,12 @@ exports.resolveDispute = async (req, res, next) => {
         }),
       ]);
     } catch (notifErr) {
-      console.error('[dispute] resolve notification error:', notifErr);
+      logger.error('dispute.resolve_notification_failed', { err: notifErr.message, stack: notifErr.stack, orderId: String(updated._id) });
     }
 
     res.json({ success: true, data: updated });
   } catch (err) {
-    console.error('[dispute] resolveDispute:', err);
+    logger.error('dispute.resolve_failed', { err: err.message, stack: err.stack, orderId: req.params.id });
     return next(err);
   }
 };
@@ -228,7 +229,7 @@ exports.getAllDisputes = async (req, res, next) => {
       }
     });
   } catch (err) {
-    console.error('[dispute] getAllDisputes:', err);
+    logger.error('dispute.list_failed', { err: err.message, stack: err.stack });
     return next(err);
   }
 };

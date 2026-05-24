@@ -1,4 +1,5 @@
 const ratingRepository = require('../../repositories/ratingRepository');
+const logger = require('../../utils/logger');
 
 /**
  * Submit or update rating for product or user
@@ -89,7 +90,7 @@ exports.submitRating = async (req, res, next) => {
         link:      entityType === 'product' ? `/products/${entityId}` : '/profile'
       });
     } catch (notifErr) {
-      console.error('Rating notification error:', notifErr);
+      logger.error('rating.notification_failed', { err: notifErr.message, stack: notifErr.stack, entityType, entityId });
     }
 
     res.json({
@@ -98,7 +99,7 @@ exports.submitRating = async (req, res, next) => {
       data: rating,
     });
   } catch (error) {
-    console.error('[rating] submitRating error:', error);
+    logger.error('rating.submit_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -118,7 +119,7 @@ async function updateSellerRating(sellerId) {
       ratingCount: agg.ratingCount
     });
   } catch (error) {
-    console.error('Error updating seller rating:', error);
+    logger.error('rating.seller_update_failed', { err: error.message, stack: error.stack, sellerId: String(sellerId) });
   }
 }
 
@@ -171,7 +172,7 @@ exports.syncAllRatings = async (req, res, next) => {
       message: `Successfully synchronized ratings for ${allUsers.length} users.`,
     });
   } catch (error) {
-    console.error('[rating] syncAllRatings error:', error);
+    logger.error('rating.sync_all_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -201,7 +202,7 @@ exports.getRatings = async (req, res, next) => {
       data: ratings,
     });
   } catch (error) {
-    console.error('[rating] getRatings error:', error);
+    logger.error('rating.list_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -229,7 +230,7 @@ exports.getUserRating = async (req, res, next) => {
       data: rating || null,
     });
   } catch (error) {
-    console.error('[rating] getUserRating error:', error);
+    logger.error('rating.user_rating_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -277,7 +278,7 @@ exports.getRatingStats = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error('[rating] getRatingStats error:', error);
+    logger.error('rating.stats_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -332,7 +333,7 @@ exports.deleteRating = async (req, res, next) => {
 
     res.json({ success: true, message: 'Rating deleted successfully' });
   } catch (error) {
-    console.error('[rating] deleteRating error:', error);
+    logger.error('rating.delete_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };

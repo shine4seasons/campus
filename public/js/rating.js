@@ -80,7 +80,7 @@ function createRatingInput(onStarClick, initialScore = 0) {
   let html = '<div class="rating-input">';
   for (let i = 1; i <= 5; i += 1) {
     const selectedClass = initialScore >= i ? ' star-filled selected' : ' star-empty';
-    html += `<span class="star${selectedClass}" data-score="${i}" onmouseenter="updateRatingHover(this, ${i})" onmouseleave="clearRatingHover()" onclick="selectRating(this, ${i})" style="width:24px;height:24px;display:inline-block;cursor:pointer;color:#CBD5E1;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
+    html += `<span class="star${selectedClass}" data-action="rating-star" data-score="${i}" style="width:24px;height:24px;display:inline-block;cursor:pointer;color:#CBD5E1;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
   }
   html += '</div>';
   return html;
@@ -357,10 +357,12 @@ function updateRatingHover(element, score) {
 /**
  * Utility: Clear rating hover
  */
-function clearRatingHover() {
-  const selected = document.querySelector('.rating-input .star.selected');
+function clearRatingHover(element) {
+  const container = element ? element.closest('.rating-input') : document.querySelector('.rating-input');
+  if (!container) return;
+  const selected = container.querySelector('.star.selected');
   if (!selected) {
-    document.querySelectorAll('.rating-input .star').forEach((star) => {
+    container.querySelectorAll('.star').forEach((star) => {
       star.classList.add('star-empty');
       star.classList.remove('star-filled');
     });
@@ -392,9 +394,21 @@ function selectRating(element, score) {
 /**
  * Utility: Escape HTML
  */
-function escapeHtml(text) {
-  if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-    return window.AppUtils.escapeHtml(text);
-  }
-  return String(text ?? '');
-}
+const escapeHtml = window.AppUtils && typeof window.AppUtils.escapeHtml === 'function'
+  ? window.AppUtils.escapeHtml
+  : (text) => String(text ?? '');
+
+document.addEventListener('mouseover', (event) => {
+  const star = event.target.closest('[data-action="rating-star"]');
+  if (star) updateRatingHover(star, Number(star.dataset.score || 0));
+});
+
+document.addEventListener('mouseout', (event) => {
+  const star = event.target.closest('[data-action="rating-star"]');
+  if (star) clearRatingHover(star);
+});
+
+document.addEventListener('click', (event) => {
+  const star = event.target.closest('[data-action="rating-star"]');
+  if (star) selectRating(star, Number(star.dataset.score || 0));
+});

@@ -1,4 +1,5 @@
 const { Parser } = require('json2csv');
+const logger = require('./logger');
 
 /**
  * Convert JSON data to CSV string
@@ -13,7 +14,7 @@ function convertToCSV(data, fields) {
     const csv = parser.parse(data);
     return csv;
   } catch (err) {
-    console.error('CSV conversion error:', err);
+    logger.error('csv.conversion_failed', { err: err.message, stack: err.stack });
     throw err;
   }
 }

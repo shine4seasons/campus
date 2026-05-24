@@ -12,12 +12,16 @@ function findPaymentPageById(paymentId) {
     .populate('seller', 'name nickname');
 }
 
-function createPayment(data) {
+async function createPayment(data, options = {}) {
+  if (options.session) {
+    const [payment] = await Payment.create([data], { session: options.session });
+    return payment;
+  }
   return Payment.create(data);
 }
 
-function deletePaymentsByOrder(orderId) {
-  return Payment.deleteMany({ order: orderId });
+function deletePaymentsByOrder(orderId, options = {}) {
+  return Payment.deleteMany({ order: orderId }, options);
 }
 
 function markPaymentPaid({ paymentId, paymentSet, session }) {

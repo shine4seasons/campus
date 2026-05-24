@@ -126,7 +126,7 @@ exports.sendMessage = async (req, res, next) => {
       const io = getIO();
       if (io) io.to(`conv_${id}`).emit('message', populatedMsg);
     } catch (e) {
-      console.error('Socket emit error:', e.message);
+      logger.error('chat.socket_emit_failed', { err: e.message, conversationId: String(id) });
     }
 
     res.json({ success: true, data: populatedMsg });

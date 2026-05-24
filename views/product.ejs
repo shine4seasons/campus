@@ -4,7 +4,6 @@
   <%- include('partials/head', { pageTitle: product.title + ' - Campus Marketplace', pageStyles: ['product', 'image-modal', 'rating'] }) %>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
@@ -38,8 +37,8 @@
     }
 
     function fmtPrice(val) {
-      if (typeof val !== 'number') return '0';
-      return new Intl.NumberFormat('en-US').format(val);
+      if (typeof val !== 'number') return '0 VND';
+      return formatVND(val);
     }
 
     function safeJson(value) {
@@ -92,7 +91,7 @@
       <!-- 60% Sticky Purchase Panel -->
       <aside class="pdp-buy premium-card glass">
         <div class="pdp-price">
-          <%= fmtPrice(p.price) %><span class="pdp-currency">VND</span>
+          <%= fmtPrice(p.price) %>
         </div>
 
         <h1 class="pdp-title"><%= p.title %></h1>
@@ -276,7 +275,7 @@
                 <div class="product-cta">View details →</div>
               </div>
               <div class="product-body">
-                  <div class="product-price"><%= fmtPrice(rp.price) %> VND</div>
+                  <div class="product-price"><%= fmtPrice(rp.price) %></div>
                 <div class="product-name"><%= rp.title %></div>
                 <div class="product-category"><%= CAT_LABEL[rp.category] || rp.category %> · <%= typeof rp.quantity === 'number' ? rp.quantity : 1 %> available</div>
                 <div class="product-footer">
@@ -358,7 +357,7 @@
   <% if (!isSold && !isOwner) { %>
     <div class="buy-bar" id="buy-bar">
       <div class="buy-bar-price">
-        <%= fmtPrice(p.price) %> VND
+        <%= fmtPrice(p.price) %>
       </div>
       <div class="buy-bar-actions">
         <button class="buy-bar-buy" data-action="go-checkout">
@@ -377,7 +376,7 @@
       productMeta: {
         id: String(product._id),
         title: product.title,
-        price: fmtPrice(product.price) + ' VND',
+        price: fmtPrice(product.price),
         image: (product.images && product.images[0]) || '',
         url: '/products/' + String(product._id)
       },

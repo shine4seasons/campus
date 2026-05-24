@@ -1,5 +1,6 @@
 const Notification = require('../models/Notification');
 const { getIO } = require('./socketServer');
+const logger = require('./logger');
 
 /**
  * Send a notification to a specific user
@@ -19,6 +20,10 @@ exports.sendNotification = async (data) => {
 
     return notif;
   } catch (err) {
-    console.error('[notifService] Error sending notification:', err.message);
+    logger.error('notification.send_failed', {
+      err: err.message,
+      stack: err.stack,
+      recipient: data?.recipient ? String(data.recipient) : null
+    });
   }
 };

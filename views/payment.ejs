@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <%- include('partials/head', { pageTitle: title, pageStyles: [] }) %>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     .payment-container {
       max-width: 600px;
@@ -360,7 +359,7 @@
                 <div class="amount-label">Quantity: <%= payment.order.quantity %></div>
               <% } %>
               <div class="amount-value">
-                <%= new Intl.NumberFormat('vi-VN', { style: 'currency' , currency: 'VND' }).format(payment.amount) %>
+                <%= formatVND(payment.amount) %>
               </div>
             </div>
 
@@ -375,7 +374,7 @@
                 <span class="detail-label">Account Number</span>
                 <span class="detail-value">
                   <%= platformBank.accountNumber %>
-                    <button class="copy-btn" onclick="copyToClipboard('<%= platformBank.accountNumber %>')"
+                    <button class="copy-btn" data-action="copy" data-copy-value="<%= platformBank.accountNumber %>"
                       title="Copy">
                       <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
                     </button>
@@ -391,7 +390,7 @@
                 <span class="detail-label">Transfer Content</span>
                 <span class="detail-value" style="color: var(--primary); font-family: 'JetBrains Mono', monospace;">
                   <%= payment.paymentCode %>
-                    <button class="copy-btn" onclick="copyToClipboard('<%= payment.paymentCode %>')" title="Copy">
+                    <button class="copy-btn" data-action="copy" data-copy-value="<%= payment.paymentCode %>" title="Copy">
                       <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
                     </button>
                 </span>
@@ -422,8 +421,8 @@
           <div class="paid-sub">Your order is now paid. You can track shipping progress anytime.</div>
           <div class="paid-countdown" id="paid-countdown">Auto return home in 5s</div>
           <div class="paid-actions">
-            <button type="button" class="paid-btn paid-btn-home" onclick="goHomeAfterPaid()">Back to home</button>
-            <button type="button" class="paid-btn paid-btn-track" onclick="goTrackAfterPaid()">Track order</button>
+            <button type="button" class="paid-btn paid-btn-home" data-action="go-home-after-paid">Back to home</button>
+            <button type="button" class="paid-btn paid-btn-track" data-action="go-track-after-paid">Track order</button>
           </div>
         </div>
       </div>

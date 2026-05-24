@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const walletRepository = require('../repositories/walletRepository');
+const logger = require('../utils/logger');
 
 function sanitizeBankInfo(bankInfo = {}) {
   return {
@@ -67,7 +68,11 @@ exports.submitPayoutRequest = async (req, res, next) => {
 
   } catch (err) {
     await session.abortTransaction();
-    console.error('[wallet] submitPayoutRequest:', err);
+    logger.error('wallet.payout_request_failed', {
+      err: err.message,
+      stack: err.stack,
+      userId: req.user?._id ? String(req.user._id) : null
+    });
     return next(err);
   } finally {
     session.endSession();

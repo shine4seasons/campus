@@ -214,3 +214,21 @@ document.addEventListener('DOMContentLoaded', () => {
     loadRatingStats('user', profileConfig.viewingUserId, 'user-rating-stats-content');
   }
 });
+
+document.addEventListener('click', function (event) {
+  const target = event.target.closest('[data-action]');
+  if (!target) return;
+
+  if (target.dataset.action === 'save-profile') {
+    window.saveProfile();
+  }
+  if (target.dataset.action === 'show-report-modal') {
+    window.showReportModal(target.dataset.targetType, target.dataset.targetId);
+  }
+  if (target.dataset.action === 'close-report-modal') {
+    window.closeReportModal();
+  }
+  if (target.dataset.action === 'submit-report') {
+    window.submitReport();
+  }
+});

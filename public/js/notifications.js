@@ -1,10 +1,3 @@
-function escHtml(value) {
-    if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-        return window.AppUtils.escapeHtml(value);
-    }
-    return String(value == null ? '' : value);
-}
-
 function clearNode(node) {
     if (!node) return;
     while (node.firstChild) node.removeChild(node.firstChild);
@@ -167,6 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-action="mark-all-notifications-read"]')) {
+            window.markAllNotificationsAsRead();
+        }
+    });
+
     function formatTime(dateStr) {
         const date = new Date(dateStr);
         const now = new Date();
@@ -278,8 +277,8 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
             }, 200);
         };
 
-        confirmBtn.onclick = () => close(true);
-        cancelBtn.onclick = () => close(false);
-        modal.onclick = (e) => { if (e.target === modal) close(false); };
+        confirmBtn.addEventListener('click', () => close(true));
+        cancelBtn.addEventListener('click', () => close(false));
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(false); });
     });
 };

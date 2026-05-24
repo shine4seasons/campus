@@ -39,7 +39,7 @@
   }
 
   function createOrderRow(order) {
-    const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(order.priceSnapshot || 0);
+    const price = window.AppUtils.formatVND(order.priceSnapshot || 0);
     const row = createElement('tr');
     const buyerLink = createElement('a', {
       attrs: { href: '/user/' + (order.buyer?._id || '') },

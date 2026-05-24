@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 function safeEqual(left, right) {
   const leftBuffer = Buffer.from(String(left), 'utf8');
@@ -15,7 +16,7 @@ module.exports = function verifyWebhookSecret(req, res, next) {
   const expectedSecret = process.env.SEPAY_WEBHOOK_SECRET;
 
   if (!expectedSecret) {
-    console.error('[payments] SEPAY_WEBHOOK_SECRET is not configured');
+    logger.error('payments.webhook_secret_missing');
     return res.status(503).json({
       success: false,
       message: 'Webhook is not configured',
@@ -29,7 +30,7 @@ module.exports = function verifyWebhookSecret(req, res, next) {
   if (!providedSecret || !safeEqual(providedSecret, expectedSecret)) {
     const ip = req.get('x-forwarded-for') || req.ip || req.socket?.remoteAddress || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';
-    console.warn('[security] suspicious_webhook_access', {
+    logger.warn('security.suspicious_webhook_access', {
       ip: String(ip).split(',')[0].trim(),
       path: req.originalUrl || req.url,
       method: req.method,

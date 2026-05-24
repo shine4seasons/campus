@@ -1,12 +1,8 @@
 (() => {
-  const { createElement, appendChildren, createSvgElement } = window.AppUtils || {};
+  const { createElement, appendChildren, createSvgElement, formatVND } = window.AppUtils || {};
 
   let currentPage = 1;
   let totalCount = 0;
-
-  function formatPrice(n) {
-    return new Intl.NumberFormat('vi-VN').format(n || 0) + ' VND';
-  }
 
   function createHeartIcon() {
     return createSvgElement('svg', {
@@ -116,7 +112,7 @@
     appendChildren(body, [
       createElement('div', { className: 'fav-cat', text: product.category || '' }),
       createElement('div', { className: 'fav-name', text: product.title || 'Untitled' }),
-      createElement('div', { className: 'fav-price', text: formatPrice(product.price) }),
+      createElement('div', { className: 'fav-price', text: formatVND(product.price) }),
       createElement('div', {
         className: 'fav-seller',
         children: [
@@ -238,6 +234,12 @@
     currentPage += 1;
     fetchFavorites(true);
   };
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="load-more-favorites"]')) {
+      window.loadMore();
+    }
+  });
 
   fetchFavorites();
 })();

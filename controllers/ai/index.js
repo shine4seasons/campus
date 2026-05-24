@@ -1,6 +1,7 @@
 const { categoryLabels, conditionContext, buildPrompt } = require('./constants');
 const OpenAI = require('openai');
 const { badRequest, serviceUnavailable } = require('../../utils/errors');
+const logger = require('../../utils/logger');
 
 // AI provider: 'groq' (default, OpenAI-compatible) or 'gemini'.
 const AI_PROVIDER = (process.env.AI_PROVIDER || 'groq').toLowerCase();
@@ -207,7 +208,7 @@ const describeProduct = async (req, res, next) => {
     setCachedDescription(cacheKey, description);
     res.json({ success: true, description });
   } catch (err) {
-    console.error('AI error:', err.message);
+    logger.error('ai.describe_failed', { err: err.message, stack: err.stack });
     return next(err);
   }
 };

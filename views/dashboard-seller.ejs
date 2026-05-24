@@ -55,9 +55,7 @@
                   </div>
                 </div>
                 <div class="stat-val">
-                  <%= (stats.monthRevenue>= 1000000) ? (stats.monthRevenue / 1000000).toFixed(1) + 'M' : new
-                    Intl.NumberFormat('en-US').format(stats.monthRevenue) %>
-                    <span style="font-size: 14px; font-weight: 600; opacity: 0.7;">VND</span>
+                  <%= formatVND(stats.monthRevenue) %>
                 </div>
                 <div class="stat-delta">Earned this month</div>
               </div>
@@ -91,7 +89,7 @@
               <% } %>
 
                 <div class="quick-grid">
-                  <div class="quick-card glass" onclick="window.location.href='/my-products'">
+                  <div class="quick-card glass" data-href="/my-products">
                     <div class="qc-icon" style="background:var(--primary-light);color:var(--primary)">
                       <i data-lucide="layout-grid"></i>
                     </div>
@@ -103,7 +101,7 @@
                     </div>
                     <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
-                  <div class="quick-card glass" onclick="window.location.href='/orders-seller'">
+                  <div class="quick-card glass" data-href="/orders-seller">
                     <div class="qc-icon" style="background:var(--warning-light);color:var(--warning)">
                       <i data-lucide="shopping-cart"></i>
                     </div>
@@ -115,14 +113,14 @@
                     </div>
                     <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
-                  <div class="quick-card glass" onclick="showSection('sWallet')">
+                  <div class="quick-card glass" data-action="show-section" data-section="sWallet">
                     <div class="qc-icon" style="background:var(--accent-light);color:var(--accent)">
                       <i data-lucide="wallet"></i>
                     </div>
                     <div class="qc-body">
                       <div class="qc-label">Platform Wallet</div>
                       <div class="qc-sub">
-                        <%= new Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> VND available
+                        <%= formatVND(wallet.availableBalance) %> available
                       </div>
                     </div>
                     <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
@@ -281,8 +279,8 @@
                       class="form-textarea">Selling electronics and textbooks at HUST. Fast, reliable transactions. Contact me for support.</textarea>
                   </div>
                   <div style="display:flex;gap:10px">
-                    <button class="btn btn-primary" onclick="showToast('Profile saved','ok')">Save changes</button>
-                    <button class="btn btn-outline" onclick="showToast('Edit canceled','info')">Cancel</button>
+                    <button class="btn btn-primary" data-toast-message="Profile saved" data-toast-type="ok">Save changes</button>
+                    <button class="btn btn-outline" data-toast-message="Edit canceled" data-toast-type="info">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -320,8 +318,7 @@
                         <div class="li-name">Total revenue</div>
                       </div>
                       <div class="li-val" style="color:#16a34a">
-                        <%= (stats.totalRevenue>= 1000000) ? (stats.totalRevenue / 1000000).toFixed(1) + 'M VND' : new
-                          Intl.NumberFormat('en-US').format(stats.totalRevenue) + ' VND' %>
+                        <%= formatVND(stats.totalRevenue) %>
                       </div>
                     </div>
                     <div class="list-item">
@@ -388,18 +385,17 @@
               <div>
                 <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Available Balance</div>
                 <div style="font-size: 36px; font-weight: 800; letter-spacing: -0.02em;">
-                  <%= new Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> <span
-                      style="font-size: 16px; opacity: 0.7;">VND</span>
+                  <%= formatVND(wallet.availableBalance) %>
                 </div>
                 <div
                   style="font-size: 14px; opacity: 0.8; margin-top: 12px; display: flex; align-items: center; gap: 6px;">
                   <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                  Pending: <%= new Intl.NumberFormat('vi-VN').format(wallet.pendingBalance) %> VND
+                  Pending: <%= formatVND(wallet.pendingBalance) %>
                 </div>
               </div>
               <button class="btn"
                 style="background: #fff; color: var(--primary); padding: 12px 24px; border-radius: 12px; font-weight: 700; border: none;"
-                onclick="openWithdrawModal()">
+                data-action="open-withdraw-modal">
                 Withdraw Funds
               </button>
             </div>
@@ -467,10 +463,10 @@
 
       <!-- Seller navigation (used by quick-card shortcuts) -->
       <nav id="sellerNav" style="display:none" aria-hidden="true">
-        <div class="nav-item" data-section="sDash" onclick="nav(this,'sDash')"></div>
-        <div class="nav-item" data-section="sMessages" onclick="nav(this,'sMessages')"></div>
-        <div class="nav-item" data-section="sProfile" onclick="nav(this,'sProfile')"></div>
-        <div class="nav-item" data-section="sWallet" onclick="nav(this,'sWallet')"></div>
+        <div class="nav-item" data-section="sDash"></div>
+        <div class="nav-item" data-section="sMessages"></div>
+        <div class="nav-item" data-section="sProfile"></div>
+        <div class="nav-item" data-section="sWallet"></div>
       </nav>
 
       <!-- Withdraw Modal -->
@@ -478,14 +474,13 @@
         <div class="modal glass" style="max-width: 400px; margin: 40px auto;">
           <div class="modal-head">
             <div class="modal-title">Withdraw Funds</div>
-            <button class="modal-close" onclick="closeWithdrawModal()"><i data-lucide="x"></i></button>
+            <button class="modal-close" data-action="close-withdraw-modal"><i data-lucide="x"></i></button>
           </div>
           <div class="modal-body">
             <div class="form-group" style="margin-bottom: 16px;">
               <label class="form-label">Amount (VND)</label>
               <input type="number" class="form-input" id="withdrawAmount" value="<%= wallet.availableBalance %>">
-              <div style="font-size: 12px; color: var(--t3); margin-top: 4px;">Available: <%= new
-                  Intl.NumberFormat('vi-VN').format(wallet.availableBalance) %> VND</div>
+              <div style="font-size: 12px; color: var(--t3); margin-top: 4px;">Available: <%= formatVND(wallet.availableBalance) %></div>
             </div>
             <div class="form-group" style="margin-bottom: 16px;">
               <label class="form-label">Bank Name</label>
@@ -501,8 +496,8 @@
             </div>
           </div>
           <div class="modal-foot">
-            <button class="btn btn-sec" onclick="closeWithdrawModal()">Cancel</button>
-            <button class="btn btn-pri" onclick="submitWithdraw()">Submit Request</button>
+            <button class="btn btn-sec" data-action="close-withdraw-modal">Cancel</button>
+            <button class="btn btn-pri" data-action="submit-withdraw">Submit Request</button>
           </div>
         </div>
       </div>

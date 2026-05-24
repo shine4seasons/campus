@@ -1,13 +1,9 @@
 (() => {
-  const { createElement, createSvgElement } = window.AppUtils || {};
+  const { createElement, createSvgElement, formatVND } = window.AppUtils || {};
   let currentTab = 'open';
 
   function formatDate(d) {
     return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  }
-
-  function formatPrice(n) {
-    return new Intl.NumberFormat('vi-VN').format(n || 0) + ' VND';
   }
 
   function createLoadingState() {
@@ -113,7 +109,7 @@
             createElement('div', {
               children: [
                 createElement('div', { className: 'dsp-product-name', text: productTitle }),
-                createElement('div', { className: 'dsp-product-price', text: formatPrice(order.priceSnapshot) })
+                createElement('div', { className: 'dsp-product-price', text: formatVND(order.priceSnapshot) })
               ]
             })
           ]
@@ -183,6 +179,11 @@
 
   document.getElementById('resolve-backdrop').addEventListener('click', (e) => {
     if (e.target.id === 'resolve-backdrop') closeResolveModal();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="close-resolve-modal"]')) window.closeResolveModal();
+    if (event.target.closest('[data-action="submit-resolve"]')) window.submitResolve();
   });
 
   window.submitResolve = async function() {

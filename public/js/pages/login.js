@@ -90,6 +90,18 @@ if (typeof lucide !== 'undefined') {
   lucide.createIcons();
 }
 
+document.addEventListener('click', function (event) {
+  const target = event.target.closest('[data-action]');
+  if (!target) return;
+
+  if (target.dataset.action === 'submit-profile') {
+    window.submitProfile();
+  }
+  if (target.dataset.action === 'skip-profile') {
+    window.skipProfile();
+  }
+});
+
 const urlParams = new URLSearchParams(window.location.search);
 const errorParam = urlParams.get('error');
 if (errorParam === 'banned') {

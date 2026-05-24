@@ -31,7 +31,7 @@
                   <button class="f-pill">Sold</button>
                   <button class="f-pill">Hidden</button>
                 </div>
-                <button class="btn btn-primary" onclick="window.location.href='/sell'">
+                <button class="btn btn-primary" data-href="/sell">
                   <svg viewBox="0 0 24 24" stroke-width="2.5">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
@@ -147,7 +147,7 @@
           }
 
           function createProductRow(product) {
-            const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(product.price || 0);
+            const price = window.AppUtils.formatVND(product.price || 0);
             const posted = new Date(product.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
             const status = product.status || 'active';
             const badgeClass = status === 'active' ? 'badge-active' : (status === 'sold' ? 'badge-sold' : (status === 'hidden' ? 'badge-hidden' : 'badge-active'));
@@ -236,6 +236,11 @@
           };
 
           // Wire up filter pills
+          document.addEventListener('click', (event) => {
+            const hrefTarget = event.target.closest('[data-href]');
+            if (hrefTarget) window.location.href = hrefTarget.dataset.href;
+          });
+
           document.querySelectorAll('.filter-pills .f-pill').forEach(pill => {
             pill.addEventListener('click', () => {
               document.querySelectorAll('.filter-pills .f-pill').forEach(p => p.classList.remove('on'));

@@ -595,4 +595,18 @@
       });
     }
   })();
+
+  document.addEventListener('click', (event) => {
+    const toastTarget = event.target.closest('[data-toast-message]');
+    if (toastTarget) {
+      showToast(toastTarget.dataset.toastMessage, toastTarget.dataset.toastType || 'info');
+      return;
+    }
+
+    const actionTarget = event.target.closest('[data-action]');
+    if (!actionTarget) return;
+    if (actionTarget.dataset.action === 'save-admin-settings') window.saveAdminSettings();
+    if (actionTarget.dataset.action === 'sync-seller-ratings') window.syncSellerRatings();
+    if (actionTarget.dataset.action === 'close-payout-modal') window.closePayoutModal();
+  });
 })();

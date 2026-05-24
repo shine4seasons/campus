@@ -1,8 +1,7 @@
-const mongoose = require('mongoose');
-
-const { ORDER_STATUS, ORDER_ROLES, USER_ROLES } = require('../../config/appConstants');
+const { ORDER_ROLES, USER_ROLES } = require('../../config/appConstants');
 const orderService = require('../../services/orderService');
 const orderRepository = require('../../repositories/orderRepository');
+const logger = require('../../utils/logger');
 
 // Create Order
 exports.createOrder = async (req, res, next) => {
@@ -24,7 +23,7 @@ exports.createOrder = async (req, res, next) => {
       message: 'Order placed successfully',
     });
   } catch (err) {
-    console.error('[checkout] createOrder:', err);
+    logger.error('orders.create_failed', { err: err.message, stack: err.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(err);
   }
 };

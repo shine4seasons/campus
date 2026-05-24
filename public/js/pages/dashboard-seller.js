@@ -74,7 +74,7 @@
             createElement('td', { style: { fontSize: '13px' }, text: t.description || '' }),
             createElement('td', {
               style: { fontWeight: '700', color: t.amount >= 0 ? 'var(--success)' : 'var(--error)' },
-              text: `${t.amount >= 0 ? '+' : ''}${new Intl.NumberFormat('vi-VN').format(t.amount)}`
+              text: `${t.amount >= 0 ? '+' : ''}${window.AppUtils.formatVND(t.amount)}`
             })
           );
           return row;
@@ -123,7 +123,7 @@
           }),
           createElement('td', {
             style: { fontWeight: '700' },
-            text: `${new Intl.NumberFormat('vi-VN').format(p.amount)} VND`
+            text: window.AppUtils.formatVND(p.amount)
           }),
           bankCell,
           createElement('td', {
@@ -151,4 +151,36 @@
       }
     }
   };
+
+  document.addEventListener('click', (event) => {
+    const hrefTarget = event.target.closest('[data-href]');
+    if (hrefTarget) {
+      window.location.href = hrefTarget.dataset.href;
+      return;
+    }
+
+    const toastTarget = event.target.closest('[data-toast-message]');
+    if (toastTarget) {
+      showToast(toastTarget.dataset.toastMessage, toastTarget.dataset.toastType || 'info');
+      return;
+    }
+
+    const sectionTarget = event.target.closest('[data-action="show-section"][data-section]');
+    if (sectionTarget) {
+      window.showSection(sectionTarget.dataset.section);
+      return;
+    }
+
+    const navTarget = event.target.closest('#sellerNav .nav-item[data-section]');
+    if (navTarget) {
+      nav(navTarget, navTarget.dataset.section);
+      return;
+    }
+
+    const actionTarget = event.target.closest('[data-action]');
+    if (!actionTarget) return;
+    if (actionTarget.dataset.action === 'open-withdraw-modal') openWithdrawModal();
+    if (actionTarget.dataset.action === 'close-withdraw-modal') closeWithdrawModal();
+    if (actionTarget.dataset.action === 'submit-withdraw') submitWithdraw();
+  });
 })();

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const http = require('http');
 const https = require('https');
+const logger = require('../utils/logger');
 
 const SEPAY_BASE_URL = (process.env.SEPAY_API_URL || 'https://userapi.sepay.vn/v2').replace(/\/+$/, '');
 const SEPAY_API_KEY = process.env.SEPAY_API_KEY;
@@ -12,7 +13,7 @@ const SEPAY_TX_CACHE_TTL_MS = Number.parseInt(process.env.SEPAY_TX_CACHE_TTL_MS 
 const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
 const suppressMissingKeyWarn = process.env.SEPAY_SUPPRESS_WARN === '1';
 if (!SEPAY_API_KEY && !isTestEnv && !suppressMissingKeyWarn) {
-  console.error('[SePay] CRITICAL: SEPAY_API_KEY is not set in environment variables');
+  logger.error('sepay.api_key_missing');
 }
 
 const sepayClient = axios.create({
@@ -67,7 +68,7 @@ exports.createSePayPayment = async (order, amount, description) => {
       status: 'PENDING'
     };
   } catch (err) {
-    console.error(formatError('CreatePayment', err));
+    logger.error('sepay.create_payment_failed', { err: formatError('CreatePayment', err) });
     throw err;
   }
 };
@@ -87,7 +88,7 @@ exports.getRecentTransactions = async (page = 1, perPage = 100) => {
 
     return response.data.data;
   } catch (err) {
-    console.error(formatError('GetTransactions', err));
+    logger.error('sepay.get_transactions_failed', { err: formatError('GetTransactions', err) });
     throw err;
   }
 };

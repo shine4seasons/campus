@@ -26,7 +26,7 @@
 		<div class="notif-dropdown" id="notif-dropdown">
 			<div class="notif-header">
 				<h3>Notifications</h3>
-				<span class="mark-all" onclick="markAllNotificationsAsRead()">Mark all as read</span>
+				<span class="mark-all" data-action="mark-all-notifications-read">Mark all as read</span>
 			</div>
 			<div class="notif-list" id="notif-list">
 				<div class="notif-empty">Loading...</div>
@@ -59,7 +59,6 @@
 		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
 	</div>
 </header>
-<script defer src="/vendor/lucide-0.460.0.min.js"></script>
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		if (typeof lucide !== 'undefined') {

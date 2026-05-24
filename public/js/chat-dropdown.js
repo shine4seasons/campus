@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentConvId = null;
     let socket = null;
 
+    function getCookie(name) {
+        return document.cookie
+            .split(';')
+            .map((entry) => entry.trim())
+            .find((entry) => entry.startsWith(name + '='))
+            ?.slice(name.length + 1);
+    }
+
+    function getMode() {
+        return getCookie('campus_mode') === 'seller' ? 'seller' : 'buyer';
+    }
+
     function clearNode(node) {
         if (!node) return;
         while (node.firstChild) node.removeChild(node.firstChild);
@@ -38,13 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return img;
         }
         return document.createTextNode((safeName[0] || '?').toUpperCase());
-    }
-
-    function escHtml(value) {
-        if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-            return window.AppUtils.escapeHtml(value);
-        }
-        return String(value == null ? '' : value);
     }
 
     // --- Socket.io ---
@@ -115,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderConversationList(convs) {
-        const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+        const uiMode = getMode();
         const modeLabel = uiMode === 'seller' ? ' (Seller)' : ' (Buyer)';
         clearNode(chatTitle);
         chatTitle.appendChild(document.createTextNode('Messages'));
@@ -270,15 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        sendBtn.onclick = sendMessage;
-        input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
-    }
-
-    function escHtml(s) {
-        if (window.AppUtils && typeof window.AppUtils.escapeHtml === 'function') {
-            return window.AppUtils.escapeHtml(s);
-        }
-        return String(s == null ? '' : s);
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
     }
 
     function createMessageNode(m) {
@@ -310,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUnreadBadge(convs) {
-        const uiMode = (localStorage.getItem('campus_mode') || 'buyer');
+        const uiMode = getMode();
         const filtered = convs.filter(c => {
             if (uiMode === 'seller') return c.isSellerConversation;
             return !c.isSellerConversation;

@@ -1,6 +1,7 @@
 const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
 const pageRepository = require('../repositories/pageRepository');
 const pageService = require('../services/pageService');
+const logger = require('../utils/logger');
 
 const { incrementViews } = require('../utils/viewCounter');
 const { VIEWS, APP_NAME, TITLE_SEPARATOR, LIMITS, ERROR_MESSAGES } = require('../config/pageConstants');
@@ -31,7 +32,7 @@ exports.getProduct = async (req, res, next) => {
     }
 
     // Increment view count asynchronously
-    incrementViews(productId).catch(err => console.error('View increment error:', err));
+    incrementViews(productId).catch(err => logger.error('page.view_increment_failed', { err: err.message, productId }));
 
     // Get related products
     const relatedProducts = await pageRepository.findRelatedProducts({
@@ -47,7 +48,7 @@ exports.getProduct = async (req, res, next) => {
       isLoginPage: false
     });
   } catch (error) {
-    console.error('Product page error:', error.message);
+    logger.error('page.product_failed', { err: error.message, stack: error.stack, productId: req.params.id });
     return next(error);
   }
 };
@@ -100,7 +101,7 @@ exports.getSearchResults = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('Search results page error:', error.message);
+    logger.error('page.search_results_failed', { err: error.message, stack: error.stack });
     return next(error);
   }
 };
@@ -119,7 +120,7 @@ exports.getMyProducts = async (req, res, next) => {
       activePage: 'products'
     });
   } catch (error) {
-    console.error('My products page error:', error.message);
+    logger.error('page.my_products_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -138,7 +139,7 @@ exports.getSellPage = async (req, res, next) => {
         editProduct = product;
       }
     } catch (error) {
-      console.error('Edit product fetch error:', error.message);
+      logger.error('page.edit_product_fetch_failed', { err: error.message, stack: error.stack, productId });
     }
   }
 
@@ -175,7 +176,7 @@ exports.getProfile = async (req, res, next) => {
       activePage: 'profile'
     });
   } catch (error) {
-    console.error('Profile page error:', error.message);
+    logger.error('page.profile_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -229,7 +230,7 @@ exports.getUserProfile = async (req, res, next) => {
       viewingUser
     });
   } catch (error) {
-    console.error('User profile page error:', error.message);
+    logger.error('page.user_profile_failed', { err: error.message, stack: error.stack, userId: req.params.id });
     return next(error);
   }
 };
@@ -251,7 +252,7 @@ exports.getDashboard = async (req, res, next) => {
     }
     return res.render(viewModel.view, viewModel.locals);
   } catch (error) {
-    console.error('Dashboard page error:', error.message);
+    logger.error('page.dashboard_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -264,7 +265,7 @@ exports.getSellerOrders = async (req, res, next) => {
     const viewModel = await pageService.getSellerOrdersViewModel(res.locals.user._id);
     res.render(VIEWS.ORDERS_SELLER, viewModel);
   } catch (error) {
-    console.error('Seller orders page error:', error.message);
+    logger.error('page.seller_orders_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -280,7 +281,7 @@ exports.getRevenue = async (req, res, next) => {
       activePage: 'revenue'
     });
   } catch (error) {
-    console.error('Revenue page error:', error.message);
+    logger.error('page.revenue_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -293,7 +294,7 @@ exports.getBuyerOrders = async (req, res, next) => {
     const viewModel = await pageService.getBuyerOrdersViewModel(res.locals.user._id);
     res.render(VIEWS.ORDERS_BUYER, viewModel);
   } catch (error) {
-    console.error('Buyer orders page error:', error.message);
+    logger.error('page.buyer_orders_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };
@@ -309,7 +310,7 @@ exports.getOrderTracking = async (req, res, next) => {
     });
     res.render(VIEWS.ORDER_TRACKING, viewModel);
   } catch (error) {
-    console.error('Order tracking page error:', error.message);
+    logger.error('page.order_tracking_failed', { err: error.message, stack: error.stack, orderId: req.params.id });
     if (error.status === 404) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',

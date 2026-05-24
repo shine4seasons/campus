@@ -90,7 +90,7 @@ function findProductOwnershipSnapshot(productId) {
   return Product.findById(productId).select('seller status quantity price title').lean();
 }
 
-function claimActiveStock({ productId, buyerId, quantity, soldStatus, activeStatus }) {
+function claimActiveStock({ productId, buyerId, quantity, soldStatus, activeStatus, options = {} }) {
   return Product.findOneAndUpdate(
     {
       _id: productId,
@@ -129,7 +129,7 @@ function claimActiveStock({ productId, buyerId, quantity, soldStatus, activeStat
         }
       }
     ],
-    { new: true }
+    { new: true, ...options }
   );
 }
 
