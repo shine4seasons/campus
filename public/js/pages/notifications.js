@@ -165,7 +165,7 @@
       document.getElementById('load-more-wrap').style.display = pagination.hasMore ? 'flex' : 'none';
       totalPages = pagination.totalPages || 1;
     } catch (err) {
-      console.error('[notifications] error:', err);
+      window.AppUtils?.reportClientError('[notifications] error:', err);
       if (!append) {
         replaceNotificationList(list, [createEmptyState('Failed to load', err.message || 'Unknown error')]);
       }

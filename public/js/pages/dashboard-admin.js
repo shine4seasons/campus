@@ -27,6 +27,29 @@
     return createElement('span', { className, text });
   }
 
+  function updateReportCounters({ pendingReports, reportedProducts }) {
+    const reportCount = Number(pendingReports || 0);
+    const reportedProductCount = Number(reportedProducts || 0);
+    const reportedProductsEl = document.getElementById('reported-products-count');
+    if (reportedProductsEl) reportedProductsEl.textContent = String(reportedProductCount);
+
+    const reportAlertEl = document.getElementById('reports-alert-text');
+    if (reportAlertEl) {
+      reportAlertEl.textContent = `There are ${reportCount} reported item${reportCount === 1 ? '' : 's'} awaiting review. Please review and take action promptly.`;
+    }
+  }
+
+  async function refreshAdminModerationStats() {
+    try {
+      const res = await fetch('/api/admin/stats');
+      if (!res.ok) return;
+      const json = await res.json();
+      updateReportCounters(json.data || {});
+    } catch {
+      // Dashboard stats are refreshed opportunistically; table loads still work without this.
+    }
+  }
+
   function createActionButton(label, className, onClick) {
     const button = createElement('button', { className, attrs: { type: 'button' }, text: label });
     button.addEventListener('click', onClick);
@@ -334,6 +357,7 @@
         btn.textContent = 'Resolved';
         btn.style.opacity = '0.5';
         btn.style.cursor = 'not-allowed';
+        refreshAdminModerationStats();
         loadReports();
       } catch {
         showToast('Failed to resolve report', 'error');
@@ -367,6 +391,10 @@
         const json = await res.json();
         if (json.success) {
           const reports = json.data || [];
+          if (json.pagination && currentReportFilter === 'all') {
+            const totalEl = document.getElementById('reports-total');
+            if (totalEl) totalEl.textContent = `${json.pagination.total || 0} item${json.pagination.total === 1 ? '' : 's'}`;
+          }
           if (reports.length === 0) {
             setTableMessage(tbody, 7, 'No reports found');
           } else {
@@ -384,6 +412,7 @@
     }
 
     window.loadReports = loadReports;
+    refreshAdminModerationStats();
 
     async function syncSellerRatings() {
       const confirmed = await showConfirm({

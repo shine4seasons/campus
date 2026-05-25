@@ -83,7 +83,7 @@
         setTableMessage(tbody, 4, 'No transactions yet');
       }
     } catch (err) {
-      console.error('Fetch transactions error:', err);
+      window.AppUtils?.reportClientError('Fetch transactions error:', err);
     }
   }
 
@@ -133,7 +133,7 @@
         return row;
       }));
     } catch (err) {
-      console.error('Fetch payout requests error:', err);
+      window.AppUtils?.reportClientError('Fetch payout requests error:', err);
     }
   }
 

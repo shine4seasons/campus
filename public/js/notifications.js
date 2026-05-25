@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Listen for real-time notifications (In-app only)
         socket.on('newNotification', (notif) => {
-            console.log('New notification received:', notif);
+            window.AppUtils?.reportClientInfo('New notification received:', notif);
             
             // Update unread count/dot in real-time
             checkUnreadCount();
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (err) {
-            console.error('Error checking notifications:', err);
+            window.AppUtils?.reportClientError('Error checking notifications:', err);
         }
     }
 
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
             checkUnreadCount();
         } catch (err) {
-            console.error('Error marking as read:', err);
+            window.AppUtils?.reportClientError('Error marking as read:', err);
         }
     }
 
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notifDot.style.display = 'none';
             }
         } catch (err) {
-            console.error('Error marking all as read:', err);
+            window.AppUtils?.reportClientError('Error marking all as read:', err);
         }
     };
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global Toast logic
 window.showToast = function(msg, type = 'ok') {
     const wrap = document.getElementById('toast-wrap');
-    if (!wrap) return console.warn('toast-wrap not found');
+    if (!wrap) return window.AppUtils?.reportClientWarn('toast-wrap not found');
 
     const t = document.createElement('div');
     t.className = 'toast ' + type;

@@ -97,7 +97,7 @@ async function loadRatings(entityType, entityId, containerId) {
     const data = await response.json();
 
     if (!data.success) {
-      console.error('Failed to load ratings:', data.message);
+      window.AppUtils?.reportClientError('Failed to load ratings:', data.message);
       return;
     }
 
@@ -155,7 +155,7 @@ async function loadRatings(entityType, entityId, containerId) {
       });
     }));
   } catch (error) {
-    console.error('Error loading ratings:', error);
+    window.AppUtils?.reportClientError('Error loading ratings:', error);
   }
 }
 
@@ -170,7 +170,7 @@ async function loadRatingStats(entityType, entityId, containerId) {
     const data = await response.json();
 
     if (!data.success) {
-      console.error('Failed to load rating stats:', data.message);
+      window.AppUtils?.reportClientError('Failed to load rating stats:', data.message);
       return;
     }
 
@@ -222,7 +222,7 @@ async function loadRatingStats(entityType, entityId, containerId) {
       distributionWrap
     );
   } catch (error) {
-    console.error('Error loading rating stats:', error);
+    window.AppUtils?.reportClientError('Error loading rating stats:', error);
   }
 }
 
@@ -233,7 +233,7 @@ async function submitRating(entityType, entityId, score, comment = '') {
   const notify = (msg, type = 'ok') => {
     if (typeof showToast === 'function') showToast(msg, type);
     else if (typeof toast === 'function') toast(msg, type);
-    else console.warn(msg);
+    else window.AppUtils?.reportClientWarn(msg);
   };
 
   if (!score || score < 1 || score > 5) {
@@ -264,7 +264,7 @@ async function submitRating(entityType, entityId, score, comment = '') {
     notify('Thank you! Your review has been submitted.', 'ok');
     return true;
   } catch (error) {
-    console.error('Error submitting rating:', error);
+    window.AppUtils?.reportClientError('Error submitting rating:', error);
     notify('Network error. Please try again.', 'err');
     return false;
   }
@@ -277,7 +277,7 @@ async function deleteRating(entityType, entityId) {
   const notify = (msg, type = 'ok') => {
     if (typeof showToast === 'function') showToast(msg, type);
     else if (typeof toast === 'function') toast(msg, type);
-    else console.warn(msg);
+    else window.AppUtils?.reportClientWarn(msg);
   };
 
   const confirmed = typeof showConfirm === 'function'
@@ -311,7 +311,7 @@ async function deleteRating(entityType, entityId) {
     notify('Review deleted successfully.', 'ok');
     return true;
   } catch (error) {
-    console.error('Error deleting rating:', error);
+    window.AppUtils?.reportClientError('Error deleting rating:', error);
     notify('Network error. Please try again.', 'err');
     return false;
   }
@@ -330,7 +330,7 @@ async function getUserRating(entityType, entityId) {
     if (!data.success) return null;
     return data.data;
   } catch (error) {
-    console.error('Error fetching user rating:', error);
+    window.AppUtils?.reportClientError('Error fetching user rating:', error);
     return null;
   }
 }

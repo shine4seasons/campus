@@ -228,7 +228,7 @@
       renderSearchCategoryMenu();
       updateCategoryCounts();
     } catch (error) {
-      console.error('Error loading category counts:', error);
+      window.AppUtils?.reportClientError('Error loading category counts:', error);
       updateCategoryCounts();
     }
   }
@@ -569,7 +569,7 @@
       renderSearchCategoryMenu();
       setSearchCategory(searchCatSelect.value || '');
     } catch (error) {
-      console.error('Error loading products:', error);
+      window.AppUtils?.reportClientError('Error loading products:', error);
       buildSearchCategoryOptions([]);
       renderSearchCategoryMenu();
       setSearchCategory(searchCatSelect.value || '');

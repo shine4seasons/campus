@@ -479,7 +479,7 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
             .bindPopup(address || 'Pickup Location')
             .openPopup();
         } catch (e) {
-          console.error('Leaflet error:', e);
+          window.AppUtils?.reportClientError('Leaflet error:', e);
         }
       } else if (document.getElementById('product-map')) {
         document.getElementById('product-map').style.display = 'none';

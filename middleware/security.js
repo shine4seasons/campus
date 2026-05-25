@@ -96,7 +96,8 @@ function monitorAuthzFailures(req, res, next) {
 
     current.count += 1;
     if (current.count >= 5) {
-      console.warn('[security] repeated_authz_failure', {
+      const logger = require('../utils/logger');
+      logger.warn('security.repeated_authz_failure', {
         ip,
         path,
         method: req.method,

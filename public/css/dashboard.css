@@ -245,6 +245,15 @@ body.has-sidebar .main .content,
   stroke-width: 2;
 }
 
+.qc-icon i[data-lucide],
+.stat-icon i[data-lucide] {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+}
+
 .qc-body {
   flex: 1;
   min-width: 0;

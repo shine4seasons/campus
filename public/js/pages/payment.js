@@ -54,7 +54,7 @@ async function checkStatus() {
       }
     }
   } catch (err) {
-    console.error('[Payment Polling] Error checking status:', err);
+    window.AppUtils?.reportClientError('[Payment Polling] Error checking status:', err);
   }
 
   setTimeout(checkStatus, 3000);

@@ -185,7 +185,7 @@
 
       document.getElementById('fav-load-more').style.display = pagination.hasMore ? 'flex' : 'none';
     } catch (err) {
-      console.error('[favorites] error:', err);
+      window.AppUtils?.reportClientError('[favorites] error:', err);
       if (!append) {
         setGridState(grid, createEmptyState('Failed to load', err.message || 'Unknown error', false));
       }
@@ -226,7 +226,7 @@
       }
     } catch (err) {
       if (card) card.style.opacity = '';
-      console.error('[favorites] remove error:', err);
+      window.AppUtils?.reportClientError('[favorites] remove error:', err);
     }
   };
 

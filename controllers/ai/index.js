@@ -189,7 +189,7 @@ const describeProduct = async (req, res, next) => {
           : await generateWithGroq({ prompt, imageUrl, maxTokens });
       } catch (err) {
         if (!imageUrl || AI_PROVIDER !== 'groq') throw err;
-        console.warn('Groq vision failed, retrying text-only:', err.message);
+        logger.warn('ai.groq_vision_retry_text_only', { err: err.message });
         const textOnlyPrompt = buildPrompt({ ...promptInput, hasImage: false });
         description = await generateWithGroq({ prompt: textOnlyPrompt, imageUrl: '', maxTokens });
       }

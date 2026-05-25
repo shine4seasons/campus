@@ -25,6 +25,13 @@ function toObjectIdString(value) {
   }
 }
 
+function findPendingProductReportIds() {
+  return Report.find({
+    targetType: 'product',
+    status: { $in: ['pending', 'under-review'] }
+  }).distinct('targetId');
+}
+
 async function findAdminUsers({ q, page = 1, limit = 20, status }) {
   const filter = {};
   if (status === 'banned') filter.banned = true;
@@ -93,7 +100,10 @@ async function findAdminOrders({ status, page = 1, limit = 25 }) {
 
 async function findAdminProducts({ q, page = 1, limit = 25, status }) {
   const filter = {};
-  if (status === 'reported') filter.reported = true;
+  if (status === 'reported') {
+    const pendingProductReports = await findPendingProductReportIds();
+    filter._id = { $in: pendingProductReports };
+  }
   else if (Object.values(PRODUCT_STATUS).includes(status)) filter.status = status;
   if (q) filter.$text = { $search: q };
 
@@ -123,6 +133,12 @@ async function findAdminProducts({ q, page = 1, limit = 25, status }) {
 async function getAdminStatsSummary() {
   const totalUsers = await User.countDocuments({});
   const activeProducts = await Product.countDocuments({ status: PRODUCT_STATUS.ACTIVE });
+  const totalProducts = await Product.countDocuments({});
+  const pendingReports = await Report.countDocuments({ status: { $in: ['pending', 'under-review'] } });
+  const pendingProductReportIds = await findPendingProductReportIds();
+  const reportedProducts = pendingProductReportIds.length
+    ? await Product.countDocuments({ _id: { $in: pendingProductReportIds } })
+    : 0;
 
   const start = new Date();
   start.setDate(1);
@@ -150,6 +166,9 @@ async function getAdminStatsSummary() {
   return {
     totalUsers,
     activeProducts,
+    totalProducts,
+    pendingReports,
+    reportedProducts,
     ordersThisMonth,
     gmvThisMonth: (gmvAgg[0] && gmvAgg[0].total) || 0,
     ordersByStatus

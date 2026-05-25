@@ -68,7 +68,7 @@
       const address = await reverseGeocode(lat, lng);
       document.getElementById('f-location').value = address;
     } catch (error) {
-      console.error('Geocoding failed:', error);
+      window.AppUtils?.reportClientError('Geocoding failed:', error);
     }
   }
 
@@ -102,7 +102,7 @@
           const results = await searchLocation(query);
           showDropdown(results);
         } catch (error) {
-          console.error('Search failed:', error);
+          window.AppUtils?.reportClientError('Search failed:', error);
         }
       }, 300);
     });
@@ -337,7 +337,7 @@
           }
         })
         .catch((error) => {
-          console.error('Upload error:', error);
+          window.AppUtils?.reportClientError('Upload error:', error);
           notify('Network error during upload');
         });
     });

@@ -252,7 +252,7 @@ const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
           restoreForm();
         }
       } catch (err) {
-        console.error('Order error:', err);
+        window.AppUtils?.reportClientError('Order error:', err);
         showToast('Network error. Check your connection and try again.');
         restoreForm();
       }
@@ -364,7 +364,7 @@ const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
     async function updateCheckoutLocation(lat, lng) {
       try {
         await reverseGeocodeCheckout(lat, lng);
-      } catch (err) { console.error('Geocoding failed:', err); }
+      } catch (err) { window.AppUtils?.reportClientError('Geocoding failed:', err); }
     }
 
     async function reverseGeocodeCheckout(lat, lng) {
@@ -410,7 +410,7 @@ const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
           try {
             const results = await searchLocationCheckout(query);
             showCheckoutDropdown(results, map);
-          } catch (err) { console.error('Search failed:', err); }
+          } catch (err) { window.AppUtils?.reportClientError('Search failed:', err); }
         }, 300);
       });
 

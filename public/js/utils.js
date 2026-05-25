@@ -86,6 +86,16 @@
       .replace(/\u2029/g, '\\u2029');
   }
 
+  function reportClientLog(level, ...args) {
+    const consoleApi = globalScope['console'];
+    if (!globalScope.DEBUG_CLIENT_LOGS || !consoleApi) return;
+    const method = level === 'error' ? 'error' : (level === 'warn' ? 'warn' : 'log');
+    const writer = consoleApi[method] || consoleApi.log;
+    if (typeof writer === 'function') {
+      writer.apply(consoleApi, args);
+    }
+  }
+
   function getCsrfToken() {
     const tokenPair = document.cookie
       .split(';')
@@ -130,6 +140,9 @@
     escapeHtml,
     formatVND,
     safeJsonForInlineScript,
+    reportClientError: (...args) => reportClientLog('error', ...args),
+    reportClientWarn: (...args) => reportClientLog('warn', ...args),
+    reportClientInfo: (...args) => reportClientLog('info', ...args),
     getCsrfToken
   });
 })(window);

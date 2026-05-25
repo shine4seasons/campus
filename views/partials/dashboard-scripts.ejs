@@ -274,7 +274,7 @@
             options: { ...BASE_OPTS, cutout: '70%' },
           });
         } catch (e) {
-          console.error('Failed to load admin charts', e);
+          window.AppUtils?.reportClientError('Failed to load admin charts', e);
         }
       })();
     }
@@ -387,7 +387,7 @@
           }
 
         } catch (e) {
-          console.error('Failed to load analytics charts', e);
+          window.AppUtils?.reportClientError('Failed to load analytics charts', e);
         }
       })();
     }
@@ -433,7 +433,7 @@
             })));
           }
         } catch (e) {
-          console.error(e);
+          window.AppUtils?.reportClientError(e);
         }
       })();
     }
@@ -522,7 +522,7 @@
             }
           }
         } catch (e) {
-          console.error(e);
+          window.AppUtils?.reportClientError(e);
         }
       })();
     }
@@ -655,7 +655,7 @@ function initAdminData(id) {
         showToast(json.message || 'Error saving settings', 'err');
       }
     } catch (e) {
-      console.error(e);
+      window.AppUtils?.reportClientError(e);
       showToast('Network error', 'err');
     } finally {
       btn.disabled = false;
@@ -777,7 +777,7 @@ function initAdminData(id) {
         }
       }
     } catch (e) {
-      console.error(e);
+      window.AppUtils?.reportClientError(e);
     }
   }
 
@@ -797,13 +797,13 @@ function initAdminData(id) {
         if (label.includes('completed')) valEl.textContent = (by.completed || 0);
         if (label.includes('cancelled')) valEl.textContent = (by.cancelled || 0);
       });
-    } catch (e) { console.error(e); }
+    } catch (e) { window.AppUtils?.reportClientError(e); }
   }
 
   async function fetchAdminStats() {
     try {
       const res = await fetch('/api/admin/stats');
-      if (!res.ok) return console.error('Failed to load stats');
+      if (!res.ok) return window.AppUtils?.reportClientError('Failed to load stats');
       const json = await res.json();
       const d = json.data || {};
       // Update stat cards by label
@@ -816,7 +816,7 @@ function initAdminData(id) {
         if (label.includes('Orders this month')) valEl.textContent = (d.ordersThisMonth || 0).toLocaleString();
         if (label.includes('GMV this month')) valEl.textContent = window.AppUtils.formatVND(d.gmvThisMonth || 0);
       });
-    } catch (e) { console.error(e); }
+    } catch (e) { window.AppUtils?.reportClientError(e); }
   }
 
 
@@ -827,7 +827,7 @@ function initAdminData(id) {
       showToast('Updated', 'ok');
       fetchAdminUsers();
       fetchAdminStats();
-    } catch (e) { console.error(e); showToast('Action failed', 'err'); }
+    } catch (e) { window.AppUtils?.reportClientError(e); showToast('Action failed', 'err'); }
   }
 
   async function fetchAdminProducts(page = 1, status = window._dashboard.adminProductsStatus || '') {
@@ -836,7 +836,7 @@ function initAdminData(id) {
       let url = `/api/admin/products?page=${page}&limit=20`;
       if (status) url += `&status=${encodeURIComponent(status)}`;
       const res = await fetch(url);
-      if (!res.ok) return console.error('Failed to load products');
+      if (!res.ok) return window.AppUtils?.reportClientError('Failed to load products');
       const json = await res.json();
       const products = (json.data || []);
       const tbody = document.querySelector('#aProducts table tbody');
@@ -844,7 +844,7 @@ function initAdminData(id) {
       clearChildren(tbody);
       products.forEach((p) => {
         const productId = sanitizeObjectId(p._id);
-        const productStatus = p.reported ? 'reported' : (p.status || 'hidden');
+        const productStatus = status === 'reported' ? 'reported' : (p.status || 'hidden');
         const badgeClass = productStatus === 'active' ? 'badge-active' : productStatus === 'sold' ? 'badge-sold' : productStatus === 'hidden' ? 'badge-hidden' : 'badge-reported';
         const sellerName = p.seller?.name || p.seller?.nickname || '';
         const productTitle = p.title || '';
@@ -893,9 +893,10 @@ function initAdminData(id) {
         viewA.textContent = 'View';
         actions.appendChild(viewA);
         const toggleBtn = document.createElement('button');
-        toggleBtn.className = `act-btn ${productStatus === 'active' ? 'danger' : 'success'}`;
-        toggleBtn.textContent = productStatus === 'active' ? 'Hide' : 'Restore';
-        toggleBtn.addEventListener('click', () => adminProductAction(productId, productStatus === 'active' ? 'hide' : 'restore'));
+        const productAction = p.status === 'hidden' ? 'restore' : 'hide';
+        toggleBtn.className = `act-btn ${productAction === 'hide' ? 'danger' : 'success'}`;
+        toggleBtn.textContent = productAction === 'hide' ? (productStatus === 'reported' ? 'Hide reported' : 'Hide') : 'Restore';
+        toggleBtn.addEventListener('click', () => adminProductAction(productId, productAction));
         actions.appendChild(toggleBtn);
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'act-btn';
@@ -907,7 +908,11 @@ function initAdminData(id) {
         tbody.appendChild(tr);
       });
       renderPagination('#aProducts .pagination', json.pagination, 'fetchAdminProducts');
-    } catch (e) { console.error(e); }
+      const countEl = document.querySelector('#aProducts .tbl-count');
+      if (countEl) {
+        countEl.textContent = `${json.pagination?.total || products.length} ${status === 'reported' ? 'reported ' : ''}products`;
+      }
+    } catch (e) { window.AppUtils?.reportClientError(e); }
   }
 
   async function adminProductAction(id, action) {
@@ -925,7 +930,7 @@ function initAdminData(id) {
       showToast('Done', 'ok');
       fetchAdminProducts();
       fetchAdminStats();
-    } catch (e) { console.error(e); showToast('Action failed', 'err'); }
+    } catch (e) { window.AppUtils?.reportClientError(e); showToast('Action failed', 'err'); }
   }
 
 
@@ -960,7 +965,7 @@ function initAdminData(id) {
         const pending = d.pending || 0;
         el.textContent = `You have ${pending} orders awaiting confirmation. Please confirm within 24 hours to avoid automatic cancellation.`;
       });
-    } catch (e) { console.error(e); }
+    } catch (e) { window.AppUtils?.reportClientError(e); }
   }
 
   /* ── Boot ── */

@@ -17,10 +17,10 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(uri, options);
-    console.log('MongoDB connected successfully');
+    logger.info('database.connected');
   } catch (err) {
     logger.error('database.connection_failed', { err: err.message, stack: err.stack });
-    console.log('Retrying connection in 2 seconds...');
+    logger.info('database.retry_scheduled', { delayMs: 2000 });
     setTimeout(() => connectDB(), 2000);
   }
 };

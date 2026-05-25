@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 // appendMessage(data.data); // Handled by socket
             } catch (err) {
-                console.error('Send failed', err);
+                window.AppUtils?.reportClientError('Send failed', err);
             }
         };
 

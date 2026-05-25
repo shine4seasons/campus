@@ -14,6 +14,7 @@ const { issueCsrfCookie, csrfGuard } = require('./middleware/csrf');
 const { applySecurityHeaders, monitorAuthzFailures, limitAuth } = require('./middleware/security');
 const { renderNotFound, renderServerError } = require('./utils/pageResponses');
 const { mapError } = require('./utils/errors');
+const logger = require('./utils/logger');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/products');
@@ -117,7 +118,7 @@ app.use((err, req, res, next) => {
 
   const { status, message, code, details } = mapError(err);
   if (status >= 500) {
-    console.error('[app] unhandled error:', err);
+    logger.error('app.unhandled_error', { err: err.message, stack: err.stack });
   }
 
   if (req.path.startsWith('/api/')) {
@@ -143,9 +144,9 @@ try {
   const { init } = require('./utils/socketServer');
   init(server);
 } catch (error) {
-  console.error('Socket init error:', error.message);
+  logger.error('socket.init_failed', { err: error.message, stack: error.stack });
 }
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  logger.info('server.started', { url: `http://localhost:${PORT}` });
 });

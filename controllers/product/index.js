@@ -3,6 +3,7 @@ const { PRODUCT_STATUS } = require('../../config/appConstants');
 const { ensureProductOwnerOrAdmin, notifyPriceDropFollowers } = require('../../services/productService');
 const productRepository = require('../../repositories/productRepository');
 const logger = require('../../utils/logger');
+const { incrementViews } = require('../../utils/viewCounter');
 
 const getProducts = async (req, res, next) => {
   try {
@@ -27,7 +28,10 @@ const getProduct = async (req, res, next) => {
 
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
 
-      incrementViews(req.params.id);
+    incrementViews(req.params.id).catch(err => logger.error('product.view_increment_failed', {
+      err: err.message,
+      productId: req.params.id
+    }));
 
     res.json({ success: true, data: product });
   } catch (err) {

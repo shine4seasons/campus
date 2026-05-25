@@ -26,7 +26,7 @@ Buy and sell textbooks, electronics, clothing, furniture, and more within your c
 
 - Node.js v18+
 - npm
-- MongoDB (Atlas or local)
+- MongoDB Atlas or a local MongoDB replica set. Order and wallet flows use MongoDB transactions.
 - Google OAuth client
 - Cloudinary account
 - Groq API key
@@ -65,10 +65,41 @@ npm start
 ```bash
 npm run lint
 npm run test
+npm run test:gates
+npm run test:security:rate:endpoints
+node scripts/test-architecture-repositories.js
 npm run test:hardening
 npm run test:security:lite
 npm run security-check
 ```
+
+## CSS Build
+
+```bash
+npm run build:css
+```
+
+The source entry is `public/css/tailwind-input.css`; generated CSS and page-level CSS stay out of source-package noise unless explicitly required.
+
+## Final Submission Checklist
+
+Use the required archive name format: `Group_<GroupNumber>_<ProjectName>_CLC03.zip`.
+
+Include:
+
+- Final report
+- Presentation slides
+- Complete source code
+- `README.md`
+- `.env.example`
+
+Exclude:
+
+- `.env`
+- `node_modules`
+- `.git`
+- `.venv`
+- cache, log, temporary, and generated files
 
 ---
 

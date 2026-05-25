@@ -109,7 +109,7 @@
       if (countEl) countEl.textContent = `${json.pagination?.total || orders.length} orders total`;
     } catch (err) {
       setTableMessage(tbody, 'Failed to load orders.');
-      console.error('Failed to fetch seller orders:', err);
+      window.AppUtils?.reportClientError('Failed to fetch seller orders:', err);
     }
   }
 

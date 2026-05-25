@@ -16,6 +16,8 @@
   --green-light:   #ECFDF5;
   --red:           #EF4444;
   --red-light:     #FEF2F2;
+  --blue:          #1D6AE5;
+  --blue-light:    #EEF4FF;
   --text:          #0D0F1A;
   --text-2:        #4A506A;
   --text-3:        #8288A4;
@@ -71,6 +73,15 @@
   --sb-w:      240px;
   --accent:    #1D6AE5;
   --accent-lt: rgba(29, 106, 229, 0.1);
+  --accent-light: var(--accent-lt);
+  --success: var(--green);
+  --success-light: var(--green-light);
+  --warning: var(--amber);
+  --warning-light: var(--amber-light);
+  --danger: var(--red);
+  --danger-light: var(--red-light);
+  --info: var(--blue);
+  --info-light: var(--blue-light);
   --sb-text:   #4A4A6A;
   --sb-text-hi:#1A1A2E;
 

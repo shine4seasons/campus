@@ -110,7 +110,7 @@
         drawRoute();
       },
       (error) => {
-        console.warn('Geolocation error or permission denied:', error.message);
+        window.AppUtils?.reportClientWarn('Geolocation error or permission denied:', error.message);
       },
       {
         enableHighAccuracy: true,

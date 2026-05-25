@@ -23,7 +23,7 @@ if (socket) {
       }
       fetchInbox();
     } catch (e) {
-      console.error('socket message handler error', e);
+      window.AppUtils?.reportClientError('socket message handler error', e);
     }
   });
 }
@@ -142,7 +142,7 @@ async function fetchInbox() {
     const json = await res.json();
     if (json.success) renderInbox(json.data);
   } catch (err) {
-    console.error('Error fetching inbox:', err);
+    window.AppUtils?.reportClientError('Error fetching inbox:', err);
   }
 }
 
@@ -320,7 +320,7 @@ async function fetchMessages() {
       if (pollSlowed) restartFastPolling();
     }
   } catch (err) {
-    console.error('Error fetching messages:', err);
+    window.AppUtils?.reportClientError('Error fetching messages:', err);
     pollFailures++;
     if (pollFailures >= 3 && pollInterval && !pollSlowed) {
       clearInterval(pollInterval);
@@ -484,7 +484,7 @@ window.sendMessage = async function () {
       showChatToast(json.message || 'Failed to send message');
     }
   } catch (err) {
-    console.error('Error sending message:', err);
+    window.AppUtils?.reportClientError('Error sending message:', err);
     showChatToast(err.message || 'Network error - message not sent');
   } finally {
     if (overlay) overlay.style.display = 'none';

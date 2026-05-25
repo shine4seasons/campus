@@ -1,6 +1,7 @@
 const { PRODUCT_STATUS, PAYMENT_STATUS } = require('../../config/appConstants');
 const paymentRepository = require('../../repositories/paymentRepository');
 const { serviceUnavailable } = require('../../utils/errors');
+const logger = require('../../utils/logger');
 
 const getCheckoutPage = async (req, res, next) => {
   try {
@@ -65,7 +66,7 @@ const getPaymentPage = async (req, res, next) => {
     const qrUrl = payment.sepayQrUrl || payment.qrUrl;
 
     if (!qrUrl) {
-      console.warn('[payment] QR URL missing for payment', payment._id);
+      logger.warn('payment.qr_url_missing', { paymentId: String(payment._id) });
       return next(serviceUnavailable('Payment QR could not be generated. Please contact support.'));
     }
 
