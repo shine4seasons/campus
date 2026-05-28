@@ -35,7 +35,7 @@
                 </div>
                 <div class="stat-delta">Total live products</div>
               </div>
-              <div class="stat-card glass">
+              <div class="stat-card glass urgent-card">
                 <div class="stat-top">
                   <div class="stat-label">Awaiting confirmation</div>
                   <div class="stat-icon" style="background:var(--warning-light);color:var(--warning)">
@@ -47,7 +47,7 @@
                 </div>
                 <div class="stat-delta">Needs your action</div>
               </div>
-              <div class="stat-card glass">
+              <div class="stat-card glass revenue-card">
                 <div class="stat-top">
                   <div class="stat-label">Monthly Revenue</div>
                   <div class="stat-icon" style="background:var(--info-light);color:var(--info)">
@@ -76,8 +76,26 @@
               </div>
             </div>
 
+            <div class="seller-priority-strip">
+              <div class="seller-priority-card urgent">
+                <div class="seller-priority-kicker">Pending actions</div>
+                <div class="seller-priority-title"><%= stats.pendingOrders %> order<%= stats.pendingOrders !== 1 ? 's' : '' %> need confirmation</div>
+                <div class="seller-priority-body">Prioritize confirmations first to avoid auto-cancellation and protect your response quality.</div>
+              </div>
+              <div class="seller-priority-card">
+                <div class="seller-priority-kicker">Revenue focus</div>
+                <div class="seller-priority-title"><%= formatVND(stats.monthRevenue) %> earned this month</div>
+                <div class="seller-priority-body">Monthly revenue is surfaced as your lead business metric, with active listings and ratings as supporting context.</div>
+              </div>
+              <div class="seller-priority-card">
+                <div class="seller-priority-kicker">Productivity</div>
+                <div class="seller-priority-title"><%= stats.activeProducts %> active products live</div>
+                <div class="seller-priority-body">Use quick actions below to jump directly into inventory, orders and wallet workflows without losing context.</div>
+              </div>
+            </div>
+
             <% if (stats.pendingOrders> 0) { %>
-              <div class="alert-box glass" style="margin-bottom:24px; border-left: 4px solid var(--warning);">
+              <div class="alert-box glass seller-urgent-alert" style="margin-bottom:24px; border-left: 4px solid var(--warning);">
                 <i data-lucide="alert-circle" style="color:var(--warning); width:24px; height:24px;"></i>
                 <div class="alert-box-text">
                   You have <strong>
@@ -88,7 +106,7 @@
               </div>
               <% } %>
 
-                <div class="quick-grid">
+                <div class="quick-grid seller-quick-grid">
                   <div class="quick-card glass" data-href="/my-products">
                     <div class="qc-icon" style="background:var(--primary-light);color:var(--primary)">
                       <i data-lucide="layout-grid"></i>
@@ -135,7 +153,7 @@
                         <div class="card-sub">By month (VND thousands)</div>
                       </div>
                     </div>
-                    <div style="position:relative;height:240px"><canvas id="cSellerRev"></canvas></div>
+                    <div class="chart-frame chart-frame-lg"><canvas id="cSellerRev"></canvas></div>
                   </div>
                   <div class="card premium-card">
                     <div class="card-head">
@@ -144,8 +162,7 @@
                         <div class="card-sub">By category</div>
                       </div>
                     </div>
-                    <div style="position:relative;height:180px;margin-bottom:12px"><canvas id="cSellerCat"></canvas>
-                    </div>
+                    <div class="chart-frame chart-frame-sm" style="margin-bottom:12px"><canvas id="cSellerCat"></canvas></div>
                     <div class="legend"
                       style="flex-direction:column;gap:7px; padding-top: 10px; border-top: 1px solid var(--border);"
                       id="sCatLegend">

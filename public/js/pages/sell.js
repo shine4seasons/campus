@@ -5,17 +5,116 @@
   const submitMethod = config.submitMethod || 'POST';
   const submitLabel = config.submitLabel || 'Post Product Now';
   const existingImages = Array.isArray(config.existingImages) ? config.existingImages : [];
+  const draftKey = submitMethod === 'POST' ? 'seller_product_draft_v1' : '';
 
   let uploadedImages = [];
+  let formDirty = false;
 
   const dropZone = document.getElementById('upload-drop-zone');
   const imageInput = document.getElementById('image-input');
   const imagePreview = document.getElementById('image-preview');
   const sellForm = document.getElementById('sell-form');
+  const draftIndicator = document.getElementById('sell-draft-indicator');
 
   const notify = (message, type = 'err') => {
     if (typeof showToast === 'function') showToast(message, type);
   };
+
+  function setDraftIndicator(message, dirty = false) {
+    if (!draftIndicator) return;
+    draftIndicator.textContent = message;
+    draftIndicator.classList.toggle('dirty', !!dirty);
+  }
+
+  function markDirty(value = true) {
+    formDirty = value;
+    setDraftIndicator(value ? 'Unsaved changes' : 'Draft saved', value);
+  }
+
+  function getDraftPayload() {
+    return {
+      title: document.getElementById('f-title')?.value || '',
+      category: document.getElementById('f-cat')?.value || '',
+      price: document.getElementById('f-price')?.value || '',
+      quantity: document.getElementById('f-quantity')?.value || '1',
+      description: document.getElementById('f-desc')?.value || '',
+      condition: document.getElementById('f-condition')?.value || '',
+      lat: document.getElementById('f-lat')?.value || '',
+      lng: document.getElementById('f-lng')?.value || '',
+      location: document.getElementById('f-location')?.value || '',
+      images: uploadedImages
+    };
+  }
+
+  function saveDraft() {
+    if (!draftKey) return;
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(getDraftPayload()));
+      setDraftIndicator('Draft saved');
+    } catch {}
+  }
+
+  function restoreDraft() {
+    if (!draftKey) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft || existingImages.length) return;
+      document.getElementById('f-title').value = draft.title || '';
+      document.getElementById('f-price').value = draft.price || '';
+      document.getElementById('f-quantity').value = draft.quantity || 1;
+      document.getElementById('f-desc').value = draft.description || '';
+      document.getElementById('f-condition').value = draft.condition || '';
+      document.getElementById('f-lat').value = draft.lat || '';
+      document.getElementById('f-lng').value = draft.lng || '';
+      document.getElementById('f-location').value = draft.location || '';
+      uploadedImages = Array.isArray(draft.images) ? draft.images : [];
+      if (draft.category) {
+        document.getElementById('f-cat').value = draft.category;
+        const match = document.querySelector(`.category-option[data-slug="${CSS.escape(draft.category)}"]`);
+        if (match) {
+          document.getElementById('category-label').textContent = match.dataset.name;
+          document.querySelectorAll('.category-option').forEach((opt) => {
+            const selected = opt === match;
+            opt.classList.toggle('selected', selected);
+            opt.setAttribute('aria-selected', selected ? 'true' : 'false');
+          });
+        }
+      }
+      setDraftIndicator('Draft restored');
+    } catch {}
+  }
+
+  function clearDraft() {
+    if (!draftKey) return;
+    try { localStorage.removeItem(draftKey); } catch {}
+  }
+
+  function setFieldState(element, state) {
+    if (!element) return;
+    element.classList.remove('field-error', 'field-valid');
+    if (state === 'error') element.classList.add('field-error');
+    if (state === 'valid') element.classList.add('field-valid');
+  }
+
+  function validateField(id, predicate) {
+    const el = document.getElementById(id);
+    const valid = Boolean(predicate(el?.value || ''));
+    setFieldState(el, valid ? 'valid' : 'error');
+    return valid;
+  }
+
+  function validateForm() {
+    const validTitle = validateField('f-title', (value) => value.trim().length >= 4);
+    const validCategory = validateField('f-cat', (value) => value.trim().length > 0);
+    const validPrice = validateField('f-price', (value) => Number(value) > 0);
+    const validQuantity = validateField('f-quantity', (value) => Number(value) >= 1);
+    const validDesc = validateField('f-desc', (value) => value.trim().length >= 10);
+    const validCondition = validateField('f-condition', (value) => value.trim().length > 0);
+    const validLocation = validateField('f-location', (value) => value.trim().length > 0);
+    return validTitle && validCategory && validPrice && validQuantity && validDesc && validCondition && validLocation;
+  }
 
   function initLocationPicker() {
     const latInput = document.getElementById('f-lat');
@@ -285,17 +384,14 @@
     dropZone.addEventListener('click', () => imageInput.click());
     dropZone.addEventListener('dragover', (event) => {
       event.preventDefault();
-      dropZone.style.borderColor = 'var(--primary)';
-      dropZone.style.background = 'var(--primary-light)';
+      dropZone.classList.add('is-dragover');
     });
     dropZone.addEventListener('dragleave', () => {
-      dropZone.style.borderColor = 'var(--border)';
-      dropZone.style.background = 'transparent';
+      dropZone.classList.remove('is-dragover');
     });
     dropZone.addEventListener('drop', (event) => {
       event.preventDefault();
-      dropZone.style.borderColor = 'var(--border)';
-      dropZone.style.background = 'transparent';
+      dropZone.classList.remove('is-dragover');
       handleImageFiles(event.dataTransfer.files);
     });
     imageInput.addEventListener('change', (event) => handleImageFiles(event.target.files));
@@ -332,6 +428,8 @@
             renderImagePreview();
             updatePreview();
             document.getElementById('f-images').value = JSON.stringify(uploadedImages);
+            markDirty(true);
+            saveDraft();
           } else {
             notify('Upload failed: ' + (data.message || 'Unknown error'));
           }
@@ -365,6 +463,8 @@
     renderImagePreview();
     updatePreview();
     document.getElementById('f-images').value = JSON.stringify(uploadedImages);
+    markDirty(true);
+    saveDraft();
   }
 
   function updatePreview() {
@@ -496,6 +596,10 @@
 
   async function handleSubmit() {
     const button = document.querySelector('.btn-submit');
+    if (!validateForm()) {
+      notify('Please complete the required fields before posting');
+      return;
+    }
     button.disabled = true;
     button.textContent = 'Publishing...';
 
@@ -522,6 +626,8 @@
       });
       const data = await response.json();
       if (data.success) {
+        clearDraft();
+        markDirty(false);
         location.href = '/my-products';
       } else {
         notify(data.message || 'Failed to save');
@@ -537,6 +643,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     uploadedImages = [...existingImages];
+    restoreDraft();
     if (uploadedImages.length > 0) {
       renderImagePreview();
       document.getElementById('f-images').value = JSON.stringify(uploadedImages);
@@ -567,8 +674,11 @@
 
       sellForm.addEventListener('input', (event) => {
         const target = event.target;
-        if (target && (target.id === 'f-title' || target.id === 'f-price' || target.id === 'f-quantity' || target.id === 'f-desc')) {
+        if (target && (target.id === 'f-title' || target.id === 'f-price' || target.id === 'f-quantity' || target.id === 'f-desc' || target.id === 'f-location')) {
+          markDirty(true);
+          saveDraft();
           updatePreview();
+          validateForm();
         }
       });
     }
@@ -593,5 +703,13 @@
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
     updatePreview();
+    validateForm();
+    setDraftIndicator(existingImages.length ? 'Editing existing product' : 'Draft saved');
+  });
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!formDirty) return;
+    event.preventDefault();
+    event.returnValue = '';
   });
 })();
