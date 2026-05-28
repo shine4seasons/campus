@@ -16,6 +16,17 @@ body {
   width: 100%;
 }
 
+/* Full-page capture compatibility:
+   let dashboard pages grow as normal documents so browser capture tools
+   scroll the page itself instead of stopping at a viewport-sized shell. */
+html.dashboard-shell,
+html.dashboard-shell body,
+html.dashboard-admin-shell,
+html.dashboard-admin-shell body {
+  height: auto;
+  min-height: 100%;
+}
+
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -23,6 +34,20 @@ body {
   display: flex;
   min-height: 100vh;
   font-size: var(--fs-base);
+}
+
+html.dashboard-shell body,
+body.dashboard-page,
+body.dashboard-admin {
+  display: block;
+  overflow-y: visible;
+}
+
+html.dashboard-shell .main,
+body.dashboard-page .main,
+body.dashboard-admin .main {
+  display: block;
+  min-height: calc(100vh - 62px);
 }
 
 /* ── Scrollbar ── */
