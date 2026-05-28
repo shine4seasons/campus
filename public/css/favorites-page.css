@@ -1,0 +1,119 @@
+.fav-page { max-width: 1200px; margin: 0 auto; }
+.fav-count-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--accent-lt); color: var(--accent);
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; line-height: 1.4;
+      vertical-align: middle;
+      margin-left: 10px;
+}
+
+.fav-count-badge-hidden,
+.fav-load-more-hidden {
+  display: none;
+}
+
+    .fav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .fav-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      position: relative; display: flex; flex-direction: column;
+    }
+    .fav-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-2);
+    }
+    .fav-card-img-wrap {
+      position: relative; width: 100%; aspect-ratio: 1 / 1;
+      background: var(--surface-2); overflow: hidden;
+    }
+    .fav-card-img { width: 100%; height: 100%; object-fit: cover; }
+    .fav-card-img-empty {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 32px;
+    }
+    .fav-status-pill {
+      position: absolute; top: 10px; left: 10px;
+      padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .fav-status-pill.sold { background: rgba(220, 38, 38, 0.95); color: #fff; }
+    .fav-status-pill.hidden { background: rgba(107, 114, 128, 0.95); color: #fff; }
+
+    .fav-remove-btn {
+      position: absolute; top: 10px; right: 10px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #ef4444;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .fav-remove-btn:hover { transform: scale(1.08); background: #fff; }
+    .fav-remove-btn svg { width: 18px; height: 18px; fill: #ef4444; stroke: #ef4444; }
+
+    .fav-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .fav-cat { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+    .fav-name {
+      font-size: 14.5px; font-weight: 700; color: var(--text); line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; min-height: 2.6em;
+    }
+    .fav-price { font-size: 17px; font-weight: 800; color: var(--accent); margin-top: auto; padding-top: 6px; }
+    .fav-seller { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+    .fav-seller-avatar {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .fav-seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .fav-empty {
+      grid-column: 1 / -1;
+      text-align: center; padding: 60px 20px;
+      color: var(--text-3);
+    }
+    .fav-empty-icon {
+      width: 64px; height: 64px; margin: 0 auto 16px;
+      color: var(--border-2);
+    }
+    .fav-empty-title { font-size: 18px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+    .fav-empty-sub { font-size: 14px; }
+    .fav-empty .btn-browse {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 18px; padding: 10px 20px; border-radius: 10px;
+      background: var(--accent); color: #fff; font-weight: 600;
+      text-decoration: none; transition: background 0.15s ease;
+    }
+    .fav-empty .btn-browse:hover { background: var(--primary-dark); }
+
+    .fav-loading {
+      grid-column: 1 / -1; text-align: center; padding: 60px;
+      color: var(--text-3);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; animation: spin 0.8s linear infinite; }
+
+    .fav-load-more {
+      display: flex; justify-content: center; margin-top: 24px;
+    }
+    .fav-load-more button {
+      padding: 10px 24px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--border-2);
+      color: var(--text-2); font-weight: 600; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .fav-load-more button:hover { background: var(--surface-2); }
+
+    .fav-card.sold { opacity: 0.7; }
+    .fav-card.sold .fav-name { text-decoration: line-through; text-decoration-color: var(--text-3); }

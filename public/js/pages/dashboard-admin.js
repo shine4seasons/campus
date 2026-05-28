@@ -1,6 +1,17 @@
 (() => {
   const { createElement } = window.AppUtils || {};
 
+  function safeToast(message, type) {
+    if (typeof window.showToast === 'function') window.showToast(message, type);
+  }
+
+  async function safeConfirm({ title, message, confirmText }) {
+    if (typeof window.showConfirm === 'function') {
+      return window.showConfirm({ title, message, confirmText });
+    }
+    return window.confirm([title, message].filter(Boolean).join('\n\n'));
+  }
+
   function setTableMessage(tbody, colspan, message, color) {
     const row = createElement('tr');
     row.appendChild(createElement('td', {
@@ -23,9 +34,70 @@
     tbody.replaceChildren(row);
   }
 
-  function createBadge(text, className) {
-    return createElement('span', { className, text });
+  function badgeIconFor(text, className) {
+    const key = `${className} ${text}`.toLowerCase();
+    if (key.includes('completed') || key.includes('active') || key.includes('paid')) return '+';
+    if (key.includes('pending') || key.includes('processing') || key.includes('review')) return '~';
+    if (key.includes('cancelled') || key.includes('banned') || key.includes('rejected') || key.includes('hidden')) return 'x';
+    if (key.includes('reported') || key.includes('warning')) return '!';
+    return 'i';
   }
+
+  function createBadge(text, className) {
+    return createElement('span', {
+      className,
+      children: [
+        createElement('span', { className: 'badge-icon', text: badgeIconFor(text, className) }),
+        createElement('span', { text })
+      ]
+    });
+  }
+
+  function createActionButton(label, className, onClick) {
+    const button = createElement('button', { className, attrs: { type: 'button' }, text: label });
+    if (typeof onClick === 'function') button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function createActionMenu(label, items) {
+    const details = createElement('details', { className: 'action-menu' });
+    const summary = createElement('summary', { className: 'act-btn primary', text: label });
+    const panel = createElement('div', { className: 'action-menu-panel' });
+    items.forEach((item) => {
+      panel.appendChild(createActionButton(item.label, item.className || 'act-btn', item.onClick));
+    });
+    details.append(summary, panel);
+    return details;
+  }
+
+  function formatDate(date, options) {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', options || { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function focusVisibleAdminSearch() {
+    const activeSection = document.querySelector('.dashboard-admin .section.active');
+    if (!activeSection) return false;
+    const input = activeSection.querySelector('.tbl-search input:not([disabled])');
+    if (!input) return false;
+    input.focus();
+    if (typeof input.select === 'function') input.select();
+    return true;
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+    if (focusVisibleAdminSearch()) event.preventDefault();
+  });
+
+  document.addEventListener('click', (event) => {
+    const insideMenu = event.target.closest('.action-menu');
+    document.querySelectorAll('.action-menu[open]').forEach((menu) => {
+      if (menu !== insideMenu) menu.removeAttribute('open');
+    });
+  });
 
   function updateReportCounters({ pendingReports, reportedProducts }) {
     const reportCount = Number(pendingReports || 0);
@@ -46,14 +118,8 @@
       const json = await res.json();
       updateReportCounters(json.data || {});
     } catch {
-      // Dashboard stats are refreshed opportunistically; table loads still work without this.
+      // ignore opportunistic refresh errors
     }
-  }
-
-  function createActionButton(label, className, onClick) {
-    const button = createElement('button', { className, attrs: { type: 'button' }, text: label });
-    button.addEventListener('click', onClick);
-    return button;
   }
 
   (function usersTable() {
@@ -65,6 +131,10 @@
       { bg: '#fee2e2', fg: '#b91c1c' },
       { bg: '#ccfbf1', fg: '#0f766e' }
     ];
+    const selectedUsers = new Set();
+    const selectAll = document.getElementById('usersSelectAll');
+    const bulkBar = document.getElementById('usersBulkBar');
+    const bulkCount = document.getElementById('usersSelectedCount');
 
     function getAvatarColor(str) {
       let h = 0;
@@ -76,24 +146,50 @@
       return (name || '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
     }
 
+    function createTrustChip(user) {
+      if (user.banned) return createElement('span', { className: 'meta-chip warn', text: 'Restricted' });
+      if (user.role === 'admin') return createElement('span', { className: 'meta-chip', text: 'Verified staff' });
+      if (Number(user.rating || 0) >= 4.7 && Number(user.totalSales || 0) >= 5) {
+        return createElement('span', { className: 'meta-chip good', text: 'Trusted seller' });
+      }
+      if (Number(user.totalSales || 0) === 0 && Number(user.totalPurchases || 0) <= 1) {
+        return createElement('span', { className: 'meta-chip', text: 'New account' });
+      }
+      return createElement('span', { className: 'meta-chip', text: 'Standard account' });
+    }
+
     function createRoleBadge(user) {
       if (user.role === 'admin') return createBadge('Admin', 'badge badge-admin');
       if (user.banned) return createBadge('Banned', 'badge badge-cancelled');
-      return createBadge('User', 'badge badge-active');
+      return createBadge('Active', 'badge badge-active');
+    }
+
+    function updateBulkBar() {
+      if (bulkCount) bulkCount.textContent = String(selectedUsers.size);
+      if (bulkBar) bulkBar.classList.toggle('show', selectedUsers.size > 0);
+      if (selectAll) {
+        const rowChecks = [...document.querySelectorAll('#usersTableBody .user-select')];
+        const checkedCount = rowChecks.filter((box) => box.checked).length;
+        selectAll.checked = rowChecks.length > 0 && checkedCount === rowChecks.length;
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < rowChecks.length;
+      }
     }
 
     function createUserActions(user) {
       const wrap = createElement('div', { className: 'tbl-actions' });
-      wrap.appendChild(createActionButton('View', user.role === 'admin' ? 'act-btn primary' : 'act-btn primary', () => {
+      wrap.appendChild(createActionButton('View', 'act-btn primary', () => {
         window.location.href = `/user/${user._id}`;
       }));
+
+      const menuItems = [];
       if (user.banned) {
-        wrap.appendChild(createActionButton('Unban', 'act-btn success', () => adminToggleBan(user._id, false)));
+        menuItems.push({ label: 'Unban', className: 'act-btn success', onClick: () => adminToggleBan(user._id, false) });
       } else if (user.role === 'admin') {
-        wrap.appendChild(createActionButton('Revoke', 'act-btn', () => showToast('Admin privileges revoked', 'ok')));
+        menuItems.push({ label: 'Revoke admin', className: 'act-btn', onClick: () => safeToast('Admin privileges revoked', 'ok') });
       } else {
-        wrap.appendChild(createActionButton('Ban', 'act-btn danger', () => adminToggleBan(user._id, true)));
+        menuItems.push({ label: 'Ban user', className: 'act-btn danger', onClick: () => adminToggleBan(user._id, true) });
       }
+      wrap.appendChild(createActionMenu('Actions', menuItems));
       return wrap;
     }
 
@@ -113,40 +209,60 @@
           text: getInitials(user.nickname || user.name)
         }),
         createElement('div', {
-          style: { minWidth: '0' },
+          className: 'uc-body',
           children: [
             createElement('div', {
               className: 'uc-name',
-              style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' },
+              style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' },
               text: user.nickname || user.name || '-'
             }),
             createElement('div', {
               className: 'uc-sub',
-              style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' },
+              style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' },
               text: user.email || ''
+            }),
+            createElement('div', {
+              className: 'uc-meta',
+              children: [
+                createTrustChip(user),
+                createElement('span', { className: 'meta-chip', text: `Joined ${joined}` })
+              ]
             })
           ]
         })
       );
       sellerLink.appendChild(userCell);
 
+      const checkbox = createElement('input', {
+        className: 'admin-checkbox user-select',
+        attrs: { type: 'checkbox', 'aria-label': `Select ${user.nickname || user.name || 'user'}` }
+      });
+      checkbox.dataset.userId = user._id;
+      checkbox.checked = selectedUsers.has(user._id);
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selectedUsers.add(user._id);
+        else selectedUsers.delete(user._id);
+        updateBulkBar();
+      });
+
       const ratingCell = createElement('td');
       if (user.rating) {
         ratingCell.appendChild(createElement('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '4px' },
+          className: 'metric-text',
           children: [
-            createElement('span', { text: Number(user.rating).toFixed(1) }),
-            createElement('span', { style: { fontSize: '11px', fontWeight: '700' }, text: 'rating' })
+            createElement('strong', { text: Number(user.rating).toFixed(1) }),
+            document.createTextNode(' / 5')
           ]
         }));
       } else {
-        ratingCell.appendChild(createElement('span', { style: { color: 'var(--t3)' }, text: '-' }));
+        ratingCell.appendChild(createElement('span', { className: 'muted-cell', text: '-' }));
       }
 
       [
+        createElement('td', { className: 'check-cell', children: [checkbox] }),
         createElement('td', { children: [sellerLink] }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: user.university || '-' }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: joined }),
+        createElement('td', { className: 'muted-cell', text: user.university || '-' }),
+        createElement('td', { className: 'muted-cell', text: joined }),
         createElement('td', { children: [createElement('strong', { text: user.totalSales || 0 })] }),
         createElement('td', { text: user.totalPurchases || 0 }),
         ratingCell,
@@ -157,7 +273,16 @@
       return row;
     }
 
-    async function adminToggleBan(userId, banned) {
+    async function adminToggleBan(userId, banned, options = {}) {
+      if (!options.skipConfirm) {
+        const confirmed = await safeConfirm({
+          title: banned ? 'Ban user' : 'Unban user',
+          message: banned ? 'This account will lose access until you reverse the action.' : 'This account will regain marketplace access.',
+          confirmText: banned ? 'Ban account' : 'Restore access'
+        });
+        if (!confirmed) return;
+      }
+
       try {
         const res = await fetch(`/api/admin/users/${userId}/ban`, {
           method: 'PATCH',
@@ -165,11 +290,30 @@
           body: JSON.stringify({ banned })
         });
         if (!res.ok) throw new Error();
-        showToast(banned ? 'Account banned' : 'Account unbanned', 'ok');
-        loadUsers();
+        safeToast(banned ? 'Account banned' : 'Account unbanned', 'ok');
+        selectedUsers.delete(userId);
+        if (options.refresh !== false) loadUsers();
       } catch {
-        showToast('Action failed', 'error');
+        safeToast('Action failed', 'error');
       }
+    }
+
+    async function bulkToggleUsers(banned) {
+      if (!selectedUsers.size) return;
+      const confirmed = await safeConfirm({
+        title: banned ? 'Ban selected users' : 'Unban selected users',
+        message: `Apply this action to ${selectedUsers.size} selected account${selectedUsers.size === 1 ? '' : 's'}?`,
+        confirmText: banned ? 'Ban selected' : 'Unban selected'
+      });
+      if (!confirmed) return;
+      const ids = [...selectedUsers];
+      for (const userId of ids) {
+        // eslint-disable-next-line no-await-in-loop
+        await adminToggleBan(userId, banned, { skipConfirm: true, refresh: false });
+      }
+      selectedUsers.clear();
+      updateBulkBar();
+      loadUsers();
     }
 
     window.adminToggleBan = adminToggleBan;
@@ -188,6 +332,17 @@
       });
     });
 
+    if (selectAll) {
+      selectAll.addEventListener('change', () => {
+        document.querySelectorAll('#usersTableBody .user-select').forEach((box) => {
+          box.checked = selectAll.checked;
+          if (box.checked) selectedUsers.add(box.dataset.userId);
+          else selectedUsers.delete(box.dataset.userId);
+        });
+        updateBulkBar();
+      });
+    }
+
     const searchInput = document.querySelector('#aUsers .tbl-search input');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
@@ -199,7 +354,7 @@
     async function loadUsers(page = 1) {
       const tbody = document.getElementById('usersTableBody');
       if (!tbody) return;
-      setLoadingMessage(tbody, 8, 'Loading...');
+      setLoadingMessage(tbody, 9, 'Loading...');
 
       const q = searchInput ? searchInput.value.trim() : '';
       const params = new URLSearchParams({ limit: 20, page });
@@ -212,9 +367,12 @@
         if (json.success) {
           const users = json.data || [];
           if (users.length === 0) {
+            selectedUsers.clear();
+            updateBulkBar();
             setTableMessage(tbody, 9, 'No users found');
           } else {
             tbody.replaceChildren(...users.map(createUserRow));
+            updateBulkBar();
           }
           if (typeof renderPagination === 'function') {
             renderPagination('#aUsers .pagination', json.pagination, 'loadUsers');
@@ -226,6 +384,13 @@
         setTableMessage(tbody, 9, 'Network error', 'var(--danger)');
       }
     }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-action]');
+      if (!target) return;
+      if (target.dataset.action === 'bulk-ban-users') bulkToggleUsers(true);
+      if (target.dataset.action === 'bulk-unban-users') bulkToggleUsers(false);
+    });
   })();
 
   (function ordersTable() {
@@ -236,22 +401,42 @@
       cancelled: 'badge-cancelled'
     };
 
+    function copyOrderId(text) {
+      if (!navigator.clipboard?.writeText) {
+        safeToast(text, 'info');
+        return;
+      }
+      navigator.clipboard.writeText(text)
+        .then(() => safeToast('Order ID copied', 'ok'))
+        .catch(() => safeToast('Copy failed', 'error'));
+    }
+
     function createOrderRow(order) {
       const row = createElement('tr');
       const orderId = String(order._id || '').slice(-6).toUpperCase();
+      const fullOrderId = `#ORD-${orderId}`;
       const productCell = createElement('div', {
-        style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' },
+        style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' },
         attrs: { title: order.product?.title || '-' },
         text: order.product?.title || '-'
       });
+      const copyBtn = createElement('button', {
+        className: 'copy-btn',
+        attrs: { type: 'button', 'aria-label': `Copy ${fullOrderId}` },
+        text: '[]'
+      });
+      copyBtn.addEventListener('click', () => copyOrderId(fullOrderId));
+
       [
-        createElement('td', { style: { fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--t2)' }, text: `#ORD-${orderId}` }),
-        createElement('td', { style: { color: 'var(--t2)' }, children: [productCell] }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: order.buyer?.nickname || order.buyer?.name || '-' }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: order.seller?.nickname || order.seller?.name || '-' }),
-        createElement('td', { text: order.priceSnapshot ? `${order.priceSnapshot.toLocaleString()} VND` : '-' }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: order.deliveryMethod === 'pickup' ? 'Pickup' : order.deliveryMethod === 'ship' ? 'Ship' : '-' }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: order.paymentMethod === 'cash' ? 'Cash' : order.paymentMethod === 'card' ? 'Card' : '-' }),
+        createElement('td', {
+          children: [createElement('div', { className: 'mono-id', children: [createElement('span', { text: fullOrderId }), copyBtn] })]
+        }),
+        createElement('td', { className: 'muted-cell', children: [productCell] }),
+        createElement('td', { className: 'muted-cell', text: order.buyer?.nickname || order.buyer?.name || '-' }),
+        createElement('td', { className: 'muted-cell', text: order.seller?.nickname || order.seller?.name || '-' }),
+        createElement('td', { children: [createElement('strong', { text: order.priceSnapshot ? `${order.priceSnapshot.toLocaleString()} VND` : '-' })] }),
+        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: order.deliveryMethod === 'pickup' ? 'Pickup' : order.deliveryMethod === 'ship' ? 'Ship' : '-' })] }),
+        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: order.paymentMethod === 'cash' ? 'Cash' : order.paymentMethod === 'card' ? 'Card' : '-' })] }),
         createElement('td', { children: [createBadge((order.status || 'pending').replace(/^./, (s) => s.toUpperCase()), `badge ${statusBadges[order.status] || 'badge-pending'}`)] })
       ].forEach((cell) => row.appendChild(cell));
       return row;
@@ -320,22 +505,54 @@
       dismissed: 'badge-cancelled'
     };
 
+    const selectedReports = new Set();
+    const selectAll = document.getElementById('reportsSelectAll');
+    const bulkBar = document.getElementById('reportsBulkBar');
+    const bulkCount = document.getElementById('reportsSelectedCount');
+
+    function updateBulkBar() {
+      if (bulkCount) bulkCount.textContent = String(selectedReports.size);
+      if (bulkBar) bulkBar.classList.toggle('show', selectedReports.size > 0);
+      if (selectAll) {
+        const rowChecks = [...document.querySelectorAll('#reportsTableBody .report-select')];
+        const checkedCount = rowChecks.filter((box) => box.checked).length;
+        selectAll.checked = rowChecks.length > 0 && checkedCount === rowChecks.length;
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < rowChecks.length;
+      }
+    }
+
     function createReportRow(report) {
-      const row = createElement('tr', { style: { background: '#fff7ed' } });
+      const isResolved = report.status === 'resolved';
+      const row = createElement('tr', { className: isResolved ? 'row-resolved' : 'row-critical' });
       const actionWrap = createElement('div', { className: 'tbl-actions' });
       actionWrap.appendChild(createActionButton('View', 'act-btn primary', () => {
         window.location.href = report.targetType === 'product' ? `/products/${report.targetId}` : `/user/${report.targetId}`;
       }));
-      actionWrap.appendChild(createActionButton('Resolve', 'act-btn', function onResolveClick(event) {
-        resolveReport(report._id, event.currentTarget);
-      }));
+      const resolveBtn = createActionButton(isResolved ? 'Resolved' : 'Resolve', isResolved ? 'act-btn resolution-disabled' : 'act-btn', function onResolveClick(event) {
+        if (!isResolved) resolveReport(report._id, event.currentTarget);
+      });
+      if (isResolved) resolveBtn.disabled = true;
+      actionWrap.appendChild(resolveBtn);
+
+      const checkbox = createElement('input', {
+        className: 'admin-checkbox report-select',
+        attrs: { type: 'checkbox', 'aria-label': 'Select report' }
+      });
+      checkbox.dataset.reportId = report._id;
+      checkbox.checked = selectedReports.has(report._id);
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selectedReports.add(report._id);
+        else selectedReports.delete(report._id);
+        updateBulkBar();
+      });
 
       [
+        createElement('td', { className: 'check-cell', children: [checkbox] }),
         createElement('td', { children: [createBadge(report.targetType === 'product' ? 'Product' : 'User', `badge ${report.targetType === 'product' ? 'badge-reported' : 'badge-pending'}`)] }),
         createElement('td', { children: [createElement('strong', { text: report.targetDetails ? (report.targetType === 'product' ? report.targetDetails.title : report.targetDetails.nickname || report.targetDetails.name) : '-' })] }),
-        createElement('td', { style: { color: 'var(--t2)' }, text: report.reporter ? report.reporter.nickname || report.reporter.name : '-' }),
-        createElement('td', { style: { color: 'var(--t2)', fontSize: '13px' }, text: reasonLabels[report.reason] || report.reason }),
-        createElement('td', { style: { color: 'var(--t2)', fontSize: '12px' }, text: new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }),
+        createElement('td', { className: 'muted-cell', text: report.reporter ? report.reporter.nickname || report.reporter.name : '-' }),
+        createElement('td', { className: 'muted-cell', text: reasonLabels[report.reason] || report.reason }),
+        createElement('td', { className: 'muted-cell', text: formatDate(report.createdAt) }),
         createElement('td', { children: [createBadge((report.status || 'pending').replace('-', ' '), `badge ${statusMap[report.status] || 'badge-pending'}`)] }),
         createElement('td', { children: [actionWrap] })
       ].forEach((cell) => row.appendChild(cell));
@@ -343,27 +560,56 @@
       return row;
     }
 
-    async function resolveReport(reportId, btn) {
+    async function resolveReport(reportId, btn, options = {}) {
+      if (!options.skipConfirm) {
+        const confirmed = await safeConfirm({
+          title: 'Resolve report',
+          message: 'This will mark the report as resolved and remove it from the pending moderation queue.',
+          confirmText: 'Resolve report'
+        });
+        if (!confirmed) return;
+      }
+
       try {
-        btn.disabled = true;
-        btn.textContent = 'Resolving...';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Resolving...';
+        }
         const res = await fetch(`/api/admin/reports/${reportId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'resolved' })
         });
         if (!res.ok) throw new Error();
-        showToast('Report resolved', 'ok');
-        btn.textContent = 'Resolved';
-        btn.style.opacity = '0.5';
-        btn.style.cursor = 'not-allowed';
+        safeToast('Report resolved', 'ok');
+        selectedReports.delete(reportId);
         refreshAdminModerationStats();
-        loadReports();
+        if (options.refresh !== false) loadReports();
       } catch {
-        showToast('Failed to resolve report', 'error');
-        btn.disabled = false;
-        btn.textContent = 'Resolve';
+        safeToast('Failed to resolve report', 'error');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Resolve';
+        }
       }
+    }
+
+    async function bulkResolveReports() {
+      if (!selectedReports.size) return;
+      const confirmed = await safeConfirm({
+        title: 'Resolve selected reports',
+        message: `Mark ${selectedReports.size} selected report${selectedReports.size === 1 ? '' : 's'} as resolved?`,
+        confirmText: 'Resolve selected'
+      });
+      if (!confirmed) return;
+      const ids = [...selectedReports];
+      for (const reportId of ids) {
+        // eslint-disable-next-line no-await-in-loop
+        await resolveReport(reportId, null, { skipConfirm: true, refresh: false });
+      }
+      selectedReports.clear();
+      updateBulkBar();
+      loadReports();
     }
 
     window.resolveReport = resolveReport;
@@ -378,10 +624,21 @@
       });
     });
 
+    if (selectAll) {
+      selectAll.addEventListener('change', () => {
+        document.querySelectorAll('#reportsTableBody .report-select').forEach((box) => {
+          box.checked = selectAll.checked;
+          if (box.checked) selectedReports.add(box.dataset.reportId);
+          else selectedReports.delete(box.dataset.reportId);
+        });
+        updateBulkBar();
+      });
+    }
+
     async function loadReports(page = 1) {
       const tbody = document.getElementById('reportsTableBody');
       if (!tbody) return;
-      setLoadingMessage(tbody, 7, 'Loading...');
+      setLoadingMessage(tbody, 8, 'Loading...');
 
       const params = new URLSearchParams({ limit: 25, page });
       if (currentReportFilter && currentReportFilter !== 'all') params.set('status', currentReportFilter);
@@ -396,18 +653,21 @@
             if (totalEl) totalEl.textContent = `${json.pagination.total || 0} item${json.pagination.total === 1 ? '' : 's'}`;
           }
           if (reports.length === 0) {
-            setTableMessage(tbody, 7, 'No reports found');
+            selectedReports.clear();
+            updateBulkBar();
+            setTableMessage(tbody, 8, 'No reports found');
           } else {
             tbody.replaceChildren(...reports.map(createReportRow));
+            updateBulkBar();
           }
           if (typeof renderPagination === 'function') {
             renderPagination('#aReports .pagination', json.pagination, 'loadReports');
           }
         } else {
-          setTableMessage(tbody, 7, 'Failed to load reports', 'var(--danger)');
+          setTableMessage(tbody, 8, 'Failed to load reports', 'var(--danger)');
         }
       } catch {
-        setTableMessage(tbody, 7, 'Network error', 'var(--danger)');
+        setTableMessage(tbody, 8, 'Network error', 'var(--danger)');
       }
     }
 
@@ -415,27 +675,33 @@
     refreshAdminModerationStats();
 
     async function syncSellerRatings() {
-      const confirmed = await showConfirm({
+      const confirmed = await safeConfirm({
         title: 'Sync Seller Ratings',
         message: 'This will recalculate ratings for all users based on product reviews. Continue?',
         confirmText: 'Start Sync'
       });
       if (!confirmed) return;
       try {
-        if (typeof showToast === 'function') showToast('Synchronizing ratings...', 'info');
+        safeToast('Synchronizing ratings...', 'info');
         const res = await fetch('/api/admin/sync-ratings', { method: 'POST' });
         const json = await res.json();
         if (json.success) {
-          if (typeof showToast === 'function') showToast(json.message || 'Sync complete', 'ok');
+          safeToast(json.message || 'Sync complete', 'ok');
           setTimeout(() => location.reload(), 2000);
         } else {
-          showToast(json.message || 'Sync failed', 'error');
+          safeToast(json.message || 'Sync failed', 'error');
         }
       } catch {
-        showToast('Network error', 'error');
+        safeToast('Network error', 'error');
       }
     }
     window.syncSellerRatings = syncSellerRatings;
+
+    document.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-action]');
+      if (!target) return;
+      if (target.dataset.action === 'bulk-resolve-reports') bulkResolveReports();
+    });
   })();
 
   (function payoutsTable() {
@@ -445,13 +711,16 @@
 
     function createPayoutActions(payout) {
       if (payout.status !== 'PENDING' && payout.status !== 'PROCESSING') {
-        return createElement('span', { style: { color: 'var(--t3)' }, text: '-' });
+        return createElement('span', { className: 'muted-cell', text: '-' });
       }
+
       const wrap = createElement('div', { className: 'tbl-actions' });
       const primaryAction = payout.status === 'PENDING' ? 'approve' : 'mark-paid';
       const primaryLabel = payout.status === 'PENDING' ? 'Approve' : 'Mark paid';
       wrap.appendChild(createActionButton(primaryLabel, 'act-btn success', () => window.openPayoutModal(payout._id, primaryAction)));
-      wrap.appendChild(createActionButton('Reject', 'act-btn danger', () => window.openPayoutModal(payout._id, 'reject')));
+      wrap.appendChild(createActionMenu('More', [
+        { label: 'Reject request', className: 'act-btn danger', onClick: () => window.openPayoutModal(payout._id, 'reject') }
+      ]));
       return wrap;
     }
 
@@ -461,7 +730,8 @@
       if (payout.bankInfo) {
         bankCell.append(
           createElement('div', {
-            style: { fontSize: '12px', lineHeight: '1.4' },
+            className: 'metric-text',
+            style: { lineHeight: '1.55' },
             children: [
               createElement('strong', { text: payout.bankInfo.bankName }),
               createElement('br'),
@@ -472,30 +742,39 @@
           })
         );
       } else {
-        bankCell.appendChild(createElement('span', { style: { color: 'var(--t3)' }, text: '-' }));
+        bankCell.appendChild(createElement('span', { className: 'muted-cell', text: '-' }));
       }
 
       const transferCell = createElement('td');
       if (payout.transferReference) {
         transferCell.appendChild(createElement('div', {
-          style: { fontSize: '12px', lineHeight: '1.45' },
+          className: 'metric-text',
+          style: { lineHeight: '1.55' },
           children: [
             createElement('strong', { text: payout.transferReference }),
             createElement('br'),
-            createElement('span', { style: { color: 'var(--text-3)' }, text: payout.transferNote || '' })
+            createElement('span', { className: 'muted-cell', text: payout.transferNote || '' })
           ]
         }));
       } else {
-        transferCell.appendChild(createElement('span', { style: { color: 'var(--t3)' }, text: '-' }));
+        transferCell.appendChild(createElement('span', { className: 'muted-cell', text: '-' }));
       }
+
+      const badgeClass = payout.status === 'PAID'
+        ? 'badge badge-completed'
+        : payout.status === 'REJECTED'
+          ? 'badge badge-cancelled'
+          : payout.status === 'PROCESSING'
+            ? 'badge badge-info'
+            : 'badge badge-pending';
 
       [
         createElement('td', { children: [createElement('strong', { text: payout.user?.nickname || payout.user?.name || '-' })] }),
-        createElement('td', { style: { color: 'var(--text-2)' }, text: payout.user?.email || '-' }),
+        createElement('td', { className: 'muted-cell', text: payout.user?.email || '-' }),
         createElement('td', { children: [createElement('strong', { style: { color: 'var(--primary)' }, text: `${String(payout.amount).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND` })] }),
         bankCell,
-        createElement('td', { style: { color: 'var(--text-3)', fontSize: '12px' }, text: new Date(payout.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }),
-        createElement('td', { children: [createBadge(payout.status, `badge ${payout.status === 'PAID' ? 'badge-completed' : payout.status === 'REJECTED' ? 'badge-cancelled' : 'badge-pending'}`)] }),
+        createElement('td', { className: 'muted-cell', text: new Date(payout.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }),
+        createElement('td', { children: [createBadge(payout.status, badgeClass)] }),
         transferCell,
         createElement('td', { children: [createPayoutActions(payout)] })
       ].forEach((cell) => row.appendChild(cell));
@@ -595,7 +874,7 @@
           const transferReference = document.getElementById('payoutTransferReference')?.value || '';
           const payload = { adminNote, transferReference };
           if (activePayoutAction === 'reject' && !adminNote.trim()) {
-            showToast('Rejection reason is required', 'error');
+            safeToast('Rejection reason is required', 'error');
             return;
           }
           const res = await fetch(`/api/admin/payouts/${activePayoutId}/${activePayoutAction}`, {
@@ -609,33 +888,47 @@
             const successText = activePayoutAction === 'mark-paid'
               ? 'Payout marked as paid'
               : `Payout request ${activePayoutAction}d successfully`;
-            showToast(successText, 'ok');
+            safeToast(successText, 'ok');
           } else {
-            showToast(json.message || 'Action failed', 'error');
+            safeToast(json.message || 'Action failed', 'error');
           }
         } catch {
-          showToast('Network error', 'error');
+          safeToast('Network error', 'error');
         } finally {
           confirmBtn.disabled = false;
           confirmBtn.textContent = 'Confirm';
-          closePayoutModal();
+          window.closePayoutModal();
           loadPayouts();
         }
       });
     }
   })();
 
-  document.addEventListener('click', (event) => {
+  document.addEventListener('click', async (event) => {
+    const dangerTarget = event.target.closest('[data-danger-confirm]');
+    if (dangerTarget) {
+      event.preventDefault();
+      const confirmed = await safeConfirm({
+        title: 'Confirm action',
+        message: dangerTarget.dataset.dangerConfirm,
+        confirmText: 'Continue'
+      });
+      if (confirmed && dangerTarget.dataset.toastMessage) {
+        safeToast(dangerTarget.dataset.toastMessage, dangerTarget.dataset.toastType || 'info');
+      }
+      return;
+    }
+
     const toastTarget = event.target.closest('[data-toast-message]');
     if (toastTarget) {
-      showToast(toastTarget.dataset.toastMessage, toastTarget.dataset.toastType || 'info');
+      safeToast(toastTarget.dataset.toastMessage, toastTarget.dataset.toastType || 'info');
       return;
     }
 
     const actionTarget = event.target.closest('[data-action]');
     if (!actionTarget) return;
-    if (actionTarget.dataset.action === 'save-admin-settings') window.saveAdminSettings();
-    if (actionTarget.dataset.action === 'sync-seller-ratings') window.syncSellerRatings();
-    if (actionTarget.dataset.action === 'close-payout-modal') window.closePayoutModal();
+    if (actionTarget.dataset.action === 'save-admin-settings') window.saveAdminSettings?.();
+    if (actionTarget.dataset.action === 'sync-seller-ratings') window.syncSellerRatings?.();
+    if (actionTarget.dataset.action === 'close-payout-modal') window.closePayoutModal?.();
   });
 })();

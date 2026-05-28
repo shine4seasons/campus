@@ -1,23 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: title || '404 - Campus Marketplace', pageStyles: [] }) %>
-  <style>
-    .not-found { text-align: center; padding: 100px 20px; }
-    .not-found .icon { font-size: 64px; margin-bottom: 16px; }
-    .not-found h1 { font-size: 24px; font-weight: 900; color: #0D0F1A; margin-bottom: 8px; }
-    .not-found p { color: #8890B0; margin-bottom: 24px; }
-    .not-found a {
-      display: inline-block;
-      padding: 12px 28px;
-      background: #1B5EFF;
-      color: #fff;
-      border-radius: 12px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .not-found a:hover { background: #1348D6; }
-  </style>
+  <%- include('partials/head', { pageTitle: title || '404 - Campus Marketplace', pageStyles: ['not-found'] }) %>
 </head>
 <body>
   <%- include('partials/navbar') %>
@@ -30,3 +14,4 @@
   </div>
 </body>
 </html>
+

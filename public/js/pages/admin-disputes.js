@@ -22,8 +22,19 @@
     return createElement('div', {
       className: 'dsp-empty',
       children: [
-        createElement('h3', { text: title }),
-        createElement('p', { text: message })
+        createElement('div', {
+          className: 'dsp-empty-card',
+          children: [
+            createElement('div', { className: 'dsp-empty-icon', text: currentTab === 'resolved' ? 'OK' : '::' }),
+            createElement('h3', { text: currentTab === 'resolved' ? 'All disputes resolved' : title }),
+            createElement('p', { text: currentTab === 'resolved' ? 'No unresolved cases need attention right now. You can review the archive for historical decisions.' : message }),
+            createElement('a', {
+              className: 'dsp-empty-cta',
+              attrs: { href: '/admin/disputes' },
+              text: currentTab === 'resolved' ? 'View all disputes' : 'View resolved disputes'
+            })
+          ]
+        })
       ]
     });
   }
@@ -78,7 +89,7 @@
     }
 
     return createElement('div', {
-      className: 'dsp-card',
+      className: `dsp-card ${isOpen ? 'priority' : 'resolved'}`,
       children: [
         createElement('div', {
           className: 'dsp-card-head',
@@ -103,8 +114,8 @@
             productImg
               ? createElement('img', { attrs: { src: productImg, alt: productTitle } })
               : createElement('div', {
-                  style: { width: '44px', height: '44px', background: 'var(--surface-2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-                  text: 'Package'
+                  className: 'dsp-product-placeholder',
+                  text: 'PK'
                 }),
             createElement('div', {
               children: [

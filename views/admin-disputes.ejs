@@ -1,98 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: title, pageStyles: [] }) %>
-  <style>
-    .dsp-page { padding: 24px; max-width: 1200px; margin: 0 auto; }
-    .dsp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-    .dsp-title { font-size: 26px; font-weight: 800; margin: 0; }
-    .dsp-tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; }
-    .dsp-tab {
-      padding: 8px 14px; border-radius: 7px; cursor: pointer;
-      font-weight: 600; font-size: 13px; color: var(--text-2);
-      background: transparent; border: none;
-    }
-    .dsp-tab.active { background: #fff; color: var(--accent); box-shadow: var(--shadow-sm); }
-
-    .dsp-list { display: flex; flex-direction: column; gap: 12px; }
-    .dsp-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 18px; transition: border-color 0.15s ease;
-    }
-    .dsp-card:hover { border-color: var(--border-2); }
-
-    .dsp-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-    .dsp-card-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-3); }
-    .dsp-status {
-      padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .dsp-status.open      { background: #FED7AA; color: #7C2D12; }
-    .dsp-status.in_review { background: #FEF3C7; color: #78350F; }
-    .dsp-status.resolved  { background: #A7F3D0; color: #065F46; }
-    .dsp-status.rejected  { background: #E5E7EB; color: #374151; }
-
-    .dsp-product { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-    .dsp-product img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; background: var(--surface-2); }
-    .dsp-product-name { font-weight: 700; }
-    .dsp-product-price { font-size: 13px; color: var(--text-3); }
-
-    .dsp-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
-    .dsp-row > div { min-width: 120px; }
-    .dsp-row .lbl { color: var(--text-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 2px; }
-
-    .dsp-reason {
-      background: #FFF7ED; border: 1px solid #FED7AA; padding: 10px 12px;
-      border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.5;
-    }
-    .dsp-reason strong { display: block; margin-bottom: 4px; }
-    .dsp-evidence { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .dsp-evidence img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: zoom-in; }
-
-    .dsp-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .dsp-btn {
-      padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      border: 1px solid transparent; cursor: pointer; transition: all 0.15s ease;
-    }
-    .dsp-btn.buyer  { background: #DBEAFE; color: #1E40AF; border-color: #BFDBFE; }
-    .dsp-btn.seller { background: #DCFCE7; color: #065F46; border-color: #BBF7D0; }
-    .dsp-btn.mutual { background: #F3E8FF; color: #6B21A8; border-color: #E9D5FF; }
-    .dsp-btn.reject { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
-    .dsp-btn.view   { background: var(--surface-2); color: var(--text-2); border-color: var(--border); }
-    .dsp-btn:hover  { transform: translateY(-1px); }
-
-    .dsp-empty { text-align: center; padding: 60px 20px; color: var(--text-3); }
-    .dsp-loading { text-align: center; padding: 60px; color: var(--text-3); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner { animation: spin 0.8s linear infinite; }
-
-    .dsp-resolution-meta {
-      margin-top: 10px; padding: 8px 12px; background: #ECFDF5;
-      border: 1px solid #A7F3D0; border-radius: 8px; font-size: 13px;
-    }
-
-    /* Resolve modal */
-    .resolve-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
-    .resolve-backdrop.show { display: flex; }
-    .resolve-modal { background: #fff; border-radius: 14px; max-width: 480px; width: 92%; padding: 24px; }
-    .resolve-modal h3 { margin: 0 0 12px; font-size: 18px; font-weight: 800; }
-    .resolve-modal label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 6px; }
-    .resolve-modal textarea, .resolve-modal select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
-    .resolve-modal textarea { min-height: 80px; resize: vertical; }
-    .resolve-checkbox { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
-    .resolve-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-    .resolve-actions button { padding: 9px 16px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
-    .resolve-actions .cancel { background: #F3F4F6; color: #374151; }
-    .resolve-actions .submit { background: var(--accent); color: #fff; }
-  </style>
+  <%- include('partials/head', { pageTitle: title, pageStyles: ['dashboard-admin-page', 'admin-disputes-page'] }) %>
 </head>
-<body>
+<body class="dashboard-page dashboard-admin admin-disputes-view">
   <%- include('partials/navbar') %>
   <%- include('partials/sidebar') %>
 
   <main class="main">
     <div class="dsp-page">
       <header class="dsp-header">
-        <h1 class="dsp-title">⚠ Disputes</h1>
+        <h1 class="dsp-title">&#9888; Disputes</h1>
         <div class="dsp-tabs" id="dsp-tabs">
           <button class="dsp-tab active" data-status="open">Open</button>
           <button class="dsp-tab" data-status="resolved">Resolved</button>
@@ -119,12 +37,12 @@
         <option value="buyer-favor">Rule in favor of buyer</option>
         <option value="seller-favor">Rule in favor of seller</option>
         <option value="mutual">Mutual / amicable resolution</option>
-        <option value="rejected">Reject — invalid claim</option>
+        <option value="rejected">Reject &mdash; invalid claim</option>
       </select>
 
       <div class="resolve-checkbox">
         <input type="checkbox" id="resolve-refund">
-        <label for="resolve-refund" style="margin: 0; cursor: pointer;">Refund buyer & cancel order (only with buyer-favor)</label>
+        <label for="resolve-refund" class="resolve-refund-label">Refund buyer & cancel order (only with buyer-favor)</label>
       </div>
 
       <label for="resolve-note">Note to both parties</label>
@@ -140,3 +58,4 @@
     <script defer src="/js/pages/admin-disputes.js"></script>
 </body>
 </html>
+
