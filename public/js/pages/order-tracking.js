@@ -16,41 +16,64 @@
 
   let buyerPos = null;
   let sellerPos = null;
+  let routeLine = null;
+  let routingControl = null;
 
-  if (order.deliveryMode === 'ship' && order.shippingAddress && order.shippingAddress.lat) {
-    buyerPos = [order.shippingAddress.lat, order.shippingAddress.lng];
-  } else if (order.buyer && order.buyer.location && order.buyer.location.lat) {
-    buyerPos = [order.buyer.location.lat, order.buyer.location.lng];
-  }
-
-  if (order.deliveryMode === 'pickup' && order.pickupLocation && order.pickupLocation.lat) {
-    sellerPos = [order.pickupLocation.lat, order.pickupLocation.lng];
-  } else if (order.product && order.product.location && order.product.location.lat) {
-    sellerPos = [order.product.location.lat, order.product.location.lng];
-  } else if (order.seller && order.seller.location && order.seller.location.lat) {
-    sellerPos = [order.seller.location.lat, order.seller.location.lng];
-  }
-
-  if (!buyerPos) buyerPos = [21.0285, 105.8542];
-  if (!sellerPos) sellerPos = [21.0435, 105.8542];
-
-  const buyerMarker = L.marker(buyerPos, {
-    icon: L.icon({
-      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzFCNUVGRiIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
+  function createMarkerIcon(color) {
+    return L.divIcon({
+      className: 'tracking-marker-icon',
+      html: `<div style="width:32px;height:32px;border-radius:999px;background:${color};border:3px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.18);display:flex;align-items:center;justify-content:center;"><div style="width:10px;height:10px;border-radius:999px;background:#fff;"></div></div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32]
-    })
-  }).addTo(map).bindPopup(isBuyer ? '<strong>Destination (You)</strong><br>Your Location' : '<strong>Destination</strong><br>Buyer Location');
+    });
+  }
 
-  const sellerMarker = L.marker(sellerPos, {
-    icon: L.icon({
-      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzE2YTM0YSIgLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIgLz48L3N2Zz4=',
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
-    })
-  }).addTo(map).bindPopup(isSeller ? '<strong>Origin (You)</strong><br>Your Location' : '<strong>Origin</strong><br>Seller Location');
+  function getLatLngPoint(point) {
+    if (!point) return null;
+    const lat = Number(point.lat);
+    const lng = Number(point.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return [lat, lng];
+  }
+
+  function buildShippingAddress() {
+    if (!order.shippingAddress) return '';
+    return [order.shippingAddress.street, order.shippingAddress.district, order.shippingAddress.city]
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  function buildPickupAddress() {
+    return order.pickupLocation && order.pickupLocation.address ? order.pickupLocation.address : '';
+  }
+
+  async function geocodeAddress(address) {
+    if (!address) return null;
+    try {
+      const response = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address), {
+        headers: { Accept: 'application/json' }
+      });
+      const results = await response.json();
+      if (Array.isArray(results) && results[0] && results[0].lat && results[0].lon) {
+        return [parseFloat(results[0].lat), parseFloat(results[0].lon)];
+      }
+    } catch (error) {}
+    return null;
+  }
+
+  async function resolveRoutePoints() {
+    const sellerPoint = getLatLngPoint(order.seller && order.seller.location)
+      || getLatLngPoint(order.product && order.product.location)
+      || await geocodeAddress(order.product && order.product.location && order.product.location.address ? order.product.location.address : '');
+
+    const buyerPoint = order.deliveryMode === 'ship'
+      ? getLatLngPoint(order.shippingAddress) || await geocodeAddress(buildShippingAddress())
+      : getLatLngPoint(order.pickupLocation) || await geocodeAddress(buildPickupAddress());
+
+    sellerPos = sellerPoint || [21.0435, 105.8542];
+    buyerPos = buyerPoint || [21.0285, 105.8542];
+  }
 
   function calcDist(pointA, pointB) {
     const earthRadiusKm = 6371;
@@ -63,15 +86,16 @@
     return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  let routeLine = L.polyline([buyerPos, sellerPos], { color: '#fbbf24', dashArray: '8, 8' }).addTo(map);
-  let routingControl = null;
-
   function drawRoute() {
     const dist = calcDist(buyerPos, sellerPos);
     document.getElementById('distanceValue').textContent = dist.toFixed(1) + ' km';
     document.getElementById('estimatedTime').textContent = `Est. delivery time: ${Math.round(dist * 6)} mins`;
 
-    if (routeLine) routeLine.setLatLngs([buyerPos, sellerPos]);
+    if (routeLine) {
+      routeLine.setLatLngs([sellerPos, buyerPos]);
+    } else {
+      routeLine = L.polyline([sellerPos, buyerPos], { color: '#fbbf24', dashArray: '8, 8' }).addTo(map);
+    }
 
     if (routingControl) {
       try {
@@ -88,37 +112,26 @@
       }).addTo(map);
     } catch (error) {}
 
-    const bounds = L.latLngBounds([buyerPos, sellerPos]);
+    const bounds = L.latLngBounds([sellerPos, buyerPos]);
     map.fitBounds(bounds.pad(0.5));
   }
 
-  drawRoute();
+  (async function initRouteMap() {
+    await resolveRoutePoints();
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const livePos = [position.coords.latitude, position.coords.longitude];
-        if (isBuyer) {
-          buyerPos = livePos;
-          buyerMarker.setLatLng(buyerPos);
-          buyerMarker.bindPopup('<strong>Destination (You)</strong><br>Your Live Location').openPopup();
-        } else if (isSeller) {
-          sellerPos = livePos;
-          sellerMarker.setLatLng(sellerPos);
-          sellerMarker.bindPopup('<strong>Origin (You)</strong><br>Your Live Location').openPopup();
-        }
-        drawRoute();
-      },
-      (error) => {
-        window.AppUtils?.reportClientWarn('Geolocation error or permission denied:', error.message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  }
+    const buyerLabel = order.deliveryMode === 'ship' ? 'Buyer shipping address' : 'Buyer pickup point';
+    const sellerLabel = 'Seller origin';
+
+    L.marker(sellerPos, {
+      icon: createMarkerIcon('#16a34a')
+    }).addTo(map).bindPopup('<strong>Origin</strong><br>' + sellerLabel);
+
+    L.marker(buyerPos, {
+      icon: createMarkerIcon('#1B5EFF')
+    }).addTo(map).bindPopup('<strong>Destination</strong><br>' + buyerLabel);
+
+    drawRoute();
+  })();
 
   let disputeEvidenceUrls = [];
   const backdrop = document.getElementById('dispute-modal-backdrop');

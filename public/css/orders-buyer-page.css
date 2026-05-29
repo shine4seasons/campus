@@ -144,17 +144,24 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      align-self: stretch;
     }
     .btn-track {
       background: var(--primary);
       color: #fff;
-      padding: 10px;
+      width: 100%;
+      min-height: 40px;
+      padding: 10px 12px;
       border-radius: var(--radius-md);
       font-weight: 700;
       font-size: var(--fs-xs);
       text-align: center;
       text-decoration: none;
       transition: all 0.2s;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn-track:hover {
       background: var(--primary-dark);
@@ -163,13 +170,16 @@
     .btn-cancel {
       background: var(--surface-2);
       color: var(--text-2);
-      padding: 8px;
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 12px;
       border-radius: var(--radius-md);
       font-weight: 700;
       font-size: var(--fs-xs);
       border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.2s;
+      box-sizing: border-box;
     }
     .btn-cancel:hover {
       background: var(--red-light);

@@ -8,7 +8,14 @@ function isValidObjectId(value) {
   return /^[0-9a-fA-F]{24}$/.test(String(value || ''));
 }
 
-async function getDashboardViewModel({ user, path, baseUrl }) {
+async function getDashboardViewModel({
+  user,
+  path,
+  baseUrl,
+  sellerSection = 'sDash',
+  sellerActivePage = 'dashboard',
+  sellerTitle = `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`
+}) {
   if (!user) {
     return { redirectTo: '/login' };
   }
@@ -33,13 +40,14 @@ async function getDashboardViewModel({ user, path, baseUrl }) {
   return {
     view: VIEWS.DASHBOARD_SELLER,
     locals: {
-      title: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`,
+      title: sellerTitle,
       isLoginPage: false,
       isSeller: user.role === 'seller',
       stats,
       wallet,
       recentRatings,
-      activePage: 'dashboard'
+      activePage: sellerActivePage,
+      initialSection: sellerSection
     }
   };
 }
@@ -56,6 +64,18 @@ async function getSellerOrdersViewModel(sellerId) {
     productsWithCounts,
     isLoginPage: false,
     activePage: 'seller-orders'
+  };
+}
+
+async function getSellerWalletViewModel(sellerId) {
+  const { stats, wallet } = await pageRepository.getSellerDashboardSnapshot(sellerId);
+
+  return {
+    title: `Wallet & Payouts${TITLE_SEPARATOR}${APP_NAME}`,
+    isLoginPage: false,
+    activePage: 'wallet',
+    stats,
+    wallet
   };
 }
 
@@ -117,6 +137,7 @@ async function getOrderTrackingViewModel({ orderId, actor }) {
 
 module.exports = {
   getDashboardViewModel,
+  getSellerWalletViewModel,
   getSellerOrdersViewModel,
   getBuyerOrdersViewModel,
   getOrderTrackingViewModel

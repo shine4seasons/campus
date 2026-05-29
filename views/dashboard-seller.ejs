@@ -27,7 +27,11 @@
                 <div class="stat-top">
                   <div class="stat-label">Active products</div>
                   <div class="stat-icon" style="background:var(--success-light);color:var(--success)">
-                    <i data-lucide="package"></i>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                      <path d="M3.29 7 12 12l8.71-5"></path>
+                      <path d="M12 22V12"></path>
+                    </svg>
                   </div>
                 </div>
                 <div class="stat-val">
@@ -39,7 +43,10 @@
                 <div class="stat-top">
                   <div class="stat-label">Awaiting confirmation</div>
                   <div class="stat-icon" style="background:var(--warning-light);color:var(--warning)">
-                    <i data-lucide="clock"></i>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <path d="M12 7v5l3 2"></path>
+                    </svg>
                   </div>
                 </div>
                 <div class="stat-val" style="color:var(--warning)">
@@ -51,7 +58,10 @@
                 <div class="stat-top">
                   <div class="stat-label">Monthly Revenue</div>
                   <div class="stat-icon" style="background:var(--info-light);color:var(--info)">
-                    <i data-lucide="dollar-sign"></i>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3v18"></path>
+                      <path d="M17 7.5c0-2-2.24-3.5-5-3.5s-5 1.5-5 3.5S9 11 12 11s5 1.5 5 3.5-2.24 3.5-5 3.5-5-1.5-5-3.5"></path>
+                    </svg>
                   </div>
                 </div>
                 <div class="stat-val">
@@ -63,7 +73,9 @@
                 <div class="stat-top">
                   <div class="stat-label">Seller Rating</div>
                   <div class="stat-icon" style="background:var(--accent-light);color:var(--accent)">
-                    <i data-lucide="star"></i>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 2.6l2.84 5.75 6.35.92-4.59 4.47 1.08 6.32L12 16.97l-5.68 3 1.08-6.32L2.81 9.27l6.35-.92L12 2.6z"></path>
+                    </svg>
                   </div>
                 </div>
                 <div class="stat-val" style="display:flex;align-items:center;gap:6px">
@@ -121,7 +133,11 @@
                   </div>
                   <div class="quick-card glass" data-href="/orders-seller">
                     <div class="qc-icon" style="background:var(--warning-light);color:var(--warning)">
-                      <i data-lucide="shopping-cart"></i>
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                      </svg>
                     </div>
                     <div class="qc-body">
                       <div class="qc-label">Sales Orders</div>
@@ -131,18 +147,22 @@
                     </div>
                     <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
                   </div>
-                  <div class="quick-card glass" data-action="show-section" data-section="sWallet">
+                  <a class="quick-card glass" href="/wallet-payouts">
                     <div class="qc-icon" style="background:var(--accent-light);color:var(--accent)">
-                      <i data-lucide="wallet"></i>
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
+                        <path d="M17 7V6a2 2 0 0 0-2-2H7"></path>
+                        <path d="M16 13h2"></path>
+                      </svg>
                     </div>
                     <div class="qc-body">
                       <div class="qc-label">Platform Wallet</div>
-                      <div class="qc-sub">
+                      <div class="qc-sub" id="wallet-available-quick">
                         <%= formatVND(wallet.availableBalance) %> available
                       </div>
                     </div>
                     <i data-lucide="chevron-right" style="margin-left:auto; width:16px; opacity:0.3;"></i>
-                  </div>
+                  </a>
                 </div>
 
                 <div class="charts-row">
@@ -397,80 +417,7 @@
 
           <!-- ── SECTION: Wallet ── -->
           <section class="section" id="sWallet">
-            <div class="wallet-hero glass"
-              style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 32px; border-radius: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Available Balance</div>
-                <div style="font-size: 36px; font-weight: 800; letter-spacing: -0.02em;">
-                  <%= formatVND(wallet.availableBalance) %>
-                </div>
-                <div
-                  style="font-size: 14px; opacity: 0.8; margin-top: 12px; display: flex; align-items: center; gap: 6px;">
-                  <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                  Pending: <%= formatVND(wallet.pendingBalance) %>
-                </div>
-              </div>
-              <button class="btn"
-                style="background: #fff; color: var(--primary); padding: 12px 24px; border-radius: 12px; font-weight: 700; border: none;"
-                data-action="open-withdraw-modal">
-                Withdraw Funds
-              </button>
-            </div>
-
-            <div class="card premium-card">
-              <div class="card-head">
-                <div class="card-title">Transaction History</div>
-              </div>
-              <div class="tbl-wrap">
-                <table class="tbl">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody id="walletTransactions">
-                    <tr>
-                      <td colspan="4" style="text-align:center; padding: 40px; color: var(--t2);">
-                        <i data-lucide="history"
-                          style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
-                        <div>No transactions found</div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card premium-card" style="margin-top: 24px;">
-              <div class="card-head">
-                <div>
-                  <div class="card-title">Payout Requests</div>
-                  <div class="card-sub">Track when your QR earnings are transferred to your bank account</div>
-                </div>
-              </div>
-              <div class="tbl-wrap">
-                <table class="tbl">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Amount</th>
-                      <th>Bank</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody id="payoutRequestsTable">
-                    <tr>
-                      <td colspan="4" style="text-align:center; padding: 32px; color: var(--t2);">
-                        No payout requests yet
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <%- include('partials/seller-wallet-content') %>
           </section>
 
         </div><!-- /.content -->
@@ -485,39 +432,6 @@
         <div class="nav-item" data-section="sProfile"></div>
         <div class="nav-item" data-section="sWallet"></div>
       </nav>
-
-      <!-- Withdraw Modal -->
-      <div class="modal-overlay" id="withdrawModal">
-        <div class="modal glass" style="max-width: 400px; margin: 40px auto;">
-          <div class="modal-head">
-            <div class="modal-title">Withdraw Funds</div>
-            <button class="modal-close" data-action="close-withdraw-modal"><i data-lucide="x"></i></button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Amount (VND)</label>
-              <input type="number" class="form-input" id="withdrawAmount" value="<%= wallet.availableBalance %>">
-              <div style="font-size: 12px; color: var(--t3); margin-top: 4px;">Available: <%= formatVND(wallet.availableBalance) %></div>
-            </div>
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Bank Name</label>
-              <input type="text" class="form-input" id="bankName" placeholder="e.g., MB Bank">
-            </div>
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Account Number</label>
-              <input type="text" class="form-input" id="accountNumber">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Account Holder</label>
-              <input type="text" class="form-input" id="accountName" style="text-transform: uppercase;">
-            </div>
-          </div>
-          <div class="modal-foot">
-            <button class="btn btn-sec" data-action="close-withdraw-modal">Cancel</button>
-            <button class="btn btn-pri" data-action="submit-withdraw">Submit Request</button>
-          </div>
-        </div>
-      </div>
 
             <script defer src="/js/pages/dashboard-seller.js"></script>
       <script>window.INITIAL_SECTION = "<%= (typeof initialSection !== 'undefined' ? initialSection : 'sDash') %>";</script>

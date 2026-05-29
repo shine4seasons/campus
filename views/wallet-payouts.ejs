@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" class="dashboard-shell">
+<head>
+  <%- include('partials/head', { pageTitle: 'Wallet & Payouts - Campus Marketplace', pageStyles: ['dashboard', 'seller-center'] }) %>
+</head>
+<body class="dashboard-page dashboard-seller seller-workspace wallet-payouts-page">
+<%- include('partials/navbar') %>
+<%- include('partials/sidebar') %>
+
+<main class="main">
+  <div class="content">
+    <header class="page-heading">
+      <div class="page-heading-copy">
+        <h1 class="page-heading-title" id="pageTitle">Wallet & Payouts</h1>
+        <p class="page-heading-sub" id="pageSub">Manage available balance, pending QR funds, and withdrawal requests</p>
+      </div>
+    </header>
+
+    <section class="section active" id="sWallet">
+      <%- include('partials/seller-wallet-content') %>
+    </section>
+  </div>
+</main>
+
+<div id="toast-wrap"></div>
+
+<script defer src="/js/pages/dashboard-seller.js"></script>
+<script>window.INITIAL_SECTION = 'sWallet';</script>
+<%- include('partials/dashboard-scripts') %>
+</body>
+</html>

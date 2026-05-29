@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="dashboard-shell">
 <head>
   <%- include('partials/head', { pageTitle: 'My Orders - Campus Marketplace', pageStyles: ['dashboard', 'orders', 'orders-buyer-page'] }) %>
@@ -108,7 +108,7 @@
                     <span class="order-meta-dim">via</span> <%= order.paymentMode === 'qr' ? 'QR Transfer' : (order.paymentMode === 'card' ? 'Card' : 'Cash') %>
                   </div>
                   <div class="order-meta-text order-delivery-mode">
-                    <%= order.deliveryMode === 'ship' ? 'ðŸšš Shipping' : 'ðŸ“ Pickup' %>
+                    <%= order.deliveryMode === 'ship' ? 'Shipping' : 'Pickup' %>
                   </div>
                 </div>
 
@@ -135,4 +135,5 @@
 <script defer src="/js/pages/orders-buyer.js"></script>
 </body>
 </html>
+
 

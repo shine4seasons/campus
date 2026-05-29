@@ -538,7 +538,8 @@
 }
 
 .dashboard-admin .tbl-wrap {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .dashboard-admin .tbl-toolbar {
@@ -673,12 +674,429 @@
 }
 
 .dashboard-admin table {
+  width: 100%;
   min-width: 100%;
+  table-layout: fixed;
   font-size: 13px;
 }
 
 .dashboard-admin .tbl-wrap table {
+  min-width: 0;
+}
+
+.dashboard-admin thead th,
+.dashboard-admin tbody td {
+  vertical-align: top;
+}
+
+.dashboard-admin thead th.check-cell,
+.dashboard-admin tbody td.check-cell {
+  width: 48px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.dashboard-admin .check-cell .admin-checkbox {
+  display: block;
+  margin: 0 auto;
+}
+
+#aUsers table {
+  min-width: 1120px;
+}
+
+#aUsers thead th:nth-child(2),
+#aUsers tbody td:nth-child(2) {
+  width: 27%;
+}
+
+#aUsers thead th:nth-child(3),
+#aUsers tbody td:nth-child(3) {
+  width: 16%;
+}
+
+#aUsers thead th:nth-child(4),
+#aUsers tbody td:nth-child(4) {
+  width: 10%;
+  white-space: nowrap;
+}
+
+#aUsers thead th:nth-child(5),
+#aUsers tbody td:nth-child(5),
+#aUsers thead th:nth-child(6),
+#aUsers tbody td:nth-child(6) {
+  width: 8%;
+  white-space: nowrap;
+}
+
+#aUsers thead th:nth-child(7),
+#aUsers tbody td:nth-child(7),
+#aUsers thead th:nth-child(8),
+#aUsers tbody td:nth-child(8) {
+  width: 9%;
+  white-space: nowrap;
+}
+
+#aUsers thead th:nth-child(9),
+#aUsers tbody td:nth-child(9) {
+  width: 14%;
+}
+
+#aProducts table.admin-products-table {
+  min-width: 1000px;
+}
+
+#aOrders table.admin-orders-table {
   min-width: 980px;
+}
+
+.admin-products-table .col-product {
+  width: 235px;
+}
+
+.admin-products-table .col-seller {
+  width: 120px;
+}
+
+.admin-products-table .col-category {
+  width: 110px;
+}
+
+.admin-products-table .col-price {
+  width: 95px;
+}
+
+.admin-products-table .col-views {
+  width: 58px;
+}
+
+.admin-products-table .col-interest {
+  width: 68px;
+}
+
+.admin-products-table .col-status {
+  width: 96px;
+}
+
+.admin-products-table .col-posted {
+  width: 86px;
+}
+
+.admin-products-table .col-actions {
+  width: 143px;
+}
+
+.admin-orders-table .col-order-id {
+  width: 112px;
+}
+
+.admin-orders-table .col-product {
+  width: 225px;
+}
+
+.admin-orders-table .col-buyer,
+.admin-orders-table .col-seller {
+  width: 124px;
+}
+
+.admin-orders-table .col-price {
+  width: 112px;
+}
+
+.admin-orders-table .col-delivery,
+.admin-orders-table .col-payment {
+  width: 68px;
+}
+
+.admin-orders-table .col-status {
+  width: 147px;
+}
+
+#aProducts thead th:nth-child(n+4),
+#aProducts tbody td:nth-child(n+4),
+#aOrders thead th:nth-child(n+5),
+#aOrders tbody td:nth-child(n+5) {
+  white-space: nowrap;
+}
+
+#aReports table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+#aReports thead th:nth-child(2),
+#aReports tbody td:nth-child(2) {
+  width: 30%;
+}
+
+#aReports thead th:nth-child(3),
+#aReports tbody td:nth-child(3) {
+  width: 19%;
+}
+
+#aReports thead th:nth-child(4),
+#aReports tbody td:nth-child(4) {
+  width: 31%;
+}
+
+#aReports thead th:nth-child(5),
+#aReports tbody td:nth-child(5) {
+  width: 10%;
+  white-space: nowrap;
+}
+
+#aReports thead th:nth-child(6),
+#aReports tbody td:nth-child(6) {
+  width: 10%;
+}
+
+#aReports .report-target-cell,
+#aReports .report-meta-cell,
+#aReports .report-reason-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+#aReports .report-target-title,
+#aReports .report-meta-cell strong,
+#aReports .report-reason-cell strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#aReports .report-target-sub,
+#aReports .report-meta-cell span,
+#aReports .report-reason-cell span {
+  color: var(--admin-text-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+#aReports .report-reason-cell span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#aReports .tbl-actions {
+  justify-content: flex-start;
+}
+
+@media (max-width: 1180px) {
+  #aReports thead th:nth-child(4),
+  #aReports tbody td:nth-child(4) {
+    width: 28%;
+  }
+
+  #aReports .tbl-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #aReports .tbl-actions .act-btn,
+  #aReports .tbl-actions .action-menu,
+  #aReports .tbl-actions .action-menu > summary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  #aReports .tbl-toolbar {
+    align-items: flex-start;
+  }
+
+  #aReports .filter-pills {
+    width: 100%;
+  }
+
+  #aReports .filter-pills .f-pill {
+    flex: 1 1 auto;
+  }
+}
+
+#aPayouts .admin-payouts-table {
+  min-width: 1380px;
+  table-layout: fixed;
+}
+
+#aPayouts .admin-payouts-table .col-payout-seller {
+  width: 180px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-email {
+  width: 250px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-amount {
+  width: 160px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-bank {
+  width: 270px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-date {
+  width: 160px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-status {
+  width: 120px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-transfer {
+  width: 180px;
+}
+
+#aPayouts .admin-payouts-table .col-payout-actions {
+  width: 160px;
+}
+
+#aPayouts .admin-payouts-table th,
+#aPayouts .admin-payouts-table td {
+  padding-left: 14px;
+  padding-right: 14px;
+  vertical-align: top;
+}
+
+#aPayouts .payout-seller-cell {
+  min-width: 0;
+}
+
+#aPayouts .payout-seller-name {
+  display: block;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+#aPayouts .payout-email-cell {
+  min-width: 0;
+}
+
+#aPayouts .payout-email-text {
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+
+#aPayouts .payout-amount-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+#aPayouts .payout-amount-text {
+  display: inline-block;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+#aPayouts .payout-bank-details,
+#aPayouts .payout-transfer-details {
+  line-height: 1.55;
+  white-space: normal;
+  word-break: break-word;
+}
+
+#aPayouts .payout-date-cell {
+  white-space: normal;
+}
+
+#aPayouts .payout-date-stack {
+  display: grid;
+  gap: 3px;
+  line-height: 1.45;
+}
+
+#aPayouts .payout-date-primary {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#aPayouts .payout-date-secondary {
+  color: var(--admin-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#aPayouts .payout-status-cell {
+  white-space: nowrap;
+}
+
+#aPayouts .payout-transfer-cell {
+  min-width: 0;
+}
+
+#aPayouts .payout-actions-cell .tbl-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#aPayouts .payout-actions-cell .act-btn,
+#aPayouts .payout-actions-cell .action-menu > summary {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+}
+
+#aPayouts .payout-actions-cell .action-menu-panel {
+  left: auto;
+  right: 0;
+}
+
+#aProducts thead th,
+#aProducts tbody td,
+#aOrders thead th,
+#aOrders tbody td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#aProducts .tbl-actions,
+#aOrders .tbl-actions {
+  gap: 6px;
+}
+
+#aProducts .admin-product-actions-cell .tbl-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+#aProducts .act-btn,
+#aOrders .act-btn {
+  min-height: 32px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+#aProducts .admin-product-actions-cell .act-btn {
+  width: auto;
+  justify-content: center;
+}
+
+#aProducts .admin-product-actions-cell > .tbl-actions > .act-btn,
+#aProducts .admin-product-actions-cell > .tbl-actions > .action-menu > summary {
+  min-width: 54px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+#aProducts .admin-product-actions-cell .action-menu-panel {
+  right: 0;
+  left: auto;
+}
+
+#aProducts .action-menu-panel,
+#aOrders .action-menu-panel {
+  min-width: 160px;
 }
 
 .dashboard-admin thead th {
@@ -706,6 +1124,8 @@
   padding-top: 15px;
   padding-bottom: 15px;
   border-bottom-color: rgba(226, 232, 240, 0.92);
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .dashboard-admin tbody tr:hover td {
@@ -829,6 +1249,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .dashboard-admin .product-thumb {
@@ -849,16 +1270,36 @@
 .dashboard-admin .product-copy {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .dashboard-admin .product-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   font-weight: 800;
   color: var(--t1);
 }
 
 .dashboard-admin .product-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--admin-text-soft);
   font-size: 12px;
+}
+
+.dashboard-admin .admin-order-product {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .dashboard-admin .badge {
@@ -946,20 +1387,59 @@
   border-radius: 10px;
   font-size: 12px;
   font-weight: 800;
+  color: #334155;
+  background: rgba(248, 250, 252, 0.96);
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dashboard-admin .act-btn:hover,
+.dashboard-admin .act-btn:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(241, 245, 249, 0.98);
+  border-color: rgba(148, 163, 184, 0.42);
+  color: #0f172a;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .dashboard-admin .act-btn.primary {
   border-color: rgba(59, 130, 246, 0.18);
   background: rgba(239, 246, 255, 0.92);
+  color: #1d4ed8;
+}
+
+.dashboard-admin .act-btn.primary:hover,
+.dashboard-admin .act-btn.primary:focus-visible,
+.dashboard-admin .action-menu[open] > summary.act-btn.primary {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
 }
 
 .dashboard-admin .act-btn.success {
   border-color: rgba(134, 239, 172, 0.78);
+  background: rgba(236, 253, 245, 0.96);
+  color: #166534;
+}
+
+.dashboard-admin .act-btn.success:hover,
+.dashboard-admin .act-btn.success:focus-visible {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
 }
 
 .dashboard-admin .act-btn.danger {
   border-color: rgba(252, 165, 165, 0.9);
   background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+}
+
+.dashboard-admin .act-btn.danger:hover,
+.dashboard-admin .act-btn.danger:focus-visible {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
 }
 
 .dashboard-admin .action-menu {
@@ -996,10 +1476,6 @@
   height: 1px;
   margin: 6px 0;
   background: rgba(226, 232, 240, 0.92);
-}
-
-.dashboard-admin .action-menu[open] .act-btn.primary {
-  background: rgba(219, 234, 254, 0.92);
 }
 
 .dashboard-admin .resolution-disabled {
@@ -1166,6 +1642,15 @@
   border-radius: 14px;
   font: inherit;
   background: rgba(248, 250, 252, 0.86);
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.dashboard-admin .modal-input:focus,
+.dashboard-admin .modal-textarea:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.95);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(191, 219, 254, 0.4);
 }
 
 .dashboard-admin .modal-textarea {
@@ -1173,10 +1658,65 @@
   resize: vertical;
 }
 
+.dashboard-admin .payout-action-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-admin .payout-action-card {
+  width: min(90%, 560px);
+  text-align: center;
+  background: #fff;
+}
+
+.dashboard-admin .payout-action-icon {
+  display: block;
+  margin: 0 auto;
+  color: var(--primary);
+}
+
+.dashboard-admin #payoutTransferReference,
+.dashboard-admin #payoutTransferNote {
+  display: none;
+}
+
+.dashboard-admin #payoutsTableBody td:nth-child(4),
+.dashboard-admin #payoutsTableBody td:nth-child(7) {
+  min-width: 180px;
+}
+
+.dashboard-admin #payoutsTableBody td:last-child {
+  min-width: 150px;
+}
+
 .dashboard-admin .modal-actions {
   display: flex;
   justify-content: center;
   gap: 12px;
+}
+
+.dashboard-admin .payout-modal-cancel,
+.dashboard-admin .payout-modal-confirm {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.dashboard-admin .payout-modal-cancel {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.dashboard-admin .payout-modal-confirm {
+  border: none;
+  background: var(--primary);
+  color: #fff;
 }
 
 .dashboard-admin .main .pagination {
@@ -1239,12 +1779,6 @@
   stroke-width: 2.2;
 }
 
-.admin-disputes-view {
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 30%),
-    linear-gradient(180deg, #f4f7fb 0%, #edf3f8 100%);
-}
-
 @media (max-width: 1100px) {
   .dashboard-admin .settings-grid,
   .dashboard-admin .admin-insights,
@@ -1298,5 +1832,13 @@
   .dashboard-admin .stat-card,
   .dashboard-admin .alert-box {
     border-radius: 20px;
+  }
+
+  .dashboard-admin .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dashboard-admin .modal-actions .btn {
+    width: 100%;
   }
 }

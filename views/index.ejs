@@ -4,7 +4,7 @@
   <%- include('partials/head', { pageTitle: 'Campus Marketplace - Buy & Sell Student Goods', pageStyles: ['index', 'rating'] }) %>
 </head>
 
-<body>
+<body class="index-page">
   <%- include('partials/navbar') %>
 
     <%- include('partials/sidebar') %>
@@ -126,12 +126,51 @@
             </div>
             <div class="sort-wrap">
               <label class="sort-label">Sort by</label>
-              <select class="sort-select" id="sort-select">
+              <select class="sort-select-native" id="sort-select" aria-hidden="true" tabindex="-1">
                 <option value="newest">Newest first</option>
                 <option value="price-asc">Price: low → high</option>
                 <option value="price-desc">Price: high → low</option>
                 <option value="rating">Top rated</option>
               </select>
+              <div class="sort-combobox" id="sort-combobox">
+                <button type="button" class="sort-select" id="sort-select-btn" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="sort-select-copy">
+                    <span class="sort-select-kicker">Active sort</span>
+                    <span class="sort-select-label" id="sort-select-label">Newest first</span>
+                  </span>
+                  <i data-lucide="chevrons-up-down" class="sort-select-icon"></i>
+                </button>
+                <div class="sort-menu" id="sort-menu" role="listbox">
+                  <button type="button" class="sort-option selected" data-sort-value="newest" role="option" aria-selected="true">
+                    <span class="sort-option-copy">
+                      <span class="sort-option-title">Newest first</span>
+                      <span class="sort-option-sub">Latest listings from students</span>
+                    </span>
+                    <i data-lucide="check" class="sort-option-check"></i>
+                  </button>
+                  <button type="button" class="sort-option" data-sort-value="price-asc" role="option" aria-selected="false">
+                    <span class="sort-option-copy">
+                      <span class="sort-option-title">Price: low to high</span>
+                      <span class="sort-option-sub">Best for budget-first browsing</span>
+                    </span>
+                    <i data-lucide="check" class="sort-option-check"></i>
+                  </button>
+                  <button type="button" class="sort-option" data-sort-value="price-desc" role="option" aria-selected="false">
+                    <span class="sort-option-copy">
+                      <span class="sort-option-title">Price: high to low</span>
+                      <span class="sort-option-sub">Show premium items first</span>
+                    </span>
+                    <i data-lucide="check" class="sort-option-check"></i>
+                  </button>
+                  <button type="button" class="sort-option" data-sort-value="rating" role="option" aria-selected="false">
+                    <span class="sort-option-copy">
+                      <span class="sort-option-title">Top rated</span>
+                      <span class="sort-option-sub">Prioritize trusted sellers and products</span>
+                    </span>
+                    <i data-lucide="check" class="sort-option-check"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

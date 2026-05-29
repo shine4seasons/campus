@@ -62,7 +62,7 @@ function applySecurityHeaders(req, res, next) {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: blob: https:",
     "style-src 'self' 'unsafe-inline' https:",
     "script-src 'self' 'unsafe-inline' https:",
     "worker-src 'self' blob:",

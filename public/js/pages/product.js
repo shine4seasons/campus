@@ -12,6 +12,7 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
       image: '',
       url: '/products/' + PRODUCT_ID
     };
+    let interestRequestInFlight = false;
 
     // ── Gallery ──────────────────────────────────────────────────────────
     window.setImg = function (i) {
@@ -174,11 +175,27 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
     function applyHeartState(active) {
       const icon = document.getElementById('heart-icon');
       if (icon) {
-        icon.style.fill = active ? '#f87171' : 'none';
-        icon.style.stroke = active ? '#f87171' : 'currentColor';
+        icon.style.fill = active ? '#ffffff' : 'none';
+        icon.style.stroke = active ? '#ffffff' : 'currentColor';
       }
       const btn = document.getElementById('btn-interested');
-      if (btn) btn.classList.toggle('active', active);
+      if (btn) {
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', String(!!active));
+        if (active) {
+          btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+          btn.style.borderColor = 'rgba(220, 38, 38, 0.45)';
+          btn.style.color = '#ffffff';
+          btn.style.boxShadow = '0 14px 28px rgba(239, 68, 68, 0.24)';
+        } else {
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+          btn.style.boxShadow = '';
+        }
+        const label = btn.querySelector('[data-interest-label]');
+        if (label) label.textContent = active ? 'Remove from Interests' : 'Add to Interests';
+      }
     }
 
     // Initialize favorite state from server on load
@@ -196,19 +213,31 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
 
     window.toggleInterested = async function () {
       if (!IS_AUTH) { if (typeof showToast === 'function') showToast('Please sign in to mark interest', 'err'); return; }
+      if (interestRequestInFlight) return;
+      interestRequestInFlight = true;
+      const btn = document.getElementById('btn-interested');
+      if (btn) btn.disabled = true;
       interestedState = !interestedState;
       applyHeartState(interestedState);
       try {
         const res = await fetch('/api/products/' + PRODUCT_ID + '/interested', { method: 'POST', credentials: 'include' });
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to update interest');
         if (data && typeof data.isFavorited === 'boolean') {
           interestedState = data.isFavorited;
           applyHeartState(interestedState);
         }
-        document.getElementById('int-count').textContent = '(' + (data.interested || 0) + ')';
+        const countEl = document.getElementById('int-count');
+        if (countEl && typeof data.interested === 'number') {
+          countEl.textContent = '(' + data.interested + ')';
+        }
       } catch {
         interestedState = !interestedState;
         applyHeartState(interestedState);
+        if (typeof showToast === 'function') showToast('Could not update interests', 'err');
+      } finally {
+        interestRequestInFlight = false;
+        if (btn) btn.disabled = false;
       }
     };
 
@@ -328,6 +357,8 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
       reportTargetType = targetType;
       reportTargetId = targetId;
       document.getElementById('report-modal').style.display = 'flex';
+      const modalTitle = document.getElementById('report-modal-title');
+      if (modalTitle) modalTitle.textContent = targetType === 'user' ? 'Report this seller' : 'Report this product';
       document.getElementById('report-reason').value = '';
       document.getElementById('report-content').value = '';
       document.getElementById('report-char-count').textContent = '0';
@@ -413,6 +444,12 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
         if (action === 'report-seller') {
           const sellerId = actionEl.dataset.sellerId || '';
           if (sellerId) window.showReportModal('user', sellerId);
+          return;
+        }
+
+        if (action === 'report-product') {
+          const productId = actionEl.dataset.productId || PRODUCT_ID;
+          if (productId) window.showReportModal('product', productId);
           return;
         }
 

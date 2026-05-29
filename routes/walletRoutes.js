@@ -5,6 +5,7 @@ const { validate } = require('../middleware/validate');
 const { payoutRequestSchema } = require('../validation/mutateSchemas');
 
 router.post('/payout-request', protect, validate(payoutRequestSchema), walletController.submitPayoutRequest);
+router.get('/summary', protect, walletController.getSummary);
 router.get('/transactions', protect, walletController.getTransactions);
 router.get('/payout-requests', protect, walletController.getPayoutRequests);
 

@@ -86,6 +86,7 @@
       'sProducts': { title: 'My Products', sub: 'Manage your active and sold products', cta: 'Create Product' },
       'sOrders': { title: 'Seller Orders', sub: 'Manage buyer orders & fulfillment', cta: 'Action' },
       'sRevenue': { title: 'Revenue & Wallet', sub: 'Review wallet balance and payouts', cta: 'Withdraw' },
+      'sWallet': { title: 'Revenue & Wallet', sub: 'Review wallet balance and payouts', cta: 'Withdraw' },
       'sMessages': { title: 'Inbox Messages', sub: 'Chat with buyers and sellers', cta: 'Action' },
       'sProfile': { title: 'User Profile', sub: 'Manage account details & settings', cta: 'Action' }
     };
@@ -852,7 +853,10 @@ function initAdminData(id) {
         const viewHref = productId ? `/products/${encodeURIComponent(productId)}` : '#';
         const tr = document.createElement('tr');
         const tdTitle = document.createElement('td');
+        tdTitle.className = 'admin-product-title-cell';
         const strong = document.createElement('strong');
+        strong.className = 'product-title';
+        strong.title = productTitle;
         strong.textContent = productTitle;
         tdTitle.appendChild(strong);
         tr.appendChild(tdTitle);
@@ -885,6 +889,7 @@ function initAdminData(id) {
         tdDate.textContent = new Date(p.createdAt).toLocaleDateString();
         tr.appendChild(tdDate);
         const tdActions = document.createElement('td');
+        tdActions.className = 'admin-product-actions-cell';
         const actions = document.createElement('div');
         actions.className = 'tbl-actions';
         const viewA = document.createElement('a');
@@ -892,17 +897,26 @@ function initAdminData(id) {
         viewA.href = viewHref;
         viewA.textContent = 'View';
         actions.appendChild(viewA);
+        const menu = document.createElement('details');
+        menu.className = 'action-menu';
+        const summary = document.createElement('summary');
+        summary.className = 'act-btn';
+        summary.textContent = 'More';
+        const panel = document.createElement('div');
+        panel.className = 'action-menu-panel';
         const toggleBtn = document.createElement('button');
         const productAction = p.status === 'hidden' ? 'restore' : 'hide';
         toggleBtn.className = `act-btn ${productAction === 'hide' ? 'danger' : 'success'}`;
         toggleBtn.textContent = productAction === 'hide' ? (productStatus === 'reported' ? 'Hide reported' : 'Hide') : 'Restore';
         toggleBtn.addEventListener('click', () => adminProductAction(productId, productAction));
-        actions.appendChild(toggleBtn);
+        panel.appendChild(toggleBtn);
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'act-btn';
         deleteBtn.textContent = 'Delete';
         deleteBtn.addEventListener('click', () => adminProductAction(productId, 'delete'));
-        actions.appendChild(deleteBtn);
+        panel.appendChild(deleteBtn);
+        menu.append(summary, panel);
+        actions.appendChild(menu);
         tdActions.appendChild(actions);
         tr.appendChild(tdActions);
         tbody.appendChild(tr);

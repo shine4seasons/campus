@@ -27,8 +27,38 @@
             <div class="draft-indicator" id="sell-draft-indicator">Draft saved</div>
           </div>
 
-          <!-- Progress bar -->
-          <div class="sell-progress-wrap">
+          <div class="sell-flow-nav" id="sell-flow-nav" aria-label="Listing progress">
+            <button type="button" class="sell-flow-step active" data-step-target="step-0">
+              <span class="sell-flow-index">1</span>
+              <span class="sell-flow-copy">
+                <span class="sell-flow-title">Add photos</span>
+                <span class="sell-flow-sub">Show the item clearly</span>
+              </span>
+            </button>
+            <button type="button" class="sell-flow-step" data-step-target="step-1">
+              <span class="sell-flow-index">2</span>
+              <span class="sell-flow-copy">
+                <span class="sell-flow-title">Condition</span>
+                <span class="sell-flow-sub">Set buyer expectations</span>
+              </span>
+            </button>
+            <button type="button" class="sell-flow-step" data-step-target="step-2">
+              <span class="sell-flow-index">3</span>
+              <span class="sell-flow-copy">
+                <span class="sell-flow-title">Details</span>
+                <span class="sell-flow-sub">Title, price and description</span>
+              </span>
+            </button>
+            <button type="button" class="sell-flow-step" data-step-target="step-3">
+              <span class="sell-flow-index">4</span>
+              <span class="sell-flow-copy">
+                <span class="sell-flow-title">Location</span>
+                <span class="sell-flow-sub">Confirm a meetup point</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="sell-progress-wrap" aria-hidden="true">
             <div class="sell-progress-fill" id="sell-progress-fill"></div>
           </div>
 
@@ -37,7 +67,7 @@
             <div class="sell-steps">
               <form id="sell-form">
                 <!-- Step 0: Images -->
-                <div class="sell-card active" id="step-0">
+                <div class="sell-card active" id="step-0" data-step-card="0">
                   <div class="sell-step-num">01</div>
                   <div class="sell-card-title">Add photos</div>
                   <div class="sell-card-sub">Upload clear photos of your item (max 5 images)</div>
@@ -53,14 +83,19 @@
                       <div class="sell-upload-note">JPG, PNG &bull; Max 5MB per image</div>
                       <input type="file" id="image-input" multiple accept="image/*" class="sell-hidden-input">
                     </div>
+                    <div class="sell-upload-meta">
+                      <div class="sell-upload-chip" id="image-count-indicator">0 / 5 images added</div>
+                      <div class="sell-upload-chip sell-upload-chip-muted" id="upload-status">Ready to upload</div>
+                    </div>
                     <div id="image-preview" class="sell-image-preview-grid">
                     </div>
+                    <p class="field-help">Use a cover photo with strong lighting, then add close-ups of important details.</p>
                     <input type="hidden" id="f-images" value="">
                   </div>
                 </div>
 
                 <!-- Step 1 -->
-                <div class="sell-card" id="step-1">
+                <div class="sell-card" id="step-1" data-step-card="1">
                   <div class="sell-step-num">02</div>
                   <div class="sell-card-title">Item condition</div>
                   <div class="sell-card-sub">Select the best description for your item</div>
@@ -84,7 +119,7 @@
                 </div>
 
                 <!-- Step 2 -->
-                <div class="sell-card" id="step-2">
+                <div class="sell-card" id="step-2" data-step-card="2">
                   <div class="sell-step-num">03</div>
                   <div class="sell-card-title">Item details</div>
                   <div class="sell-card-sub">Name, describe and price your item</div>
@@ -93,6 +128,7 @@
                     <label class="sf-label">Product Title *</label>
                     <input class="sf-input" id="f-title" type="text" value="<%= ep ? ep.title : '' %>"
                       placeholder="e.g. Calculus 1 Textbook" maxlength="120">
+                    <p class="field-help">Keep it specific so buyers can recognize the item at a glance.</p>
                   </div>
 
                   <div class="sell-detail-grid">
@@ -147,8 +183,12 @@
                     </div>
                     <div class="sf">
                       <label class="sf-label">Price (VND) *</label>
-                      <input class="sf-input" id="f-price" type="number" value="<%= ep ? ep.price : '' %>"
+                      <div class="sell-price-input">
+                        <span class="sell-price-currency">VND</span>
+                        <input class="sf-input" id="f-price" type="number" value="<%= ep ? ep.price : '' %>"
                         placeholder="0">
+                      </div>
+                      <p class="field-help">Set a fair campus price buyers can act on quickly.</p>
                     </div>
                     <div class="sf">
                       <label class="sf-label">Quantity *</label>
@@ -192,39 +232,50 @@
                     </div>
                     <textarea class="sf-textarea" id="f-desc" rows="5"
                       placeholder="Tell buyers more about your item..."><%= ep ? ep.description : '' %></textarea>
+                    <p class="field-help">Include usage history, defects, included accessories, and why the buyer should trust this listing.</p>
                     <div id="ai-status" class="sell-ai-status"></div>
                   </div>
                 </div>
 
                 <!-- Step 3 -->
-                <div class="sell-card" id="step-3">
+                <div class="sell-card" id="step-3" data-step-card="3">
                   <div class="sell-step-num">04</div>
                   <div class="sell-card-title">Location</div>
                   <div class="sell-card-sub">Where can the buyer meet you?</div>
 
                   <div class="sf">
                     <div class="sell-location-wrap">
-                      <input class="sf-input" id="location-search" type="text" placeholder="Search campus location...">
+                      <input class="sf-input" id="location-search" type="text" placeholder="Search a campus building, landmark, or meeting point...">
                       <div id="location-dropdown" class="sell-location-dropdown">
                       </div>
                     </div>
+                    <div class="sell-location-summary" id="sell-location-summary">No meetup point selected yet.</div>
                     <div id="location-map" class="sell-location-map"></div>
+                    <p class="field-help">Pick a clear, familiar campus location to reduce coordination friction with buyers.</p>
                     <input type="hidden" id="f-lat" value="<%= ep ? (ep.location?.lat || '') : '' %>">
                     <input type="hidden" id="f-lng" value="<%= ep ? (ep.location?.lng || '') : '' %>">
                     <input type="hidden" id="f-location" value="<%= ep ? (ep.locationName || '') : '' %>">
                   </div>
                 </div>
 
-                <button type="button" class="btn-submit" id="btn-submit-sell">
-                  <i data-lucide="check-circle" class="sell-submit-icon"></i>
-                  <%= ep ? 'Save Changes' : 'Post Product Now' %>
-                </button>
+                <div class="sell-submit-bar">
+                  <div class="sell-submit-copy">
+                    <div class="sell-submit-title">Review and publish</div>
+                    <div class="sell-submit-sub">Your listing can be updated later, but accurate details improve trust now.</div>
+                  </div>
+                  <button type="button" class="btn-submit" id="btn-submit-sell">
+                    <i data-lucide="check-circle" class="sell-submit-icon"></i>
+                    <%= ep ? 'Save Changes' : 'Post Product Now' %>
+                  </button>
+                </div>
               </form>
             </div>
 
             <!-- RIGHT: Preview -->
             <aside class="preview-sidebar">
-              <div class="sell-card-title sell-preview-heading">Live Preview
+              <div class="sell-preview-header">
+                <div class="sell-card-title sell-preview-heading">Live Preview</div>
+                <div class="sell-preview-caption">This is how buyers will scan your card in the marketplace feed.</div>
               </div>
               <div class="preview-card">
                 <div class="preview-card-image" id="p-image-wrap">
@@ -235,7 +286,10 @@
                   <div class="preview-card-meta" id="p-cat">Category</div>
                   <div class="preview-card-title" id="p-title">Product Title</div>
                   <div class="preview-card-price" id="p-price">&#8363;0</div>
-                  <div class="sell-preview-quantity" id="p-quantity">Stock: 1</div>
+                  <div class="sell-preview-meta-row">
+                    <div class="sell-preview-quantity" id="p-quantity">Stock: 1</div>
+                    <div class="sell-preview-location" id="p-location">Campus meetup</div>
+                  </div>
                 </div>
               </div>
 

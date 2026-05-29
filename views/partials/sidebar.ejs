@@ -45,10 +45,6 @@
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" /></svg>
         Payouts
       </div>
-      <a class="nav-item" href="/admin/disputes">
-        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Disputes
-      </a>
       <div class="nav-item" data-admin-path="/admin/reports" data-admin-section="aReports">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         Reports
@@ -125,6 +121,10 @@
           <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
           Revenue
         </a>
+        <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'wallet') ? ' active' : '' %>" href="/wallet-payouts">
+          <svg viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 015.5 5H19a2 2 0 012 2v2H5.5A2.5 2.5 0 003 11.5v5A2.5 2.5 0 005.5 19H20a1 1 0 001-1v-2"/><path d="M3 11.5A2.5 2.5 0 015.5 9H21v8H5.5A2.5 2.5 0 013 14.5v-3z"/><circle cx="16.5" cy="13" r="1"/></svg>
+          Wallet & Payouts
+        </a>
         <a class="nav-item<%= (typeof activePage !== 'undefined' && activePage === 'messages') ? ' active' : '' %>" href="/messages">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Messages
@@ -165,8 +165,11 @@
 
         <div class="sb-user-dropdown" id="sb-user-dropdown" role="menu" aria-labelledby="sb-user-trigger">
           <a href="/profile" class="sb-dropdown-item" role="menuitem">
-            <i data-lucide="user-round"></i>
-            Profile
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Profile</span>
           </a>
 
           <% if (user.role !== 'admin') { %>
@@ -185,8 +188,12 @@
 
           <div class="sb-dropdown-divider"></div>
           <button type="button" id="logout-btn" class="sb-dropdown-item danger" role="menuitem">
-            <i data-lucide="log-out"></i>
-            Sign out
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sign out</span>
           </button>
         </div>
       </div>
@@ -240,7 +247,8 @@
         aProducts:'/admin/products', aOrders:'/admin/orders', aPayouts:'/admin/payouts',
         aReports:'/admin/reports',
         aSettings:'/admin/settings', sDash:'/dashboard', sProducts:'/my-products',
-        sOrders:'/orders-seller', sRevenue:'/revenue', sMessages:'/messages', sProfile:'/profile'
+        sOrders:'/orders-seller', sRevenue:'/revenue', sWallet:'/wallet-payouts',
+        sMessages:'/messages', sProfile:'/profile'
       };
       if (el && el.classList) {
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -585,4 +593,11 @@
     applySidebarStateForViewport();
   });
 })();
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+      lucide.createIcons();
+    }
+  });
 </script>

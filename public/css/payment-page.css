@@ -327,10 +327,16 @@
     }
 
     .paid-btn-track {
-      background: linear-gradient(135deg, #1b5eff, #5b8aff);
+      background: linear-gradient(135deg, #1b5eff, #4f7dff);
       color: #fff;
-      box-shadow: 0 8px 18px rgba(27, 94, 255, 0.3);
+      border: 1px solid rgba(27, 94, 255, 0.16);
+      box-shadow: 0 10px 24px rgba(27, 94, 255, 0.22);
       font-weight: 800;
+    }
+
+    .paid-btn-track:hover {
+      background: linear-gradient(135deg, #1558c0, #3b6af4);
+      box-shadow: 0 14px 30px rgba(27, 94, 255, 0.26);
     }
 
     @media (max-width: 420px) {

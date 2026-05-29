@@ -120,6 +120,5 @@ exports.getAnalytics = async (req, res, next) => {
 const dispute = require('./dispute');
 exports.openDispute     = dispute.openDispute;
 exports.resolveDispute  = dispute.resolveDispute;
-exports.getAllDisputes  = dispute.getAllDisputes;
 
 

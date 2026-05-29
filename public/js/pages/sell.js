@@ -15,6 +15,13 @@
   const imagePreview = document.getElementById('image-preview');
   const sellForm = document.getElementById('sell-form');
   const draftIndicator = document.getElementById('sell-draft-indicator');
+  const flowNav = document.getElementById('sell-flow-nav');
+  const flowSteps = Array.from(document.querySelectorAll('.sell-flow-step[data-step-target]'));
+  const stepCards = Array.from(document.querySelectorAll('.sell-card[data-step-card]'));
+  const uploadStatus = document.getElementById('upload-status');
+  const imageCountIndicator = document.getElementById('image-count-indicator');
+  const locationSummary = document.getElementById('sell-location-summary');
+  const submitButton = document.getElementById('btn-submit-sell');
 
   const notify = (message, type = 'err') => {
     if (typeof showToast === 'function') showToast(message, type);
@@ -69,7 +76,12 @@
       document.getElementById('f-lat').value = draft.lat || '';
       document.getElementById('f-lng').value = draft.lng || '';
       document.getElementById('f-location').value = draft.location || '';
+      const locationSearch = document.getElementById('location-search');
+      if (locationSearch) locationSearch.value = draft.location || '';
       uploadedImages = Array.isArray(draft.images) ? draft.images : [];
+      document.querySelectorAll('.cond-opt').forEach((option) => {
+        option.classList.toggle('selected', option.dataset.val === (draft.condition || ''));
+      });
       if (draft.category) {
         document.getElementById('f-cat').value = draft.category;
         const match = document.querySelector(`.category-option[data-slug="${CSS.escape(draft.category)}"]`);
@@ -116,6 +128,56 @@
     return validTitle && validCategory && validPrice && validQuantity && validDesc && validCondition && validLocation;
   }
 
+  function getStepCompletion() {
+    return [
+      uploadedImages.length > 0,
+      Boolean(document.getElementById('f-condition')?.value.trim()),
+      Boolean(
+        document.getElementById('f-title')?.value.trim().length >= 4
+        && document.getElementById('f-cat')?.value.trim()
+        && Number(document.getElementById('f-price')?.value) > 0
+        && Number(document.getElementById('f-quantity')?.value) >= 1
+        && document.getElementById('f-desc')?.value.trim().length >= 10
+      ),
+      Boolean(document.getElementById('f-location')?.value.trim() && document.getElementById('f-lat')?.value && document.getElementById('f-lng')?.value)
+    ];
+  }
+
+  function setActiveStep(stepIndex) {
+    stepCards.forEach((card, index) => card.classList.toggle('active', index === stepIndex));
+    flowSteps.forEach((step, index) => step.classList.toggle('active', index === stepIndex));
+  }
+
+  function syncStepState(preferredStep) {
+    const completion = getStepCompletion();
+    const firstIncomplete = completion.findIndex((step) => !step);
+    const activeStep = Number.isInteger(preferredStep)
+      ? preferredStep
+      : (firstIncomplete === -1 ? completion.length - 1 : firstIncomplete);
+
+    stepCards.forEach((card, index) => {
+      card.classList.toggle('completed', completion[index]);
+      card.dataset.stepState = completion[index] ? 'done' : (index === activeStep ? 'active' : 'idle');
+    });
+
+    flowSteps.forEach((step, index) => {
+      step.classList.toggle('done', completion[index]);
+      step.classList.toggle('active', index === activeStep);
+    });
+  }
+
+  function updateImageMeta(message = '') {
+    if (imageCountIndicator) imageCountIndicator.textContent = `${uploadedImages.length} / 5 images added`;
+    if (!uploadStatus) return;
+    uploadStatus.textContent = message || (uploadedImages.length ? 'Cover photo ready' : 'Ready to upload');
+  }
+
+  function updateLocationSummary() {
+    if (!locationSummary) return;
+    const address = document.getElementById('f-location')?.value.trim();
+    locationSummary.textContent = address || 'No meetup point selected yet.';
+  }
+
   function initLocationPicker() {
     const latInput = document.getElementById('f-lat');
     const lngInput = document.getElementById('f-lng');
@@ -160,14 +222,25 @@
     initAutocomplete();
   }
 
-  async function updateLocation(lat, lng) {
+  async function updateLocation(lat, lng, options = {}) {
+    const { persist = true } = options;
     document.getElementById('f-lat').value = lat;
     document.getElementById('f-lng').value = lng;
     try {
       const address = await reverseGeocode(lat, lng);
       document.getElementById('f-location').value = address;
+      document.getElementById('location-search').value = address;
     } catch (error) {
       window.AppUtils?.reportClientError('Geocoding failed:', error);
+    } finally {
+      updateLocationSummary();
+      updatePreview();
+      validateForm();
+      syncStepState(3);
+      if (persist) {
+        markDirty(true);
+        saveDraft();
+      }
     }
   }
 
@@ -331,7 +404,11 @@
       });
 
       close();
+      markDirty(true);
+      saveDraft();
       updatePreview();
+      syncStepState(2);
+      validateForm();
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
@@ -404,13 +481,17 @@
     }
 
     const filesToAdd = Array.from(files).slice(0, 5 - uploadedImages.length);
+    if (!filesToAdd.length) return;
+    updateImageMeta(`Uploading ${filesToAdd.length} image${filesToAdd.length > 1 ? 's' : ''}...`);
     filesToAdd.forEach((file) => {
       if (!file.type.startsWith('image/')) {
         notify('Only image files are allowed');
+        updateImageMeta();
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
         notify('Image must be smaller than 5MB');
+        updateImageMeta();
         return;
       }
 
@@ -430,13 +511,17 @@
             document.getElementById('f-images').value = JSON.stringify(uploadedImages);
             markDirty(true);
             saveDraft();
+            updateImageMeta('Upload complete');
+            syncStepState(0);
           } else {
             notify('Upload failed: ' + (data.message || 'Unknown error'));
+            updateImageMeta('Upload failed');
           }
         })
         .catch((error) => {
           window.AppUtils?.reportClientError('Upload error:', error);
           notify('Network error during upload');
+          updateImageMeta('Upload failed');
         });
     });
   }
@@ -444,22 +529,59 @@
   function renderImagePreview() {
     if (!imagePreview) return;
     imagePreview.replaceChildren(...uploadedImages.map((url, index) => createElement('div', {
-      style: { position: 'relative', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg2)' },
+      className: 'sell-image-tile',
       children: [
-        createElement('img', { attrs: { src: url, alt: `image ${index + 1}` }, style: { width: '100%', height: '100px', objectFit: 'cover' } }),
-        createElement('button', {
-          attrs: { type: 'button' },
-          className: 'remove-image-btn',
-          dataset: { index },
-          style: { position: 'absolute', top: '2px', right: '2px', width: '24px', height: '24px', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-          text: 'x'
+        createElement('img', { attrs: { src: url, alt: `image ${index + 1}` } }),
+        createElement('div', {
+          className: 'sell-image-toolbar',
+          children: [
+            createElement('div', { className: 'sell-image-tag', text: index === 0 ? 'Cover' : `Photo ${index + 1}` }),
+            createElement('div', {
+              className: 'sell-image-actions',
+              children: [
+                createElement('button', {
+                  attrs: { type: 'button', title: 'Move left' },
+                  className: 'sell-image-action',
+                  dataset: { action: 'left', index },
+                  text: '<'
+                }),
+                createElement('button', {
+                  attrs: { type: 'button', title: 'Move right' },
+                  className: 'sell-image-action',
+                  dataset: { action: 'right', index },
+                  text: '>'
+                }),
+                createElement('button', {
+                  attrs: { type: 'button', title: 'Remove image' },
+                  className: 'remove-image-btn',
+                  dataset: { index },
+                  text: 'x'
+                })
+              ]
+            })
+          ]
         })
       ]
     })));
+    updateImageMeta();
   }
 
   function removeImage(index) {
     uploadedImages.splice(index, 1);
+    renderImagePreview();
+    updatePreview();
+    document.getElementById('f-images').value = JSON.stringify(uploadedImages);
+    markDirty(true);
+    saveDraft();
+    updateImageMeta(uploadedImages.length ? 'Photos updated' : 'Ready to upload');
+    syncStepState(0);
+  }
+
+  function moveImage(index, direction) {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= uploadedImages.length) return;
+    const [image] = uploadedImages.splice(index, 1);
+    uploadedImages.splice(targetIndex, 0, image);
     renderImagePreview();
     updatePreview();
     document.getElementById('f-images').value = JSON.stringify(uploadedImages);
@@ -474,6 +596,7 @@
     const price = document.getElementById('f-price').value || '0';
     const quantity = document.getElementById('f-quantity').value || '1';
     const condition = document.getElementById('f-condition').value || 'Condition';
+    const location = document.getElementById('f-location').value || 'Campus meetup';
 
     const imageWrap = document.getElementById('p-image-wrap');
     const badge = createElement('div', { className: 'preview-card-badge', attrs: { id: 'p-cond' }, text: condition });
@@ -495,14 +618,12 @@
       ? window.AppUtils.formatVND(price)
       : `${Number(price || 0).toLocaleString('vi-VN')} VND`;
     document.getElementById('p-quantity').textContent = 'Stock: ' + quantity;
+    document.getElementById('p-location').textContent = location;
 
-    let filled = 0;
-    if (uploadedImages.length > 0) filled += 20;
-    if (title !== 'Product Title') filled += 20;
-    if (document.getElementById('f-desc').value) filled += 20;
-    if (condition !== 'Condition') filled += 20;
-    if (document.getElementById('f-lat').value) filled += 20;
+    const stepCompletion = getStepCompletion();
+    const filled = (stepCompletion.filter(Boolean).length / stepCompletion.length) * 100;
     document.getElementById('sell-progress-fill').style.width = filled + '%';
+    syncStepState();
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
@@ -511,7 +632,11 @@
     document.querySelectorAll('.cond-opt').forEach((option) => option.classList.remove('selected'));
     element.classList.add('selected');
     document.getElementById('f-condition').value = element.dataset.val;
+    markDirty(true);
+    saveDraft();
     updatePreview();
+    validateForm();
+    syncStepState(1);
   }
 
   async function generateAIDescription() {
@@ -576,7 +701,11 @@
         setTimeout(() => {
           statusDiv.style.display = 'none';
         }, 3000);
+        markDirty(true);
+        saveDraft();
         updatePreview();
+        validateForm();
+        syncStepState(2);
       } else {
         statusDiv.style.background = '#ffebee';
         statusDiv.style.borderLeftColor = '#f44336';
@@ -595,13 +724,14 @@
   }
 
   async function handleSubmit() {
-    const button = document.querySelector('.btn-submit');
+    const button = submitButton || document.querySelector('.btn-submit');
     if (!validateForm()) {
       notify('Please complete the required fields before posting');
       return;
     }
     button.disabled = true;
-    button.textContent = 'Publishing...';
+    button.innerHTML = '<i data-lucide="loader-circle" class="sell-submit-icon"></i> Publishing...';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     const payload = {
       title: document.getElementById('f-title').value,
@@ -648,6 +778,8 @@
       renderImagePreview();
       document.getElementById('f-images').value = JSON.stringify(uploadedImages);
     }
+    updateImageMeta();
+    updateLocationSummary();
     initLocationPicker();
     setupImageUpload();
     initCategoryDropdown();
@@ -679,12 +811,24 @@
           saveDraft();
           updatePreview();
           validateForm();
+          syncStepState(target.id === 'f-location' ? 3 : 2);
         }
+      });
+
+      sellForm.addEventListener('focusin', (event) => {
+        const card = event.target.closest('.sell-card[data-step-card]');
+        if (!card) return;
+        setActiveStep(Number(card.dataset.stepCard));
       });
     }
 
     if (imagePreview) {
       imagePreview.addEventListener('click', (event) => {
+        const moveBtn = event.target.closest('.sell-image-action[data-action][data-index]');
+        if (moveBtn) {
+          moveImage(Number(moveBtn.dataset.index), moveBtn.dataset.action);
+          return;
+        }
         const removeBtn = event.target.closest('.remove-image-btn[data-index]');
         if (!removeBtn) return;
         const index = Number(removeBtn.dataset.index);
@@ -701,9 +845,21 @@
       });
     }
 
+    if (flowNav) {
+      flowNav.addEventListener('click', (event) => {
+        const target = event.target.closest('.sell-flow-step[data-step-target]');
+        if (!target) return;
+        const card = document.getElementById(target.dataset.stepTarget);
+        if (!card) return;
+        setActiveStep(Number(card.dataset.stepCard));
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
     updatePreview();
     validateForm();
+    syncStepState();
     setDraftIndicator(existingImages.length ? 'Editing existing product' : 'Draft saved');
   });
 

@@ -78,16 +78,10 @@ router.get('/favorites', requireAuth, (req, res) => {
   });
 });
 
-router.get('/admin/disputes', requireAuth, requireAdminPage, (req, res) => {
-  return res.render(VIEWS.ADMIN_DISPUTES, {
-    title: `Disputes${TITLE_SEPARATOR}${APP_NAME}`,
-    isLoginPage: false,
-  });
-});
-
 router.get('/dashboard', requireAuth, requireAdminPage, pageController.getDashboard);
 router.get('/dashboard-seller', requireAuth, pageController.getDashboard);
 router.get('/orders-seller', requireAuth, pageController.getSellerOrders);
 router.get('/revenue', requireAuth, pageController.getRevenue);
+router.get('/wallet-payouts', requireAuth, pageController.getWalletPayouts);
 
 module.exports = router;

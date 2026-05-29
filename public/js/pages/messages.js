@@ -136,6 +136,128 @@ function dayKey(dateStr) {
   return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
 }
 
+function parseOrderMessage(text) {
+  const raw = String(text || '');
+  if (!raw.startsWith('[ORDER]')) return null;
+
+  const lines = raw
+    .replace(/^\[ORDER\]\s*/i, '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return null;
+
+  const parsed = {
+    requester: '',
+    product: '',
+    quantity: '',
+    total: '',
+    delivery: '',
+    payment: '',
+    note: '',
+  };
+
+  const firstLine = lines[0].replace(/^\*+|\*+$/g, '');
+  const requesterMatch = firstLine.match(/new order from\s+(.+)/i);
+  parsed.requester = requesterMatch ? requesterMatch[1].replace(/\*+$/g, '').trim() : firstLine.trim();
+
+  for (let i = 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    const idx = line.indexOf(':');
+    if (idx === -1) continue;
+
+    const key = line.slice(0, idx).trim().toLowerCase();
+    const value = line.slice(idx + 1).trim();
+
+    if (key === 'product') parsed.product = value;
+    else if (key === 'quantity') parsed.quantity = value;
+    else if (key === 'total') parsed.total = value;
+    else if (key === 'delivery to' || key === 'method') parsed.delivery = value;
+    else if (key === 'payment') parsed.payment = value;
+    else if (key === 'note') parsed.note = value;
+  }
+
+  return parsed;
+}
+
+function createOrderField(label, value) {
+  const field = document.createElement('div');
+  field.className = 'message-order-field';
+
+  const fieldLabel = document.createElement('div');
+  fieldLabel.className = 'message-order-field-label';
+  fieldLabel.textContent = label;
+
+  const fieldValue = document.createElement('div');
+  fieldValue.className = 'message-order-field-value';
+  fieldValue.textContent = value || '—';
+
+  field.appendChild(fieldLabel);
+  field.appendChild(fieldValue);
+  return field;
+}
+
+function renderOrderCard(m, isMe) {
+  const parsed = parseOrderMessage(m.text);
+  if (!parsed) return null;
+
+  const card = document.createElement('div');
+  card.className = `message-order-card ${isMe ? 'me' : 'other'}`.trim();
+
+  const head = document.createElement('div');
+  head.className = 'message-order-head';
+
+  const headCopy = document.createElement('div');
+  headCopy.className = 'message-order-head-copy';
+
+  const badge = document.createElement('div');
+  badge.className = 'message-order-badge';
+  badge.textContent = 'Order update';
+  headCopy.appendChild(badge);
+
+  const title = document.createElement('div');
+  title.className = 'message-order-title';
+  title.textContent = parsed.requester ? `New order from ${parsed.requester}` : 'New order';
+  headCopy.appendChild(title);
+
+  const subtitle = document.createElement('div');
+  subtitle.className = 'message-order-subtitle';
+  subtitle.textContent = 'Structured order summary';
+  headCopy.appendChild(subtitle);
+
+  head.appendChild(headCopy);
+  card.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'message-order-grid';
+  grid.appendChild(createOrderField('Product', parsed.product));
+  grid.appendChild(createOrderField('Quantity', parsed.quantity));
+  grid.appendChild(createOrderField('Total', parsed.total));
+  grid.appendChild(createOrderField('Delivery', parsed.delivery));
+  grid.appendChild(createOrderField('Payment', parsed.payment));
+  card.appendChild(grid);
+
+  if (parsed.note) {
+    const note = document.createElement('div');
+    note.className = 'message-order-note';
+
+    const noteLabel = document.createElement('div');
+    noteLabel.className = 'message-order-field-label';
+    noteLabel.textContent = 'Note';
+
+    const noteValue = document.createElement('div');
+    noteValue.className = 'message-order-note-value';
+    noteValue.textContent = parsed.note;
+
+    note.appendChild(noteLabel);
+    note.appendChild(noteValue);
+    card.appendChild(note);
+  }
+
+  return card;
+}
+
 async function fetchInbox() {
   try {
     const res = await fetch('/api/chat', { credentials: 'include' });
@@ -454,8 +576,8 @@ window.sendMessage = async function () {
 
   input.disabled = true;
   btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.textContent = '...';
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
 
   try {
     let imageUrl = null;
@@ -488,12 +610,16 @@ window.sendMessage = async function () {
     showChatToast(err.message || 'Network error - message not sent');
   } finally {
     if (overlay) overlay.style.display = 'none';
-    btn.textContent = originalText;
+    btn.innerHTML = originalHTML;
     input.disabled = false;
     btn.disabled = false;
     input.focus();
   }
 };
+
+document.getElementById('chat-send-btn').addEventListener('click', () => {
+  sendMessage();
+});
 
 document.getElementById('chat-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendMessage();
@@ -570,3 +696,150 @@ document.addEventListener('visibilitychange', () => {
     startPolling(5000);
   }
 });
+
+function renderInbox(convs) {
+  const list = document.getElementById('conv-list');
+  const uiMode = USER_ROLE === 'seller' ? 'seller' : 'buyer';
+  const modeLabel = document.getElementById('mode-label');
+  if (modeLabel) modeLabel.textContent = uiMode === 'seller' ? 'Seller view' : 'Buyer view';
+  clearNode(list);
+
+  if (convs.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'conv-empty';
+    empty.textContent = 'No messages yet.';
+    list.appendChild(empty);
+    return;
+  }
+
+  const filtered = convs.filter((c) => {
+    if (uiMode === 'seller') return c.isSellerConversation;
+    return !c.isSellerConversation;
+  });
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'conv-empty';
+    empty.textContent = 'No messages for current mode.';
+    list.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach((c) => {
+    const partner = c.partner || (c.participants ? c.participants.find((p) => String(p._id) !== MY_USER_ID) : null) || { name: 'Unknown', nickname: '' };
+    const name = partner.nickname || partner.name || 'Unknown';
+    const activeClass = c._id === currentConvId ? 'active' : '';
+    const prodName = c.product ? c.product.title : 'Deleted Product';
+    const lastMessageText = String(c.lastMessage || '').trim();
+    const isOrderUpdate = /^new order/i.test(lastMessageText);
+
+    const item = document.createElement('div');
+    item.className = `conv-item ${activeClass}`.trim();
+    item.dataset.convId = String(c._id || '');
+    item.dataset.convName = String(name);
+    item.dataset.convAvatar = String(partner.avatar || '');
+
+    const av = document.createElement('div');
+    av.className = 'conv-avatar';
+    av.appendChild(avatarNode(name, partner.avatar, 48, 18));
+    item.appendChild(av);
+
+    const info = document.createElement('div');
+    info.className = 'conv-info';
+
+    const top = document.createElement('div');
+    top.className = 'conv-top';
+
+    const n = document.createElement('div');
+    n.className = 'conv-name';
+    n.textContent = name;
+    top.appendChild(n);
+
+    if (c.unreadCount > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'unread-badge';
+      badge.textContent = String(c.unreadCount);
+      top.appendChild(badge);
+    }
+
+    info.appendChild(top);
+
+    const product = document.createElement('div');
+    product.className = 'conv-product';
+    product.textContent = prodName;
+    info.appendChild(product);
+
+    const last = document.createElement('div');
+    last.className = 'conv-lastmsg';
+    last.textContent = isOrderUpdate ? `Order update · ${lastMessageText.replace(/^new order\s*-\s*/i, '')}` : (lastMessageText || '...');
+    if (isOrderUpdate) last.dataset.kind = 'order';
+    info.appendChild(last);
+
+    item.appendChild(info);
+    list.appendChild(item);
+  });
+}
+
+function renderMessages(messages) {
+  const container = document.getElementById('chat-messages');
+  const shouldScroll = autoScroll || (container.scrollTop + container.clientHeight >= container.scrollHeight - 50);
+  clearNode(container);
+
+  let lastDayKey = null;
+
+  messages.forEach((m) => {
+    const senderId = m && m.sender && m.sender._id ? String(m.sender._id) : String(m.sender || '');
+    const isMe = senderId === MY_USER_ID;
+    const time = new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const msgDay = dayKey(m.createdAt);
+
+    if (msgDay !== lastDayKey) {
+      lastDayKey = msgDay;
+      const label = formatDateLabel(m.createdAt);
+      const divider = document.createElement('div');
+      divider.className = 'date-divider';
+      const labelEl = document.createElement('span');
+      labelEl.className = 'date-divider-label';
+      labelEl.textContent = label;
+      divider.appendChild(labelEl);
+      container.appendChild(divider);
+    }
+
+    const row = document.createElement('div');
+    row.className = `message-row ${isMe ? 'me' : 'other'}`;
+
+    if (m.imageUrl) {
+      const img = document.createElement('img');
+      img.className = 'message-image';
+      img.src = String(m.imageUrl);
+      img.alt = 'Image';
+      img.dataset.imageUrl = String(m.imageUrl);
+      row.appendChild(img);
+    }
+
+    if (m.text) {
+      const orderCard = renderOrderCard(m, isMe);
+      if (orderCard) {
+        row.classList.add('message-row-order');
+        row.appendChild(orderCard);
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = String(m.text);
+        row.appendChild(bubble);
+      }
+    }
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'message-time';
+    timeEl.textContent = time;
+    row.appendChild(timeEl);
+
+    container.appendChild(row);
+  });
+
+  if (shouldScroll) {
+    container.scrollTop = container.scrollHeight;
+    autoScroll = false;
+  }
+}

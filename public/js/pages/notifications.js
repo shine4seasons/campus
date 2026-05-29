@@ -81,9 +81,15 @@
   function createNotificationItem(notification) {
     const meta = TYPE_COLORS[notification.type] || TYPE_COLORS.info;
     const isRead = !!notification.isRead;
+    const typeLabel = ({
+      order: 'Order',
+      message: 'Message',
+      rating: 'Review',
+      system: 'System',
+    }[notification.type] || 'Update');
     const item = createElement('div', {
       className: `notif-item ${isRead ? '' : 'unread'}`.trim(),
-      dataset: { id: notification._id }
+      dataset: { id: notification._id, type: notification.type || 'info', read: isRead ? 'true' : 'false' }
     });
 
     if (!isRead) {
@@ -104,10 +110,16 @@
 
     const body = createElement('div', { className: 'notif-body' });
     body.appendChild(createElement('div', {
+      className: 'notif-topline',
+      children: [
+        createElement('span', { className: 'notif-type-chip', text: typeLabel }),
+        createElement('div', { className: 'notif-time', text: timeAgo(notification.createdAt) })
+      ]
+    }));
+    body.appendChild(createElement('div', {
       className: 'notif-row',
       children: [
         createElement('div', { className: 'notif-title-text', text: notification.title || '' }),
-        createElement('div', { className: 'notif-time', text: timeAgo(notification.createdAt) })
       ]
     }));
     body.appendChild(createElement('div', { className: 'notif-message', text: notification.message || '' }));
@@ -116,7 +128,7 @@
       body.appendChild(createElement('a', {
         className: 'notif-link',
         attrs: { href: notification.link },
-        text: 'View details'
+        text: 'View details →'
       }));
     }
 

@@ -6,7 +6,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
-<body>
+<body class="product-page">
   <%- include('partials/navbar') %>
     <%- include('partials/sidebar') %>
 
@@ -131,8 +131,8 @@
             <button class="btn-contact" id="btn-msg-seller" data-action="init-chat">
               <i data-lucide="message-circle"></i> Chat with Seller
             </button>
-            <button class="btn-interested" id="btn-interested" data-action="toggle-interested">
-              <i data-lucide="heart" id="heart-icon"></i> Add to Interests
+            <button type="button" class="btn-interested" id="btn-interested" data-action="toggle-interested" aria-pressed="false">
+              <i data-lucide="heart" id="heart-icon"></i> <span data-interest-label>Add to Interests</span>
             </button>
           <% } %>
         </div>
@@ -193,6 +193,22 @@
       <% } %>
     </section>
 
+    <!-- BUY NOW -->
+    <% if (!isSold && !isOwner) { %>
+      <section class="pdp-card pdp-buy-inline">
+        <div class="pdp-buy-inline-copy">
+          <div class="pdp-buy-inline-label">Ready to buy?</div>
+          <div class="pdp-buy-inline-price"><%= fmtPrice(p.price) %></div>
+          <div class="pdp-buy-inline-sub">This button stays in the page flow and scrolls with you.</div>
+        </div>
+        <div class="pdp-buy-inline-actions">
+          <button class="buy-bar-buy" data-action="go-checkout">
+            Buy Now
+          </button>
+        </div>
+      </section>
+    <% } %>
+
     <!-- REVIEWS -->
     <section class="pdp-card pdp-reviews">
       <h2 class="pdp-card-title">
@@ -251,6 +267,7 @@
         <div class="pdp-seller-full-actions">
           <a href="/user/<%= seller._id %>" class="pdp-btn-secondary" style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); font-weight:700; text-decoration:none; color:var(--text); display:inline-block;">View Profile</a>
           <% if (user && !isOwner) { %>
+            <button class="pdp-btn-ghost" data-action="report-product" data-product-id="<%= p._id %>" style="margin-left:12px; border:none; background:none; color:var(--text-3); font-size:13px; font-weight:600; cursor:pointer;">Report Product</button>
             <button class="pdp-btn-ghost" data-action="report-seller" data-seller-id="<%= seller._id %>" style="margin-left:12px; border:none; background:none; color:var(--text-3); font-size:13px; font-weight:600; cursor:pointer;">Report Seller</button>
           <% } %>
         </div>
@@ -316,7 +333,7 @@
     style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;flex-direction:column;">
     <div
       style="background:#fff;border-radius:16px;padding:24px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-      <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Report this <%= user ? 'item' : '' %></div>
+      <div id="report-modal-title" style="font-size:18px;font-weight:700;margin-bottom:16px;">Report this item</div>
       <div style="color:#666;font-size:14px;margin-bottom:20px;">Help us keep Campus safe by reporting inappropriate content.</div>
 
       <div style="margin-bottom:16px;">
@@ -352,20 +369,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ── Fixed bottom buy bar ── -->
-  <% if (!isSold && !isOwner) { %>
-    <div class="buy-bar" id="buy-bar">
-      <div class="buy-bar-price">
-        <%= fmtPrice(p.price) %>
-      </div>
-      <div class="buy-bar-actions">
-        <button class="buy-bar-buy" data-action="go-checkout">
-          Buy Now
-        </button>
-      </div>
-    </div>
-  <% } %>
 
   <script defer src="/js/rating.js"></script>
   <script>

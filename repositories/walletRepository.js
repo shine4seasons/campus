@@ -1,6 +1,7 @@
 const Wallet = require('../models/Wallet');
 const PayoutRequest = require('../models/PayoutRequest');
 const WalletTransaction = require('../models/WalletTransaction');
+const { PAYOUT_STATUS } = require('../config/appConstants');
 
 function findWalletByUser(userId, session = null) {
   const query = Wallet.findOne({ user: userId });
@@ -32,7 +33,8 @@ function upsertWalletForUser(userId, update, options = {}) {
 function findTransactionsByWallet(walletId, limit = 50) {
   return WalletTransaction.find({ wallet: walletId })
     .sort('-createdAt')
-    .limit(limit);
+    .limit(limit)
+    .lean();
 }
 
 function findPayoutRequestsByUser(userId, limit = 30) {
@@ -42,6 +44,25 @@ function findPayoutRequestsByUser(userId, limit = 30) {
     .lean();
 }
 
+async function getPayoutStatsByUser(userId) {
+  const counts = await PayoutRequest.aggregate([
+    { $match: { user: userId } },
+    { $group: { _id: '$status', count: { $sum: 1 } } }
+  ]);
+
+  return counts.reduce((acc, item) => {
+    if (Object.prototype.hasOwnProperty.call(acc, item._id)) {
+      acc[item._id] = item.count;
+    }
+    return acc;
+  }, {
+    [PAYOUT_STATUS.PENDING]: 0,
+    [PAYOUT_STATUS.PROCESSING]: 0,
+    [PAYOUT_STATUS.PAID]: 0,
+    [PAYOUT_STATUS.REJECTED]: 0
+  });
+}
+
 module.exports = {
   findWalletByUser,
   createPayoutRequest,
@@ -49,5 +70,6 @@ module.exports = {
   createWalletTransactions,
   upsertWalletForUser,
   findTransactionsByWallet,
-  findPayoutRequestsByUser
+  findPayoutRequestsByUser,
+  getPayoutStatsByUser
 };

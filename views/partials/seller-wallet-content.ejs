@@ -1,0 +1,227 @@
+<div class="wallet-hero wallet-hero-primary glass">
+  <div class="wallet-hero-main">
+    <div class="wallet-hero-copy">
+      <div class="wallet-hero-label">Available Balance</div>
+      <div id="wallet-available-balance" class="wallet-hero-balance">
+        <%= formatVND(wallet.availableBalance) %>
+      </div>
+      <div id="wallet-pending-balance" class="wallet-hero-pending">
+        <i data-lucide="clock" class="wallet-hero-pending-icon"></i>
+        Pending: <%= formatVND(wallet.pendingBalance) %>
+      </div>
+      <div id="wallet-total-sales" class="wallet-hero-meta">
+        Total settled sales: <%= formatVND(wallet.totalSales) %>
+      </div>
+    </div>
+    <div class="wallet-hero-inline-stats">
+      <div class="wallet-hero-inline-card">
+        <span>Withdrawable now</span>
+        <strong id="wallet-available-stat-hero"><%= formatVND(wallet.availableBalance) %></strong>
+      </div>
+      <div class="wallet-hero-inline-card">
+        <span>Processing</span>
+        <strong id="wallet-processing-count-hero">0</strong>
+      </div>
+    </div>
+  </div>
+  <div class="wallet-hero-side">
+    <div class="wallet-hero-side-copy">
+      <div class="wallet-hero-side-title">Withdraw to bank</div>
+      <div class="wallet-hero-side-sub">Submit a payout request and track status below.</div>
+    </div>
+    <button class="btn wallet-hero-action" data-action="toggle-withdraw-panel" aria-expanded="false" aria-controls="withdrawPanel">
+      Withdraw Funds
+    </button>
+  </div>
+</div>
+
+<section id="withdrawPanel" class="withdraw-inline-panel" hidden>
+  <div class="withdraw-inline-shell">
+    <aside class="withdraw-sidecard">
+      <div class="withdraw-sidecard-label">Ready to transfer</div>
+      <div class="withdraw-sidecard-balance" id="withdraw-balance-display"><%= formatVND(wallet.availableBalance) %></div>
+      <div class="withdraw-sidecard-sub">Available balance from settled orders</div>
+
+      <div class="withdraw-sidecard-preview">
+        <div class="withdraw-preview-row">
+          <span>Withdrawal amount</span>
+          <strong id="withdraw-preview-amount"><%= formatVND(wallet.availableBalance) %></strong>
+        </div>
+        <div class="withdraw-preview-row">
+          <span>Estimated arrival</span>
+          <strong>Manual bank transfer</strong>
+        </div>
+        <div class="withdraw-preview-row">
+          <span>Platform fee</span>
+          <strong>0 VND</strong>
+        </div>
+      </div>
+
+      <div class="withdraw-sidecard-note">
+        Double-check bank information before submitting. Rejected requests are returned to wallet balance.
+      </div>
+    </aside>
+
+    <div class="withdraw-form-panel">
+      <div class="withdraw-panel-head">
+        <div>
+          <div class="withdraw-panel-kicker">Payout form</div>
+          <h3 class="withdraw-panel-title">Request bank withdrawal</h3>
+        </div>
+        <button type="button" class="withdraw-panel-close" data-action="close-withdraw-panel">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="form-group withdraw-form-group">
+        <label class="form-label">Amount (VND)</label>
+        <div class="withdraw-amount-display-row">
+          <strong id="withdraw-amount-display" class="withdraw-amount-display"><%= formatVND(wallet.availableBalance) %></strong>
+          <span class="withdraw-amount-caption">Selected payout amount</span>
+        </div>
+        <div class="withdraw-slider-wrap">
+          <input type="range" class="withdraw-amount-slider" id="withdrawAmountRange" min="0" max="<%= wallet.availableBalance %>" step="1000" value="<%= wallet.availableBalance %>">
+          <input type="hidden" id="withdrawAmount" value="<%= wallet.availableBalance %>">
+        </div>
+        <div class="withdraw-slider-scale">
+          <span>0 ₫</span>
+          <span id="withdraw-slider-max"><%= formatVND(wallet.availableBalance) %></span>
+        </div>
+        <div class="withdraw-quick-actions">
+          <button type="button" class="withdraw-chip" data-withdraw-preset="25">25%</button>
+          <button type="button" class="withdraw-chip" data-withdraw-preset="50">50%</button>
+          <button type="button" class="withdraw-chip" data-withdraw-preset="75">75%</button>
+          <button type="button" class="withdraw-chip withdraw-chip-strong" data-withdraw-preset="100">Max</button>
+        </div>
+        <div id="withdraw-available-hint" class="withdraw-available-hint">Available: <%= formatVND(wallet.availableBalance) %></div>
+      </div>
+
+      <div class="withdraw-bank-grid">
+        <div class="form-group withdraw-form-group">
+          <label class="form-label">Bank Name</label>
+          <input type="text" class="form-input" id="bankName" placeholder="e.g., MB Bank">
+        </div>
+        <div class="form-group withdraw-form-group">
+          <label class="form-label">Account Number</label>
+          <input type="text" class="form-input" id="accountNumber" placeholder="Enter destination account number">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Account Holder</label>
+        <input type="text" class="form-input withdraw-account-name" id="accountName" placeholder="Full legal name in uppercase">
+        <div class="withdraw-field-note">The bank account holder must match the destination account details.</div>
+      </div>
+
+      <div class="withdraw-inline-checks">
+        <div class="withdraw-check">
+          <i data-lucide="shield-check"></i>
+          <span>Manual review before transfer</span>
+        </div>
+        <div class="withdraw-check">
+          <i data-lucide="badge-check"></i>
+          <span>Funds return to wallet if rejected</span>
+        </div>
+      </div>
+
+      <div class="withdraw-panel-actions">
+        <button class="btn btn-sec" type="button" data-action="close-withdraw-panel">Cancel</button>
+        <button class="btn btn-pri" id="submit-withdraw-btn" type="button" data-action="submit-withdraw">Submit Request</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stat-grid wallet-stat-grid">
+  <div class="stat-card glass">
+    <div class="stat-top">
+      <div class="stat-label">Available to withdraw</div>
+    </div>
+    <div class="stat-val" id="wallet-available-stat"><%= formatVND(wallet.availableBalance) %></div>
+    <div class="stat-delta">Can be requested immediately</div>
+  </div>
+  <div class="stat-card glass">
+    <div class="stat-top">
+      <div class="stat-label">Waiting for order completion</div>
+    </div>
+    <div class="stat-val" id="wallet-pending-stat"><%= formatVND(wallet.pendingBalance) %></div>
+    <div class="stat-delta">QR payments not settled yet</div>
+  </div>
+  <div class="stat-card glass">
+    <div class="stat-top">
+      <div class="stat-label">Payouts in progress</div>
+    </div>
+    <div class="stat-val" id="wallet-processing-count">0</div>
+    <div class="stat-delta">Approved by admin, waiting transfer</div>
+  </div>
+  <div class="stat-card glass">
+    <div class="stat-top">
+      <div class="stat-label">Paid out</div>
+    </div>
+    <div class="stat-val" id="wallet-paid-count">0</div>
+    <div class="stat-delta">Completed withdrawals</div>
+  </div>
+</div>
+
+<div id="wallet-status-note" class="alert-box alert-info wallet-status-note">
+  <svg viewBox="0 0 24 24" stroke-width="2">
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+  </svg>
+  <div class="alert-box-text">Wallet data is synchronized from completed QR orders and your withdrawal history.</div>
+</div>
+
+<div class="card premium-card">
+  <div class="card-head">
+    <div class="card-title">Transaction History</div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl wallet-transactions-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="walletTransactions">
+        <tr class="wallet-empty-row">
+          <td colspan="5" class="wallet-empty-cell">
+            <i data-lucide="history" class="wallet-empty-icon"></i>
+            <div>No transactions found</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card premium-card wallet-payout-card">
+  <div class="card-head">
+    <div>
+      <div class="card-title">Payout Requests</div>
+      <div class="card-sub">Track when your QR earnings are transferred to your bank account</div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl wallet-payout-requests-table">
+      <thead>
+        <tr>
+          <th>Requested</th>
+          <th>Amount</th>
+          <th>Bank</th>
+          <th>Status</th>
+          <th>Transfer Ref</th>
+        </tr>
+      </thead>
+      <tbody id="payoutRequestsTable">
+        <tr>
+          <td colspan="5" class="wallet-empty-cell wallet-empty-cell-compact">
+            No payout requests yet
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -75,7 +75,7 @@ const ratingDeleteSchema = z.object({
 }).strict();
 
 const payoutRequestSchema = z.object({
-  amount: z.coerce.number().positive(),
+  amount: z.coerce.number().int().min(50000),
   bankInfo: z.object({
     bankName: z.string().trim().min(1).max(120),
     accountNumber: z.string().trim().min(1).max(50),
@@ -98,7 +98,7 @@ const adminPayoutApproveSchema = z.object({
 
 const adminPayoutMarkPaidSchema = z.object({
   adminNote: z.string().trim().max(1000).optional().default(''),
-  transferReference: z.string().trim().max(120).optional().default(''),
+  transferReference: z.string().trim().min(1).max(120),
   transferNote: z.string().trim().max(1000).optional().default(''),
 }).strict();
 

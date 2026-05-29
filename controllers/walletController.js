@@ -1,12 +1,51 @@
 const mongoose = require('mongoose');
 const walletRepository = require('../repositories/walletRepository');
 const logger = require('../utils/logger');
+const {
+  PAYOUT_STATUS,
+  WALLET_TRANSACTION_STATUS,
+  WALLET_TRANSACTION_TYPES
+} = require('../config/appConstants');
 
 function sanitizeBankInfo(bankInfo = {}) {
   return {
     bankName: String(bankInfo.bankName || '').trim(),
     accountNumber: String(bankInfo.accountNumber || '').trim(),
     accountName: String(bankInfo.accountName || '').trim().toUpperCase()
+  };
+}
+
+function normalizePayoutAmount(amount) {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount)) return Number.NaN;
+  return Math.trunc(numericAmount);
+}
+
+async function buildWalletOverview(userId) {
+  const wallet = await walletRepository.findWalletByUser(userId);
+  const [transactions, payouts, payoutStats] = await Promise.all([
+    wallet ? walletRepository.findTransactionsByWallet(wallet._id, 20) : Promise.resolve([]),
+    walletRepository.findPayoutRequestsByUser(userId, 20),
+    walletRepository.getPayoutStatsByUser(userId)
+  ]);
+
+  const walletSnapshot = wallet
+    ? {
+      availableBalance: wallet.availableBalance || 0,
+      pendingBalance: wallet.pendingBalance || 0,
+      totalSales: wallet.totalSales || 0
+    }
+    : {
+      availableBalance: 0,
+      pendingBalance: 0,
+      totalSales: 0
+    };
+
+  return {
+    wallet: walletSnapshot,
+    transactions,
+    payouts,
+    payoutStats
   };
 }
 
@@ -21,7 +60,7 @@ exports.submitPayoutRequest = async (req, res, next) => {
   try {
     const { amount, bankInfo } = req.body;
     const userId = req.user._id;
-    const payoutAmount = Number(amount);
+    const payoutAmount = normalizePayoutAmount(amount);
     const cleanBankInfo = sanitizeBankInfo(bankInfo);
 
     if (!Number.isFinite(payoutAmount) || payoutAmount < 50000) {
@@ -44,7 +83,7 @@ exports.submitPayoutRequest = async (req, res, next) => {
       user: userId,
       amount: payoutAmount,
       bankInfo: cleanBankInfo,
-      status: 'PENDING'
+      status: PAYOUT_STATUS.PENDING
     }, session);
 
     // 2. Deduct from available balance
@@ -55,16 +94,25 @@ exports.submitPayoutRequest = async (req, res, next) => {
     await walletRepository.createWalletTransaction({
       wallet: wallet._id,
       user: userId,
-      type: 'WITHDRAW',
+      type: WALLET_TRANSACTION_TYPES.WITHDRAW,
       amount: -payoutAmount,
       description: `Payout request to ${cleanBankInfo.bankName} (${cleanBankInfo.accountNumber})`,
-      status: 'PENDING',
+      status: WALLET_TRANSACTION_STATUS.PENDING,
       referenceId: payout._id,
-      referenceType: 'PayoutRequest'
+      referenceType: 'PayoutRequest',
+      idempotencyKey: `PAYOUT_REQUEST:${payout._id}`
     }, session);
 
     await session.commitTransaction();
-    res.json({ success: true, message: 'Payout request submitted', data: payout });
+    const overview = await buildWalletOverview(userId);
+    res.json({
+      success: true,
+      message: 'Payout request submitted',
+      data: {
+        payout,
+        ...overview
+      }
+    });
 
   } catch (err) {
     await session.abortTransaction();
@@ -76,6 +124,19 @@ exports.submitPayoutRequest = async (req, res, next) => {
     return next(err);
   } finally {
     session.endSession();
+  }
+};
+
+/**
+ * Get wallet summary, recent transactions, and payout history
+ * GET /api/wallet/summary
+ */
+exports.getSummary = async (req, res, next) => {
+  try {
+    const overview = await buildWalletOverview(req.user._id);
+    res.json({ success: true, data: overview });
+  } catch (err) {
+    return next(err);
   }
 };
 

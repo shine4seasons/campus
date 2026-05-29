@@ -146,11 +146,13 @@ router.get('/', async (req, res) => {
   try {
     const topSellers = await getTopSellers(5);
     const stats = await getDashboardStats();
+    const allUsersCount = await User.countDocuments({});
     res.render('dashboard-admin', {
       title: 'Admin Dashboard',
       initialSection: 'aDash',
       topSellers,
       stats,
+      allUsersCount,
       CATEGORIES
     });
   } catch (error) {
@@ -159,6 +161,7 @@ router.get('/', async (req, res) => {
       title: 'Admin Dashboard',
       initialSection: 'aDash',
       topSellers: [],
+      allUsersCount: 0,
       stats: {
         totalUsers: { value: 0, delta: 0, type: 'percentage' },
         activeProducts: { value: 0, delta: 0, type: 'absolute' },
@@ -176,12 +179,14 @@ ADMIN_SECTIONS.forEach(sectionName => {
     try {
       const topSellers = await getTopSellers(5);
       const stats = await getDashboardStats();
+      const allUsersCount = await User.countDocuments({});
       const initialSection = SECTION_MAP[sectionName] || 'aDash';
       res.render('dashboard-admin', {
         title: `Admin Dashboard - ${sectionName}`,
         initialSection,
         topSellers,
         stats,
+        allUsersCount,
         CATEGORIES
       });
     } catch (error) {
@@ -191,6 +196,7 @@ ADMIN_SECTIONS.forEach(sectionName => {
         title: `Admin Dashboard - ${sectionName}`,
         initialSection,
         topSellers: [],
+        allUsersCount: 0,
         CATEGORIES,
         stats: {
           totalUsers: { value: 0, delta: 0, type: 'percentage' },

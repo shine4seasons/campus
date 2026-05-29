@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const adminRepository = require('../../repositories/adminRepository');
 const { broadcastSystemAnnouncement } = require('../../services/adminService');
-const { PRODUCT_STATUS, NOTIFICATION_TYPES } = require('../../config/appConstants');
+const {
+  PRODUCT_STATUS,
+  NOTIFICATION_TYPES,
+  PAYOUT_STATUS,
+  WALLET_TRANSACTION_STATUS
+} = require('../../config/appConstants');
 const logger = require('../../utils/logger');
-
-const { PAYOUT_STATUS } = adminRepository;
 
 const getUsers = async (req, res, next) => {
   try {
@@ -314,7 +317,7 @@ const approvePayout = async (req, res, next) => {
     payout.processedAt = new Date();
     payout.processedBy = req.user._id;
     await adminRepository.savePayout(payout, session);
-    await adminRepository.updatePayoutTransactionStatus(payout._id, 'PENDING', session);
+    await adminRepository.updatePayoutTransactionStatus(payout._id, WALLET_TRANSACTION_STATUS.PENDING, session);
 
     try {
       const { sendNotification } = require('../../utils/notifService');
@@ -357,6 +360,9 @@ const markPayoutPaid = async (req, res, next) => {
     if (payout.status !== PAYOUT_STATUS.PROCESSING) {
       return res.status(400).json({ success: false, message: 'Only processing payouts can be marked as paid' });
     }
+    if (!String(transferReference || '').trim()) {
+      return res.status(400).json({ success: false, message: 'Transfer reference is required' });
+    }
 
     payout.status = PAYOUT_STATUS.PAID;
     payout.adminNote = adminNote || payout.adminNote || '';
@@ -365,7 +371,7 @@ const markPayoutPaid = async (req, res, next) => {
     payout.paidAt = new Date();
     payout.paidBy = req.user._id;
     await adminRepository.savePayout(payout, session);
-    await adminRepository.updatePayoutTransactionStatus(payout._id, 'COMPLETED', session);
+    await adminRepository.updatePayoutTransactionStatus(payout._id, WALLET_TRANSACTION_STATUS.COMPLETED, session);
 
     try {
       const { sendNotification } = require('../../utils/notifService');
@@ -435,7 +441,7 @@ const rejectPayout = async (req, res, next) => {
       payoutId: payout._id
     });
     await adminRepository.saveWalletTransaction(refundTx, session);
-    await adminRepository.updatePayoutTransactionStatus(payout._id, 'FAILED', session);
+    await adminRepository.updatePayoutTransactionStatus(payout._id, WALLET_TRANSACTION_STATUS.FAILED, session);
 
     try {
       const { sendNotification } = require('../../utils/notifService');

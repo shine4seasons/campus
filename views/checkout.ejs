@@ -5,266 +5,284 @@
   <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
 </head>
-<body>
+<body class="checkout-page">
  <%- include('partials/navbar') %>
  <%- include('partials/sidebar') %>
   <!-- Top navigation -->
 
 
   <main class="main">
-  <div class="co-layout">
-
-    <!-- 1. Product -->
-    <div class="co-card">
-      <div class="co-card-header">
-        <div class="co-card-title">Product</div>
+  <div class="checkout-page-wrap">
+    <section class="checkout-hero">
+      <div class="checkout-hero-copy">
+        <div class="checkout-kicker">Secure checkout</div>
+        <h1>Review your order and choose the best way to pay</h1>
+        <p>Keep the same flow, but with clearer guidance, stronger selected states, and a premium checkout feel.</p>
       </div>
-      <div class="co-card-body">
-        <div class="prod-row">
-          <div class="prod-img" id="prod-img">
-            <% if (product.images && product.images[0]) { %>
-              <img src="<%= product.images[0] %>" alt="<%= product.title %>">
-            <% } else { %>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-4a2 2 0 0 0-2 0l-8 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l8 4a2 2 0 0 0 2 0l8-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
-            <% } %>
+      <div class="checkout-steps" aria-label="Checkout progress">
+        <div class="checkout-step active"><span>1</span> Review</div>
+        <div class="checkout-step"><span>2</span> Delivery</div>
+        <div class="checkout-step"><span>3</span> Payment</div>
+        <div class="checkout-step"><span>4</span> Confirm</div>
+      </div>
+    </section>
+
+    <div class="checkout-shell">
+      <div class="checkout-flow">
+        <!-- 1. Product -->
+        <div class="co-card">
+          <div class="co-card-header">
+            <div class="co-card-title">Product</div>
           </div>
-          <div class="prod-info">
-            <div class="prod-title"><%= product.title %></div>
-            <div class="prod-meta">
-              <%
-                const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
-                const COND_INFO = { new:'New', 'like-new':'Like new', good:'Good', fair:'Fair' };
-              %>
-              <span class="prod-badge"><%= CAT_LABEL[product.category] || product.category %></span>
-              <span class="prod-badge"><%= COND_INFO[product.condition] || product.condition %></span>
-            </div>
-            <div class="prod-price">
-              <%= formatVND(product.price) %>
-            </div>
-            <div class="co-prod-stock">
-              Available: <%= product.quantity || 1 %>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quantity -->
-    <div class="co-card">
-      <div class="co-card-header">
-        <div class="co-card-title">Quantity</div>
-      </div>
-      <div class="co-card-body">
-        <div class="co-qty-row">
-          <div class="co-qty-help">
-            Choose how many units you want to buy.
-          </div>
-          <input class="form-input co-qty-input" type="number" id="order-quantity" min="1" max="<%= product.quantity || 1 %>" step="1" value="1">
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Delivery method -->
-    <div class="co-card">
-      <div class="co-card-header">
-        <div class="co-card-title">Delivery method</div>
-      </div>
-      <div class="co-card-body co-delivery-body">
-        <div class="method-tabs">
-            <label class="method-tab selected" id="tab-pickup" data-action="select-delivery" data-mode="pickup">
-            <input type="radio" name="delivery" value="pickup" checked>
-            <div class="method-tab-check"></div>
-            <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-6 9 6"/><path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 22v-7h6v7"/></svg></span>
-            <div class="method-tab-label">Pick up</div>
-            <div class="method-tab-desc">Meet the seller in person. Free.</div>
-          </label>
-          <label class="method-tab" id="tab-ship" data-action="select-delivery" data-mode="ship">
-            <input type="radio" name="delivery" value="ship">
-            <div class="method-tab-check"></div>
-            <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8l9 6 9-6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
-            <div class="method-tab-label">Ship</div>
-            <div class="method-tab-desc">Seller ships to your address.</div>
-          </label>
-        </div>
-
-        <!-- Pickup info -->
-        <div id="pickup-info">
-          <div class="pickup-box">
-            <div class="pickup-box-icon"><i data-lucide="map-pin" class="pickup-icon-svg"></i></div>
-            <div class="pickup-box-body">
-              <div class="pickup-box-label">Pickup location</div>
-              <div class="pickup-box-addr">
-                <% if (product.location && product.location.address) { %>
-                  <%= product.location.address %>
+          <div class="co-card-body">
+            <div class="prod-row">
+              <div class="prod-img" id="prod-img">
+                <% if (product.images && product.images[0]) { %>
+                  <img src="<%= product.images[0] %>" alt="<%= product.title %>">
                 <% } else { %>
-                  Contact the seller to confirm location
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-8-4a2 2 0 0 0-2 0l-8 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l8 4a2 2 0 0 0 2 0l8-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
                 <% } %>
               </div>
-                <div class="pickup-actions-row">
-                  <div class="pickup-box-note">Arrange pickup time via chat</div>
-                  <button type="button" id="btn-open-map" data-action="open-map" data-context="pickup" class="btn co-inline-btn">Select meeting point</button>
+              <div class="prod-info">
+                <div class="prod-title"><%= product.title %></div>
+                <div class="prod-meta">
+                  <%
+                    const CAT_LABEL = { books:'Books', electronics:'Electronics', clothing:'Clothing', furniture:'Furniture', 'daily-needs':'Daily needs', sports:'Sports', gaming:'Gaming', other:'Other' };
+                    const COND_INFO = { new:'New', 'like-new':'Like new', good:'Good', fair:'Fair' };
+                  %>
+                  <span class="prod-badge"><%= CAT_LABEL[product.category] || product.category %></span>
+                  <span class="prod-badge"><%= COND_INFO[product.condition] || product.condition %></span>
                 </div>
-                <input type="hidden" id="checkout-f-location" value="<%= product.location && product.location.address ? product.location.address : '' %>">
-                <input type="hidden" id="checkout-f-lat" value="<%= product.location && product.location.lat ? product.location.lat : '' %>">
-                <input type="hidden" id="checkout-f-lng" value="<%= product.location && product.location.lng ? product.location.lng : '' %>">
-            </div>
-          </div>
-          <div id="checkout-map-wrap" class="checkout-map-wrap">
-            <div class="checkout-map-search-wrap">
-              <input type="text" id="checkout-location-search" class="checkout-map-search" placeholder="Search address or click on map...">
-              <div id="checkout-location-dropdown" class="checkout-location-dropdown"></div>
-              <button type="button" data-action="geolocate" title="Use my current location" class="checkout-geolocate-btn">
-                <i data-lucide="locate-fixed" class="checkout-geolocate-icon"></i>
-              </button>
-            </div>
-            <div id="checkout-location-map" class="checkout-location-map">
-              <div class="checkout-map-loading">
-                <i data-lucide="map" class="checkout-map-loading-icon"></i>
-                <div class="checkout-map-loading-text">Loading map...</div>
+                <div class="prod-price">
+                  <%= formatVND(product.price) %>
+                </div>
+                <div class="co-prod-stock">
+                  Available: <%= product.quantity || 1 %>
+                </div>
               </div>
-            </div>
-            <div class="checkout-map-actions">
-              <button type="button" class="btn checkout-action-btn checkout-action-btn-secondary" data-action="close-map">Close</button>
-              <button type="button" class="btn checkout-action-btn checkout-action-btn-primary" data-action="save-location">Save location</button>
             </div>
           </div>
         </div>
 
-        <!-- Ship address form -->
-        <div id="ship-info" class="ship-info">
-          <div class="addr-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Full name</label>
-                <input class="form-input" type="text" id="addr-name" placeholder="John Doe"
-                  value="<%= user.name || '' %>">
+        <!-- Quantity -->
+        <div class="co-card">
+          <div class="co-card-header">
+            <div class="co-card-title">Quantity</div>
+          </div>
+          <div class="co-card-body">
+            <div class="co-qty-row">
+              <div class="co-qty-help">
+                Choose how many units you want to buy.
               </div>
-              <div class="form-group">
-                <label class="form-label">Phone number</label>
-                <input class="form-input" type="tel" id="addr-phone" placeholder="0912 345 678"
-                  value="<%= user.phone || '' %>">
+              <input class="form-input co-qty-input" type="number" id="order-quantity" min="1" max="<%= product.quantity || 1 %>" step="1" value="1">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Delivery method -->
+        <div class="co-card">
+          <div class="co-card-header">
+            <div class="co-card-title">Delivery method</div>
+          </div>
+          <div class="co-card-body co-delivery-body">
+            <div class="method-tabs">
+                <label class="method-tab selected" id="tab-pickup" data-action="select-delivery" data-mode="pickup">
+                <input type="radio" name="delivery" value="pickup" checked>
+                <div class="method-tab-check"></div>
+                <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 9l9-6 9 6"/><path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 22v-7h6v7"/></svg></span>
+                <div class="method-tab-label">Pick up</div>
+                <div class="method-tab-desc">Meet the seller in person. Free.</div>
+              </label>
+              <label class="method-tab" id="tab-ship" data-action="select-delivery" data-mode="ship">
+                <input type="radio" name="delivery" value="ship">
+                <div class="method-tab-check"></div>
+                <span class="method-tab-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8l9 6 9-6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
+                <div class="method-tab-label">Ship</div>
+                <div class="method-tab-desc">Seller ships to your address.</div>
+              </label>
+            </div>
+
+            <!-- Pickup info -->
+            <div id="pickup-info">
+              <div class="pickup-box">
+                <div class="pickup-box-icon"><i data-lucide="map-pin" class="pickup-icon-svg"></i></div>
+                <div class="pickup-box-body">
+                  <div class="pickup-box-label">Pickup location</div>
+                  <div class="pickup-box-addr">
+                    <% if (product.location && product.location.address) { %>
+                      <%= product.location.address %>
+                    <% } else { %>
+                      Contact the seller to confirm location
+                    <% } %>
+                  </div>
+                    <div class="pickup-actions-row">
+                      <div class="pickup-box-note">Arrange pickup time via chat</div>
+                      <button type="button" id="btn-open-map" data-action="open-map" data-context="pickup" class="btn co-inline-btn">Select meeting point</button>
+                    </div>
+                    <input type="hidden" id="checkout-f-location" value="<%= product.location && product.location.address ? product.location.address : '' %>">
+                    <input type="hidden" id="checkout-f-lat" value="<%= product.location && product.location.lat ? product.location.lat : '' %>">
+                    <input type="hidden" id="checkout-f-lng" value="<%= product.location && product.location.lng ? product.location.lng : '' %>">
+                </div>
+              </div>
+              <div id="checkout-map-wrap" class="checkout-map-wrap">
+                <div class="checkout-map-search-wrap">
+                  <input type="text" id="checkout-location-search" class="checkout-map-search" placeholder="Search address or click on map...">
+                  <div id="checkout-location-dropdown" class="checkout-location-dropdown"></div>
+                  <button type="button" data-action="geolocate" title="Use my current location" class="checkout-geolocate-btn">
+                    <i data-lucide="locate-fixed" class="checkout-geolocate-icon"></i>
+                  </button>
+                </div>
+                <div id="checkout-location-map" class="checkout-location-map">
+                  <div class="checkout-map-loading">
+                    <i data-lucide="map" class="checkout-map-loading-icon"></i>
+                    <div class="checkout-map-loading-text">Loading map...</div>
+                  </div>
+                </div>
+                <div class="checkout-map-actions">
+                  <button type="button" class="btn checkout-action-btn checkout-action-btn-secondary" data-action="close-map">Close</button>
+                  <button type="button" class="btn checkout-action-btn checkout-action-btn-primary" data-action="save-location">Save location</button>
+                </div>
               </div>
             </div>
-            
-            <div class="ship-address-header">
-              <span class="form-label ship-address-label">Shipping Address</span>
-              <button type="button" data-action="open-map" data-context="ship" class="btn ship-map-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Select from map
-              </button>
-            </div>
-            
-            <div class="form-group">
-              <input class="form-input" type="text" id="addr-street" placeholder="House number, street name">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">District</label>
-                <input class="form-input" type="text" id="addr-district" placeholder="e.g. District 1">
+
+            <!-- Ship address form -->
+            <div id="ship-info" class="ship-info">
+              <div class="addr-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Full name</label>
+                    <input class="form-input" type="text" id="addr-name" placeholder="John Doe"
+                      value="<%= user.name || '' %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Phone number</label>
+                    <input class="form-input" type="tel" id="addr-phone" placeholder="0912 345 678"
+                      value="<%= user.phone || '' %>">
+                  </div>
+                </div>
+                
+                <div class="ship-address-header">
+                  <span class="form-label ship-address-label">Shipping Address</span>
+                  <button type="button" data-action="open-map" data-context="ship" class="btn ship-map-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Select from map
+                  </button>
+                </div>
+                
+                <div class="form-group">
+                  <input class="form-input" type="text" id="addr-street" placeholder="House number, street name">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">District</label>
+                    <input class="form-input" type="text" id="addr-district" placeholder="e.g. District 1">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">City / Province</label>
+                    <input class="form-input" type="text" id="addr-city" placeholder="e.g. Hanoi">
+                  </div>
+                </div>
+                
+                <input type="hidden" id="ship-f-lat">
+                <input type="hidden" id="ship-f-lng">
               </div>
-              <div class="form-group">
-                <label class="form-label">City / Province</label>
-                <input class="form-input" type="text" id="addr-city" placeholder="e.g. Hanoi">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Payment method -->
+        <div class="co-card">
+          <div class="co-card-header">
+            <div class="co-card-title">Payment method</div>
+          </div>
+          <div class="co-card-body">
+            <div class="pay-tabs">
+              <label class="pay-tab selected" id="pay-cash" data-action="select-payment" data-mode="cash">
+                <input type="radio" name="payment" value="cash" checked>
+                <div class="pay-tab-check"></div>
+                <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2"/></svg></div>
+                <div>
+                  <div class="pay-tab-label">Cash</div>
+                  <div class="pay-tab-sub">Pay on pickup</div>
+                </div>
+              </label>
+              <label class="pay-tab" id="pay-qr" data-action="select-payment" data-mode="qr">
+                <input type="radio" name="payment" value="qr">
+                <div class="pay-tab-check"></div>
+                <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+                <div>
+                  <div class="pay-tab-label">QR Transfer</div>
+                  <div class="pay-tab-sub">Pay via banking app</div>
+                </div>
+              </label>
+            </div>
+
+            <!-- QR info box (shown when QR selected) -->
+            <div class="card-form hidden co-qr-info" id="qr-info">
+              <div class="co-qr-info-row">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="co-qr-info-icon"><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h6v6h-6z"/><path d="M9 9h6v6H9z"/></svg>
+                <div>
+                  <div class="co-qr-info-title">QR code will appear after placing</div>
+                  <div class="co-qr-info-sub">Scan the platform QR code on the next screen to complete payment securely.</div>
+                </div>
               </div>
             </div>
-            
-            <input type="hidden" id="ship-f-lat">
-            <input type="hidden" id="ship-f-lng">
+          </div>
+        </div>
+
+        <!-- 4. Notes -->
+        <div class="co-card note-section">
+            <div class="co-card-header">
+            <div class="co-card-title">Notes for seller</div>
+          </div>
+          <div class="co-card-body">
+            <textarea class="form-textarea" id="order-note" placeholder="E.g.: meet at Gate A, after 5pm..."></textarea>
           </div>
         </div>
       </div>
+
+      <aside class="checkout-aside">
+        <!-- 5. Order summary -->
+        <div class="co-card checkout-summary-card">
+            <div class="co-card-header">
+            <div class="co-card-title">Order summary</div>
+          </div>
+          <div class="co-card-body">
+            <div class="summary-rows">
+              <div class="summary-row">
+                <span class="summary-row-label">Item price</span>
+                <span class="summary-row-val" id="sum-price">
+                  <%= formatVND(product.price) %>
+                </span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-row-label">Quantity</span>
+                <span class="summary-row-val" id="sum-quantity">1</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-row-label">Subtotal</span>
+                <span class="summary-row-val" id="sum-subtotal">
+                  <%= formatVND(product.price) %>
+                </span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-row-label">Shipping fee</span>
+                <span class="summary-row-val summary-ship-free" id="sum-ship">Free</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-row">
+                <span class="summary-total-label">Total</span>
+                <span class="summary-total-val" id="sum-total">
+                  <%= formatVND(product.price) %>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
     </div>
-
-    <!-- 3. Payment method -->
-    <div class="co-card">
-      <div class="co-card-header">
-        <div class="co-card-title">Payment method</div>
-      </div>
-      <div class="co-card-body">
-        <div class="pay-tabs">
-          <label class="pay-tab selected" id="pay-cash" data-action="select-payment" data-mode="cash">
-            <input type="radio" name="payment" value="cash" checked>
-            <div class="pay-tab-check"></div>
-            <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2"/></svg></div>
-            <div>
-              <div class="pay-tab-label">Cash</div>
-              <div class="pay-tab-sub">Pay on pickup</div>
-            </div>
-          </label>
-          <label class="pay-tab" id="pay-qr" data-action="select-payment" data-mode="qr">
-            <input type="radio" name="payment" value="qr">
-            <div class="pay-tab-check"></div>
-            <div class="pay-tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-            <div>
-              <div class="pay-tab-label">QR Transfer</div>
-              <div class="pay-tab-sub">Pay via banking app</div>
-            </div>
-          </label>
-        </div>
-
-        <!-- QR info box (shown when QR selected) -->
-        <div class="card-form hidden co-qr-info" id="qr-info">
-          <div class="co-qr-info-row">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="co-qr-info-icon"><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h6v6h-6z"/><path d="M9 9h6v6H9z"/></svg>
-            <div>
-              <div class="co-qr-info-title">QR code will appear after placing</div>
-              <div class="co-qr-info-sub">Scan the platform QR code on the next screen to complete payment securely.</div>
-            </div>
-          </div>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. Notes -->
-    <div class="co-card note-section">
-        <div class="co-card-header">
-        <div class="co-card-title">Notes for seller</div>
-      </div>
-      <div class="co-card-body">
-        <textarea class="form-textarea" id="order-note" placeholder="E.g.: meet at Gate A, after 5pm..."></textarea>
-      </div>
-    </div>
-
-    <!-- 5. Order summary -->
-    <div class="co-card">
-        <div class="co-card-header">
-        <div class="co-card-title">Payment details</div>
-      </div>
-      <div class="co-card-body">
-        <div class="summary-rows">
-          <div class="summary-row">
-            <span class="summary-row-label">Item price</span>
-            <span class="summary-row-val" id="sum-price">
-              <%= formatVND(product.price) %>
-            </span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-row-label">Quantity</span>
-            <span class="summary-row-val" id="sum-quantity">1</span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-row-label">Subtotal</span>
-            <span class="summary-row-val" id="sum-subtotal">
-              <%= formatVND(product.price) %>
-            </span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-row-label">Shipping fee</span>
-            <span class="summary-row-val summary-ship-free" id="sum-ship">Free</span>
-          </div>
-          <div class="summary-divider"></div>
-          <div class="summary-row">
-            <span class="summary-total-label">Total</span>
-            <span class="summary-total-val" id="sum-total">
-              <%= formatVND(product.price) %>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /co-layout -->
+  </div><!-- /checkout-page-wrap -->
   </main>
 
   <!-- Fixed bottom bar -->

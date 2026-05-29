@@ -45,6 +45,11 @@
   const searchCatMenu = document.getElementById('search-cat-menu');
   const searchCatLabel = document.getElementById('search-cat-label');
   const searchCatIcon = document.getElementById('search-cat-icon');
+  const sortSelect = document.getElementById('sort-select');
+  const sortCombobox = document.getElementById('sort-combobox');
+  const sortSelectBtn = document.getElementById('sort-select-btn');
+  const sortMenu = document.getElementById('sort-menu');
+  const sortSelectLabel = document.getElementById('sort-select-label');
   const catGrid = document.getElementById('cat-grid');
   const featuredSection = document.getElementById('featured');
   const toastContainer = document.getElementById('toast-container');
@@ -57,7 +62,7 @@
   window.ALL_PRODUCTS = [];
   window.currentFilteredProducts = [];
 
-  if (!searchInput || !searchDropdown || !searchWrap || !searchCatSelect || !searchCatCombobox || !searchCatBtn || !searchCatMenu || !searchCatLabel || !searchCatIcon || !catGrid || !featuredSection || !toastContainer) {
+  if (!searchInput || !searchDropdown || !searchWrap || !searchCatSelect || !searchCatCombobox || !searchCatBtn || !searchCatMenu || !searchCatLabel || !searchCatIcon || !sortSelect || !sortCombobox || !sortSelectBtn || !sortMenu || !sortSelectLabel || !catGrid || !featuredSection || !toastContainer) {
     return;
   }
 
@@ -327,6 +332,33 @@
   function openSearchCategoryMenu() {
     searchCatCombobox.classList.add('open');
     searchCatBtn.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeSortMenu() {
+    sortCombobox.classList.remove('open');
+    sortSelectBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function openSortMenu() {
+    sortCombobox.classList.add('open');
+    sortSelectBtn.setAttribute('aria-expanded', 'true');
+  }
+
+  function syncSortUi(value) {
+    const selectedOption = Array.from(sortMenu.querySelectorAll('.sort-option')).find((option) => option.dataset.sortValue === value)
+      || sortMenu.querySelector('.sort-option');
+    if (!selectedOption) return;
+
+    sortSelect.value = selectedOption.dataset.sortValue || 'newest';
+    sortSelectLabel.textContent = selectedOption.querySelector('.sort-option-title')?.textContent || 'Newest first';
+
+    sortMenu.querySelectorAll('.sort-option').forEach((option) => {
+      const selected = option === selectedOption;
+      option.classList.toggle('selected', selected);
+      option.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+
+    refreshIcons([sortCombobox]);
   }
 
   function createSuggestionItem(product, index) {
@@ -616,7 +648,7 @@
   };
 
   window.applySort = function applySort() {
-    state.sort = document.getElementById('sort-select').value;
+    state.sort = sortSelect.value;
     state.page = 1;
     fetchProducts();
   };
@@ -640,6 +672,7 @@
   showCatalogState('loading');
   fetchProducts();
   fetchCategoryCounts();
+  syncSortUi(sortSelect.value || 'newest');
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -694,6 +727,58 @@
       event.preventDefault();
       closeSearchCategoryMenu();
       searchCatBtn.focus();
+    }
+  });
+
+  sortSelectBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (sortCombobox.classList.contains('open')) closeSortMenu();
+    else openSortMenu();
+  });
+
+  sortSelectBtn.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openSortMenu();
+      const firstOption = sortMenu.querySelector('.sort-option');
+      if (firstOption) firstOption.focus();
+    } else if (event.key === 'Escape') {
+      closeSortMenu();
+    }
+  });
+
+  sortMenu.addEventListener('click', (event) => {
+    const option = event.target.closest('.sort-option[data-sort-value]');
+    if (!option) return;
+    syncSortUi(option.dataset.sortValue || 'newest');
+    closeSortMenu();
+    window.applySort();
+  });
+
+  sortMenu.addEventListener('keydown', (event) => {
+    const options = Array.from(sortMenu.querySelectorAll('.sort-option'));
+    if (!options.length) return;
+    const currentIndex = options.indexOf(document.activeElement);
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, options.length - 1);
+      options[nextIndex].focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const prevIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+      options[prevIndex].focus();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeSortMenu();
+      sortSelectBtn.focus();
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      const option = document.activeElement.closest('.sort-option[data-sort-value]');
+      if (!option) return;
+      event.preventDefault();
+      syncSortUi(option.dataset.sortValue || 'newest');
+      closeSortMenu();
+      window.applySort();
     }
   });
 
@@ -779,6 +864,7 @@
     }
 
     if (!searchCatCombobox.contains(event.target)) closeSearchCategoryMenu();
+    if (!sortCombobox.contains(event.target)) closeSortMenu();
     if (!searchWrap.contains(event.target)) hideSuggestions();
   });
 
@@ -786,10 +872,10 @@
     if (searchInput.value.trim()) updateSuggestions();
   });
 
-  const sortSelect = document.getElementById('sort-select');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', () => window.applySort());
-  }
+  sortSelect.addEventListener('change', () => {
+    syncSortUi(sortSelect.value || 'newest');
+    window.applySort();
+  });
 
   refreshIcons();
 })();

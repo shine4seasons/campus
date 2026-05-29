@@ -338,6 +338,49 @@ body { background: var(--bg); font-family: 'Plus Jakarta Sans', system-ui, sans-
   letter-spacing: 0;
 }
 
+/* Tab filter states */
+#notif-tabs .notif-tab {
+  border: 1px solid transparent;
+  color: var(--text-2);
+  transition:
+    background-color .16s ease,
+    color .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease,
+    transform .16s ease;
+}
+
+#notif-tabs .notif-tab:hover:not(.active) {
+  color: var(--primary);
+  background: rgba(27, 94, 255, 0.08);
+  border-color: rgba(27, 94, 255, 0.14);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+#notif-tabs .notif-tab:active {
+  transform: translateY(0);
+}
+
+#notif-tabs .notif-tab.active,
+#notif-tabs .notif-tab.active:hover,
+#notif-tabs .notif-tab.active:focus-visible {
+  background: linear-gradient(135deg, var(--primary), #4F7DFF);
+  color: #fff;
+  border-color: rgba(27, 94, 255, 0.2);
+  box-shadow: 0 10px 22px rgba(27, 94, 255, 0.22);
+}
+
+#notif-tabs .notif-tab.active .notif-tab-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+#notif-tabs .notif-tab:focus-visible {
+  outline: 2px solid rgba(27, 94, 255, 0.35);
+  outline-offset: 2px;
+}
+
 .notif-dropdown .notif-msg {
   font-size: 12px;
   line-height: 1.4;

@@ -242,10 +242,27 @@ exports.getUserProfile = async (req, res, next) => {
  */
 exports.getDashboard = async (req, res, next) => {
   try {
+    const sellerSectionMap = {
+      sDash: {
+        sellerSection: 'sDash',
+        sellerActivePage: 'dashboard',
+        sellerTitle: `Seller Dashboard${TITLE_SEPARATOR}${APP_NAME}`
+      },
+      sWallet: {
+        sellerSection: 'sWallet',
+        sellerActivePage: 'wallet',
+        sellerTitle: `Wallet & Payouts${TITLE_SEPARATOR}${APP_NAME}`
+      }
+    };
+
+    const requestedSellerSection = String(req.query.section || '').trim();
+    const sellerSectionConfig = sellerSectionMap[requestedSellerSection] || sellerSectionMap.sDash;
+
     const viewModel = await pageService.getDashboardViewModel({
       user: res.locals.user,
       path: req.path,
-      baseUrl: req.baseUrl
+      baseUrl: req.baseUrl,
+      ...sellerSectionConfig
     });
     if (viewModel.redirectTo) {
       return res.redirect(viewModel.redirectTo);
@@ -275,13 +292,26 @@ exports.getSellerOrders = async (req, res, next) => {
  */
 exports.getRevenue = async (req, res, next) => {
   try {
-    res.render(VIEWS.REVENUE, {
+    const { stats, wallet } = await pageService.getSellerWalletViewModel(res.locals.user._id);
+    return res.render(VIEWS.REVENUE, {
       title: `Revenue${TITLE_SEPARATOR}${APP_NAME}`,
       isLoginPage: false,
-      activePage: 'revenue'
+      activePage: 'revenue',
+      stats,
+      wallet
     });
   } catch (error) {
     logger.error('page.revenue_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
+    return next(error);
+  }
+};
+
+exports.getWalletPayouts = async (req, res, next) => {
+  try {
+    const viewModel = await pageService.getSellerWalletViewModel(res.locals.user._id);
+    return res.render(VIEWS.WALLET_PAYOUTS, viewModel);
+  } catch (error) {
+    logger.error('page.wallet_payouts_failed', { err: error.message, stack: error.stack, userId: req.user?._id ? String(req.user._id) : null });
     return next(error);
   }
 };

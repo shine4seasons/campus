@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   const { createElement } = window.AppUtils || {};
 
   let currentFilter = '';
@@ -13,27 +13,94 @@
     cancelled: 'badge-cancelled'
   };
 
+  const statusToLabel = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled'
+  };
+
+  function closeStatusMenus(exceptMenu = null) {
+    document.querySelectorAll('.order-status-menu.open').forEach((menu) => {
+      if (exceptMenu && menu === exceptMenu) return;
+      menu.classList.remove('open');
+      const trigger = menu.querySelector('.order-status-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function decorateStatusMenu(menu, status) {
+    if (!menu) return;
+
+    ['status-pending', 'status-confirmed', 'status-completed', 'status-cancelled'].forEach((className) => {
+      menu.classList.remove(className);
+    });
+
+    const nextStatus = status || 'pending';
+    menu.classList.add(`status-${nextStatus}`);
+    menu.dataset.status = nextStatus;
+
+    const triggerLabel = menu.querySelector('.order-status-trigger-label');
+    if (triggerLabel) triggerLabel.textContent = statusToLabel[nextStatus] || nextStatus;
+
+    menu.querySelectorAll('.order-status-option').forEach((option) => {
+      const selected = option.dataset.statusValue === nextStatus;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+  }
+
   function setTableMessage(tbody, message) {
     const row = createElement('tr');
     row.appendChild(createElement('td', {
       className: 'empty',
-      attrs: { colspan: '10' },
+      attrs: { colspan: '6' },
       text: message
     }));
     tbody.replaceChildren(row);
   }
 
-  function createStatusSelect(order) {
-    const select = createElement('select', {
-      className: 'order-status-select',
-      dataset: { orderId: order._id, prev: order.status || 'pending' }
+  function createStatusMenu(order) {
+    const currentStatus = order.status || 'pending';
+    const menu = createElement('div', {
+      className: 'order-status-menu',
+      dataset: { orderId: order._id, prev: currentStatus, status: currentStatus }
     });
+
+    const trigger = createElement('button', {
+      className: 'order-status-trigger',
+      attrs: {
+        type: 'button',
+        'aria-haspopup': 'true',
+        'aria-expanded': 'false'
+      },
+      dataset: { action: 'toggle-status-menu' },
+      children: [
+        createElement('span', { className: 'order-status-trigger-label', text: statusToLabel[currentStatus] || currentStatus }),
+        createElement('span', { className: 'order-status-trigger-icon', text: '▾' })
+      ]
+    });
+
+    const panel = createElement('div', {
+      className: 'order-status-panel',
+      attrs: { role: 'menu' }
+    });
+
     ['pending', 'confirmed', 'completed', 'cancelled'].forEach((status) => {
-      const option = createElement('option', { attrs: { value: status }, text: status });
-      if ((order.status || 'pending') === status) option.selected = true;
-      select.appendChild(option);
+      panel.appendChild(createElement('button', {
+        className: 'order-status-option',
+        attrs: { type: 'button', role: 'menuitem' },
+        dataset: { action: 'select-status', statusValue: status },
+        children: [
+          createElement('span', { className: 'order-status-option-dot' }),
+          createElement('span', { className: 'order-status-option-label', text: statusToLabel[status] || status })
+        ]
+      }));
     });
-    return select;
+
+    menu.append(trigger, panel);
+    decorateStatusMenu(menu, currentStatus);
+    return menu;
   }
 
   function createStatusBadge(status) {
@@ -65,8 +132,16 @@
             createElement('div', {
               className: 'order-preview-card',
               children: [
-                createElement('div', { className: 'order-preview-label', text: 'Delivery + payment' }),
-                createElement('div', { className: 'order-preview-value', text: `${order.deliveryMode === 'ship' ? 'Ship' : 'Pickup'} / ${order.paymentMode === 'qr' ? 'QR' : order.paymentMode === 'card' ? 'Card' : 'Cash'}` }),
+                createElement('div', { className: 'order-preview-label', text: 'Fulfillment' }),
+                createElement('div', { className: 'order-preview-value', text: order.deliveryMode === 'ship' ? 'Shipping' : 'Pickup' }),
+                createElement('div', { className: 'seller-insight-note', text: order.deliveryMode === 'ship' ? 'Deliver to buyer address' : 'Meet buyer at the agreed pickup point' })
+              ]
+            }),
+            createElement('div', {
+              className: 'order-preview-card',
+              children: [
+                createElement('div', { className: 'order-preview-label', text: 'Payment + note' }),
+                createElement('div', { className: 'order-preview-value', text: order.paymentMode === 'qr' ? 'QR Transfer' : order.paymentMode === 'card' ? 'Card' : 'Cash' }),
                 createElement('div', { className: 'seller-insight-note', text: order.note || 'No additional buyer note' })
               ]
             }),
@@ -82,7 +157,7 @@
         })
       ]
     });
-    row.appendChild(createElement('td', { attrs: { colspan: '10' }, children: [preview] }));
+    row.appendChild(createElement('td', { attrs: { colspan: '6' }, children: [preview] }));
     return row;
   }
 
@@ -92,14 +167,15 @@
       dataset: { orderId: order._id }
     });
     const buyerLink = createElement('a', {
+      className: 'seller-order-buyer-link',
       attrs: { href: '/user/' + (order.buyer?._id || '') },
-      style: { color: '#1B5EFF', textDecoration: 'none', fontWeight: '700' },
       text: order.buyer?.nickname || order.buyer?.name || '-'
     });
     const productCell = createElement('div', {
+      className: 'seller-order-product-cell',
       children: [
-        createElement('div', { style: { fontWeight: '800' }, text: order.product?.title || '-' }),
-        createElement('div', { className: 'seller-insight-note', text: String(order._id || '').slice(-8).toUpperCase() })
+        createElement('div', { className: 'seller-order-product-title', text: order.product?.title || '-' }),
+        createElement('div', { className: 'seller-insight-note', text: `Qty ${order.quantity || 1} · ${order.deliveryMode === 'ship' ? 'Shipping' : 'Pickup'}` })
       ]
     });
     const actionsWrap = createElement('div', {
@@ -111,7 +187,7 @@
           dataset: { togglePreview: order._id },
           text: expandedOrderId === order._id ? 'Hide details' : 'Preview'
         }),
-        createStatusSelect(order)
+        createStatusMenu(order)
       ]
     });
 
@@ -119,11 +195,7 @@
       createElement('td', { style: { fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--t2)' }, text: String(order._id || '').slice(-8).toUpperCase() }),
       createElement('td', { children: [productCell] }),
       createElement('td', { children: [buyerLink] }),
-      createElement('td', { text: order.quantity || 1 }),
-      createElement('td', { children: [createElement('strong', { text: price })] }),
-      createElement('td', { style: { color: 'var(--t2)' }, text: order.deliveryMode === 'ship' ? 'Ship' : 'Pickup' }),
-      createElement('td', { style: { color: 'var(--t2)' }, text: order.paymentMode === 'qr' ? 'QR' : order.paymentMode === 'card' ? 'Card' : 'Cash' }),
-      createElement('td', { style: { color: 'var(--t3)', fontSize: '12px' }, text: order.note || '-' }),
+      createElement('td', { className: 'seller-order-price-cell', children: [createElement('strong', { className: 'seller-order-price', text: price })] }),
       createElement('td', { children: [createStatusBadge(order.status)] }),
       createElement('td', { children: [actionsWrap] })
     ].forEach((cell) => row.appendChild(cell));
@@ -188,9 +260,11 @@
     }
   }
 
-  async function updateStatus(orderId, status, selectEl) {
-    const original = selectEl.dataset.prev || selectEl.value;
+  async function updateStatus(orderId, status, menuEl) {
+    const original = menuEl.dataset.prev || menuEl.dataset.status || 'pending';
     if (status === original) return;
+    decorateStatusMenu(menuEl, status);
+    closeStatusMenus();
 
     const needsConfirm = status === 'cancelled' || status === 'completed';
     if (needsConfirm) {
@@ -205,12 +279,15 @@
           })
         : window.confirm(`Mark order as ${status}?`);
       if (!confirmed) {
-        selectEl.value = original;
+        decorateStatusMenu(menuEl, original);
         return;
       }
     }
 
-    selectEl.disabled = true;
+    menuEl.classList.add('is-busy');
+    menuEl.querySelectorAll('button').forEach((button) => {
+      button.disabled = true;
+    });
     try {
       const res = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
         method: 'PATCH',
@@ -222,29 +299,52 @@
 
       const order = loadedOrders.find((item) => item._id === orderId);
       if (order) order.status = status;
-      selectEl.dataset.prev = status;
+      menuEl.dataset.prev = status;
       renderOrders();
       if (typeof showToast === 'function') showToast('Order updated to ' + status, 'ok');
     } catch {
-      selectEl.value = original;
+      decorateStatusMenu(menuEl, original);
       if (typeof showToast === 'function') showToast('Failed to update order', 'err');
     } finally {
-      selectEl.disabled = false;
+      menuEl.classList.remove('is-busy');
+      menuEl.querySelectorAll('button').forEach((button) => {
+        button.disabled = false;
+      });
     }
   }
 
-  document.addEventListener('change', (e) => {
-    const sel = e.target.closest('.order-status-select');
-    if (!sel) return;
-    updateStatus(sel.dataset.orderId, sel.value, sel);
-  });
-
   document.addEventListener('click', (e) => {
+    const statusToggle = e.target.closest('[data-action="toggle-status-menu"]');
+    if (statusToggle) {
+      const menu = statusToggle.closest('.order-status-menu');
+      if (!menu || menu.classList.contains('is-busy')) return;
+      const nextOpen = !menu.classList.contains('open');
+      closeStatusMenus(nextOpen ? menu : null);
+      menu.classList.toggle('open', nextOpen);
+      statusToggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      return;
+    }
+
+    const statusOption = e.target.closest('[data-action="select-status"][data-status-value]');
+    if (statusOption) {
+      const menu = statusOption.closest('.order-status-menu');
+      if (!menu || menu.classList.contains('is-busy')) return;
+      updateStatus(menu.dataset.orderId, statusOption.dataset.statusValue, menu);
+      return;
+    }
+
     const toggle = e.target.closest('[data-toggle-preview]');
-    if (!toggle) return;
-    const orderId = toggle.dataset.togglePreview;
-    expandedOrderId = expandedOrderId === orderId ? '' : orderId;
-    renderOrders();
+    if (toggle) {
+      const orderId = toggle.dataset.togglePreview;
+      expandedOrderId = expandedOrderId === orderId ? '' : orderId;
+      closeStatusMenus();
+      renderOrders();
+      return;
+    }
+
+    if (!e.target.closest('.order-status-menu')) {
+      closeStatusMenus();
+    }
   });
 
   document.querySelectorAll('.filter-pills .f-pill').forEach((pill) => {
@@ -270,3 +370,4 @@
 
   document.addEventListener('DOMContentLoaded', () => loadSellerOrders(1));
 })();
+

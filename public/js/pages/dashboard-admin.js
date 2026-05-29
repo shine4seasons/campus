@@ -70,6 +70,19 @@
     return details;
   }
 
+  function formatDeliveryMode(mode) {
+    if (mode === 'pickup') return 'Pickup';
+    if (mode === 'ship') return 'Ship';
+    return '-';
+  }
+
+  function formatPaymentMode(mode) {
+    if (mode === 'cash') return 'Cash';
+    if (mode === 'qr') return 'QR Transfer';
+    if (mode === 'card') return 'Card';
+    return '-';
+  }
+
   function formatDate(date, options) {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('en-US', options || { month: 'short', day: 'numeric', year: 'numeric' });
@@ -353,6 +366,7 @@
 
     async function loadUsers(page = 1) {
       const tbody = document.getElementById('usersTableBody');
+      const countEl = document.getElementById('adminUsersCount');
       if (!tbody) return;
       setLoadingMessage(tbody, 9, 'Loading...');
 
@@ -366,6 +380,8 @@
         const json = await res.json();
         if (json.success) {
           const users = json.data || [];
+          const total = Number(json.pagination?.total || 0);
+          if (countEl) countEl.textContent = `${total.toLocaleString()} accounts`;
           if (users.length === 0) {
             selectedUsers.clear();
             updateBulkBar();
@@ -378,9 +394,11 @@
             renderPagination('#aUsers .pagination', json.pagination, 'loadUsers');
           }
         } else {
+          if (countEl) countEl.textContent = '0 accounts';
           setTableMessage(tbody, 9, 'Failed to load users', 'var(--danger)');
         }
       } catch {
+        if (countEl) countEl.textContent = '0 accounts';
         setTableMessage(tbody, 9, 'Network error', 'var(--danger)');
       }
     }
@@ -416,7 +434,7 @@
       const orderId = String(order._id || '').slice(-6).toUpperCase();
       const fullOrderId = `#ORD-${orderId}`;
       const productCell = createElement('div', {
-        style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' },
+        className: 'admin-order-product',
         attrs: { title: order.product?.title || '-' },
         text: order.product?.title || '-'
       });
@@ -435,8 +453,8 @@
         createElement('td', { className: 'muted-cell', text: order.buyer?.nickname || order.buyer?.name || '-' }),
         createElement('td', { className: 'muted-cell', text: order.seller?.nickname || order.seller?.name || '-' }),
         createElement('td', { children: [createElement('strong', { text: order.priceSnapshot ? `${order.priceSnapshot.toLocaleString()} VND` : '-' })] }),
-        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: order.deliveryMethod === 'pickup' ? 'Pickup' : order.deliveryMethod === 'ship' ? 'Ship' : '-' })] }),
-        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: order.paymentMethod === 'cash' ? 'Cash' : order.paymentMethod === 'card' ? 'Card' : '-' })] }),
+        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: formatDeliveryMode(order.deliveryMode) })] }),
+        createElement('td', { children: [createElement('span', { className: 'meta-chip', text: formatPaymentMode(order.paymentMode) })] }),
         createElement('td', { children: [createBadge((order.status || 'pending').replace(/^./, (s) => s.toUpperCase()), `badge ${statusBadges[order.status] || 'badge-pending'}`)] })
       ].forEach((cell) => row.appendChild(cell));
       return row;
@@ -546,13 +564,57 @@
         updateBulkBar();
       });
 
+      const targetTitle = report.targetDetails
+        ? (report.targetType === 'product'
+          ? report.targetDetails.title
+          : report.targetDetails.nickname || report.targetDetails.name)
+        : '-';
+      const reporterName = report.reporter ? report.reporter.nickname || report.reporter.name : '-';
+      const reportDate = formatDate(report.createdAt);
+
       [
         createElement('td', { className: 'check-cell', children: [checkbox] }),
-        createElement('td', { children: [createBadge(report.targetType === 'product' ? 'Product' : 'User', `badge ${report.targetType === 'product' ? 'badge-reported' : 'badge-pending'}`)] }),
-        createElement('td', { children: [createElement('strong', { text: report.targetDetails ? (report.targetType === 'product' ? report.targetDetails.title : report.targetDetails.nickname || report.targetDetails.name) : '-' })] }),
-        createElement('td', { className: 'muted-cell', text: report.reporter ? report.reporter.nickname || report.reporter.name : '-' }),
-        createElement('td', { className: 'muted-cell', text: reasonLabels[report.reason] || report.reason }),
-        createElement('td', { className: 'muted-cell', text: formatDate(report.createdAt) }),
+        createElement('td', {
+          children: [
+            createElement('div', {
+              className: 'report-target-cell',
+              children: [
+                createBadge(report.targetType === 'product' ? 'Product' : 'User', `badge ${report.targetType === 'product' ? 'badge-reported' : 'badge-pending'}`),
+                createElement('strong', { className: 'report-target-title', text: targetTitle }),
+                createElement('span', {
+                  className: 'report-target-sub',
+                  text: report.targetType === 'product'
+                    ? (report.targetDetails?.category || 'Product report')
+                    : 'User profile report'
+                })
+              ]
+            })
+          ]
+        }),
+        createElement('td', {
+          children: [
+            createElement('div', {
+              className: 'report-meta-cell',
+              children: [
+                createElement('strong', { text: reporterName }),
+                createElement('span', { text: reportDate })
+              ]
+            })
+          ]
+        }),
+        createElement('td', {
+          children: [
+            createElement('div', {
+              className: 'report-reason-cell',
+              children: [
+                createElement('strong', { text: reasonLabels[report.reason] || report.reason }),
+                createElement('span', {
+                  text: report.description || 'No description provided'
+                })
+              ]
+            })
+          ]
+        }),
         createElement('td', { children: [createBadge((report.status || 'pending').replace('-', ' '), `badge ${statusMap[report.status] || 'badge-pending'}`)] }),
         createElement('td', { children: [actionWrap] })
       ].forEach((cell) => row.appendChild(cell));
@@ -638,7 +700,7 @@
     async function loadReports(page = 1) {
       const tbody = document.getElementById('reportsTableBody');
       if (!tbody) return;
-      setLoadingMessage(tbody, 8, 'Loading...');
+      setLoadingMessage(tbody, 6, 'Loading...');
 
       const params = new URLSearchParams({ limit: 25, page });
       if (currentReportFilter && currentReportFilter !== 'all') params.set('status', currentReportFilter);
@@ -655,7 +717,7 @@
           if (reports.length === 0) {
             selectedReports.clear();
             updateBulkBar();
-            setTableMessage(tbody, 8, 'No reports found');
+            setTableMessage(tbody, 6, 'No reports found');
           } else {
             tbody.replaceChildren(...reports.map(createReportRow));
             updateBulkBar();
@@ -664,10 +726,10 @@
             renderPagination('#aReports .pagination', json.pagination, 'loadReports');
           }
         } else {
-          setTableMessage(tbody, 8, 'Failed to load reports', 'var(--danger)');
+          setTableMessage(tbody, 6, 'Failed to load reports', 'var(--danger)');
         }
       } catch {
-        setTableMessage(tbody, 8, 'Network error', 'var(--danger)');
+        setTableMessage(tbody, 6, 'Network error', 'var(--danger)');
       }
     }
 
@@ -726,12 +788,11 @@
 
     function createPayoutRow(payout) {
       const row = createElement('tr');
-      const bankCell = createElement('td');
+      const bankCell = createElement('td', { className: 'payout-bank-cell' });
       if (payout.bankInfo) {
         bankCell.append(
           createElement('div', {
-            className: 'metric-text',
-            style: { lineHeight: '1.55' },
+            className: 'metric-text payout-bank-details',
             children: [
               createElement('strong', { text: payout.bankInfo.bankName }),
               createElement('br'),
@@ -745,11 +806,10 @@
         bankCell.appendChild(createElement('span', { className: 'muted-cell', text: '-' }));
       }
 
-      const transferCell = createElement('td');
+      const transferCell = createElement('td', { className: 'payout-transfer-cell' });
       if (payout.transferReference) {
         transferCell.appendChild(createElement('div', {
-          className: 'metric-text',
-          style: { lineHeight: '1.55' },
+          className: 'metric-text payout-transfer-details',
           children: [
             createElement('strong', { text: payout.transferReference }),
             createElement('br'),
@@ -768,15 +828,51 @@
             ? 'badge badge-info'
             : 'badge badge-pending';
 
+      const requestedDate = new Date(payout.createdAt);
+
       [
-        createElement('td', { children: [createElement('strong', { text: payout.user?.nickname || payout.user?.name || '-' })] }),
-        createElement('td', { className: 'muted-cell', text: payout.user?.email || '-' }),
-        createElement('td', { children: [createElement('strong', { style: { color: 'var(--primary)' }, text: `${String(payout.amount).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND` })] }),
+        createElement('td', {
+          className: 'payout-seller-cell',
+          children: [
+            createElement('strong', {
+              className: 'payout-seller-name',
+              text: payout.user?.nickname || payout.user?.name || '-'
+            })
+          ]
+        }),
+        createElement('td', {
+          className: 'payout-email-cell',
+          children: [createElement('span', { className: 'muted-cell payout-email-text', text: payout.user?.email || '-' })]
+        }),
+        createElement('td', {
+          className: 'payout-amount-cell',
+          children: [createElement('strong', {
+            className: 'payout-amount-text',
+            text: `${String(payout.amount).replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND`
+          })]
+        }),
         bankCell,
-        createElement('td', { className: 'muted-cell', text: new Date(payout.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }),
-        createElement('td', { children: [createBadge(payout.status, badgeClass)] }),
+        createElement('td', {
+          className: 'muted-cell payout-date-cell',
+          children: [
+            createElement('div', {
+              className: 'payout-date-stack',
+              children: [
+                createElement('strong', {
+                  className: 'payout-date-primary',
+                  text: requestedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                }),
+                createElement('span', {
+                  className: 'payout-date-secondary',
+                  text: requestedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                })
+              ]
+            })
+          ]
+        }),
+        createElement('td', { className: 'payout-status-cell', children: [createBadge(payout.status, badgeClass)] }),
         transferCell,
-        createElement('td', { children: [createPayoutActions(payout)] })
+        createElement('td', { className: 'payout-actions-cell', children: [createPayoutActions(payout)] })
       ].forEach((cell) => row.appendChild(cell));
 
       return row;
@@ -840,13 +936,22 @@
       const text = document.getElementById('payoutActionText');
       const noteField = document.getElementById('payoutAdminNote');
       const refField = document.getElementById('payoutTransferReference');
+      const transferNoteField = document.getElementById('payoutTransferNote');
       if (!modal || !text) return;
 
       if (noteField) noteField.value = '';
       if (refField) refField.value = '';
+      if (transferNoteField) transferNoteField.value = '';
+      if (refField) refField.style.display = action === 'mark-paid' ? '' : 'none';
+      if (transferNoteField) transferNoteField.style.display = action === 'mark-paid' ? '' : 'none';
       text.textContent = action === 'mark-paid'
         ? 'Confirm that the bank transfer to the seller has been completed.'
         : `Are you sure you want to ${action} this payout?`;
+      if (noteField) {
+        noteField.placeholder = action === 'reject'
+          ? 'Rejection reason'
+          : 'Admin note';
+      }
       modal.classList.add('show');
       modal.style.display = 'flex';
     };
@@ -872,9 +977,14 @@
         try {
           const adminNote = document.getElementById('payoutAdminNote')?.value || '';
           const transferReference = document.getElementById('payoutTransferReference')?.value || '';
-          const payload = { adminNote, transferReference };
+          const transferNote = document.getElementById('payoutTransferNote')?.value || '';
+          const payload = { adminNote, transferReference, transferNote };
           if (activePayoutAction === 'reject' && !adminNote.trim()) {
             safeToast('Rejection reason is required', 'error');
+            return;
+          }
+          if (activePayoutAction === 'mark-paid' && !transferReference.trim()) {
+            safeToast('Transfer reference is required', 'error');
             return;
           }
           const res = await fetch(`/api/admin/payouts/${activePayoutId}/${activePayoutAction}`, {
@@ -891,15 +1001,16 @@
             safeToast(successText, 'ok');
           } else {
             safeToast(json.message || 'Action failed', 'error');
+            return;
           }
         } catch {
           safeToast('Network error', 'error');
         } finally {
           confirmBtn.disabled = false;
           confirmBtn.textContent = 'Confirm';
-          window.closePayoutModal();
-          loadPayouts();
         }
+        window.closePayoutModal();
+        loadPayouts();
       });
     }
   })();

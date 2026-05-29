@@ -6,14 +6,12 @@ const SystemSettings = require('../models/SystemSettings');
 const PayoutRequest = require('../models/PayoutRequest');
 const Wallet = require('../models/Wallet');
 const WalletTransaction = require('../models/WalletTransaction');
-const { ORDER_STATUS, PRODUCT_STATUS } = require('../config/appConstants');
-
-const PAYOUT_STATUS = Object.freeze({
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  PAID: 'PAID',
-  REJECTED: 'REJECTED'
-});
+const {
+  ORDER_STATUS,
+  PRODUCT_STATUS,
+  PAYOUT_STATUS,
+  WALLET_TRANSACTION_TYPES
+} = require('../config/appConstants');
 
 function toObjectIdString(value) {
   try {
@@ -516,7 +514,7 @@ function savePayout(payout, session) {
 
 function updatePayoutTransactionStatus(payoutId, status, session) {
   return WalletTransaction.findOneAndUpdate(
-    { referenceId: payoutId, referenceType: 'PayoutRequest', type: 'WITHDRAW' },
+    { referenceId: payoutId, referenceType: 'PayoutRequest', type: WALLET_TRANSACTION_TYPES.WITHDRAW },
     { $set: { status } },
     { session }
   );
@@ -534,7 +532,7 @@ function createRefundWalletTransaction({ walletId, userId, amount, adminNote, pa
   return new WalletTransaction({
     wallet: walletId,
     user: userId,
-    type: 'DEPOSIT',
+    type: WALLET_TRANSACTION_TYPES.DEPOSIT,
     amount,
     description: `Refund for rejected withdrawal request: ${adminNote}`,
     status: 'COMPLETED',

@@ -16,11 +16,11 @@ const VIEWS = {
   MESSAGES: 'messages',
   NOTIFICATIONS: 'notifications',
   FAVORITES: 'favorites',
-  ADMIN_DISPUTES: 'admin-disputes',
   DASHBOARD_ADMIN: 'dashboard-admin',
   DASHBOARD_SELLER: 'dashboard-seller',
   ORDERS_SELLER: 'orders-seller',
   REVENUE: 'revenue',
+  WALLET_PAYOUTS: 'wallet-payouts',
   NOT_FOUND: '404',
   ERROR: 'error',
 };
