@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <%- include('partials/head', { pageTitle: (editProduct ? 'Edit Product' : 'Post a Product') + ' - Campus Marketplace', pageStyles: ['sell', 'sell-page', 'seller-center'] }) %>
-  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+  <link href="/vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
+  <script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
 </head>
 
 <body class="dashboard-page seller-workspace seller-post-view">
@@ -314,14 +314,12 @@
               .replace(/\u2029/g, '\\u2029');
           }
         %>
-        <script>
-          window.SELL_PAGE_CONFIG = <%- safeJson({
+        <script id="sell-page-config" type="application/json"><%- safeJson({
             submitUrl: ep ? "/api/products/" + ep._id : "/api/products",
             submitMethod: ep ? "PATCH" : "POST",
             submitLabel: ep ? "Save Changes" : "Post Product Now",
             existingImages: ep && ep.images ? ep.images : []
-          }) %>;
-        </script>
+          }) %></script>
         <script defer src="/js/pages/sell.js"></script>
 </body>
 

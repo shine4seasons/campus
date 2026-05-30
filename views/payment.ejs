@@ -97,14 +97,22 @@
         </div>
       </div>
 
-      <script>
-        window.PAYMENT_PAGE_CONFIG = {
-          paymentId: '<%= payment._id %>',
-          expiredAt: '<%= payment.expiredAt %>',
-          trackingUrl: '/orders/tracking/<%= payment.order._id %>',
-          isAlreadyPaid: <%= isAlreadyPaid ? 'true' : 'false' %>
-        };
-      </script>
+      <%
+        function safeJson(value) {
+          return JSON.stringify(value)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026')
+            .replace(/\u2028/g, '\\u2028')
+            .replace(/\u2029/g, '\\u2029');
+        }
+      %>
+      <script id="payment-page-config" type="application/json"><%- safeJson({
+        paymentId: String(payment._id),
+        expiredAt: payment.expiredAt,
+        trackingUrl: '/orders/tracking/' + String(payment.order._id),
+        isAlreadyPaid: !!isAlreadyPaid
+      }) %></script>
       <script defer src="/js/pages/payment.js"></script>
 </body>
 

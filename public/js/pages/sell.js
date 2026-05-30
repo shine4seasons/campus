@@ -1,6 +1,6 @@
 (function () {
-  const { createElement } = window.AppUtils || {};
-  const config = window.SELL_PAGE_CONFIG || {};
+  const { createElement, readJsonScript } = window.AppUtils || {};
+  const config = typeof readJsonScript === 'function' ? readJsonScript('sell-page-config') : {};
   const submitUrl = config.submitUrl || '/api/products';
   const submitMethod = config.submitMethod || 'POST';
   const submitLabel = config.submitLabel || 'Post Product Now';
@@ -730,7 +730,13 @@
       return;
     }
     button.disabled = true;
-    button.innerHTML = '<i data-lucide="loader-circle" class="sell-submit-icon"></i> Publishing...';
+    button.replaceChildren(
+      createElement('i', {
+        className: 'sell-submit-icon',
+        attrs: { 'data-lucide': 'loader-circle' }
+      }),
+      document.createTextNode(' Publishing...')
+    );
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     const payload = {

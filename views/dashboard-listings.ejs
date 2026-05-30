@@ -145,15 +145,8 @@
 
       <div id="toast-wrap"></div>
 
-      <script>window.INITIAL_SECTION = 'sProducts';</script>
-      <script>
-        document.addEventListener('click', function (event) {
-          const toastTarget = event.target.closest('[data-toast-message]');
-          if (toastTarget && typeof showToast === 'function') {
-            showToast(toastTarget.dataset.toastMessage, toastTarget.dataset.toastType || 'info');
-          }
-        });
-      </script>
+      <script id="dashboard-page-config" type="application/json">{"initialSection":"sProducts"}</script>
+      <script defer src="/js/pages/dashboard-listings.js"></script>
       <%- include('partials/dashboard-scripts') %>
 </body>
 

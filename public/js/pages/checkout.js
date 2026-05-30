@@ -1,6 +1,8 @@
 (function () {
 const { createElement, createSvgElement, formatVND } = window.AppUtils || {};
-const checkoutConfig = window.CHECKOUT_PAGE_CONFIG || {};
+const checkoutConfig = window.AppUtils?.readJsonScript
+  ? window.AppUtils.readJsonScript('checkout-page-config')
+  : {};
     const PRODUCT_ID = checkoutConfig.productId || '';
     const PRODUCT_PRICE = Number(checkoutConfig.productPrice || 0);
     const PRODUCT_STOCK = Number(checkoutConfig.productStock || 1);

@@ -12,30 +12,7 @@
     <a href="/login">Try again</a>
   </div>
 
-  <script>
-    // Server has set the httpOnly cookie and redirected here
-    // Just verify the user is valid and redirect them home
-    (async () => {
-      try {
-        const res  = await fetch('/api/auth/me', { credentials: 'include' });
-        const data = await res.json();
-
-        if (!res.ok || !data.success) throw new Error('Not authenticated');
-
-        const user = data.data;
-        document.getElementById('msg').textContent = 'Welcome back, ' + user.name + '!';
-
-        const redirectTo = sessionStorage.getItem('redirect_after_login') || '/';
-        sessionStorage.removeItem('redirect_after_login');
-        setTimeout(() => window.location.replace(redirectTo), 800);
-
-      } catch (err) {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('msg').style.display     = 'none';
-        document.getElementById('err-card').style.display = 'block';
-      }
-    })();
-  </script>
+  <script defer src="/js/pages/callback.js"></script>
 </body>
 </html>
 

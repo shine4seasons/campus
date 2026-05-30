@@ -309,18 +309,7 @@
       <div id="toast-container"></div>
 
       <script defer src="/js/categories.js"></script>
-      <script>
-        window.INDEX_PAGE_CONFIG = {
-          isAuth: <%= !!user %>
-        };
-
-        window.footerSignOut = async function footerSignOut() {
-          try {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-          } catch (_) {}
-          window.location.href = '/';
-        };
-      </script>
+      <script id="index-page-config" type="application/json"><%- JSON.stringify({ isAuth: !!user }) %></script>
       <script defer src="/js/pages/index.js"></script>
 </body>
 

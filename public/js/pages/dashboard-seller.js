@@ -156,8 +156,7 @@
 
     const pendingNode = document.getElementById('wallet-pending-balance');
     if (pendingNode) {
-      pendingNode.innerHTML = '';
-      pendingNode.append(
+      pendingNode.replaceChildren(
         createElement('i', {
           attrs: { 'data-lucide': 'clock' },
           style: { width: '14px', height: '14px' }
@@ -457,7 +456,10 @@
 
   syncWithdrawPanelState();
 
-  if (window.INITIAL_SECTION === 'sWallet') {
+  const dashboardConfig = window.AppUtils?.readJsonScript
+    ? window.AppUtils.readJsonScript('dashboard-page-config')
+    : {};
+  if (dashboardConfig.initialSection === 'sWallet') {
     refreshWalletData();
   }
 })();

@@ -1,4 +1,4 @@
-body { background: var(--bg); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+body { background: var(--bg); font-family: var(--font); }
 
 .notif-page {
   max-width: 880px;

@@ -15,6 +15,7 @@
     "test:concurrency:controls": "node scripts/test-concurrency-controls.js",
     "test:concurrency:runtime": "node scripts/test-concurrency-runtime.js",
     "test:concurrency:verify": "node scripts/verify-concurrency-invariants.js",
+    "seed:runtime": "node scripts/seed-runtime-fixtures.js",
     "bench:p95": "node scripts/benchmark-p95.js",
     "bench:p95:budget": "node scripts/evaluate-p95-budgets.js",
     "bench:p95:matrix": "node scripts/render-perf-matrix.js",
@@ -28,12 +29,16 @@
   },
   "dependencies": {
     "axios": "^1.16.1",
+    "chart.js": "4.4.1",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
+    "leaflet": "1.9.4",
+    "leaflet-routing-machine": "3.2.12",
+    "maplibre-gl": "4.7.1",
     "mongoose": "^7.6.3",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.67.0",
@@ -47,4 +52,3 @@
     "tailwindcss": "^3.4.19"
   }
 }
-

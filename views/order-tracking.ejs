@@ -2,7 +2,7 @@
 <html lang="en" class="dashboard-shell">
 <head>
   <%- include('partials/head', { pageTitle: 'Order Tracking - Campus Marketplace', pageStyles: ['dashboard', 'rating', 'order-tracking-page'] }) %>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
 </head>
 
 <body class="dashboard-page">
@@ -332,12 +332,11 @@
       </main>
 
       <!-- Leaflet JS for maps -->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+      <script defer src="/vendor/leaflet-1.9.4/leaflet.js"></script>
       <!-- Leaflet Routing Machine for routes -->
-      <script
-        src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.umd.js"></script>
+      <script defer src="/vendor/leaflet-routing-machine-3.2.12/leaflet-routing-machine.min.js"></script>
       <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+        href="/vendor/leaflet-routing-machine-3.2.12/leaflet-routing-machine.css" />
 
 
       <!-- Dispute modal -->
@@ -388,14 +387,12 @@
             .replace(/\u2029/g, '\\u2029');
         }
       %>
-      <script>
-        window.ORDER_TRACKING_CONFIG = <%- safeJson({
+      <script id="order-tracking-config" type="application/json"><%- safeJson({
           order,
           isBuyer,
           isSeller,
           orderId: String(order._id)
-        }) %>;
-      </script>
+        }) %></script>
       <script defer src="/js/pages/order-tracking.js"></script>
 
 </body>

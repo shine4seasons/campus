@@ -1,6 +1,8 @@
 (function () {
   const { createElement } = window.AppUtils || {};
-  const config = window.ORDER_TRACKING_CONFIG || {};
+  const config = window.AppUtils?.readJsonScript
+    ? window.AppUtils.readJsonScript('order-tracking-config')
+    : {};
   const order = config.order;
   const isBuyer = !!config.isBuyer;
   const isSeller = !!config.isSeller;

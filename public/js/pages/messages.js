@@ -1,4 +1,15 @@
-const messagesConfig = window.MESSAGES_PAGE_CONFIG || {};
+function readMessagesConfig() {
+  const node = document.getElementById('messages-page-config');
+  if (!node) return {};
+  try {
+    return JSON.parse(node.textContent || '{}');
+  } catch (err) {
+    window.AppUtils?.reportClientError('Invalid messages page config', err);
+    return {};
+  }
+}
+
+const messagesConfig = readMessagesConfig();
 const MY_USER_ID = messagesConfig.myUserId || '';
 const USER_ROLE = messagesConfig.userRole || 'buyer';
 let currentConvId = messagesConfig.currentConvId || '';
@@ -301,14 +312,20 @@ function avatarNode(name, avatarUrl, size = 48, fontSize = 18) {
   return span;
 }
 
-function renderAvatarMarkup(name, avatarUrl, size = 48, fontSize = 18) {
-  const safeName = esc(name || 'User');
-  const safeAvatarUrl = String(avatarUrl || '').trim();
-  if (safeAvatarUrl) {
-    return `<img src="${esc(safeAvatarUrl)}" alt="${safeName}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;">`;
-  }
-  const initial = safeName.charAt(0).toUpperCase() || '?';
-  return `<span style="font-size:${fontSize}px;font-weight:700;">${initial}</span>`;
+function createSendSpinner() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2.5');
+  svg.style.animation = 'spin 0.8s linear infinite';
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83');
+  svg.appendChild(path);
+  return svg;
 }
 
 function renderInbox(convs) {
@@ -576,8 +593,8 @@ window.sendMessage = async function () {
 
   input.disabled = true;
   btn.disabled = true;
-  const originalHTML = btn.innerHTML;
-  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
+  const originalChildren = Array.from(btn.childNodes);
+  btn.replaceChildren(createSendSpinner());
 
   try {
     let imageUrl = null;
@@ -610,7 +627,7 @@ window.sendMessage = async function () {
     showChatToast(err.message || 'Network error - message not sent');
   } finally {
     if (overlay) overlay.style.display = 'none';
-    btn.innerHTML = originalHTML;
+    btn.replaceChildren(...originalChildren);
     input.disabled = false;
     btn.disabled = false;
     input.focus();

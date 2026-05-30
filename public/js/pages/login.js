@@ -4,6 +4,12 @@ document.getElementById('google-btn').addEventListener('click', function () {
 });
 const { createElement, createSvgElement } = window.AppUtils || {};
 
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+});
+
 function setSubmitButton(button, loading) {
   if (loading) {
     button.replaceChildren(

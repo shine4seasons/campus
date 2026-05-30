@@ -2,7 +2,7 @@
 <html lang="en" class="dashboard-shell">
 <head>
   <%- include('partials/head', { pageTitle: 'Seller Dashboard - Campus Marketplace', pageStyles: ['dashboard', 'rating', 'seller-center'] }) %>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script defer src="/vendor/chart.js-4.4.1/chart.umd.js"></script>
 </head>
 
 <body class="dashboard-page dashboard-seller seller-workspace">
@@ -434,7 +434,7 @@
       </nav>
 
             <script defer src="/js/pages/dashboard-seller.js"></script>
-      <script>window.INITIAL_SECTION = "<%= (typeof initialSection !== 'undefined' ? initialSection : 'sDash') %>";</script>
+      <script id="dashboard-page-config" type="application/json"><%- JSON.stringify({ initialSection: (typeof initialSection !== 'undefined' ? initialSection : 'sDash') }).replace(/</g, '\\u003c') %></script>
       <script defer src="/js/rating.js"></script>
       <%- include('partials/dashboard-scripts') %>
 </body>

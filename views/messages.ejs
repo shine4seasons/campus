@@ -83,14 +83,12 @@
         .replace(/\u2029/g, '\\u2029');
     }
   %>
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    window.MESSAGES_PAGE_CONFIG = <%- safeJson({
+  <script defer src="/socket.io/socket.io.js"></script>
+  <script id="messages-page-config" type="application/json"><%- safeJson({
       myUserId: String(user._id),
       currentConvId: conversationId || '',
       userRole: user && user.role ? user.role : 'buyer'
-    }) %>;
-  </script>
+    }) %></script>
   <script defer src="/js/pages/messages.js"></script>
 </body>
 </html>

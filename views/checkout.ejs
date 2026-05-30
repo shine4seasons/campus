@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <%- include('partials/head', { pageTitle: 'Checkout - Campus Marketplace', pageStyles: ['checkout', 'checkout-page'] }) %>
-  <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+  <link href="/vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
+  <script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
 </head>
 <body class="checkout-page">
  <%- include('partials/navbar') %>
@@ -330,15 +330,23 @@
     </div>
   </div>
 
-  <script>
-    window.CHECKOUT_PAGE_CONFIG = {
-      productId: '<%= product && product._id ? product._id.toString() : '' %>',
-      productPrice: <%= typeof product !== 'undefined' && product.price ? product.price : 0 %>,
-      productStock: <%= typeof product !== 'undefined' && product.quantity ? product.quantity : 1 %>,
-      sellerId: '<%= (product && product.seller && product.seller._id) ? product.seller._id.toString() : (product && product.seller ? product.seller.toString() : '') %>',
-      shipFee: 0
-    };
-  </script>
+  <%
+    function safeJson(value) {
+      return JSON.stringify(value)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+    }
+  %>
+  <script id="checkout-page-config" type="application/json"><%- safeJson({
+    productId: product && product._id ? product._id.toString() : '',
+    productPrice: typeof product !== 'undefined' && product.price ? product.price : 0,
+    productStock: typeof product !== 'undefined' && product.quantity ? product.quantity : 1,
+    sellerId: (product && product.seller && product.seller._id) ? product.seller._id.toString() : (product && product.seller ? product.seller.toString() : ''),
+    shipFee: 0
+  }) %></script>
   <script defer src="/js/pages/checkout.js"></script>
 </body>
 </html>

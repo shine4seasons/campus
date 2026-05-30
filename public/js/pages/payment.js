@@ -1,4 +1,6 @@
-const paymentConfig = window.PAYMENT_PAGE_CONFIG || {};
+const paymentConfig = window.AppUtils?.readJsonScript
+  ? window.AppUtils.readJsonScript('payment-page-config')
+  : {};
 const PAYMENT_ID = paymentConfig.paymentId || '';
 const EXPIRED_AT = new Date(paymentConfig.expiredAt || '').getTime();
 const TRACKING_URL = paymentConfig.trackingUrl || '/';

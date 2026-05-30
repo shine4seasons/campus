@@ -86,6 +86,17 @@
       .replace(/\u2029/g, '\\u2029');
   }
 
+  function readJsonScript(id, fallback = {}) {
+    const node = document.getElementById(id);
+    if (!node) return fallback;
+    try {
+      return JSON.parse(node.textContent || '{}');
+    } catch (err) {
+      reportClientLog('error', 'Invalid JSON script config', id, err);
+      return fallback;
+    }
+  }
+
   function reportClientLog(level, ...args) {
     const consoleApi = globalScope['console'];
     if (!globalScope.DEBUG_CLIENT_LOGS || !consoleApi) return;
@@ -139,6 +150,7 @@
     createSvgElement,
     escapeHtml,
     formatVND,
+    readJsonScript,
     safeJsonForInlineScript,
     reportClientError: (...args) => reportClientLog('error', ...args),
     reportClientWarn: (...args) => reportClientLog('warn', ...args),

@@ -135,6 +135,35 @@ function runFrontendXssChecks() {
   } catch (err) {
     check('FE-201 DOM HTML API audit snapshot matches repo', false, err.stderr ? String(err.stderr).trim() : 'snapshot mismatch');
   }
+
+  let pageConfigGlobals = '';
+  try {
+    pageConfigGlobals = execFileSync('rg', [
+      '-n',
+      'window\\.(SELL|PRODUCT|PROFILE|CHECKOUT|PAYMENT|INDEX|MESSAGES|ORDER_TRACKING)_CONFIG|window\\.(SELL|PRODUCT|PROFILE|CHECKOUT|PAYMENT|INDEX|MESSAGES|ORDER_TRACKING)_PAGE_CONFIG|window\\.INITIAL_SECTION',
+      'views',
+      'public/js'
+    ], {
+      cwd: ROOT,
+      encoding: 'utf8'
+    }).trim();
+  } catch (err) {
+    if (!err || err.status !== 1) throw err;
+  }
+  check('FE-202 executable page config globals removed', pageConfigGlobals === '', pageConfigGlobals);
+
+  const viewFiles = execFileSync('rg', ['--files', 'views'], {
+    cwd: ROOT,
+    encoding: 'utf8'
+  })
+    .split(/\r?\n/)
+    .filter((file) => file.endsWith('.ejs'));
+  const executableInlineScripts = viewFiles.flatMap((file) => {
+    const content = read(file);
+    const matches = content.match(/<script\b(?![^>]*\bsrc=)(?![^>]*type=["']application\/json["'])[^>]*>/gi) || [];
+    return matches.map((match) => `${file}: ${match}`);
+  });
+  check('FE-202 no executable inline scripts in views', executableInlineScripts.length === 0, executableInlineScripts.join('; '));
 }
 
 function runApiContractChecks() {
@@ -162,6 +191,7 @@ function runDbRuntimeHarnessChecks() {
   const runtime = read('scripts/test-concurrency-runtime.js');
   const verifier = read('scripts/verify-concurrency-invariants.js');
   const collector = read('scripts/collect-runtime-evidence.js');
+  const seed = read('scripts/seed-runtime-fixtures.js');
   check(
     'DB-201 runtime harness detects unreachable target',
     runtime.includes('unreachable_target_or_all_requests_failed')
@@ -181,6 +211,10 @@ function runDbRuntimeHarnessChecks() {
   check(
     'DB-201 runtime evidence collector persists invariant artifacts',
     includesAll(collector, ['EVIDENCE_VERIFY_ARGS', 'verify-concurrency-invariants.js', 'concurrency-invariants-'])
+  );
+  check(
+    'DB-201 runtime fixture seed exports benchmark and invariant inputs',
+    includesAll(seed, ['BENCH_BUYER_COOKIE', 'CONC_VERIFY_PRODUCT_ID', 'CONC_VERIFY_PAYMENT_ID', 'CONC_VERIFY_PAYOUT_ID'])
   );
 }
 
@@ -204,6 +238,56 @@ function runPerformanceHarnessChecks() {
   check(
     'PERF-201 budget evaluator rejects non-meaningful runs',
     includesAll(budgets, ['auth_only_responses', 'disallowed_status_observed', 'successP95', 'meaningful'])
+  );
+
+  const sellView = read('views/sell.ejs');
+  const checkoutView = read('views/checkout.ejs');
+  const productView = read('views/product.ejs');
+  const orderTrackingView = read('views/order-tracking.ejs');
+  const dashboardSellerView = read('views/dashboard-seller.ejs');
+  const dashboardAdminView = read('views/dashboard-admin.ejs');
+  const revenueView = read('views/revenue.ejs');
+  const viewFiles = [
+    sellView,
+    checkoutView,
+    productView,
+    orderTrackingView,
+    dashboardSellerView,
+    dashboardAdminView,
+    revenueView
+  ];
+  check(
+    'PERF-202 third-party browser libraries are self-hosted',
+    viewFiles.every((content) => !/https:\/\/(unpkg|cdnjs|cdn\.jsdelivr)\./.test(content)) &&
+      includesAll(sellView, ['/vendor/maplibre-gl-4.7.1/maplibre-gl.css', '/vendor/maplibre-gl-4.7.1/maplibre-gl.js']) &&
+      includesAll(checkoutView, ['/vendor/maplibre-gl-4.7.1/maplibre-gl.css', '/vendor/maplibre-gl-4.7.1/maplibre-gl.js']) &&
+      includesAll(productView, ['/vendor/leaflet-1.9.4/leaflet.css', '/vendor/leaflet-1.9.4/leaflet.js']) &&
+      includesAll(orderTrackingView, ['/vendor/leaflet-1.9.4/leaflet.css', '/vendor/leaflet-1.9.4/leaflet.js', '/vendor/leaflet-routing-machine-3.2.12/leaflet-routing-machine.min.js']) &&
+      dashboardSellerView.includes('/vendor/chart.js-4.4.1/chart.umd.js') &&
+      dashboardAdminView.includes('/vendor/chart.js-4.4.1/chart.umd.js') &&
+      revenueView.includes('/vendor/chart.js-4.4.1/chart.umd.js')
+  );
+  check(
+    'PERF-202 map libraries do not block initial parsing',
+    sellView.includes('<script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"') &&
+      checkoutView.includes('<script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"') &&
+      productView.includes('<script defer src="/vendor/leaflet-1.9.4/leaflet.js"') &&
+      orderTrackingView.includes('<script defer src="/vendor/leaflet-1.9.4/leaflet.js"') &&
+      orderTrackingView.includes('<script defer') &&
+      dashboardSellerView.includes('<script defer src="/vendor/chart.js-4.4.1/chart.umd.js"') &&
+      dashboardAdminView.includes('<script defer src="/vendor/chart.js-4.4.1/chart.umd.js"') &&
+      revenueView.includes('<script defer src="/vendor/chart.js-4.4.1/chart.umd.js"')
+  );
+
+  const head = read('views/partials/head.ejs');
+  const sharedCss = read('public/css/shared.css');
+  check(
+    'PERF-202 fonts do not depend on render-blocking third-party CSS',
+    !/fonts\.googleapis|fonts\.gstatic|@import\s+url\(/.test(`${head}\n${sharedCss}`)
+  );
+  check(
+    'PERF-202 avatar fallbacks do not call third-party image services',
+    !/ui-avatars\.com/.test(read('views/profile.ejs'))
   );
 }
 

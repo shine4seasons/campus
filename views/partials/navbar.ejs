@@ -59,17 +59,9 @@
 		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
 	</div>
 </header>
-<script>
-	document.addEventListener('DOMContentLoaded', function () {
-		if (typeof lucide !== 'undefined') {
-			lucide.createIcons();
-		}
-	});
-</script>
+<script defer src="/js/navbar-init.js"></script>
 <script defer src="/socket.io/socket.io.js"></script>
-<script>
-    window.SOCKET_USER_ID = '<%= user ? user._id : "" %>';
-</script>
+<script id="socket-user-config" type="application/json"><%- JSON.stringify({ userId: user ? String(user._id) : "" }).replace(/</g, '\\u003c') %></script>
 <div id="toast-wrap"></div>
 <div id="modal-container"></div>
 <script defer src="/js/notifications.js"></script>

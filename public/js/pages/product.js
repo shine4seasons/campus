@@ -1,5 +1,7 @@
 (function () {
-const productConfig = window.PRODUCT_PAGE_CONFIG || {};
+    const productConfig = window.AppUtils?.readJsonScript
+      ? window.AppUtils.readJsonScript('product-page-config')
+      : {};
     const PRODUCT_ID = productConfig.productId || '';
     const IS_AUTH = !!productConfig.isAuth;
     const IMAGES = Array.isArray(productConfig.images) ? productConfig.images : [];
@@ -487,7 +489,7 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
     });
 // Initialize product rating on page load
     document.addEventListener('DOMContentLoaded', async () => {
-      const productId = (window.PRODUCT_PAGE_CONFIG || {}).productId || '';
+      const productId = productConfig.productId || '';
 
       // Load product rating stats (overview)
       if (productId && typeof loadRatingStats === 'function') {
@@ -500,7 +502,6 @@ const productConfig = window.PRODUCT_PAGE_CONFIG || {};
       }
 
       // Initialize Map
-      const productConfig = window.PRODUCT_PAGE_CONFIG || {};
       const lat = productConfig.mapLat;
       const lng = productConfig.mapLng;
       const address = productConfig.mapAddress || '';

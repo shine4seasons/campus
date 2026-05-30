@@ -1,5 +1,7 @@
-const profileConfig = window.PROFILE_PAGE_CONFIG || {};
 const { createElement, createSvgElement } = window.AppUtils || {};
+const profileConfig = window.AppUtils?.readJsonScript
+  ? window.AppUtils.readJsonScript('profile-page-config')
+  : {};
 
 lucide.createIcons();
 

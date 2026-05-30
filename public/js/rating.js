@@ -48,42 +48,53 @@ function createStarsNode(score, size = 16) {
  * Display star rating
  */
 function renderStars(score, size = 16) {
-  const fullStars = Math.floor(score);
-  const hasHalf = score % 1 >= 0.5;
-  let html = '';
-  for (let i = 1; i <= 5; i += 1) {
-    const className = i <= fullStars ? 'star star-filled' : (i === fullStars + 1 && hasHalf ? 'star star-half' : 'star star-empty');
-    const color = i <= fullStars || (i === fullStars + 1 && hasHalf) ? '#fbbf24' : '#CBD5E1';
-    const fill = i <= fullStars ? 'currentColor' : 'none';
-    html += `<span class="${className}" style="width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;color:${color};"><svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
-  }
-  return html;
+  return createStarsNode(Number(score) || 0, Number(size) || 16);
 }
 
 /**
  * Display rating component with score and count
  */
 function displayRating(score, count = 0) {
-  return `
-    <div class="rating-display">
-      <div class="stars">${renderStars(score)}</div>
-      <span class="rating-value">${parseFloat(score).toFixed(1)}</span>
-      <span class="rating-count">${count} ${count === 1 ? 'review' : 'reviews'}</span>
-    </div>
-  `;
+  const stars = createElement('div', { className: 'stars' });
+  stars.appendChild(renderStars(score));
+  return createElement('div', {
+    className: 'rating-display',
+    children: [
+      stars,
+      createElement('span', { className: 'rating-value', text: (Number.parseFloat(score) || 0).toFixed(1) }),
+      createElement('span', { className: 'rating-count', text: `${count} ${count === 1 ? 'review' : 'reviews'}` })
+    ]
+  });
 }
 
 /**
  * Create interactive star rating input
  */
 function createRatingInput(onStarClick, initialScore = 0) {
-  let html = '<div class="rating-input">';
+  const wrap = createElement('div', { className: 'rating-input' });
   for (let i = 1; i <= 5; i += 1) {
     const selectedClass = initialScore >= i ? ' star-filled selected' : ' star-empty';
-    html += `<span class="star${selectedClass}" data-action="rating-star" data-score="${i}" style="width:24px;height:24px;display:inline-block;cursor:pointer;color:#CBD5E1;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>`;
+    const star = createElement('span', {
+      className: `star${selectedClass}`,
+      attrs: {
+        'data-action': 'rating-star',
+        'data-score': String(i)
+      },
+      style: {
+        width: '24px',
+        height: '24px',
+        display: 'inline-block',
+        cursor: 'pointer',
+        color: '#CBD5E1'
+      }
+    });
+    star.appendChild(createStarSvg(24, 'none'));
+    if (typeof onStarClick === 'function') {
+      star.addEventListener('click', () => onStarClick(i));
+    }
+    wrap.appendChild(star);
   }
-  html += '</div>';
-  return html;
+  return wrap;
 }
 
 /**

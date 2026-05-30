@@ -1,5 +1,5 @@
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font);
   background: #F7F8FC;
   font-size: var(--fs-base);
 }

@@ -17,7 +17,9 @@
     other: { bg: '#E5E7EB', icon: '#374151' }
   };
 
-  const indexPageConfig = window.INDEX_PAGE_CONFIG || {};
+  const indexPageConfig = window.AppUtils?.readJsonScript
+    ? window.AppUtils.readJsonScript('index-page-config')
+    : {};
   const IS_AUTH = !!indexPageConfig.isAuth;
   const PER_PAGE = 12;
 
@@ -653,6 +655,13 @@
     fetchProducts();
   };
 
+  async function footerSignOut() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (_) {}
+    window.location.href = '/';
+  }
+
   window.openProduct = function openProduct(id) {
     if (!IS_AUTH) {
       const element = document.createElement('div');
@@ -859,7 +868,7 @@
     }
 
     if (event.target.closest('[data-action="footer-sign-out"]')) {
-      window.footerSignOut();
+      footerSignOut();
       return;
     }
 

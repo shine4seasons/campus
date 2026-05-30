@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!notifBtn) return;
 
     // --- Socket.io Integration ---
+    const socketConfig = window.AppUtils?.readJsonScript
+        ? window.AppUtils.readJsonScript('socket-user-config')
+        : {};
+    window.SOCKET_USER_ID = socketConfig.userId || '';
+
     if (window.SOCKET_USER_ID) {
         const socket = io();
         

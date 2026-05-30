@@ -8,7 +8,15 @@
   <%- include('partials/navbar') %>
     <%- include('partials/sidebar') %>
 
-      <% const profileUser=isOwnProfile ? user : viewingUser; const isViewingOwn=isOwnProfile; %>
+      <%
+        const profileUser=isOwnProfile ? user : viewingUser;
+        const isViewingOwn=isOwnProfile;
+        function avatarDataUri(name) {
+          const label = String(name || '?').trim().charAt(0).toUpperCase() || '?';
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#E8F0FE"/><text x="50%" y="56%" text-anchor="middle" font-family="Arial,sans-serif" font-size="40" font-weight="700" fill="#2563EB">${label.replace(/[<&>]/g, '?')}</text></svg>`;
+          return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+        }
+      %>
 
         <div class="profile-wrap">
           <div class="profile-page-intro">
@@ -32,7 +40,7 @@
                 <div class="user-info-header">
                   <div class="user-avatar-section">
                     <img
-                      src="<%= profileUser.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(profileUser.name) + '&background=E8F0FE&color=2563EB&size=200' %>"
+                      src="<%= profileUser.avatar || avatarDataUri(profileUser.name) %>"
                       alt="<%= profileUser.name %>" class="user-avatar-lg">
                     <div class="user-info-text">
                       <div class="user-name">
@@ -149,7 +157,7 @@
                 <div class="card avatar-card profile-hero-card premium-card glass">
                   <div class="avatar-wrap" id="avatar-wrap">
                     <img
-                      src="<%= user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=E8F0FE&color=2563EB&size=200' %>"
+                      src="<%= user.avatar || avatarDataUri(user.name) %>"
                       alt="<%= user.name %>" class="avatar-img" id="avatar-img">
                     <label class="avatar-change-btn" for="avatar-upload-input" title="Change avatar">
                       <i data-lucide="camera"></i>
@@ -377,13 +385,11 @@
                 .replace(/\u2029/g, '\\u2029');
             }
           %>
-          <script>
-            window.PROFILE_PAGE_CONFIG = <%- safeJson({
+          <script id="profile-page-config" type="application/json"><%- safeJson({
               isOwnProfile: !!isOwnProfile,
               isViewingOwn: !!isViewingOwn,
               viewingUserId: String(profileUser._id)
-            }) %>;
-          </script>
+            }) %></script>
           <script defer src="/js/rating.js"></script>
           <script defer src="/js/pages/profile.js"></script>
 </body>
