@@ -106,7 +106,13 @@ async function verifyPaymentPaid(cfg, checks) {
 
   const idempotencyKey = `PAYMENT_PAID:${payment._id}`;
   const creditTxCount = await WalletTransaction.countDocuments({ idempotencyKey });
-  pushCheck(checks, 'single_payment_credit_tx', creditTxCount === 1, `idempotencyKey=${idempotencyKey} count=${creditTxCount}`);
+  const shouldHavePaymentCredit = cfg.expectPaymentPaid || payment.status === PAYMENT_STATUS.PAID;
+  pushCheck(
+    checks,
+    shouldHavePaymentCredit ? 'single_payment_credit_tx' : 'pending_payment_has_no_credit_tx',
+    shouldHavePaymentCredit ? creditTxCount === 1 : creditTxCount === 0,
+    `idempotencyKey=${idempotencyKey} count=${creditTxCount}`
+  );
 
   if (payment.bankTransactionId) {
     const duplicateBankTxCount = await Payment.countDocuments({ bankTransactionId: payment.bankTransactionId });
@@ -145,7 +151,13 @@ async function verifyPayoutRefund(cfg, checks) {
 
   const refundKey = `PAYOUT_REJECT_REFUND:${payout._id}`;
   const refundTxCount = await WalletTransaction.countDocuments({ idempotencyKey: refundKey });
-  pushCheck(checks, 'single_refund_credit_tx', refundTxCount === 1, `idempotencyKey=${refundKey} count=${refundTxCount}`);
+  const shouldHaveRefund = cfg.expectPayoutRejected || payout.status === 'REJECTED';
+  pushCheck(
+    checks,
+    shouldHaveRefund ? 'single_refund_credit_tx' : 'pending_payout_has_no_refund_credit_tx',
+    shouldHaveRefund ? refundTxCount === 1 : refundTxCount === 0,
+    `idempotencyKey=${refundKey} count=${refundTxCount}`
+  );
 
   const withdrawTxCount = await WalletTransaction.countDocuments({
     referenceId: payout._id,
@@ -153,7 +165,12 @@ async function verifyPayoutRefund(cfg, checks) {
     type: 'WITHDRAW',
     status: 'FAILED'
   });
-  pushCheck(checks, 'withdraw_tx_failed_once', withdrawTxCount === 1, `count=${withdrawTxCount}`);
+  pushCheck(
+    checks,
+    shouldHaveRefund ? 'withdraw_tx_failed_once' : 'pending_payout_has_no_failed_withdraw_tx',
+    shouldHaveRefund ? withdrawTxCount === 1 : withdrawTxCount === 0,
+    `count=${withdrawTxCount}`
+  );
 
   const wallet = await Wallet.findOne({ user: cfg.userId || payout.user }).lean();
   pushCheck(checks, 'wallet_exists', Boolean(wallet), `userId=${cfg.userId || payout.user}`);

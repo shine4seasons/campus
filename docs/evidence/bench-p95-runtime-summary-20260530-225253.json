@@ -1,0 +1,9 @@
+﻿{
+  "ok": true,
+  "baselinePass": true,
+  "currentPass": true,
+  "files": {
+    "jsonOut": "docs\\evidence\\perf-201-budget-2026-05-30T15-53-12-291Z.json",
+    "mdOut": "docs\\evidence\\perf-201-budget-2026-05-30T15-53-12-291Z.md"
+  }
+}

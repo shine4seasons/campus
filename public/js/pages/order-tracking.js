@@ -11,7 +11,7 @@
   if (!order) return;
 
   const map = L.map('map').setView([21.0285, 105.8542], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer(window.AppUtils.mapServices.leafletTiles, {
     attribution: 'OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map);
@@ -53,7 +53,7 @@
   async function geocodeAddress(address) {
     if (!address) return null;
     try {
-      const response = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address), {
+      const response = await fetch(window.AppUtils.buildUrl(window.AppUtils.mapServices.searchGeocode, { format: 'json', limit: 1, q: address }), {
         headers: { Accept: 'application/json' }
       });
       const results = await response.json();

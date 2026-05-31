@@ -193,7 +193,7 @@
         sources: {
           osm: {
             type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tiles: window.AppUtils.mapServices.rasterTiles,
             tileSize: 256,
             attribution: 'OpenStreetMap contributors'
           }
@@ -245,13 +245,13 @@
   }
 
   async function reverseGeocode(lat, lng) {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const response = await fetch(window.AppUtils.buildUrl(window.AppUtils.mapServices.reverseGeocode, { format: 'json', lat, lon: lng }));
     const data = await response.json();
     return data.display_name;
   }
 
   async function searchLocation(query) {
-    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+    const response = await fetch(window.AppUtils.buildUrl(window.AppUtils.mapServices.autocomplete, { q: query, limit: 5 }));
     const data = await response.json();
     return data.features || [];
   }

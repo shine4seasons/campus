@@ -2,7 +2,12 @@
   const { createElement } = window.AppUtils || {};
 
   function safeToast(message, type) {
-    if (typeof window.showToast === 'function') window.showToast(message, type);
+    const normalizedType = type === 'error' ? 'err' : (type || 'ok');
+    if (typeof window.showToast === 'function') {
+      window.showToast(message || 'Action failed', normalizedType);
+      return;
+    }
+    window.AppUtils?.reportClientWarn(message || 'Action failed');
   }
 
   async function safeConfirm({ title, message, confirmText }) {
@@ -57,6 +62,52 @@
     const button = createElement('button', { className, attrs: { type: 'button' }, text: label });
     if (typeof onClick === 'function') button.addEventListener('click', onClick);
     return button;
+  }
+
+  function createIcon(name, size = 16) {
+    const icon = createElement('i', {
+      attrs: {
+        'data-lucide': name,
+        'aria-hidden': 'true'
+      }
+    });
+    icon.style.width = `${size}px`;
+    icon.style.height = `${size}px`;
+    return icon;
+  }
+
+  function entityLink({ href, text, className = 'admin-entity-link', title }) {
+    const label = text || '-';
+    if (!href || label === '-') {
+      return createElement('span', { className, text: label });
+    }
+    return createElement('a', {
+      className,
+      attrs: { href, title: title || label },
+      text: label
+    });
+  }
+
+  function userProfileLink(user, options = {}) {
+    const label = user?.nickname || user?.name || '-';
+    const userId = user?._id ? String(user._id) : '';
+    return entityLink({
+      href: userId ? `/user/${encodeURIComponent(userId)}` : '',
+      text: label,
+      className: options.className || 'admin-entity-link admin-user-link',
+      title: label
+    });
+  }
+
+  function productLink(product, options = {}) {
+    const label = product?.title || '-';
+    const productId = product?._id ? String(product._id) : '';
+    return entityLink({
+      href: productId ? `/products/${encodeURIComponent(productId)}` : '',
+      text: label,
+      className: options.className || 'admin-entity-link admin-product-link',
+      title: label
+    });
   }
 
   function createActionMenu(label, items) {
@@ -433,15 +484,11 @@
       const row = createElement('tr');
       const orderId = String(order._id || '').slice(-6).toUpperCase();
       const fullOrderId = `#ORD-${orderId}`;
-      const productCell = createElement('div', {
-        className: 'admin-order-product',
-        attrs: { title: order.product?.title || '-' },
-        text: order.product?.title || '-'
-      });
+      const productCell = productLink(order.product, { className: 'admin-order-product admin-entity-link admin-product-link' });
       const copyBtn = createElement('button', {
         className: 'copy-btn',
-        attrs: { type: 'button', 'aria-label': `Copy ${fullOrderId}` },
-        text: '[]'
+        attrs: { type: 'button', 'aria-label': `Copy ${fullOrderId}`, title: `Copy ${fullOrderId}` },
+        children: [createIcon('copy', 14)]
       });
       copyBtn.addEventListener('click', () => copyOrderId(fullOrderId));
 
@@ -450,8 +497,8 @@
           children: [createElement('div', { className: 'mono-id', children: [createElement('span', { text: fullOrderId }), copyBtn] })]
         }),
         createElement('td', { className: 'muted-cell', children: [productCell] }),
-        createElement('td', { className: 'muted-cell', text: order.buyer?.nickname || order.buyer?.name || '-' }),
-        createElement('td', { className: 'muted-cell', text: order.seller?.nickname || order.seller?.name || '-' }),
+        createElement('td', { className: 'muted-cell', children: [userProfileLink(order.buyer)] }),
+        createElement('td', { className: 'muted-cell', children: [userProfileLink(order.seller)] }),
         createElement('td', { children: [createElement('strong', { text: order.priceSnapshot ? `${order.priceSnapshot.toLocaleString()} VND` : '-' })] }),
         createElement('td', { children: [createElement('span', { className: 'meta-chip', text: formatDeliveryMode(order.deliveryMode) })] }),
         createElement('td', { children: [createElement('span', { className: 'meta-chip', text: formatPaymentMode(order.paymentMode) })] }),
@@ -490,6 +537,7 @@
             setTableMessage(tbody, 8, 'No orders found');
           } else {
             tbody.replaceChildren(...orders.map(createOrderRow));
+            if (typeof window.lucide?.createIcons === 'function') window.lucide.createIcons();
           }
           if (typeof renderPagination === 'function') {
             renderPagination('#aOrders .pagination', json.pagination, 'loadOrders');
@@ -564,12 +612,9 @@
         updateBulkBar();
       });
 
-      const targetTitle = report.targetDetails
-        ? (report.targetType === 'product'
-          ? report.targetDetails.title
-          : report.targetDetails.nickname || report.targetDetails.name)
-        : '-';
-      const reporterName = report.reporter ? report.reporter.nickname || report.reporter.name : '-';
+      const targetNode = report.targetType === 'product'
+        ? productLink({ ...(report.targetDetails || {}), _id: report.targetId }, { className: 'report-target-title admin-entity-link admin-product-link' })
+        : userProfileLink({ ...(report.targetDetails || {}), _id: report.targetId }, { className: 'report-target-title admin-entity-link admin-user-link' });
       const reportDate = formatDate(report.createdAt);
 
       [
@@ -580,7 +625,7 @@
               className: 'report-target-cell',
               children: [
                 createBadge(report.targetType === 'product' ? 'Product' : 'User', `badge ${report.targetType === 'product' ? 'badge-reported' : 'badge-pending'}`),
-                createElement('strong', { className: 'report-target-title', text: targetTitle }),
+                targetNode,
                 createElement('span', {
                   className: 'report-target-sub',
                   text: report.targetType === 'product'
@@ -596,7 +641,7 @@
             createElement('div', {
               className: 'report-meta-cell',
               children: [
-                createElement('strong', { text: reporterName }),
+                userProfileLink(report.reporter, { className: 'admin-entity-link admin-user-link report-reporter-link' }),
                 createElement('span', { text: reportDate })
               ]
             })
@@ -834,10 +879,7 @@
         createElement('td', {
           className: 'payout-seller-cell',
           children: [
-            createElement('strong', {
-              className: 'payout-seller-name',
-              text: payout.user?.nickname || payout.user?.name || '-'
-            })
+            userProfileLink(payout.user, { className: 'payout-seller-name admin-entity-link admin-user-link' })
           ]
         }),
         createElement('td', {
@@ -918,6 +960,9 @@
     }
 
     window.loadPayouts = loadPayouts;
+    if (document.getElementById('aPayouts')?.classList.contains('active')) {
+      loadPayouts(1);
+    }
 
     document.querySelectorAll('#aPayouts .f-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
@@ -978,33 +1023,39 @@
           const adminNote = document.getElementById('payoutAdminNote')?.value || '';
           const transferReference = document.getElementById('payoutTransferReference')?.value || '';
           const transferNote = document.getElementById('payoutTransferNote')?.value || '';
-          const payload = { adminNote, transferReference, transferNote };
           if (activePayoutAction === 'reject' && !adminNote.trim()) {
-            safeToast('Rejection reason is required', 'error');
+            safeToast('Rejection reason is required', 'err');
             return;
           }
           if (activePayoutAction === 'mark-paid' && !transferReference.trim()) {
-            safeToast('Transfer reference is required', 'error');
+            safeToast('Transfer reference is required', 'err');
             return;
+          }
+          const payload = { adminNote };
+          if (activePayoutAction === 'mark-paid') {
+            payload.transferReference = transferReference;
+            payload.transferNote = transferNote;
           }
           const res = await fetch(`/api/admin/payouts/${activePayoutId}/${activePayoutAction}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          const json = await res.json();
+          const json = await res.json().catch(() => ({}));
 
-          if (json.success) {
+          if (res.ok && json.success) {
             const successText = activePayoutAction === 'mark-paid'
               ? 'Payout marked as paid'
               : `Payout request ${activePayoutAction}d successfully`;
             safeToast(successText, 'ok');
           } else {
-            safeToast(json.message || 'Action failed', 'error');
+            const fieldErrors = json.details?.fieldErrors || {};
+            const firstFieldError = Object.values(fieldErrors).flat()[0];
+            safeToast(firstFieldError || json.message || 'Action failed', 'err');
             return;
           }
         } catch {
-          safeToast('Network error', 'error');
+          safeToast('Network error', 'err');
         } finally {
           confirmBtn.disabled = false;
           confirmBtn.textContent = 'Confirm';

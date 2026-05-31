@@ -482,164 +482,20 @@
                 <input id="adminProductsSearch" type="text" placeholder="Search products or sellers...">
                 <span class="tbl-search-hint"><span class="kbd-hint">/</span> Focus search</span>
               </div>
-              <table class="admin-products-table">
-                <colgroup>
-                  <col class="col-product">
-                  <col class="col-seller">
-                  <col class="col-category">
-                  <col class="col-price">
-                  <col class="col-views">
-                  <col class="col-interest">
-                  <col class="col-status">
-                  <col class="col-posted">
-                  <col class="col-actions">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Seller</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Views</th>
-                    <th>Interest</th>
-                    <th>Status</th>
-                    <th>Posted</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div class="product-cell">
-                        <div class="product-thumb">FX</div>
-                        <div class="product-copy">
-                          <strong class="product-title">Casio FX-580VNX</strong>
-                          <div class="product-sub">Fast-moving calculator listing</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="muted-cell">John Tran</td>
-                    <td class="muted-cell">Electronics</td>
-                    <td>320,000 VND</td>
-                    <td>124</td>
-                    <td>8</td>
-                    <td><span class="badge badge-active">Active</span></td>
-                    <td class="muted-cell">02/04/2026</td>
-                    <td>
-                      <div class="tbl-actions">
-                        <button class="act-btn primary">View</button>
-                        <details class="action-menu">
-                          <summary class="act-btn">Moderate</summary>
-                          <div class="action-menu-panel">
-                            <button class="act-btn danger" type="button" data-danger-confirm="Hide this product from the marketplace?" data-toast-message="Product hidden" data-toast-type="ok">Hide</button>
-                          </div>
-                        </details>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="product-cell">
-                        <div class="product-thumb">BK</div>
-                        <div class="product-copy">
-                          <strong class="product-title">Macroeconomics Textbook</strong>
-                          <div class="product-sub">Study material with steady demand</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="muted-cell">Ann Le</td>
-                    <td class="muted-cell">Books</td>
-                    <td>80,000 VND</td>
-                    <td>88</td>
-                    <td>4</td>
-                    <td><span class="badge badge-active">Active</span></td>
-                    <td class="muted-cell">28/03/2026</td>
-                    <td>
-                      <div class="tbl-actions">
-                        <button class="act-btn primary">View</button>
-                        <details class="action-menu">
-                          <summary class="act-btn">Moderate</summary>
-                          <div class="action-menu-panel">
-                            <button class="act-btn danger" type="button" data-danger-confirm="Hide this product from the marketplace?">Hide</button>
-                          </div>
-                        </details>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="product-cell">
-                        <div class="product-thumb">HU</div>
-                        <div class="product-copy">
-                          <strong class="product-title">HUST Hoodie 2024</strong>
-                          <div class="product-sub">Seasonal campus apparel</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="muted-cell">Minh Hoa</td>
-                    <td class="muted-cell">Clothing</td>
-                    <td>250,000 VND</td>
-                    <td>210</td>
-                    <td>18</td>
-                    <td><span class="badge badge-sold">Sold</span></td>
-                    <td class="muted-cell">15/03/2026</td>
-                    <td>
-                      <div class="tbl-actions"><button class="act-btn">View</button></div>
-                    </td>
-                  </tr>
-                  <tr class="row-critical">
-                    <td>
-                      <div class="product-cell">
-                        <div class="product-thumb">LP</div>
-                        <div class="product-copy">
-                          <strong class="product-title">Laptop Dell XPS 13 (2024)</strong>
-                          <div class="product-sub">High-value listing flagged by reports</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="muted-cell">Phuc Quang</td>
-                    <td class="muted-cell">Electronics</td>
-                    <td>18,500,000 VND</td>
-                    <td>543</td>
-                    <td>32</td>
-                    <td><span class="badge badge-reported">Reported</span></td>
-                    <td class="muted-cell">10/03/2026</td>
-                    <td>
-                      <div class="tbl-actions">
-                        <button class="act-btn primary">Review</button>
-                        <details class="action-menu">
-                          <summary class="act-btn">Moderate</summary>
-                          <div class="action-menu-panel">
-                            <button class="act-btn danger" type="button" data-danger-confirm="Delete this reported product?" data-toast-message="Product deleted" data-toast-type="ok">Delete</button>
-                          </div>
-                        </details>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="product-cell">
-                        <div class="product-thumb">HM</div>
-                        <div class="product-copy">
-                          <strong class="product-title">Memory Foam Pillow</strong>
-                          <div class="product-sub">Hidden after repeated quality complaints</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="muted-cell">Bao Khanh</td>
-                    <td class="muted-cell">Furniture</td>
-                    <td>450,000 VND</td>
-                    <td>67</td>
-                    <td>5</td>
-                    <td><span class="badge badge-hidden">Hidden</span></td>
-                    <td class="muted-cell">01/03/2026</td>
-                    <td>
-                      <div class="tbl-actions"><button class="act-btn success"
-                          data-toast-message="Product restored" data-toast-type="ok">Restore</button></div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="bulk-bar warning" id="adminProductsBulkBar">
+                <div class="bulk-copy">
+                  <i data-lucide="check-square"></i>
+                  <span><strong id="adminProductsSelectedCount">0</strong> products selected</span>
+                </div>
+                <div class="bulk-actions">
+                  <button class="act-btn success" type="button" data-action="bulk-restore-products">Restore selected</button>
+                  <button class="act-btn danger" type="button" data-action="bulk-hide-products">Hide selected</button>
+                  <button class="act-btn danger" type="button" data-action="bulk-delete-products">Delete selected</button>
+                </div>
+              </div>
+              <div class="admin-products-grid" id="adminProductsGrid">
+                <div class="admin-products-message"><span class="adm-loader"></span> Loading products&hellip;</div>
+              </div>
               <div class="pagination"></div>
             </div>
           </section>

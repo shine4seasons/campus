@@ -338,7 +338,7 @@ const checkoutConfig = window.AppUtils?.readJsonScript
         container: 'checkout-location-map',
         style: {
           version: 8,
-          sources: { 'osm': { type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256 } },
+          sources: { 'osm': { type:'raster', tiles: window.AppUtils.mapServices.rasterTiles, tileSize:256 } },
           layers: [{ id:'osm', type:'raster', source:'osm' }]
         },
         center: [lngVal, latVal],
@@ -370,7 +370,7 @@ const checkoutConfig = window.AppUtils?.readJsonScript
     }
 
     async function reverseGeocodeCheckout(lat, lng) {
-      const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const res  = await fetch(window.AppUtils.buildUrl(window.AppUtils.mapServices.reverseGeocode, { format: 'json', lat, lon: lng }));
       const data = await res.json();
       
       if (currentMapContext === 'ship') {
@@ -394,7 +394,7 @@ const checkoutConfig = window.AppUtils?.readJsonScript
     }
 
     async function searchLocationCheckout(query) {
-      const res  = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+      const res  = await fetch(window.AppUtils.buildUrl(window.AppUtils.mapServices.autocomplete, { q: query, limit: 5 }));
       const data = await res.json();
       return data.features || [];
     }

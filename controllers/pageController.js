@@ -23,8 +23,10 @@ exports.getProduct = async (req, res, next) => {
     }
 
     const product = await pageRepository.findPageProductById(productId);
+    const currentUser = req.user || res.locals.user || null;
+    const isAdmin = currentUser && currentUser.role === 'admin';
 
-    if (!product || product.status === PRODUCT_STATUS.HIDDEN) {
+    if (!product || (product.status === PRODUCT_STATUS.HIDDEN && !isAdmin)) {
       return res.status(404).render(VIEWS.NOT_FOUND, {
         title: '404 — Not Found',
         isLoginPage: false
@@ -45,6 +47,7 @@ exports.getProduct = async (req, res, next) => {
       title: `${product.title}${TITLE_SEPARATOR}${APP_NAME}`,
       product,
       relatedProducts,
+      isAdminProductPreview: !!isAdmin,
       isLoginPage: false
     });
   } catch (error) {

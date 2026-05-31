@@ -122,6 +122,37 @@
     return url.startsWith('/api/') || url.startsWith(`${window.location.origin}/api/`);
   }
 
+  const MAP_SERVICES = Object.freeze({
+    rasterTiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+    leafletTiles: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    reverseGeocode: 'https://nominatim.openstreetmap.org/reverse',
+    searchGeocode: 'https://nominatim.openstreetmap.org/search',
+    autocomplete: 'https://photon.komoot.io/api/'
+  });
+
+  function buildUrl(baseUrl, params = {}) {
+    const url = new URL(baseUrl);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value != null && value !== '') url.searchParams.set(key, String(value));
+    });
+    return url.toString();
+  }
+
+  function maplibreRasterStyle() {
+    return {
+      version: 8,
+      sources: {
+        osm: {
+          type: 'raster',
+          tiles: MAP_SERVICES.rasterTiles,
+          tileSize: 256,
+          attribution: 'OpenStreetMap contributors'
+        }
+      },
+      layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+    };
+  }
+
   const nativeFetch = globalScope.fetch && globalScope.fetch.bind(globalScope);
   if (nativeFetch) {
     globalScope.fetch = function hardenedFetch(input, init = {}) {
@@ -152,6 +183,9 @@
     formatVND,
     readJsonScript,
     safeJsonForInlineScript,
+    mapServices: MAP_SERVICES,
+    buildUrl,
+    maplibreRasterStyle,
     reportClientError: (...args) => reportClientLog('error', ...args),
     reportClientWarn: (...args) => reportClientLog('warn', ...args),
     reportClientInfo: (...args) => reportClientLog('info', ...args),

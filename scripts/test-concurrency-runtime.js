@@ -26,6 +26,15 @@ function parseHeaders(raw) {
   }
 }
 
+function redactHeaders(headers = {}) {
+  const sensitive = new Set(['authorization', 'cookie', 'x-csrf-token', 'x-api-key']);
+  return Object.fromEntries(Object.entries(headers).map(([key, value]) => {
+    return sensitive.has(String(key).toLowerCase())
+      ? [key, value ? '[redacted]' : value]
+      : [key, value];
+  }));
+}
+
 function parseArgs() {
   const args = process.argv.slice(2);
   const cfg = {
@@ -141,7 +150,7 @@ async function main() {
 
   const report = {
     date: new Date().toISOString(),
-    config: cfg,
+    config: { ...cfg, headers: redactHeaders(cfg.headers) },
     statusCounts,
     errors,
     responded,

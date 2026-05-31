@@ -4,6 +4,7 @@
       : {};
     const PRODUCT_ID = productConfig.productId || '';
     const IS_AUTH = !!productConfig.isAuth;
+    const IS_ADMIN = !!productConfig.isAdmin;
     const IMAGES = Array.isArray(productConfig.images) ? productConfig.images : [];
     let interestedState = false;
 
@@ -201,7 +202,7 @@
     }
 
     // Initialize favorite state from server on load
-    if (IS_AUTH) {
+    if (IS_AUTH && !IS_ADMIN) {
       fetch('/api/products/favorites/ids', { credentials: 'include' })
         .then(r => r.json())
         .then(json => {
@@ -214,6 +215,7 @@
     }
 
     window.toggleInterested = async function () {
+      if (IS_ADMIN) return;
       if (!IS_AUTH) { if (typeof showToast === 'function') showToast('Please sign in to mark interest', 'err'); return; }
       if (interestRequestInFlight) return;
       interestRequestInFlight = true;
@@ -245,6 +247,7 @@
 
     // ── Chat — redirect to /messages with conversation pre-selected ──────
     window.initChat = async function () {
+      if (IS_ADMIN) return;
       const btn = document.getElementById('btn-msg-seller');
       if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
       try {
@@ -313,12 +316,14 @@
 
     // ── Buy Now — go to checkout ─────────────────────────────────────────
     window.goCheckout = function () {
+      if (IS_ADMIN) return;
       if (!IS_AUTH) { if (typeof showToast === 'function') showToast('Please sign in to purchase', 'err'); return; }
       window.location.href = '/checkout/' + PRODUCT_ID;
     };
 
     // ── Submit Product Rating ─────────────────────────────────────────────
     window.submitProductRating = async function () {
+      if (IS_ADMIN) return;
       const stars = document.querySelectorAll('#rating-stars .star.selected');
       const score = stars.length > 0 ? stars[stars.length - 1].dataset.score : 0;
       const comment = document.getElementById('rating-comment').value.trim();
@@ -356,6 +361,7 @@
     let reportTargetId = '';
 
     window.showReportModal = function (targetType, targetId) {
+      if (IS_ADMIN) return;
       reportTargetType = targetType;
       reportTargetId = targetId;
       document.getElementById('report-modal').style.display = 'flex';
@@ -371,6 +377,7 @@
     };
 
     window.submitReport = async function () {
+      if (IS_ADMIN) return;
       const reason = document.getElementById('report-reason').value;
       const content = document.getElementById('report-content').value;
 
@@ -509,7 +516,7 @@
       if (lat && lng && document.getElementById('product-map') && typeof L !== 'undefined') {
         try {
           const map = L.map('product-map').setView([lat, lng], 15);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          L.tileLayer(window.AppUtils.mapServices.leafletTiles, {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           }).addTo(map);
 

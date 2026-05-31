@@ -15,6 +15,22 @@
     return /^[a-fA-F0-9]{24}$/.test(id) ? id : '';
   }
 
+  function createEntityLink(href, text, className) {
+    const label = text || '-';
+    if (!href || label === '-') {
+      const span = document.createElement('span');
+      span.className = className || 'admin-entity-link';
+      span.textContent = label;
+      return span;
+    }
+    const link = document.createElement('a');
+    link.className = className || 'admin-entity-link';
+    link.href = href;
+    link.title = label;
+    link.textContent = label;
+    return link;
+  }
+
   function toSafeNumber(value, fallback = 0) {
     const n = Number(value);
     return Number.isFinite(n) ? n : fallback;
@@ -829,105 +845,204 @@ function initAdminData(id) {
     } catch (e) { window.AppUtils?.reportClientError(e); showToast('Action failed', 'err'); }
   }
 
+  window._dashboard.adminSelectedProducts = window._dashboard.adminSelectedProducts || new Set();
+
+  function updateAdminProductsBulkBar() {
+    const selected = window._dashboard.adminSelectedProducts;
+    const bulkBar = document.getElementById('adminProductsBulkBar');
+    const countEl = document.getElementById('adminProductsSelectedCount');
+    if (countEl) countEl.textContent = String(selected.size);
+    if (bulkBar) bulkBar.classList.toggle('show', selected.size > 0);
+    document.querySelectorAll('#adminProductsGrid .admin-product-select').forEach((box) => {
+      box.checked = selected.has(box.dataset.productId);
+      const card = box.closest('.admin-product-card');
+      if (card) card.classList.toggle('selected', box.checked);
+    });
+  }
+
+  function setAdminProductsMessage(message, isLoading) {
+    const grid = document.getElementById('adminProductsGrid');
+    if (!grid) return;
+    clearChildren(grid);
+    const empty = document.createElement('div');
+    empty.className = 'admin-products-message';
+    if (isLoading) {
+      const loader = document.createElement('span');
+      loader.className = 'adm-loader';
+      empty.appendChild(loader);
+      empty.appendChild(document.createTextNode(' ' + message));
+    } else {
+      empty.textContent = message;
+    }
+    grid.appendChild(empty);
+  }
+
+  function createAdminProductStatusBadge(productStatus) {
+    const badgeClass = productStatus === 'active'
+      ? 'badge-active'
+      : productStatus === 'sold'
+        ? 'badge-sold'
+        : productStatus === 'hidden'
+          ? 'badge-hidden'
+          : 'badge-reported';
+    const badge = document.createElement('span');
+    badge.className = `badge ${badgeClass}`;
+    badge.textContent = productStatus;
+    return badge;
+  }
+
+  function createAdminProductMetric(label, value) {
+    const item = document.createElement('span');
+    item.textContent = `${value} ${label}`;
+    return item;
+  }
+
+  function createAdminProductCard(p, statusFilter) {
+    const productId = sanitizeObjectId(p._id);
+    const productStatus = statusFilter === 'reported' ? 'reported' : (p.status || 'hidden');
+    const sellerName = p.seller?.nickname || p.seller?.name || '';
+    const sellerId = sanitizeObjectId(p.seller?._id);
+    const productTitle = p.title || '';
+    const categoryName = p.category || 'Uncategorized';
+    const viewHref = productId ? `/products/${encodeURIComponent(productId)}` : '#';
+    const imageUrl = Array.isArray(p.images) && p.images.length ? p.images[0] : '';
+
+    const card = document.createElement('article');
+    card.className = `admin-product-card product-card ${window._dashboard.adminSelectedProducts.has(productId) ? 'selected' : ''}`.trim();
+    card.tabIndex = 0;
+    card.setAttribute('role', 'link');
+    card.setAttribute('aria-label', `View ${productTitle || 'product'}`);
+    card.dataset.productId = productId;
+
+    const selectWrap = document.createElement('label');
+    selectWrap.className = 'admin-product-select-wrap';
+    selectWrap.setAttribute('aria-label', `Select ${productTitle || 'product'}`);
+    const checkbox = document.createElement('input');
+    checkbox.className = 'admin-checkbox admin-product-select';
+    checkbox.type = 'checkbox';
+    checkbox.dataset.productId = productId;
+    checkbox.checked = window._dashboard.adminSelectedProducts.has(productId);
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) window._dashboard.adminSelectedProducts.add(productId);
+      else window._dashboard.adminSelectedProducts.delete(productId);
+      updateAdminProductsBulkBar();
+    });
+    selectWrap.appendChild(checkbox);
+
+    const imageWrap = document.createElement('div');
+    imageWrap.className = 'admin-product-image product-img-placeholder';
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = productTitle || 'Product image';
+      imageWrap.appendChild(img);
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'admin-product-image-empty';
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', 'package');
+      empty.appendChild(icon);
+      imageWrap.appendChild(empty);
+    }
+
+    const topRow = document.createElement('div');
+    topRow.className = 'admin-product-topline';
+    const price = document.createElement('div');
+    price.className = 'product-price admin-product-price';
+    price.textContent = window.AppUtils.formatVND(p.price);
+    topRow.append(price, createAdminProductStatusBadge(productStatus));
+
+    const title = createEntityLink(viewHref, productTitle, 'product-name admin-product-name admin-entity-link admin-product-link');
+    const seller = createEntityLink(sellerId ? `/user/${encodeURIComponent(sellerId)}` : '', sellerName, 'admin-product-seller admin-entity-link admin-user-link');
+
+    const metrics = document.createElement('div');
+    metrics.className = 'admin-product-metrics';
+    metrics.append(
+      createAdminProductMetric('views', p.views || 0),
+      createAdminProductMetric('interested', p.interested || 0),
+      createAdminProductMetric('stock', typeof p.quantity === 'number' ? p.quantity : 1)
+    );
+
+    const meta = document.createElement('div');
+    meta.className = 'admin-product-meta';
+    meta.append(
+      document.createTextNode(categoryName),
+      document.createTextNode(' · '),
+      document.createTextNode(p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-')
+    );
+
+    const actions = document.createElement('div');
+    actions.className = 'tbl-actions admin-product-actions';
+    const viewA = document.createElement('a');
+    viewA.className = 'act-btn primary';
+    viewA.href = viewHref;
+    viewA.textContent = statusFilter === 'reported' ? 'Review' : 'View';
+    actions.appendChild(viewA);
+
+    const productAction = p.status === 'hidden' ? 'restore' : 'hide';
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = `act-btn ${productAction === 'hide' ? 'danger' : 'success'}`;
+    toggleBtn.textContent = productAction === 'hide' ? 'Hide' : 'Restore';
+    toggleBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      adminProductAction(productId, productAction);
+    });
+    actions.appendChild(toggleBtn);
+
+    const body = document.createElement('div');
+    body.className = 'product-body admin-product-body';
+    body.append(topRow, title, seller, meta, metrics, actions);
+    card.append(selectWrap, imageWrap, body);
+
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('a, button, input, label, details, summary')) return;
+      window.location.href = viewHref;
+    });
+    card.addEventListener('keydown', (event) => {
+      if (event.target.closest('a, button, input, label')) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        window.location.href = viewHref;
+      }
+    });
+    return card;
+  }
+
   async function fetchAdminProducts(page = 1, status = window._dashboard.adminProductsStatus || '') {
     try {
       window._dashboard.adminProductsStatus = status;
-      let url = `/api/admin/products?page=${page}&limit=20`;
+      const q = document.getElementById('adminProductsSearch')?.value?.trim() || '';
+      let url = `/api/admin/products?page=${page}&limit=12`;
       if (status) url += `&status=${encodeURIComponent(status)}`;
+      if (q) url += `&q=${encodeURIComponent(q)}`;
+      setAdminProductsMessage('Loading products...', true);
       const res = await fetch(url);
-      if (!res.ok) return window.AppUtils?.reportClientError('Failed to load products');
+      if (!res.ok) {
+        setAdminProductsMessage('Failed to load products.');
+        return window.AppUtils?.reportClientError('Failed to load products');
+      }
       const json = await res.json();
       const products = (json.data || []);
-      const tbody = document.querySelector('#aProducts table tbody');
-      if (!tbody) return;
-      clearChildren(tbody);
-      products.forEach((p) => {
-        const productId = sanitizeObjectId(p._id);
-        const productStatus = status === 'reported' ? 'reported' : (p.status || 'hidden');
-        const badgeClass = productStatus === 'active' ? 'badge-active' : productStatus === 'sold' ? 'badge-sold' : productStatus === 'hidden' ? 'badge-hidden' : 'badge-reported';
-        const sellerName = p.seller?.name || p.seller?.nickname || '';
-        const productTitle = p.title || '';
-        const categoryName = p.category || '';
-        const viewHref = productId ? `/products/${encodeURIComponent(productId)}` : '#';
-        const tr = document.createElement('tr');
-        const tdTitle = document.createElement('td');
-        tdTitle.className = 'admin-product-title-cell';
-        const strong = document.createElement('strong');
-        strong.className = 'product-title';
-        strong.title = productTitle;
-        strong.textContent = productTitle;
-        tdTitle.appendChild(strong);
-        tr.appendChild(tdTitle);
-        const tdSeller = document.createElement('td');
-        tdSeller.style.color = 'var(--t2)';
-        tdSeller.textContent = sellerName;
-        tr.appendChild(tdSeller);
-        const tdCategory = document.createElement('td');
-        tdCategory.style.color = 'var(--t2)';
-        tdCategory.textContent = categoryName;
-        tr.appendChild(tdCategory);
-        const tdPrice = document.createElement('td');
-        tdPrice.textContent = window.AppUtils.formatVND(p.price);
-        tr.appendChild(tdPrice);
-        const tdViews = document.createElement('td');
-        tdViews.textContent = String(p.views || 0);
-        tr.appendChild(tdViews);
-        const tdInterested = document.createElement('td');
-        tdInterested.textContent = String(p.interested || 0);
-        tr.appendChild(tdInterested);
-        const tdStatus = document.createElement('td');
-        const statusBadge = document.createElement('span');
-        statusBadge.className = `badge ${badgeClass}`;
-        statusBadge.textContent = productStatus;
-        tdStatus.appendChild(statusBadge);
-        tr.appendChild(tdStatus);
-        const tdDate = document.createElement('td');
-        tdDate.style.color = 'var(--t2)';
-        tdDate.style.fontSize = '12px';
-        tdDate.textContent = new Date(p.createdAt).toLocaleDateString();
-        tr.appendChild(tdDate);
-        const tdActions = document.createElement('td');
-        tdActions.className = 'admin-product-actions-cell';
-        const actions = document.createElement('div');
-        actions.className = 'tbl-actions';
-        const viewA = document.createElement('a');
-        viewA.className = 'act-btn primary';
-        viewA.href = viewHref;
-        viewA.textContent = 'View';
-        actions.appendChild(viewA);
-        const menu = document.createElement('details');
-        menu.className = 'action-menu';
-        const summary = document.createElement('summary');
-        summary.className = 'act-btn';
-        summary.textContent = 'More';
-        const panel = document.createElement('div');
-        panel.className = 'action-menu-panel';
-        const toggleBtn = document.createElement('button');
-        const productAction = p.status === 'hidden' ? 'restore' : 'hide';
-        toggleBtn.className = `act-btn ${productAction === 'hide' ? 'danger' : 'success'}`;
-        toggleBtn.textContent = productAction === 'hide' ? (productStatus === 'reported' ? 'Hide reported' : 'Hide') : 'Restore';
-        toggleBtn.addEventListener('click', () => adminProductAction(productId, productAction));
-        panel.appendChild(toggleBtn);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'act-btn';
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', () => adminProductAction(productId, 'delete'));
-        panel.appendChild(deleteBtn);
-        menu.append(summary, panel);
-        actions.appendChild(menu);
-        tdActions.appendChild(actions);
-        tr.appendChild(tdActions);
-        tbody.appendChild(tr);
-      });
+      const grid = document.getElementById('adminProductsGrid');
+      if (!grid) return;
+      clearChildren(grid);
+      if (!products.length) {
+        setAdminProductsMessage(q ? 'No matching products found.' : 'No products found.');
+      } else {
+        products.forEach((p) => grid.appendChild(createAdminProductCard(p, status)));
+      }
       renderPagination('#aProducts .pagination', json.pagination, 'fetchAdminProducts');
       const countEl = document.querySelector('#aProducts .tbl-count');
       if (countEl) {
         countEl.textContent = `${json.pagination?.total || products.length} ${status === 'reported' ? 'reported ' : ''}products`;
       }
+      updateAdminProductsBulkBar();
+      if (typeof window.lucide?.createIcons === 'function') window.lucide.createIcons();
     } catch (e) { window.AppUtils?.reportClientError(e); }
   }
 
-  async function adminProductAction(id, action) {
+  async function adminProductAction(id, action, options = {}) {
     try {
       let res;
       if (action === 'hide') res = await fetch('/api/admin/products/' + id + '/hide', { method: 'PATCH' });
@@ -939,11 +1054,54 @@ function initAdminData(id) {
         const j = await res.json().catch(() => ({}));
         return showToast(j.message || 'Action failed', 'err');
       }
-      showToast('Done', 'ok');
-      fetchAdminProducts();
-      fetchAdminStats();
+      if (!options.silent) showToast('Done', 'ok');
+      window._dashboard.adminSelectedProducts.delete(id);
+      if (options.refresh !== false) {
+        fetchAdminProducts();
+        fetchAdminStats();
+      }
     } catch (e) { window.AppUtils?.reportClientError(e); showToast('Action failed', 'err'); }
   }
+
+  async function bulkAdminProductAction(action) {
+    const selected = window._dashboard.adminSelectedProducts;
+    if (!selected.size) return;
+    const actionLabel = action === 'hide' ? 'hide' : action === 'restore' ? 'restore' : 'delete';
+    const confirmed = typeof window.showConfirm === 'function'
+      ? await window.showConfirm({
+          title: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected products`,
+          message: `Apply this action to ${selected.size} selected product${selected.size === 1 ? '' : 's'}?`,
+          confirmText: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected`,
+          type: action === 'delete' || action === 'hide' ? 'danger' : 'info'
+        })
+      : window.confirm(`Apply ${actionLabel} to ${selected.size} selected product(s)?`);
+    if (!confirmed) return;
+
+    const ids = [...selected];
+    for (const productId of ids) {
+      // eslint-disable-next-line no-await-in-loop
+      await adminProductAction(productId, action, { silent: true, refresh: false });
+    }
+    selected.clear();
+    updateAdminProductsBulkBar();
+    showToast('Bulk action completed', 'ok');
+    fetchAdminProducts();
+    fetchAdminStats();
+  }
+
+  let adminProductsSearchTimer;
+  document.getElementById('adminProductsSearch')?.addEventListener('input', () => {
+    clearTimeout(adminProductsSearchTimer);
+    adminProductsSearchTimer = setTimeout(() => fetchAdminProducts(1), 300);
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-action]');
+    if (!target) return;
+    if (target.dataset.action === 'bulk-hide-products') bulkAdminProductAction('hide');
+    if (target.dataset.action === 'bulk-restore-products') bulkAdminProductAction('restore');
+    if (target.dataset.action === 'bulk-delete-products') bulkAdminProductAction('delete');
+  });
 
 
   // Seller-specific stats (counts by status for seller)

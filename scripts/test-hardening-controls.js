@@ -164,6 +164,75 @@ function runFrontendXssChecks() {
     return matches.map((match) => `${file}: ${match}`);
   });
   check('FE-202 no executable inline scripts in views', executableInlineScripts.length === 0, executableInlineScripts.join('; '));
+
+  const dashboardAdmin = read('public/js/pages/dashboard-admin.js');
+  check(
+    'FE-203 payout actions send schema-specific payloads',
+    includesAll(dashboardAdmin, [
+      'const payload = { adminNote }',
+      "if (activePayoutAction === 'mark-paid')",
+      'payload.transferReference = transferReference',
+      'payload.transferNote = transferNote'
+    ])
+  );
+  check(
+    'FE-203 payout action toasts use supported error class',
+    dashboardAdmin.includes("type === 'error' ? 'err'")
+  );
+  check(
+    'FE-203 active payouts section loads after admin script initialization',
+    includesAll(dashboardAdmin, ["document.getElementById('aPayouts')?.classList.contains('active')", 'loadPayouts(1)'])
+  );
+  check(
+    'FE-203 admin orders copy control uses icon button',
+    includesAll(dashboardAdmin, ["data-lucide': name", "createIcon('copy', 14)", "title: `Copy ${fullOrderId}`"])
+  );
+  check(
+    'FE-203 admin account and product names render as navigation links',
+    includesAll(dashboardAdmin, [
+      'function userProfileLink',
+      'function productLink',
+      '`/user/${encodeURIComponent(userId)}`',
+      '`/products/${encodeURIComponent(productId)}`',
+      'userProfileLink(payout.user',
+      'productLink(order.product',
+      'userProfileLink(order.buyer',
+      'userProfileLink(report.reporter'
+    ]) &&
+      includesAll(read('public/js/dashboard-scripts.js'), [
+        'function createEntityLink',
+        'product-title admin-entity-link admin-product-link',
+        'admin-entity-link admin-user-link'
+      ])
+  );
+
+  const pageController = read('controllers/pageController.js');
+  const productView = read('views/product.ejs');
+  const productPageJs = read('public/js/pages/product.js');
+  check(
+    'FE-204 admins can view product pages without buyer/report CTAs',
+    includesAll(pageController, [
+      "currentUser = req.user || res.locals.user || null",
+      "isAdmin = currentUser && currentUser.role === 'admin'",
+      "product.status === PRODUCT_STATUS.HIDDEN && !isAdmin"
+    ]) &&
+      includesAll(productView, [
+        'const isAdmin',
+        'const canBuyerAct = !isAdmin && !isOwner',
+        'Admin preview mode',
+        'isAdmin: !!isAdmin',
+        'if (!isSold && canBuyerAct)',
+        'if (user && canBuyerAct)'
+      ]) &&
+      includesAll(productPageJs, [
+        'const IS_ADMIN = !!productConfig.isAdmin',
+        'if (IS_AUTH && !IS_ADMIN)',
+        'window.toggleInterested = async function () {\n      if (IS_ADMIN) return;',
+        'window.goCheckout = function () {\n      if (IS_ADMIN) return;',
+        'window.showReportModal = function (targetType, targetId) {\n      if (IS_ADMIN) return;',
+        'window.submitReport = async function () {\n      if (IS_ADMIN) return;'
+      ])
+  );
 }
 
 function runApiContractChecks() {
@@ -205,12 +274,20 @@ function runDbRuntimeHarnessChecks() {
     runtime.includes('allowStatuses') && runtime.includes('disallowed_status_observed')
   );
   check(
+    'DB-201 runtime harness redacts sensitive headers in artifacts',
+    includesAll(runtime, ['redactHeaders', 'authorization', 'x-csrf-token', '[redacted]'])
+  );
+  check(
     'DB-201 invariant verifier covers key scenarios',
     includesAll(verifier, ['order-create', 'payment-paid', 'payout-refund', 'PAYMENT_PAID:', 'PAYOUT_REJECT_REFUND:'])
   );
   check(
     'DB-201 runtime evidence collector persists invariant artifacts',
     includesAll(collector, ['EVIDENCE_VERIFY_ARGS', 'verify-concurrency-invariants.js', 'concurrency-invariants-'])
+  );
+  check(
+    'DB-201 runtime evidence collector can seed authenticated fixtures',
+    includesAll(collector, ['EVIDENCE_SEED_RUNTIME', 'seed-runtime-fixtures.js', 'BENCH_BUYER_COOKIE', 'CONC_VERIFY_PRODUCT_ID'])
   );
   check(
     'DB-201 runtime fixture seed exports benchmark and invariant inputs',
@@ -282,12 +359,28 @@ function runPerformanceHarnessChecks() {
   const head = read('views/partials/head.ejs');
   const sharedCss = read('public/css/shared.css');
   check(
-    'PERF-202 fonts do not depend on render-blocking third-party CSS',
-    !/fonts\.googleapis|fonts\.gstatic|@import\s+url\(/.test(`${head}\n${sharedCss}`)
+    'FE-204 brand fonts are loaded once through shared head',
+    includesAll(head, ['fonts.googleapis.com', 'fonts.gstatic.com', 'Plus+Jakarta+Sans', 'DM+Mono']) &&
+      includesAll(sharedCss, ['--font: "Plus Jakarta Sans"', '--mono: "DM Mono"']) &&
+      !/@import\s+url\(/.test(sharedCss)
   );
   check(
     'PERF-202 avatar fallbacks do not call third-party image services',
     !/ui-avatars\.com/.test(read('views/profile.ejs'))
+  );
+  check(
+    'PERF-202 external map service URLs are centralized',
+    includesAll(read('public/js/utils.js'), ['mapServices', 'tile.openstreetmap.org', 'nominatim.openstreetmap.org', 'photon.komoot.io']) &&
+      !/tile\.openstreetmap|nominatim\.openstreetmap|photon\.komoot/.test([
+        read('public/js/pages/sell.js'),
+        read('public/js/pages/checkout.js'),
+        read('public/js/pages/product.js'),
+        read('public/js/pages/order-tracking.js')
+      ].join('\n'))
+  );
+  check(
+    'CONF-201 placeholder social links removed from homepage',
+    !/facebook\.com|instagram\.com/.test(read('views/index.ejs'))
   );
 }
 
