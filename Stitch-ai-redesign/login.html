@@ -1,0 +1,235 @@
+<!-- Login (Redesigned) -->
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Campus - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#131b2e",
+                    "tertiary": "#525657",
+                    "inverse-surface": "#283044",
+                    "outline": "#737686",
+                    "tertiary-container": "#6b6e70",
+                    "surface-bright": "#faf8ff",
+                    "tertiary-fixed": "#e0e3e5",
+                    "on-surface-variant": "#434655",
+                    "secondary": "#505f76",
+                    "surface-tint": "#0053db",
+                    "on-tertiary": "#ffffff",
+                    "on-background": "#131b2e",
+                    "on-error": "#ffffff",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container-high": "#e2e7ff",
+                    "on-tertiary-container": "#eff1f3",
+                    "primary": "#004ac6",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "surface-dim": "#d2d9f4",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#dae2fd",
+                    "on-secondary-container": "#54647a",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "surface": "#faf8ff",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#eeefff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed": "#00174b",
+                    "inverse-primary": "#b4c5ff",
+                    "on-secondary-fixed": "#0b1c30",
+                    "secondary-container": "#d0e1fb",
+                    "outline-variant": "#c3c6d7",
+                    "surface-container-low": "#f2f3ff",
+                    "primary-fixed": "#dbe1ff",
+                    "primary-container": "#2563eb",
+                    "surface-variant": "#dae2fd",
+                    "background": "#faf8ff",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "surface-container": "#eaedff",
+                    "inverse-on-surface": "#eef0ff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#191c1e",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "md": "16px",
+                    "sm": "12px",
+                    "gutter": "24px",
+                    "xs": "4px",
+                    "margin": "32px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Geist"],
+                    "headline-lg-mobile": ["Geist"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Geist"],
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "display-lg": ["Geist"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Geist"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen flex flex-col md:flex-row overflow-hidden font-body-md">
+<!-- Left Panel: Brand & Value Prop -->
+<div class="hidden md:flex flex-col justify-between w-full md:w-1/2 lg:w-5/12 bg-surface-container-low p-margin relative overflow-hidden">
+<!-- Subtle Pattern Overlay -->
+<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(var(--tw-colors-primary-fixed) 1px, transparent 1px); background-size: 24px 24px;"></div>
+<div class="relative z-10">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">CAMPUS</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Marketplace Administration Suite</p>
+</div>
+<div class="relative z-10 flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-xl">
+<div class="space-y-md">
+<div class="flex items-start space-x-md">
+<div class="bg-primary-container text-on-primary-container p-sm rounded-lg flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Centralized Operations</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage vendors, track payouts, and monitor platform health from a single, unified dashboard.</p>
+</div>
+</div>
+<div class="flex items-start space-x-md">
+<div class="bg-secondary-container text-on-secondary-container p-sm rounded-lg flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Real-time Analytics</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Gain immediate insights into gross merchandise value, user acquisition rates, and conversion metrics.</p>
+</div>
+</div>
+<div class="flex items-start space-x-md">
+<div class="bg-surface-variant text-on-surface-variant p-sm rounded-lg flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Enterprise Security</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Role-based access control and comprehensive audit logs ensure compliance and data integrity.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative z-10 mt-auto">
+<div class="w-full rounded-xl overflow-hidden border border-outline-variant shadow-sm bg-surface">
+<img alt="Campus Dashboard Preview" class="w-full h-auto opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGQLhr2gVT2XjVyLVHY9s1t8JMCrzOTUyb2LYQ7at01_pKcvTtkS7gdIUQSt2J7CNQVroQoaYRbIkfDmx2ZcQ-rog3LGnj31otEC0RWSR0I83v4gBJoFHWJIoafHgnc4Od3Fz0auSSszTBqPnSP7_2H5xCYiNPudK3mamBydmWhpNDKjwO6raA5xUnKl95N_qCYPfEBXaxMiMGdqOrLkm2vtEo7WOAb0MQVj_6dTGYCcs0hwR4ItGw5hAk0TDzT9z2iHgZNiOBocc">
+</div>
+</div>
+</div>
+<!-- Right Panel: Login Form -->
+<div class="flex-1 flex flex-col justify-center items-center bg-surface p-margin relative">
+<div class="w-full max-w-md space-y-xl glass-panel p-xl rounded-xl shadow-[0_10px_15px_-3px_rgb(0,0,0,0.05)]">
+<div class="text-center space-y-xs">
+<h2 class="font-headline-md text-headline-md text-on-surface">Welcome back</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sign in to your administration account</p>
+</div>
+<form class="space-y-lg">
+<div class="space-y-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs" for="email">Work Email</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none">
+<span class="material-symbols-outlined text-sm" data-icon="mail">mail</span>
+</span>
+<input class="block w-full pl-xl pr-sm py-sm font-body-sm text-body-sm bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-shadow placeholder-outline" id="email" name="email" placeholder="admin@campus.com" required="" type="email">
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-xs">
+<label class="block font-label-md text-label-md text-on-surface" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none">
+<span class="material-symbols-outlined text-sm" data-icon="lock">lock</span>
+</span>
+<input class="block w-full pl-xl pr-sm py-sm font-body-sm text-body-sm bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-shadow placeholder-outline" id="password" name="password" placeholder="••••••••" required="" type="password">
+</div>
+</div>
+</div>
+<div class="flex items-center">
+<input class="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded bg-surface" id="remember-me" name="remember-me" type="checkbox">
+<label class="ml-2 block font-body-sm text-body-sm text-on-surface-variant" for="remember-me">
+                        Remember me for 30 days
+                    </label>
+</div>
+<button class="w-full flex justify-center py-sm px-4 border border-transparent rounded-lg shadow-sm font-label-md text-label-md text-on-primary bg-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors" type="submit">
+                    Sign in to Dashboard
+                </button>
+</form>
+<div class="relative">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant"></div>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="px-2 bg-surface font-body-sm text-body-sm text-on-surface-variant">Or continue with</span>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-md">
+<button class="w-full flex justify-center items-center py-sm px-4 border border-outline-variant rounded-lg shadow-sm bg-surface font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-outline-variant" type="button">
+<svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+                    Sign in with Google
+                </button>
+<button class="w-full flex justify-center items-center py-sm px-4 border border-outline-variant rounded-lg shadow-sm bg-surface font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-outline-variant" type="button">
+<svg aria-hidden="true" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
+</svg>
+                    Sign in with GitHub
+                </button>
+</div>
+<div class="text-center mt-md">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Don't have an account? <a class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Request access</a></p>
+</div>
+</div>
+</div>
+</body></html>
+

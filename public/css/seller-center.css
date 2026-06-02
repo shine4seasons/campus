@@ -1,4 +1,4 @@
-.seller-workspace {
+﻿.seller-workspace {
   --seller-bg: linear-gradient(180deg, #f4f8f6 0%, #edf5f2 100%);
   --seller-surface: #ffffff;
   --seller-surface-soft: #f7fbf9;
@@ -11,7 +11,7 @@
   --seller-text-passive: #94a3b8;
   background:
     radial-gradient(circle at top left, rgba(16, 185, 129, 0.07), transparent 28%),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 25%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.05), transparent 25%),
     var(--seller-bg);
 }
 
@@ -61,7 +61,7 @@
 .seller-workspace .status-count-card,
 .seller-workspace .sell-card,
 .seller-workspace .preview-card,
-.seller-workspace .chat-container {
+.seller-workspace:not(.messages-page) .chat-container {
   border-radius: 24px;
   border: 1px solid var(--seller-border);
   box-shadow: var(--seller-shadow);
@@ -373,6 +373,12 @@
   font-weight: 800;
 }
 
+.seller-workspace .f-pill:hover:not(.on) {
+  border-color: rgba(5, 150, 105, 0.55);
+  background: #ecfdf5;
+  color: #047857;
+}
+
 .seller-workspace .f-pill.on {
   background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
@@ -425,12 +431,12 @@
 
 .seller-workspace thead th:nth-child(2),
 .seller-workspace tbody td:nth-child(2) {
-  width: 38%;
+  width: 32%;
 }
 
 .seller-workspace thead th:nth-child(3),
 .seller-workspace tbody td:nth-child(3) {
-  width: 18%;
+  width: 20%;
 }
 
 .seller-workspace thead th:nth-child(4),
@@ -470,7 +476,7 @@
 }
 
 .seller-workspace .seller-order-buyer-link {
-  color: #1b5eff;
+  color: #16a34a;
   font-weight: 700;
   text-decoration: none;
 }
@@ -615,7 +621,7 @@
 .seller-workspace .order-status-menu.status-confirmed .order-status-trigger {
   border-color: rgba(96, 165, 250, 0.44);
   background: linear-gradient(135deg, rgba(219, 234, 254, 0.98), rgba(239, 246, 255, 0.98));
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .seller-workspace .order-status-menu.status-completed .order-status-trigger {
@@ -635,7 +641,7 @@
 }
 
 .seller-workspace .order-status-option[data-status-value="confirmed"] {
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .seller-workspace .order-status-option[data-status-value="completed"] {
@@ -682,7 +688,7 @@
 .seller-workspace .badge-sold {
   background: rgba(219,234,254,0.92);
   border-color: rgba(147,197,253,0.84);
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .seller-workspace .badge-hidden,
@@ -1091,6 +1097,36 @@
   margin-top: 20px;
 }
 
+.seller-workspace .withdraw-panel-actions .btn {
+  min-width: 132px;
+  justify-content: center;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+.seller-workspace .withdraw-action-cancel {
+  border: 1px solid rgba(148,163,184,0.36);
+  background: #ffffff;
+  color: #475569;
+  box-shadow: 0 10px 22px rgba(15,23,42,0.06);
+}
+
+.seller-workspace .withdraw-action-cancel:hover {
+  border-color: rgba(100,116,139,0.42);
+  background: #f8fafc;
+}
+
+.seller-workspace .withdraw-action-submit {
+  border: 0;
+  background: linear-gradient(135deg, #065f46, #059669);
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(5,150,105,0.24);
+}
+
+.seller-workspace .withdraw-action-submit:hover {
+  background: linear-gradient(135deg, #064e3b, #047857);
+}
+
 .seller-workspace .withdraw-sidecard {
   display: flex;
   flex-direction: column;
@@ -1346,7 +1382,7 @@
 
 .wallet-payouts-page .wallet-transactions-table th:nth-child(2),
 .wallet-payouts-page .wallet-transactions-table td:nth-child(2) {
-  width: 88px !important;
+  width: 112px !important;
   padding-right: 8px !important;
 }
 
@@ -1385,7 +1421,7 @@
   justify-content: center;
 }
 
-.seller-workspace .chat-container {
+.seller-workspace:not(.messages-page) .chat-container {
   min-height: calc(100vh - 62px);
 }
 
@@ -1426,17 +1462,17 @@
   background: rgba(240,253,244,0.92) !important;
 }
 
-.seller-workspace .chat-sidebar,
-.seller-workspace .chat-main {
+.seller-workspace:not(.messages-page) .chat-sidebar,
+.seller-workspace:not(.messages-page) .chat-main {
   background: linear-gradient(180deg, #ffffff, #f8fbfa);
 }
 
-.seller-workspace .conv-item.active {
+.seller-workspace:not(.messages-page) .conv-item.active {
   background: linear-gradient(90deg, #ebfbf5, #ffffff);
   border-left-color: #059669;
 }
 
-.seller-workspace .unread-badge {
+.seller-workspace:not(.messages-page) .unread-badge {
   min-width: 22px;
   height: 22px;
   display: inline-flex;
@@ -1447,7 +1483,7 @@
   font-weight: 800;
 }
 
-.seller-workspace .product-banner {
+.seller-workspace:not(.messages-page) .product-banner {
   border-top: 1px solid rgba(226,232,240,0.92);
   background: rgba(248,250,252,0.9);
 }
@@ -1521,7 +1557,7 @@
   .seller-workspace .tbl-wrap,
   .seller-workspace .sell-card,
   .seller-workspace .preview-card,
-  .seller-workspace .chat-container {
+  .seller-workspace:not(.messages-page) .chat-container {
     border-radius: 20px;
   }
 

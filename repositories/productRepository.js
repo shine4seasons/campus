@@ -212,8 +212,42 @@ function updateInterestedCount(productId, delta) {
   return Product.findByIdAndUpdate(productId, { $inc: { interested: delta } }, { new: true });
 }
 
-async function findFavoritesForUser({ userId, page = 1, limit = 12 }) {
+async function findFavoritesForUser({ userId, page = 1, limit = 12, q = '' }) {
   const skip = (page - 1) * limit;
+  const term = String(q || '').trim().toLowerCase();
+
+  if (term) {
+    const favorites = await Favorite.find({ user: userId })
+      .sort('-createdAt')
+      .populate({
+        path: 'product',
+        select: 'title price quantity images category condition status seller interested ratingAverage ratingCount soldAt',
+        populate: { path: 'seller', select: 'name nickname avatar' }
+      })
+      .lean();
+    const items = favorites
+      .filter((favorite) => favorite.product)
+      .map((favorite) => ({
+        ...favorite.product,
+        favoritedAt: favorite.createdAt
+      }))
+      .filter((product) => {
+        const seller = product.seller || {};
+        const haystack = [
+          product.title,
+          product.category,
+          product.condition,
+          seller.nickname,
+          seller.name
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(term);
+      });
+
+    return {
+      items: items.slice(skip, skip + limit),
+      total: items.length
+    };
+  }
 
   const [favorites, total] = await Promise.all([
     Favorite.find({ user: userId })

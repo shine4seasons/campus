@@ -145,17 +145,66 @@ async function getAdminDashboardSnapshot() {
     gmvThisMonth: { value: gmvThisMonth, delta: gmvDelta }
   };
 
-  const topSellers = await Order.aggregate([
-    { $match: { status: ORDER_STATUS.COMPLETED, createdAt: { $gte: startOfMonth } } },
-    { $group: { _id: '$seller', totalRevenue: { $sum: '$priceSnapshot' }, totalOrders: { $sum: 1 } } },
-    { $sort: { totalRevenue: -1 } },
-    { $limit: 5 },
-    { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'sellerInfo' } },
-    { $unwind: '$sellerInfo' },
-    { $project: { _id: 0, sellerId: '$_id', name: { $ifNull: ['$sellerInfo.nickname', '$sellerInfo.name'] }, university: '$sellerInfo.university', rating: '$sellerInfo.rating', totalRevenue: 1, totalOrders: 1 } }
-  ]);
+  const topSellers = await getAdminTopSellers(5, now);
 
   return { stats, topSellers };
+}
+
+async function getAdminTopSellers(limit = 5, now = new Date()) {
+  const normalizedLimit = Math.max(1, Math.min(Number(limit) || 5, 20));
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const completedAtOrCreatedAt = { $ifNull: ['$completedAt', '$createdAt'] };
+
+  return Order.aggregate([
+    {
+      $match: {
+        status: ORDER_STATUS.COMPLETED,
+        $expr: {
+          $and: [
+            { $gte: [completedAtOrCreatedAt, startOfMonth] },
+            { $lt: [completedAtOrCreatedAt, startOfNextMonth] }
+          ]
+        }
+      }
+    },
+    { $group: { _id: '$seller', totalRevenue: { $sum: '$priceSnapshot' }, totalOrders: { $sum: 1 } } },
+    { $sort: { totalRevenue: -1 } },
+    { $limit: normalizedLimit },
+    { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'sellerInfo' } },
+    { $unwind: '$sellerInfo' },
+    {
+      $project: {
+        _id: 0,
+        sellerId: '$_id',
+        name: {
+          $let: {
+            vars: {
+              nickname: { $trim: { input: { $ifNull: ['$sellerInfo.nickname', ''] } } },
+              fullName: { $trim: { input: { $ifNull: ['$sellerInfo.name', ''] } } }
+            },
+            in: {
+              $cond: [
+                { $ne: ['$$nickname', ''] },
+                '$$nickname',
+                {
+                  $cond: [
+                    { $ne: ['$$fullName', ''] },
+                    '$$fullName',
+                    'Unknown seller'
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        university: '$sellerInfo.university',
+        rating: { $ifNull: ['$sellerInfo.rating', 0] },
+        totalRevenue: 1,
+        totalOrders: 1
+      }
+    }
+  ]);
 }
 
 async function getSellerDashboardSnapshot(sellerId) {
@@ -267,6 +316,7 @@ module.exports = {
   findPublicProfileUserById,
   findPublicProfileProducts,
   getAdminDashboardSnapshot,
+  getAdminTopSellers,
   getSellerDashboardSnapshot,
   findSellerOrders,
   getProductOrderCounts,

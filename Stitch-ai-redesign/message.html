@@ -1,0 +1,438 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Messages - CAMPUS Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#131b2e",
+                        "tertiary": "#525657",
+                        "inverse-surface": "#283044",
+                        "outline": "#737686",
+                        "tertiary-container": "#6b6e70",
+                        "surface-bright": "#faf8ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-surface-variant": "#434655",
+                        "secondary": "#505f76",
+                        "surface-tint": "#0053db",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#131b2e",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-container-high": "#e2e7ff",
+                        "on-tertiary-container": "#eff1f3",
+                        "primary": "#004ac6",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "surface-dim": "#d2d9f4",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#dae2fd",
+                        "on-secondary-container": "#54647a",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface": "#faf8ff",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#eeefff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#00174b",
+                        "inverse-primary": "#b4c5ff",
+                        "on-secondary-fixed": "#0b1c30",
+                        "secondary-container": "#d0e1fb",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-low": "#f2f3ff",
+                        "primary-fixed": "#dbe1ff",
+                        "primary-container": "#2563eb",
+                        "surface-variant": "#dae2fd",
+                        "background": "#faf8ff",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "surface-container": "#eaedff",
+                        "inverse-on-surface": "#eef0ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "lg": "24px",
+                        "base": "8px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "margin": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Geist"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Geist"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for message list */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e0e3e5; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c3c6d7; 
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col h-screen overflow-hidden">
+<!-- Top Navigation (Desktop) -->
+<nav class="hidden md:flex justify-between items-center w-full px-4 h-16 z-50 bg-surface border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-md">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">CAMPUS</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 bg-surface-container-highest">
+<img alt="An Nguyen Quoc" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPkTP9X5DN6M5qhC4cOKBh-xBegVk489U7NYh0J7Ig0fmvJ1noP5RL8bt3NvoTUyW0cTKq8oxp46WSi15X5W3kx0moyfhHJWyqABzzanqMVk7haapsVJJ2oyX8LRzKUm6J3Y4fFDc2LyZG6Crh3BsQl1AI0p0OD5wwB-rHwXT7REAsuCOD7qqmEvPcegZZpuHTOowNoWQv8O6u46QtowXnAxeLgF7aawnyvEi7LqryM1EOxg3ieLU3G3XK1UZZtQTfkQmQlumWNnI">
+</div>
+</div>
+</nav>
+<!-- Main Layout Container -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Side Navigation (Desktop) -->
+<aside class="hidden md:flex fixed left-0 top-16 h-[calc(100vh-64px)] flex-col justify-between py-4 border-r border-outline-variant bg-surface-container-low w-64 shrink-0 z-40">
+<nav class="flex flex-col gap-1">
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">shopping_cart</span>
+<span class="font-label-md text-label-md">Orders</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+<span class="font-label-md text-label-md">Payouts</span>
+</a>
+<a class="bg-primary text-on-primary rounded-lg mx-2 my-1 flex items-center px-4 py-2 scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined fill-icon mr-3">chat_bubble</span>
+<span class="font-label-md text-label-md">Messages</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pb-4">
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container-high rounded-lg p-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">person</span>
+<span class="font-label-md text-label-md">An Nguyen Quoc</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area (Messaging) -->
+<main class="flex-1 flex overflow-hidden md:ml-64 relative bg-background">
+<!-- Inbox List (Left Panel) -->
+<section class="w-full md:w-[380px] lg:w-[420px] flex flex-col border-r border-outline-variant bg-surface-container-lowest shrink-0 z-20 absolute md:relative h-full transition-transform duration-300" id="inbox-panel">
+<!-- Inbox Header -->
+<div class="p-lg border-b border-outline-variant shrink-0 bg-surface-container-lowest z-10">
+<div class="flex items-center justify-between mb-md">
+<h1 class="font-headline-md text-headline-md text-on-surface">Messages</h1>
+<button class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" title="New Message">
+<span class="material-symbols-outlined">edit_square</span>
+</button>
+</div>
+<!-- Search Input -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-sm font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-on-surface-variant transition-shadow" placeholder="Search conversations..." type="text">
+</div>
+</div>
+<!-- Filters -->
+<div class="flex items-center gap-xs p-3 border-b border-outline-variant shrink-0 overflow-x-auto no-scrollbar">
+<button class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm whitespace-nowrap">All</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm whitespace-nowrap transition-colors">Unread</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm whitespace-nowrap transition-colors">Orders</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm whitespace-nowrap transition-colors">Support</button>
+</div>
+<!-- Conversation List -->
+<div class="flex-1 overflow-y-auto">
+<!-- Active Item -->
+<div class="p-4 border-l-4 border-primary bg-surface-container-high cursor-pointer flex gap-4 transition-colors relative" onclick="toggleMobileView()">
+<div class="relative shrink-0">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant">
+<img alt="Alex Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBckKOZLp5bS-SSbnjBhO0WkcyD8hlKoWQ1n6ucbXRsrUPRd32q6Zp_8vqsIj4UIQbzxd7VsyvFdU4JC14qOP7ZUyWHTb6qyZeS-JHZffAhAAsJ8qqn7tZI2FlhVaxUF_jHJ3eyQAziMUSox2Fw39BNGeZndQhEJv8z22NOR3wl0O75sUJX-yUnHTMLlA7HCVZId4xWcD5ypVZPhG-5-7yBRAQbrO2nJRJgxoULKkbhWzi7Z0xyMNRYfV3l-W10ZlHy0cn78IFye3c">
+</div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-surface-container-high rounded-full"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-md text-label-md text-on-surface truncate pr-2">Alex Chen</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">10:42 AM</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface truncate">That sounds perfect. I'll place the order now.</p>
+</div>
+</div>
+<!-- Read Item -->
+<div class="p-4 border-l-4 border-transparent hover:bg-surface-container-lowest cursor-pointer flex gap-4 transition-colors group">
+<div class="relative shrink-0">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex items-center justify-center text-primary-fixed-variant font-headline-sm">
+                                SJ
+                            </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-md text-label-md text-on-surface truncate pr-2">Sarah Jenkins</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Yesterday</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Order #ORD-8832 has been delivered.</p>
+</div>
+</div>
+<!-- Unread Item -->
+<div class="p-4 border-l-4 border-transparent hover:bg-surface-container-lowest cursor-pointer flex gap-4 transition-colors">
+<div class="relative shrink-0">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant">
+<img alt="Miguel Santos" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl-E12IK-pKBhf80wOO4IEXdgFPFYtiE9BDWW2Q1KzNTTVlySwnvE2bdMJxwONSsaAcgMS4aAOHIAZ1LXbZ-QfBUBSPg-sNkEOH6hVw__GpdXmC_Y5PknLGhtlA1XEiS5qP83A2sXP2AsIFTIsafAToSviRCZtKiFw8flCojb1uveziLu9wGBDdYFSjwO5Pm4WqJtl-OsqScsf1_UIZuMbHNopcnpwSwgNU9N0sd7SL56jJOC-QrqgZxr8ZP9mKJqTJz3eIvx4-Uw">
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate pr-2">Miguel Santos</h3>
+<span class="font-label-sm text-label-sm text-primary font-bold shrink-0">Tue</span>
+</div>
+<div class="flex justify-between items-center gap-2">
+<p class="font-body-sm text-body-sm text-on-surface font-bold truncate">Can you confirm the dimensions?</p>
+<span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-sm text-[10px] shrink-0">2</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Active Conversation (Right Panel) -->
+<section class="flex-1 flex flex-col h-full bg-surface-container-lowest w-full absolute md:relative translate-x-full md:translate-x-0 transition-transform duration-300 z-30" id="conversation-panel">
+<!-- Conversation Header -->
+<header class="flex items-center justify-between p-md md:p-lg border-b border-outline-variant bg-surface-container-lowest shrink-0 shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.02)] z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-2 -ml-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="toggleMobileView()">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-surface-variant">
+<img alt="Alex Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6bvllI0v16XYUmbkKuKDniUA28su1Qf82rKYHXGy0Ge-ggYPXvMEtgEh8bDq0bwFScfnNm2T7iimNVQ7Hzn2g6YrWnKO4mL4OrPMeoq66WlpY13pPfRu69Od41ZvsBNzT-LWdgxSp26Vw2smM4wIFysflNoIr-O8K5yM2beXD7p6MgE3IngtpAoXOO8LzCX9uyBqy60lGamuWAnkbGg9cZ4E6BuX1ZACXSIlCgbtnmlhTJHuZe2q-i5jvhocUGiQPe_bdw6wmSVE">
+</div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Alex Chen</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Online
+                                </p>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors hidden sm:block" title="Search in conversation">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="More options">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Message Feed -->
+<div class="flex-1 overflow-y-auto p-4 md:p-lg flex flex-col gap-6 bg-background/50">
+<!-- Date Divider -->
+<div class="flex justify-center my-2">
+<span class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full shadow-sm border border-outline-variant/30">Today</span>
+</div>
+<!-- Received Message -->
+<div class="flex gap-3 max-w-[85%] md:max-w-[75%]">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-auto hidden sm:block">
+<img alt="Alex Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoGCRnpHcM8jVhx3J_PT8lIP_4PKc6yKX0bo0rIFy_aMY-HYNJGaeilP_lWyUPzuRg7vNBhioiOjNPH5N2Inlv2mB2qnuNjXcO5cBQM7cAcWNfLpYFUc5-MDmKp4AmJC3L0KsvOUHZBjTUAnN4R5di2htlN6w2UzomZudHeTYgc3bF_Speqi_nbjHT5WHD9lifMUEEyDtljzftzjjNH0FEhdBwLAz1ye89Pflw4zDOjrLYdwVwOpvzvl7c9ttyipWtEjE-nCqCrb4">
+</div>
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface border border-outline-variant rounded-2xl rounded-bl-sm px-4 py-3 shadow-[0_1px_2px_0_rgb(0_0_0_/_0.05)]">
+<p class="font-body-md text-body-md text-on-surface">Hi there! I have a question about the Campus Pro subscription. Does it include the advanced analytics module?</p>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant ml-1">10:30 AM</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex gap-3 max-w-[85%] md:max-w-[75%] self-end flex-row-reverse">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-auto hidden sm:block bg-surface-container-highest">
+<img alt="Me" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1JFlEta3xUzVIPxtN9HW2ud0bH4zSJ2a68UjuikZmb4jS46YfYSsJiHFfq2nZboJgBwVE0lKx0fSo3dKjWIju6dCONg5C998n1kQ8D5rqsrAUJUSYPo0LbodCIj8c_isx4DFbAX-38TljImh5-_X9tIScEPa1mHG11iQe7Cmig4b002-jo8oEp6EE3C6V_dibOYSGiGtIQNuRcWbcJFVt15hwgUL1DhbHynzWdHaGagRG3MfY6OLOlD5i5Mvqyh1kNGTIYk6APmU">
+</div>
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-primary text-on-primary rounded-2xl rounded-br-sm px-4 py-3 shadow-[0_1px_2px_0_rgb(0_0_0_/_0.05)]">
+<p class="font-body-md text-body-md">Hello Alex! Yes, the Campus Pro subscription includes full access to the advanced analytics module, plus custom reporting features.</p>
+</div>
+<div class="flex items-center gap-1 mr-1">
+<span class="font-label-sm text-[11px] text-on-surface-variant">10:32 AM</span>
+<span class="material-symbols-outlined text-[14px] text-primary">done_all</span>
+</div>
+</div>
+</div>
+<!-- Contextual Order Card (Sent by Admin) -->
+<div class="flex gap-3 max-w-[90%] md:max-w-[80%] self-end flex-row-reverse mt-2">
+<div class="w-8 h-8 shrink-0 hidden sm:block"></div> <!-- Spacer for alignment -->
+<div class="flex flex-col gap-1 items-end w-full">
+<!-- Bento-style Context Card -->
+<div class="bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.05)] w-full sm:w-[400px]">
+<div class="bg-surface-container-low px-4 py-3 border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">shopping_bag</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">Reference Plan</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-1 bg-secondary-container text-on-secondary-container rounded-md">Pro Tier</span>
+</div>
+<div class="p-4 flex gap-4">
+<div class="w-16 h-16 bg-surface-container-high rounded-lg flex items-center justify-center shrink-0 border border-outline-variant/50">
+<span class="material-symbols-outlined text-[32px] text-primary/70">rocket_launch</span>
+</div>
+<div class="flex-1">
+<h4 class="font-label-md text-label-md text-on-surface mb-1">Campus Pro Annual</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-2">Billed yearly. Includes 5 user seats.</p>
+<div class="flex justify-between items-center mt-2 pt-2 border-t border-outline-variant/50">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Total</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">$1,200.00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest px-4 py-2 border-t border-outline-variant flex justify-end gap-2">
+<button class="font-label-sm text-label-sm text-primary hover:bg-surface-container px-3 py-1.5 rounded transition-colors">View Details</button>
+<button class="font-label-sm text-label-sm bg-primary text-on-primary hover:bg-primary/90 px-3 py-1.5 rounded shadow-sm transition-colors">Send Checkout Link</button>
+</div>
+</div>
+<!-- End Card -->
+<div class="flex items-center gap-1 mr-1 mt-1">
+<span class="font-label-sm text-[11px] text-on-surface-variant">10:35 AM</span>
+<span class="material-symbols-outlined text-[14px] text-primary">done_all</span>
+</div>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex gap-3 max-w-[85%] md:max-w-[75%] mt-2">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-auto hidden sm:block">
+<img alt="Alex Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQjWD29K4dT1ABfLK8vdst-h15UZ1BcYZ2mBPmmPM09fhThhAXj19GQqHT9nThjF6Hy7sHCc2wYJUWxSLp6M-Et9oFnrS5sO63z0Y2Gk27M7WNROBkgvZzocD9Nu_DtOG03YCrBX2uUw2KZ65kH4xAa0h5e1PR6rp9HqoGSJRVOgkLKZDk69_AYk-Yh0nhogrD4SDLDx8dPYP6qKkdhk875ZRQ_k3UowWvgQRzmYpq15vkUnw9C_VPcp2A1qLTCIk_ie8TV7inLYs">
+</div>
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface border border-outline-variant rounded-2xl rounded-bl-sm px-4 py-3 shadow-[0_1px_2px_0_rgb(0_0_0_/_0.05)]">
+<p class="font-body-md text-body-md text-on-surface">That sounds perfect. I'll place the order now.</p>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant ml-1">10:42 AM</span>
+</div>
+</div>
+</div>
+<!-- Message Input Area -->
+<div class="p-4 bg-surface border-t border-outline-variant shrink-0 z-10">
+<div class="flex items-end gap-2 bg-surface-container-low border border-outline-variant rounded-xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-shadow">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-lg transition-colors shrink-0" title="Add attachment">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<textarea class="flex-1 bg-transparent border-none p-2 font-body-md text-body-md text-on-surface resize-none focus:ring-0 max-h-32 min-h-[44px] leading-tight" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 128) + 'px'" placeholder="Type a message..." rows="1"></textarea>
+<div class="flex items-center gap-1 shrink-0 pb-1 pr-1">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-lg transition-colors hidden sm:block" title="Insert Emoji">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+<button class="p-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center" title="Send message">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2 px-1">
+<span class="font-label-sm text-[11px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> End-to-end encrypted
+                        </span>
+<span class="font-label-sm text-[11px] text-on-surface-variant hidden sm:inline">Press Enter to send</span>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Mobile Navigation Panel logic -->
+<script>
+        function toggleMobileView() {
+            const inbox = document.getElementById('inbox-panel');
+            const conversation = document.getElementById('conversation-panel');
+            
+            // If on mobile (less than md breakpoint)
+            if (window.innerWidth < 768) {
+                inbox.classList.toggle('-translate-x-full');
+                conversation.classList.toggle('translate-x-full');
+                conversation.classList.toggle('translate-x-0');
+            }
+        }
+
+        // Handle resize events to reset transforms if moving from mobile to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                document.getElementById('inbox-panel').classList.remove('-translate-x-full');
+                document.getElementById('conversation-panel').classList.remove('translate-x-full', 'translate-x-0');
+            }
+        });
+    </script>
+</body></html>

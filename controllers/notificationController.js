@@ -5,9 +5,11 @@ exports.getNotifications = async (req, res, next) => {
     const page   = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit  = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
     const filter = req.query.filter || 'all';   // 'all' | 'unread' | 'order' | 'message' | 'rating' | 'system'
+    const q = String(req.query.q || '').trim();
     const result = await notificationRepository.findNotificationsForRecipient({
       recipientId: req.user._id,
       filter,
+      q,
       page,
       limit
     });

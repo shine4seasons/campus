@@ -203,7 +203,8 @@ const getFavorites = async (req, res, next) => {
     const result = await productRepository.findFavoritesForUser({
       userId: req.user._id,
       page,
-      limit
+      limit,
+      q: req.query.q || ''
     });
 
     res.json({

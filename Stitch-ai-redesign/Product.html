@@ -1,0 +1,460 @@
+<!-- Product Detail (Redesigned) -->
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CAMPUS Marketplace | Product Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#00174b",
+                    "surface-container": "#eaedff",
+                    "secondary-container": "#d0e1fb",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e2e7ff",
+                    "surface-bright": "#faf8ff",
+                    "inverse-on-surface": "#eef0ff",
+                    "tertiary": "#525657",
+                    "error": "#ba1a1a",
+                    "inverse-primary": "#b4c5ff",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#434655",
+                    "on-secondary-container": "#54647a",
+                    "primary": "#004ac6",
+                    "on-tertiary-fixed": "#191c1e",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "error-container": "#ffdad6",
+                    "surface": "#faf8ff",
+                    "surface-container-highest": "#dae2fd",
+                    "primary-container": "#2563eb",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#6b6e70",
+                    "on-secondary-fixed": "#0b1c30",
+                    "on-primary-container": "#eeefff",
+                    "on-surface": "#131b2e",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "surface-container-low": "#f2f3ff",
+                    "outline": "#737686",
+                    "background": "#faf8ff",
+                    "inverse-surface": "#283044",
+                    "surface-tint": "#0053db",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-dim": "#d2d9f4",
+                    "surface-variant": "#dae2fd",
+                    "on-tertiary-container": "#eff1f3",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#dbe1ff",
+                    "secondary-fixed": "#d3e4fe",
+                    "outline-variant": "#c3c6d7",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "tertiary-fixed": "#e0e3e5",
+                    "on-background": "#131b2e",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "secondary": "#505f76"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "12px",
+                    "margin": "32px",
+                    "xl": "32px",
+                    "base": "8px",
+                    "gutter": "24px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Geist"],
+                    "headline-lg": ["Geist"],
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-lg": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Geist"],
+                    "headline-sm": ["Geist"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { background-color: #F8FAFC; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center w-full px-4 h-16 z-50 fixed top-0 bg-surface border-b border-outline-variant shadow-sm backdrop-blur-md bg-opacity-90">
+<div class="flex items-center gap-md">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">CAMPUS</span>
+<div class="hidden md:flex ml-lg relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 w-80 text-body-sm focus:ring-2 focus:ring-primary" placeholder="Search functions, pages..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">chat_bubble</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="An Nguyen Quoc" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyKbJ72nIYeEK4Q5CI4WiUvFSo-TcZ4kbf2gYHaBDST0rK66NkEZN_mkGV2-fQnwp3QieUXsre_jaX1oGMRunoH-ytiuMGMhkbYQjmu-FLpmLQxYFObIp653SvSz_wRZet6L460O8fIRiPOjdKc8y73UNANmyHbhzHfPb4qsHuyht8vLrvSxXFqRQpOcOYDLWBkcNIFEtJYvvzVJFupkUw14_3AZ9m49N_-wsIZVILBWLY1sMJQEqszkM_5UnUiRXinFyM861LToE">
+</div>
+</div>
+</header>
+<!-- Side Navigation Bar (Hidden on Mobile) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-surface-container-low border-r border-outline-variant flex flex-col justify-between py-4 hidden md:flex">
+<div class="space-y-1">
+<div class="px-6 mb-4">
+<p class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Browse</p>
+</div>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="bg-primary text-on-primary rounded-lg mx-2 my-1 flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">shopping_cart</span>
+<span class="font-label-md text-label-md">Orders</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">favorite</span>
+<span class="font-label-md text-label-md">Favorites</span>
+</a>
+<div class="px-6 py-4">
+<p class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Marketplace</p>
+</div>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+<span class="font-label-md text-label-md">Payouts</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="border-t border-outline-variant pt-4">
+<div class="mx-2 p-3 rounded-lg bg-surface-container flex items-center gap-3">
+<img alt="User" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmojdcHbpIgWoNCJXRYAkQIZX870ZsvY7wPiBgInKllXCzi7HmClqqPaxzdNoETxfZNHc2GejTLRms1gFFcCBS1IIzYIOoa1xn6KISHkohusUFBTwJaVDLMBXyJs2Wix2I5Jm-1bj68MzpDkNnqdXusLbWtJf-bm1tn5Y_WA46O7uvsjb-TO84uST7ZjfOdVaSLz8q6cIwCvhQlw8StV4gx9VEUKbBi05MH5uVk1aB2ZyqBlELowOdD48VtjJij7IBoR6KKGcjDIQ">
+<div>
+<p class="font-label-md text-label-md text-on-surface leading-tight">An Nguyen Quoc</p>
+<p class="text-[10px] text-outline">Administrator</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-20 px-4 md:px-8 pb-24">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-label-sm font-label-sm text-outline mb-6">
+<a class="hover:text-primary" href="#">Home</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary" href="#">Daily needs</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface-variant">Lót chuột hình người tốc độ</span>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Product Showcase Column -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Bento Gallery Layout -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="md:col-span-4 bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center justify-center relative group overflow-hidden">
+<img alt="Lót chuột hình người tốc độ" class="rounded-lg w-full max-h-[500px] object-contain transition-transform duration-500 group-hover:scale-105" data-alt="A high-quality studio photograph of a premium ergonomic mouse pad designed for high-speed gaming. The mouse pad features a detailed illustrative graphic of a modern stylized human silhouette in a dynamic running pose. The lighting is crisp and cool, highlighting the fine texture of the micro-woven fabric surface. The background is a clean, minimalist professional workspace setup with soft ambient light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg5RDzv_otYT1mRiM1Uu1M-ff7nNbh73zhl8ia7b-6_ZQ9v4PqhQgv1byAoDm7cOzE5hhM91WfgD6G90oWXAxBdc_YR39eaBiMW37Meotz2ZbV2Sy4q2jDQV1yjNr-EnFpf6UPYsdhysxKz9A3meJpoTgau-ZHOVD0EKYDFajRN2OIHPerVBtFXdErEBG53WbwuKel5ax4PJ5LG44SFPvblVKGXnesbcn64L3fRV1UzaoxkoQchQMRyn7EOgSqUzyRBQ7KDG0nIks">
+<button class="absolute top-6 right-6 bg-white/90 p-3 rounded-full shadow-lg hover:bg-white transition-all text-error">
+<span class="material-symbols-outlined" data-weight="fill">favorite</span>
+</button>
+</div>
+</div>
+<!-- Product Description -->
+<div class="bg-white rounded-xl p-lg shadow-sm border border-slate-100">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-4">Description</h2>
+<p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Lót chuột mới chỉ được sử dụng trong thời gian ngắn, chất lượng tốt. Có mặt người tốc độ để boost tinh thần học tập. Bề mặt vải mịn mượt giúp chuột di chuyển chính xác, đế cao su chống trượt chắc chắn trên mọi bề mặt bàn làm việc.
+                    </p>
+</div>
+<!-- Location Map -->
+<div class="bg-white rounded-xl p-lg shadow-sm border border-slate-100">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Pickup location</h2>
+<div class="flex items-center text-primary text-label-md font-label-md">
+<span class="material-symbols-outlined mr-1">location_on</span>
+                            Hanoi, Vietnam
+                        </div>
+</div>
+<div class="bg-surface-container-low rounded-lg h-64 overflow-hidden relative border border-outline-variant">
+<img class="w-full h-full object-cover grayscale brightness-90 contrast-75 opacity-50" data-location="Hanoi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa287dGZRyZLIgsykABLRM-dsxt_qh3XYXMj6976T3mBHXlV60ovcH31MzasvFKrKxVAsZvlSQKqYvX-BWMoLfiEW8VNKVT9yZaArgSMYlNP8ae_IUWJT7cZgN7GRWuCYUZgWxi4vxitf8tz_Ti5iRlSKorkY8K7cK-Wgv43g20pxLTEv-jnpHMHb1jFB4QbUHHL9vZMuD99NCGyJ7iLQXrn_vp6_MCeZ4iZBoKBkISEEC9ZStpDBo2n5uOz-sT7jaHFlUuSMF4s0">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white px-4 py-2 rounded-full shadow-xl flex items-center gap-2 border border-primary/20">
+<span class="material-symbols-outlined text-primary" data-weight="fill">location_on</span>
+<span class="font-label-md text-label-md">Hoan Kiem Ward, Hanoi</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Reviews Section -->
+<div class="bg-white rounded-xl p-lg shadow-sm border border-slate-100">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-8">Reviews</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+<div class="text-center md:border-r border-outline-variant md:pr-8">
+<p class="text-6xl font-bold text-on-surface mb-2">0.0</p>
+<div class="flex justify-center text-outline mb-2">
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+</div>
+<p class="text-label-sm font-label-sm text-outline">Based on 0 reviews</p>
+</div>
+<div class="md:col-span-2 space-y-2">
+<!-- Ratings Bars -->
+<div class="flex items-center gap-3">
+<span class="w-4 text-label-sm text-outline">5</span>
+<span class="material-symbols-outlined text-[14px] text-outline">star</span>
+<div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<span class="w-4 text-label-sm text-outline">0</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-4 text-label-sm text-outline">4</span>
+<span class="material-symbols-outlined text-[14px] text-outline">star</span>
+<div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<span class="w-4 text-label-sm text-outline">0</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-4 text-label-sm text-outline">3</span>
+<span class="material-symbols-outlined text-[14px] text-outline">star</span>
+<div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<span class="w-4 text-label-sm text-outline">0</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-4 text-label-sm text-outline">2</span>
+<span class="material-symbols-outlined text-[14px] text-outline">star</span>
+<div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<span class="w-4 text-label-sm text-outline">0</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-4 text-label-sm text-outline">1</span>
+<span class="material-symbols-outlined text-[14px] text-outline">star</span>
+<div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<span class="w-4 text-label-sm text-outline">0</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-md border border-outline-variant">
+<p class="font-label-md text-label-md mb-3">Write a review</p>
+<div class="flex gap-1 mb-4 text-outline cursor-pointer">
+<span class="material-symbols-outlined hover:text-primary transition-colors">star</span>
+<span class="material-symbols-outlined hover:text-primary transition-colors">star</span>
+<span class="material-symbols-outlined hover:text-primary transition-colors">star</span>
+<span class="material-symbols-outlined hover:text-primary transition-colors">star</span>
+<span class="material-symbols-outlined hover:text-primary transition-colors">star</span>
+</div>
+<textarea class="w-full bg-white border border-outline-variant rounded-lg p-3 text-body-sm focus:ring-2 focus:ring-primary h-32 mb-4" placeholder="What did you think of this product?"></textarea>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 text-label-md font-label-md text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+<button class="px-6 py-2 bg-primary text-on-primary text-label-md font-label-md rounded-lg shadow-lg hover:shadow-primary/20 transition-all">Submit review</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Actions Column -->
+<div class="lg:col-span-4 space-y-gutter">
+<!-- Sticky Pricing Card -->
+<div class="sticky top-24 space-y-gutter">
+<div class="bg-white rounded-xl p-lg shadow-xl border border-slate-100">
+<div class="flex justify-between items-start mb-2">
+<h1 class="font-display-lg text-display-lg text-primary leading-none">110.000 ₫</h1>
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase">1 Available</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6 leading-tight">Lót chuột hình người tốc độ</h2>
+<div class="flex flex-wrap gap-2 mb-8">
+<span class="bg-surface-container-low px-3 py-1.5 rounded-full text-label-sm font-label-sm text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1">history</span>
+                                13 days ago
+                            </span>
+<span class="bg-surface-container-low px-3 py-1.5 rounded-full text-label-sm font-label-sm text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1">visibility</span>
+                                19 views
+                            </span>
+<span class="bg-surface-container-low px-3 py-1.5 rounded-full text-label-sm font-label-sm text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[16px] mr-1">favorite</span>
+                                0 interested
+                            </span>
+</div>
+<div class="space-y-3">
+<button class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+<span class="material-symbols-outlined">chat_bubble</span>
+                                Chat with Seller
+                            </button>
+<button class="w-full py-4 border border-outline-variant text-on-surface-variant rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined">share</span>
+                                Share Product
+                            </button>
+</div>
+<div class="mt-8 p-4 bg-surface-container-low rounded-xl border-l-4 border-primary">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">info</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Campus Safety Tip</p>
+<p class="text-[12px] text-on-surface-variant leading-snug">Meet in person at public campus areas like the library or canteen. Inspect items before paying.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Seller Profile Card -->
+<div class="bg-white rounded-xl p-lg shadow-sm border border-slate-100">
+<div class="flex items-center gap-4 mb-6">
+<div class="h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20">
+<img alt="Long Phuoc" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSM9o-G85CBc8vZVqm3sAuiT4XtxBJboqInVyWBJFpRcwGiczZStVQk5g8GAK4b8IVknLipv4eRvEBpo_mBRV5hhNx5HHaVHRcKB72vil03qSQ5MG0O0C2-6te4heagYXe0MFCsT3G24m3eoBmTuIOt0HeRNfneP9SJXSBYpAj91tNi41JRLexHjDU5dNykcohW_MPp7rcDjUyWimALhu0_fJulFoMtQBKgqzBX9t-eFKieSvUvNXNhkDIeHjgvBpLPfCQmun7tw">
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Long Phuoc</h3>
+<p class="text-label-sm text-outline">Joined May 2026</p>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-2 mb-6">
+<div class="bg-surface-container-low p-2 rounded-lg text-center">
+<p class="text-xl font-bold text-primary">4.0</p>
+<p class="text-[10px] text-outline uppercase font-bold">Rating</p>
+</div>
+<div class="bg-surface-container-low p-2 rounded-lg text-center">
+<p class="text-xl font-bold text-primary">7</p>
+<p class="text-[10px] text-outline uppercase font-bold">Sold</p>
+</div>
+<div class="bg-surface-container-low p-2 rounded-lg text-center">
+<p class="text-xl font-bold text-primary">1</p>
+<p class="text-[10px] text-outline uppercase font-bold">Reviews</p>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-container-high text-on-surface font-label-md rounded-lg hover:bg-surface-container-highest transition-all">View Full Profile</button>
+<div class="mt-4 flex justify-between px-2">
+<button class="text-[12px] text-outline hover:text-error">Report Product</button>
+<button class="text-[12px] text-outline hover:text-error">Report Seller</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Similar Products Carousel -->
+<section class="mt-16">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Similar Products</h2>
+<p class="text-body-md text-on-surface-variant">Recommended based on your current browsing</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded-full hover:bg-white transition-all"><span class="material-symbols-outlined">arrow_back</span></button>
+<button class="p-2 border border-outline-variant rounded-full hover:bg-white transition-all"><span class="material-symbols-outlined">arrow_forward</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Product Card 1 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-slate-100 flex flex-col">
+<div class="h-48 bg-slate-100 overflow-hidden relative">
+<img alt="Gối ngủ memory foam" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A luxurious memory foam sleeping pillow displayed in a high-end lifestyle setting. The pillow features a breathable, textured white bamboo cover and is resting on a minimal, modern bed with neutral linen. The lighting is soft and golden, creating a calm, high-end bedroom atmosphere. The focus is sharp on the quality fabric weave." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBridAripg_iF2Phun6AyCB9DsoL6Si_D4X3wQtGIXsj7qP08IwEc4nZB9UCdNae_IAd12ETMgsElx4UQjq7AIjy5J_BhLSJWhaF0PXTmlF5ysCcDJijQbkyHso5bmDBe1qaWkTPN34P5GgyAeYK6_RUETJ7tWD5MTFfM4OX2mdnLP3k0Nyz5Z-arLpwrGBWq5TwjiwiBPuRJ4STinpFDuwE4Ig4k1b0gf_Z-i5imEGeptvSnFKnHgb-AhsYv2Wdox2jPwaYQo9sIc">
+</div>
+<div class="p-4 flex flex-col flex-1">
+<p class="text-primary font-bold text-headline-sm mb-1">220.000 ₫</p>
+<h3 class="font-label-md text-label-md text-on-surface mb-2 line-clamp-1">Gối ngủ memory foam</h3>
+<p class="text-[12px] text-outline mt-auto">Daily Needs • 1 Available</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-slate-100 flex flex-col">
+<div class="h-48 bg-slate-100 overflow-hidden relative">
+<img alt="Honda Motorbike" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A pristine, well-maintained white Honda Wave motorbike parked against a clean, modern concrete wall. The morning sunlight catches the chrome accents and polished paint, highlighting its excellent condition. The composition is clean and professional, typical of high-quality automotive photography. The surrounding environment is bright and spacious." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByMWI_X8bVdAVTxI7EISDct-Ew5HP2ufVDUILCcSswqvSBnVwUXPCEyhbfXHBi3JEAGFJzq_1BqigrUEuKLQe6ryP_I8gNWZ_3yLL08xItPqo9nX-Keb595Nn0MhJME75yL6j__qqiocAgmWYWJEkV8CzmnjHAvAiA2X8VtefIWmkPujE2aFq3pgWClrOqOA19J2ibTKCMdbaNFkEIE06oM0BKTTdF6B0C_a_vCsLp4LYqR37u3Pxl6zxf72nva8vuWN1gN5uHaEo">
+</div>
+<div class="p-4 flex flex-col flex-1">
+<p class="text-primary font-bold text-headline-sm mb-1">20.000.000 ₫</p>
+<h3 class="font-label-md text-label-md text-on-surface mb-2 line-clamp-1">Honda Motorbike</h3>
+<p class="text-[12px] text-outline mt-auto">Vehicles • 1 Available</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-slate-100 flex flex-col">
+<div class="h-48 bg-slate-100 overflow-hidden relative">
+<img alt="Giá kê laptop nhôm" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A sleek, adjustable brushed aluminum laptop stand supporting a modern slim laptop. The stand is shown on a minimalist wooden desk with a small succulent plant nearby. High-key, natural window lighting creates soft shadows and highlights the premium metallic finish. The overall aesthetic is professional, organized, and technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx5hMja0e00e9IMxmnwlxfty3DnPy3g2CMjdzsS9TXsj1AHGOMXAYp3pPQH0OdWbWhZEXX2G-mx47I1eKNnCW6PbiDNKEIQ_dW_jOUvKMC5yWed9XHJtfW6A4CpXcPCbd0JT4gP5K5-45iI8CnkvKl-qdUi0CBOHWgsAk-HFgEeqHCe2z-xMfzvuubJUsyTSxopQ4HaMeqb9qvt3K8nBmcgk4ED5hjibJlm5tYHrHQDgBDQZq7U5PZsamA8EV-lm7f_I_J1ZdfMxE">
+</div>
+<div class="p-4 flex flex-col flex-1">
+<p class="text-primary font-bold text-headline-sm mb-1">150.000 ₫</p>
+<h3 class="font-label-md text-label-md text-on-surface mb-2 line-clamp-1">Giá kê laptop nhôm</h3>
+<p class="text-[12px] text-outline mt-auto">Office Supplies • 1 Available</p>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-slate-100 flex flex-col">
+<div class="h-48 bg-slate-100 overflow-hidden relative">
+<img alt="Sneakers" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A pair of clean, white minimalist sneakers placed on a light grey textured background. The lighting is direct and creates sharp, clean shadows, emphasizing the sleek design and high-quality leather construction. The image has a high-fashion, editorial commercial feel with a very bright and modern color palette dominated by whites and soft greys." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGehwGsAUAoLI_SJWzQiVAqAxTGLhkkq8DS-w2KkPVlrWGQgWXDdZCSYiyTuLY2y7OwfXGdnv6w_N9q7O5UMTXAZWKPARykF92e6hKT6HFeEbMyxPuc7lkMmYrtlaY7FpdjuZwhVlJX33TxVxG54T4HDeKBla0hQ16Hx4THoYEuAooBevOioDO-CL7sNzC9m_nDleOdfwIybaou9NTQMTMpBf1iXT7_AVPJ7ak5ID6aZwSf8SFym8qi-DE0WkGirc5b1_S7RVVmU0">
+</div>
+<div class="p-4 flex flex-col flex-1">
+<p class="text-primary font-bold text-headline-sm mb-1">231.000 ₫</p>
+<h3 class="font-label-md text-label-md text-on-surface mb-2 line-clamp-1">Modern Sneakers</h3>
+<p class="text-[12px] text-outline mt-auto">Fashion • 1 Available</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Purchase Bar (Mobile Only) -->
+<div class="fixed bottom-0 left-0 right-0 p-4 glass-card md:hidden z-50 flex items-center justify-between border-t border-outline-variant">
+<div>
+<p class="text-primary font-bold text-headline-md leading-none">110.000 ₫</p>
+<p class="text-[10px] text-outline">Ready to buy?</p>
+</div>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-bold shadow-lg shadow-primary/30">Buy Now</button>
+</div>
+</body></html>

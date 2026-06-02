@@ -1,19 +1,29 @@
+let currentStatusFilter = 'all';
+let currentOrderSearch = '';
+
+function applyBuyerOrderFilters() {
+  const ordersList = document.getElementById('ordersList');
+  if (!ordersList) return;
+  const cards = ordersList.querySelectorAll('.order-card');
+  cards.forEach((card) => {
+    const statusMatch = currentStatusFilter === 'all' || card.dataset.status === currentStatusFilter;
+    const searchMatch = !currentOrderSearch || String(card.dataset.searchText || '').includes(currentOrderSearch);
+    card.style.display = statusMatch && searchMatch ? 'flex' : 'none';
+  });
+}
+
 document.querySelectorAll('.f-pill').forEach((pill) => {
   pill.addEventListener('click', function () {
-    const status = this.dataset.status;
+    currentStatusFilter = this.dataset.status || 'all';
     document.querySelectorAll('.f-pill').forEach((p) => p.classList.remove('on'));
     this.classList.add('on');
-    const ordersList = document.getElementById('ordersList');
-    if (!ordersList) return;
-    const cards = ordersList.querySelectorAll('.order-card');
-    cards.forEach((card) => {
-      if (status === 'all' || card.dataset.status === status) {
-        card.style.display = 'flex';
-      } else {
-        card.style.display = 'none';
-      }
-    });
+    applyBuyerOrderFilters();
   });
+});
+
+document.getElementById('buyer-orders-search')?.addEventListener('input', (event) => {
+  currentOrderSearch = event.target.value.trim().toLowerCase();
+  applyBuyerOrderFilters();
 });
 
 window.cancelOrder = async function (orderId) {

@@ -1,11 +1,11 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --brand: #1B5EFF;
-    --brand-ink: #1558C0;
+    --brand: #16A34A;
+    --brand-ink: #15803D;
     --muted: #8890B0;
   }
 }

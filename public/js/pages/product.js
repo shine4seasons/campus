@@ -450,12 +450,6 @@
         if (action === 'close-report-modal') return window.closeReportModal();
         if (action === 'submit-report') return window.submitReport();
 
-        if (action === 'report-seller') {
-          const sellerId = actionEl.dataset.sellerId || '';
-          if (sellerId) window.showReportModal('user', sellerId);
-          return;
-        }
-
         if (action === 'report-product') {
           const productId = actionEl.dataset.productId || PRODUCT_ID;
           if (productId) window.showReportModal('product', productId);

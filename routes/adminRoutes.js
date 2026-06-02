@@ -4,6 +4,7 @@ const requirePageAuth = require('../middleware/pageAuth');
 const requireAdmin = require('../middleware/adminAuth');
 const { ADMIN_SECTIONS, SECTION_MAP } = require('../config/adminConstants');
 const { CATEGORIES } = require('../public/js/categories');
+const pageRepository = require('../repositories/pageRepository');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
@@ -86,55 +87,7 @@ async function getDashboardStats() {
 
 // Function to get top sellers by revenue this month
 async function getTopSellers(limit = 5) {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const topSellers = await Order.aggregate([
-    {
-      $match: {
-        status: 'completed',
-        createdAt: { $gte: startOfMonth }
-      }
-    },
-    {
-      $group: {
-        _id: '$seller',
-        totalRevenue: { $sum: '$priceSnapshot' },
-        totalOrders: { $sum: 1 }
-      }
-    },
-    {
-      $sort: { totalRevenue: -1 }
-    },
-    {
-      $limit: limit
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'sellerInfo'
-      }
-    },
-    {
-      $unwind: '$sellerInfo'
-    },
-    {
-      $project: {
-        _id: 0,
-        sellerId: '$_id',
-        name: { $ifNull: ['$sellerInfo.nickname', '$sellerInfo.name'] },
-        university: '$sellerInfo.university',
-        rating: '$sellerInfo.rating',
-        totalRevenue: 1,
-        totalOrders: 1
-      }
-    }
-  ]);
-
-  return topSellers;
+  return pageRepository.getAdminTopSellers(limit);
 }
 
 // All admin routes require authentication and admin role

@@ -120,7 +120,12 @@ async function loadRatings(entityType, entityId, containerId) {
       return;
     }
 
-    container.replaceChildren(...data.data.map((rating) => {
+    const renderRatingItems = (items) => {
+      if (!items.length) {
+        container.replaceChildren(createElement('p', { style: { color: 'var(--t2)', fontSize: '13px' }, text: 'No matching reviews found' }));
+        return;
+      }
+      container.replaceChildren(...items.map((rating) => {
       const date = new Date(rating.createdAt).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -164,7 +169,31 @@ async function loadRatings(entityType, entityId, containerId) {
           rating.comment ? createElement('div', { className: 'rating-item-comment', text: rating.comment }) : null
         ].filter(Boolean)
       });
-    }));
+      }));
+    };
+
+    const applyRatingSearch = () => {
+      const input = document.querySelector(`[data-rating-search="${containerId}"]`);
+      const term = input?.value.trim().toLowerCase() || '';
+      const items = term
+        ? data.data.filter((rating) => {
+          const rater = rating.rater || {};
+          const haystack = [rater.nickname, rater.name, rating.comment, rating.score]
+            .filter((value) => value != null)
+            .join(' ')
+            .toLowerCase();
+          return haystack.includes(term);
+        })
+        : data.data;
+      renderRatingItems(items);
+    };
+
+    applyRatingSearch();
+    const searchInput = document.querySelector(`[data-rating-search="${containerId}"]`);
+    if (searchInput && !searchInput.dataset.boundRatingSearch) {
+      searchInput.dataset.boundRatingSearch = 'true';
+      searchInput.addEventListener('input', applyRatingSearch);
+    }
   } catch (error) {
     window.AppUtils?.reportClientError('Error loading ratings:', error);
   }

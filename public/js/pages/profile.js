@@ -234,3 +234,10 @@ document.addEventListener('click', function (event) {
     window.submitReport();
   }
 });
+
+document.getElementById('profile-products-search')?.addEventListener('input', (event) => {
+  const term = event.target.value.trim().toLowerCase();
+  document.querySelectorAll('[data-profile-product]').forEach((card) => {
+    card.style.display = !term || String(card.dataset.searchText || '').includes(term) ? '' : 'none';
+  });
+});

@@ -329,11 +329,13 @@
   function closeSearchCategoryMenu() {
     searchCatCombobox.classList.remove('open');
     searchCatBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('search-category-menu-open');
   }
 
   function openSearchCategoryMenu() {
     searchCatCombobox.classList.add('open');
     searchCatBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('search-category-menu-open');
   }
 
   function closeSortMenu() {

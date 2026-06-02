@@ -4,6 +4,7 @@
   let currentFilter = 'all';
   let currentPage = 1;
   let totalPages = 1;
+  let currentSearch = '';
 
   const TYPE_COLORS = {
     order: { color: '#1B5EFF', bg: '#EBF0FF', icon: 'box' },
@@ -149,7 +150,9 @@
   async function fetchNotifications(append) {
     const list = document.getElementById('notif-page-list');
     try {
-      const url = '/api/notifications?page=' + currentPage + '&limit=15&filter=' + currentFilter;
+      const params = new URLSearchParams({ page: currentPage, limit: 15, filter: currentFilter });
+      if (currentSearch) params.set('q', currentSearch);
+      const url = '/api/notifications?' + params.toString();
       const res = await fetch(url, { credentials: 'include' });
       const json = await res.json();
 
@@ -225,6 +228,16 @@
     document.getElementById('notif-page-list').replaceChildren(createElement('div', {
       style: { padding: '40px', textAlign: 'center', color: '#8890B0' },
       text: 'Loading...'
+    }));
+    fetchNotifications();
+  });
+
+  document.getElementById('notif-search-input')?.addEventListener('input', function onSearchInput(e) {
+    currentSearch = e.target.value.trim();
+    currentPage = 1;
+    document.getElementById('notif-page-list').replaceChildren(createElement('div', {
+      style: { padding: '40px', textAlign: 'center', color: '#8890B0' },
+      text: 'Searching...'
     }));
     fetchNotifications();
   });

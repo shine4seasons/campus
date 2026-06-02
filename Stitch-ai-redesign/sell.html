@@ -1,0 +1,382 @@
+<!-- Seller: Post a Product (Redesigned) -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Post a Product - Seller Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#004ac6",
+                        "surface-tint": "#0053db",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#dae2fd",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "surface-dim": "#d2d9f4",
+                        "surface-container-low": "#f2f3ff",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "background": "#faf8ff",
+                        "surface-bright": "#faf8ff",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#6b6e70",
+                        "on-surface-variant": "#434655",
+                        "surface": "#faf8ff",
+                        "on-secondary-container": "#54647a",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "inverse-primary": "#b4c5ff",
+                        "on-surface": "#131b2e",
+                        "on-background": "#131b2e",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c3c6d7",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-on-surface": "#eef0ff",
+                        "primary-container": "#2563eb",
+                        "surface-container-highest": "#dae2fd",
+                        "secondary-container": "#d0e1fb",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e2e7ff",
+                        "on-primary-fixed": "#00174b",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-secondary-fixed": "#0b1c30",
+                        "inverse-surface": "#283044",
+                        "tertiary": "#525657",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-tertiary-container": "#eff1f3",
+                        "on-primary-container": "#eeefff",
+                        "surface-container": "#eaedff",
+                        "secondary": "#505f76",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "outline": "#737686"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin": "32px",
+                        "xl": "32px",
+                        "sm": "12px",
+                        "md": "16px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "headline-sm": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c3c6d7;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #737686;
+        }
+        .bg-pattern-dot {
+            background-image: radial-gradient(#c3c6d7 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface shadow-sm flex flex-col h-full py-lg px-md h-screen w-64 fixed left-0 top-0 z-50">
+<div class="flex items-center gap-sm mb-xl">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined font-bold">storefront</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-black text-primary truncate">Global Vendor</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Verified Merchant</p>
+</div>
+</div>
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-secondary-fixed-variant dark:text-tertiary-fixed-dim hover:bg-surface-container dark:hover:bg-surface-variant transition-all scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-secondary-fixed-variant dark:text-tertiary-fixed-dim hover:bg-surface-container dark:hover:bg-surface-variant transition-all scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold hover:bg-surface-container dark:hover:bg-surface-variant transition-all scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_box</span>
+<span class="font-label-md text-label-md">Post Product</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-secondary-fixed-variant dark:text-tertiary-fixed-dim hover:bg-surface-container dark:hover:bg-surface-variant transition-all scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Revenue &amp; Wallet</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-secondary-fixed-variant dark:text-tertiary-fixed-dim hover:bg-surface-container dark:hover:bg-surface-variant transition-all scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto pt-md border-t border-surface-variant">
+<button class="w-full flex items-center justify-center gap-sm bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg hover:opacity-90 transition-opacity mb-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+                Request Payout
+            </button>
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">support</span>
+                        Help Center
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors text-body-sm font-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Logout
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen overflow-hidden bg-background">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim w-full h-16 sticky top-0 border-b border-outline-variant dark:border-outline flat no shadows flex items-center justify-between px-gutter w-full z-40 shrink-0">
+<div class="flex items-center gap-md w-full max-w-2xl">
+<span class="text-headline-sm font-headline-sm font-bold text-primary dark:text-primary-fixed-dim mr-lg hidden lg:block">Seller Studio</span>
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-xl pr-md py-sm bg-surface-container-lowest border border-outline-variant rounded-full font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" placeholder="Search products, orders..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:opacity-80 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="ml-sm cursor-pointer active:opacity-80 transition-opacity">
+<img alt="Seller Profile Avatar" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a person, serving as a placeholder profile picture for an enterprise software dashboard. Clear lighting, neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9blMLNj5KtqgRrUrIxf5UCQp5JLlUuaACahAR4hqjrQqMNS5b1BK58alEA9mGctcwXyePba4AU0w72clI1MwPpifI5m-DPcMOmiauKwZp4-3tNgdEOrhNXCi0s38ClsabZ9IVjHO9ILMsyKiwkSJ_USMc0DaJ8rvHbbkUQRIRLNPqSNt7Nu9gQMnp2h0qtzFld8LsdDXqqkGTGzJaic1ihYQuQMSfDM0sR2chBY7RMndU36Y7RxuCbAoqa96X2Cw9NqK6QPwHirE"/>
+</button>
+</div>
+</header>
+<!-- Main Scrollable Area -->
+<main class="flex-1 overflow-y-auto p-gutter lg:p-xl flex justify-center pb-32">
+<div class="w-full max-w-6xl flex flex-col lg:flex-row gap-gutter lg:gap-xl">
+<!-- Left Column: Form -->
+<div class="flex-1 space-y-gutter">
+<!-- Header & Stepper -->
+<div class="mb-lg">
+<div class="flex items-center justify-between mb-md">
+<h1 class="font-headline-lg text-headline-lg text-on-background">Post a product</h1>
+<span class="font-label-sm text-label-sm px-sm py-xs bg-surface-container text-secondary rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                Draft saved
+                            </span>
+</div>
+<!-- Stepper -->
+<div class="bg-surface-container-lowest rounded-xl p-sm border border-outline-variant shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-sm bg-primary-container/10 px-md py-sm rounded-lg flex-1">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">1</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary">Add photos</p>
+<p class="font-label-sm text-[10px] text-primary/70">Show the item clearly</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant mx-xs">chevron_right</span>
+<div class="flex items-center gap-sm px-md py-sm flex-1 opacity-60">
+<div class="w-6 h-6 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-label-sm text-label-sm font-bold">2</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Condition</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant mx-xs">chevron_right</span>
+<div class="flex items-center gap-sm px-md py-sm flex-1 opacity-60">
+<div class="w-6 h-6 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-label-sm text-label-sm font-bold">3</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Details</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant mx-xs">chevron_right</span>
+<div class="flex items-center gap-sm px-md py-sm flex-1 opacity-60">
+<div class="w-6 h-6 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-label-sm text-label-sm font-bold">4</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Location</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 1: Add Photos -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-sm">
+<div class="flex items-start gap-md mb-md">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md shrink-0">01</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-background">Add photos</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Upload clear photos of your item (max 5 images)</p>
+</div>
+</div>
+<div class="border-2 border-dashed border-outline-variant bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl p-xl flex flex-col items-center justify-center text-center cursor-pointer min-h-[240px]">
+<div class="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center mb-md text-primary">
+<span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface mb-xs">Click to upload or drag photos here</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">JPG, PNG • Max 5MB per image</p>
+<div class="flex gap-sm">
+<span class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-label-sm">0 / 5 images added</span>
+</div>
+</div>
+<p class="mt-sm font-body-sm text-body-sm text-on-surface-variant text-sm">Use a cover photo with strong lighting, then add close-ups of important details.</p>
+</section>
+<!-- Step 2: Item Condition -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-sm opacity-50 pointer-events-none">
+<div class="flex items-start gap-md mb-md">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-label-md text-label-md shrink-0">02</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-background">Item condition</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Select the best description for your item</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<label class="border border-outline-variant rounded-lg p-md flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 text-primary focus:ring-primary border-outline-variant" name="condition" type="radio"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">New</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Never used, original packaging.</p>
+</div>
+</label>
+<label class="border border-outline-variant rounded-lg p-md flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 text-primary focus:ring-primary border-outline-variant" name="condition" type="radio"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Like New</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Used once or twice, mint condition.</p>
+</div>
+</label>
+<label class="border border-outline-variant rounded-lg p-md flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 text-primary focus:ring-primary border-outline-variant" name="condition" type="radio"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Good</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Works perfectly, minor signs of wear.</p>
+</div>
+</label>
+<label class="border border-outline-variant rounded-lg p-md flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="mt-1 text-primary focus:ring-primary border-outline-variant" name="condition" type="radio"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Fair</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Noticeable wear, fully functional.</p>
+</div>
+</label>
+</div>
+</section>
+</div>
+<!-- Right Column: Live Preview -->
+<div class="w-full lg:w-80 shrink-0 hidden lg:block sticky top-xl self-start">
+<div class="mb-md">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary">visibility</span>
+                            Live Preview
+                        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">This is how buyers will scan your card in the marketplace feed.</p>
+</div>
+<!-- Marketplace Card Preview -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<!-- Image placeholder -->
+<div class="h-48 bg-surface-container-low bg-pattern-dot flex items-center justify-center text-on-surface-variant relative">
+<span class="material-symbols-outlined text-[48px] opacity-20">image</span>
+<span class="absolute top-sm left-sm bg-surface-container-lowest/80 backdrop-blur-sm px-xs py-1 rounded text-[10px] font-label-sm uppercase tracking-wider text-on-surface border border-outline-variant/50">Condition</span>
+</div>
+<div class="p-md">
+<span class="text-[10px] font-label-sm uppercase tracking-wider text-primary bg-primary-container/10 px-xs py-1 rounded">Category</span>
+<h4 class="font-label-md text-label-md mt-sm mb-xs text-on-surface truncate">Product Title Placeholder</h4>
+<p class="font-headline-sm text-headline-sm text-primary mb-md">0 ₫</p>
+<div class="flex items-center justify-between border-t border-outline-variant pt-sm mt-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Stock: 1</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> Campus meetup
+                                </span>
+</div>
+</div>
+</div>
+<div class="mt-md bg-surface-container-low p-md rounded-lg border border-outline-variant/50">
+<p class="font-label-sm text-label-sm text-on-surface flex items-center gap-xs mb-xs">
+<span class="material-symbols-outlined text-[16px] text-tertiary">lightbulb</span>
+                            Pro Tip
+                        </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs">Items with clear photos and detailed descriptions sell 3x faster. Be honest about the condition!</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar -->
+<div class="bg-surface-container-lowest border-t border-outline-variant p-md flex items-center justify-between sticky bottom-0 z-40 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)]">
+<div class="hidden md:block">
+<p class="font-label-md text-label-md text-on-surface">Review and publish</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs">Your listing can be updated later, but accurate details improve trust now.</p>
+</div>
+<div class="flex items-center gap-sm w-full md:w-auto justify-end">
+<button class="px-lg py-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">Save as Draft</button>
+<button class="px-lg py-sm font-label-md text-label-md bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-sm">
+                     Post Product Now
+                     <span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

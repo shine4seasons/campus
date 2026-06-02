@@ -489,20 +489,34 @@
             const hisJson = await hisRes.json();
             const orders = hisJson.data || [];
             const tbody = document.getElementById('revHistoryTbody');
-            if (tbody) {
+            const renderRevenueHistory = () => {
+              if (!tbody) return;
+              const searchTerm = document.getElementById('revenue-history-search')?.value.trim().toLowerCase() || '';
+              const filteredOrders = orders.filter((o) => {
+                if (!searchTerm) return true;
+                const haystack = [
+                  o.product?.title,
+                  o.buyer?.name,
+                  o.buyer?.nickname,
+                  o.deliveryMode,
+                  o.paymentMode,
+                  o.priceSnapshot
+                ].filter((value) => value != null).join(' ').toLowerCase();
+                return haystack.includes(searchTerm);
+              });
               clearChildren(tbody);
-              if (orders.length === 0) {
+              if (filteredOrders.length === 0) {
                 const tr = document.createElement('tr');
                 const td = document.createElement('td');
                 td.colSpan = 5;
                 td.style.textAlign = 'center';
                 td.style.color = 'var(--t2)';
                 td.style.padding = '20px 0';
-                td.textContent = 'No completed orders.';
+                td.textContent = searchTerm ? 'No matching completed transactions.' : 'No completed orders.';
                 tr.appendChild(td);
                 tbody.appendChild(tr);
               } else {
-                orders.forEach((o) => {
+                filteredOrders.forEach((o) => {
                   const tr = document.createElement('tr');
                   const tdTitle = document.createElement('td');
                   const strong = document.createElement('strong');
@@ -534,7 +548,9 @@
                   tbody.appendChild(tr);
                 });
               }
-            }
+            };
+            renderRevenueHistory();
+            document.getElementById('revenue-history-search')?.addEventListener('input', renderRevenueHistory);
           }
         } catch (e) {
           window.AppUtils?.reportClientError(e);
@@ -952,7 +968,7 @@ function initAdminData(id) {
     price.textContent = window.AppUtils.formatVND(p.price);
     topRow.append(price, createAdminProductStatusBadge(productStatus));
 
-    const title = createEntityLink(viewHref, productTitle, 'product-name admin-product-name admin-entity-link admin-product-link');
+    const title = createEntityLink(viewHref, productTitle, 'product-name admin-product-name product-title admin-entity-link admin-product-link');
     const seller = createEntityLink(sellerId ? `/user/${encodeURIComponent(sellerId)}` : '', sellerName, 'admin-product-seller admin-entity-link admin-user-link');
 
     const metrics = document.createElement('div');
@@ -1067,14 +1083,12 @@ function initAdminData(id) {
     const selected = window._dashboard.adminSelectedProducts;
     if (!selected.size) return;
     const actionLabel = action === 'hide' ? 'hide' : action === 'restore' ? 'restore' : 'delete';
-    const confirmed = typeof window.showConfirm === 'function'
-      ? await window.showConfirm({
-          title: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected products`,
-          message: `Apply this action to ${selected.size} selected product${selected.size === 1 ? '' : 's'}?`,
-          confirmText: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected`,
-          type: action === 'delete' || action === 'hide' ? 'danger' : 'info'
-        })
-      : window.confirm(`Apply ${actionLabel} to ${selected.size} selected product(s)?`);
+    const confirmed = typeof window.showConfirm === 'function' && await window.showConfirm({
+      title: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected products`,
+      message: `Apply this action to ${selected.size} selected product${selected.size === 1 ? '' : 's'}?`,
+      confirmText: `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} selected`,
+      type: action === 'delete' || action === 'hide' ? 'danger' : 'info'
+    });
     if (!confirmed) return;
 
     const ids = [...selected];

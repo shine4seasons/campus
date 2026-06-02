@@ -1,8 +1,89 @@
-body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; font-family:inherit; background:#F7F8FC; }
-    .logo { font-size:24px; font-weight:900; margin-bottom:24px; }
-    .spinner { width:40px; height:40px; border:3px solid #E4E7F2; border-top-color:#1B5EFF; border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:16px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .msg  { color:#8890B0; font-size:14px; }
-    .err-card { display:none; text-align:center; padding:24px; background:#fff; border-radius:16px; border:1px solid #FEE2E2; margin-top:16px; }
-    .err-card p { color:#991B1B; margin-bottom:12px; }
-    .err-card a { color:#1B5EFF; font-weight:700; text-decoration:none; }
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--background);
+  color: var(--on-surface);
+  font-family: var(--font);
+}
+
+.logo {
+  color: var(--on-surface);
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--surface-container-high);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.msg {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.err-card {
+  display: none;
+  width: min(100%, 360px);
+  margin-top: 4px;
+  padding: 24px;
+  border: 1px solid var(--error-container);
+  border-radius: 16px;
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.err-card p {
+  margin: 0 0 14px;
+  color: var(--on-error-container);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.err-card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.err-card a:hover {
+  background: var(--primary-dark);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 19px;
+  }
+
+  .spinner {
+    width: 34px;
+    height: 34px;
+  }
+}

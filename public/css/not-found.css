@@ -1,14 +1,67 @@
-.not-found { text-align: center; padding: 100px 20px; }
-    .not-found .icon { font-size: 64px; margin-bottom: 16px; }
-    .not-found h1 { font-size: 24px; font-weight: 900; color: #0D0F1A; margin-bottom: 8px; }
-    .not-found p { color: #8890B0; margin-bottom: 24px; }
-    .not-found a {
-      display: inline-block;
-      padding: 12px 28px;
-      background: #1B5EFF;
-      color: #fff;
-      border-radius: 12px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .not-found a:hover { background: #1348D6; }
+.not-found {
+  max-width: 620px;
+  margin: 56px auto;
+  padding: 48px 24px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 18px;
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.not-found .icon {
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 36px;
+}
+
+.not-found h1 {
+  margin: 0 0 8px;
+  color: var(--on-surface);
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.not-found p {
+  max-width: 440px;
+  margin: 0 auto 24px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+}
+
+.not-found a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.not-found a:hover {
+  background: var(--primary-dark);
+  color: var(--on-primary);
+}
+
+@media (max-width: 520px) {
+  .not-found {
+    margin: 32px 14px;
+    padding: 36px 18px;
+  }
+
+  .not-found a {
+    width: 100%;
+  }
+}

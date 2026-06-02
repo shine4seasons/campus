@@ -241,6 +241,10 @@
       <% } %>
 
       <div id="product-ratings-list" class="pdp-reviews-list">
+        <label class="rating-search" for="product-reviews-search">
+          <i data-lucide="search"></i>
+          <input id="product-reviews-search" type="search" data-rating-search="product-ratings-list-content" placeholder="Search reviews..." autocomplete="off">
+        </label>
         <div id="product-ratings-list-content"></div>
       </div>
     </section>
@@ -269,11 +273,13 @@
           </div>
         </div>
         <div class="pdp-seller-full-actions">
-          <a href="/user/<%= seller._id %>" class="pdp-btn-secondary" style="padding:10px 20px; border-radius:10px; border:1px solid var(--border); font-weight:700; text-decoration:none; color:var(--text); display:inline-block;">View Profile</a>
           <% if (user && canBuyerAct) { %>
-            <button class="pdp-btn-ghost" data-action="report-product" data-product-id="<%= p._id %>" style="margin-left:12px; border:none; background:none; color:var(--text-3); font-size:13px; font-weight:600; cursor:pointer;">Report Product</button>
-            <button class="pdp-btn-ghost" data-action="report-seller" data-seller-id="<%= seller._id %>" style="margin-left:12px; border:none; background:none; color:var(--text-3); font-size:13px; font-weight:600; cursor:pointer;">Report Seller</button>
+            <button class="pdp-report-product-btn" data-action="report-product" data-product-id="<%= p._id %>">
+              <i data-lucide="flag"></i>
+              Report Product
+            </button>
           <% } %>
+          <a href="/user/<%= seller._id %>" class="pdp-btn-secondary pdp-view-profile-btn">View Profile</a>
         </div>
       </div>
     </section>

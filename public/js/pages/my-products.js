@@ -114,14 +114,12 @@
     });
     toggleBtn.addEventListener('click', async (event) => {
       event.stopPropagation();
-      const confirmed = typeof showConfirm === 'function'
-        ? await showConfirm({
-            title: status === 'hidden' ? 'Show product' : 'Hide product',
-            message: status === 'hidden' ? 'This product will be visible to buyers again.' : 'Hide this product from your storefront until you decide to relist it?',
-            confirmText: status === 'hidden' ? 'Show product' : 'Hide product',
-            type: status === 'hidden' ? 'info' : 'danger'
-          })
-        : window.confirm(status === 'hidden' ? 'Show this product again?' : 'Hide this product?');
+      const confirmed = typeof showConfirm === 'function' && await showConfirm({
+        title: status === 'hidden' ? 'Show product' : 'Hide product',
+        message: status === 'hidden' ? 'This product will be visible to buyers again.' : 'Hide this product from your storefront until you decide to relist it?',
+        confirmText: status === 'hidden' ? 'Show product' : 'Hide product',
+        type: status === 'hidden' ? 'info' : 'danger'
+      });
       if (!confirmed) return;
       window.toggleHide(product._id, status === 'hidden' ? 'active' : 'hidden');
     });
@@ -267,5 +265,9 @@
     applyLocalView();
   });
 
-  document.addEventListener('DOMContentLoaded', () => loadProducts(1));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadProducts(1), { once: true });
+  } else {
+    loadProducts(1);
+  }
 })();

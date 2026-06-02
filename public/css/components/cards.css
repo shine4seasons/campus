@@ -1,0 +1,44 @@
+.card,
+.premium-card,
+.stat-card {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.card {
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.premium-card {
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  background: linear-gradient(180deg, var(--surface-container-lowest), var(--surface-container-low));
+}
+
+.card:hover,
+.premium-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+}
+
+.stat-label {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.stat-val {
+  color: var(--text);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-extrabold);
+}

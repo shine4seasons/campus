@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: 'Checkout - Campus Marketplace', pageStyles: ['checkout', 'checkout-page'] }) %>
+  <%- include('partials/head', { pageTitle: 'Checkout - Campus Marketplace', pageStyles: ['checkout'] }) %>
   <link href="/vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
 </head>
@@ -302,7 +302,6 @@
   <!-- Confirm modal -->
   <div class="co-confirm-overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
     <div class="co-confirm-card">
-      <div class="co-confirm-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B5EFF" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div>
       <div class="co-confirm-title" id="confirm-title">Confirm your order?</div>
       <div class="co-confirm-sub" id="confirm-sub">Please review the details before placing.</div>
       <div class="co-confirm-rows" id="confirm-rows"></div>
@@ -350,4 +349,3 @@
   <script defer src="/js/pages/checkout.js"></script>
 </body>
 </html>
-

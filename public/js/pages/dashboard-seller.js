@@ -8,6 +8,10 @@
     summary: null,
     loading: false,
     withdrawOpen: false,
+    transactions: [],
+    payouts: [],
+    transactionSearch: '',
+    payoutSearch: '',
   };
 
   function toast(message, type = 'info') {
@@ -195,9 +199,19 @@
   function renderTransactions(transactions = []) {
     const tbody = document.getElementById('walletTransactions');
     if (!tbody) return;
+    const filtered = transactions.filter((transaction) => {
+      if (!state.transactionSearch) return true;
+      const haystack = [
+        transaction.type,
+        transaction.status,
+        transaction.description,
+        transaction.amount
+      ].filter((value) => value != null).join(' ').toLowerCase();
+      return haystack.includes(state.transactionSearch);
+    });
 
-    if (!transactions.length) {
-      setTableMessage(tbody, 5, 'No transactions yet');
+    if (!filtered.length) {
+      setTableMessage(tbody, 5, state.transactionSearch ? 'No matching transactions found' : 'No transactions yet');
       return;
     }
 
@@ -207,7 +221,7 @@
       FAILED: 'badge-cancelled'
     };
 
-    tbody.replaceChildren(...transactions.map((transaction) => {
+    tbody.replaceChildren(...filtered.map((transaction) => {
       const row = createElement('tr');
       const amount = Number(transaction.amount || 0);
       row.append(
@@ -241,9 +255,22 @@
   function renderPayoutRequests(payouts = []) {
     const tbody = document.getElementById('payoutRequestsTable');
     if (!tbody) return;
+    const filtered = payouts.filter((payout) => {
+      if (!state.payoutSearch) return true;
+      const haystack = [
+        payout.status,
+        payout.amount,
+        payout.bankInfo?.bankName,
+        payout.bankInfo?.accountNumber,
+        payout.bankInfo?.accountName,
+        payout.transferReference,
+        payout.transferNote
+      ].filter((value) => value != null).join(' ').toLowerCase();
+      return haystack.includes(state.payoutSearch);
+    });
 
-    if (!payouts.length) {
-      setTableMessage(tbody, 5, 'No payout requests yet');
+    if (!filtered.length) {
+      setTableMessage(tbody, 5, state.payoutSearch ? 'No matching payout requests found' : 'No payout requests yet');
       return;
     }
 
@@ -254,7 +281,7 @@
       REJECTED: 'badge-cancelled'
     };
 
-    tbody.replaceChildren(...payouts.map((payout) => {
+    tbody.replaceChildren(...filtered.map((payout) => {
       const row = createElement('tr');
       const bankCell = createElement('td', { style: { fontSize: '13px' } });
       bankCell.append(
@@ -313,8 +340,10 @@
       }
 
       renderWalletSummary(json.data);
-      renderTransactions(json.data.transactions || []);
-      renderPayoutRequests(json.data.payouts || []);
+      state.transactions = json.data.transactions || [];
+      state.payouts = json.data.payouts || [];
+      renderTransactions(state.transactions);
+      renderPayoutRequests(state.payouts);
     } catch (error) {
       window.AppUtils?.reportClientError('Fetch wallet summary error:', error);
       toast(error.message || 'Could not load wallet data', 'err');
@@ -370,8 +399,10 @@
       }
 
       renderWalletSummary(json.data);
-      renderTransactions(json.data.transactions || []);
-      renderPayoutRequests(json.data.payouts || []);
+      state.transactions = json.data.transactions || [];
+      state.payouts = json.data.payouts || [];
+      renderTransactions(state.transactions);
+      renderPayoutRequests(state.payouts);
       closeWithdrawModal();
       resetWithdrawForm();
       toast('Payout request submitted successfully', 'ok');
@@ -443,6 +474,16 @@
   if (withdrawAmountInput) {
     withdrawAmountInput.addEventListener('input', syncWithdrawPreview);
   }
+
+  document.getElementById('wallet-transactions-search')?.addEventListener('input', (event) => {
+    state.transactionSearch = event.target.value.trim().toLowerCase();
+    renderTransactions(state.transactions);
+  });
+
+  document.getElementById('wallet-payouts-search')?.addEventListener('input', (event) => {
+    state.payoutSearch = event.target.value.trim().toLowerCase();
+    renderPayoutRequests(state.payouts);
+  });
 
   const withdrawAmountRange = document.getElementById('withdrawAmountRange');
   if (withdrawAmountRange) {

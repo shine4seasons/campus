@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="en" class="dashboard-shell">
 <head>
-  <%- include('partials/head', { pageTitle: 'My Orders - Campus Marketplace', pageStyles: ['dashboard', 'orders', 'orders-buyer-page'] }) %>
+  <%- include('partials/head', { pageTitle: 'My Orders - Campus Marketplace', pageStyles: ['dashboard', 'orders'] }) %>
 </head>
-<body class="dashboard-page">
+<body class="dashboard-page orders-page">
 <%- include('partials/navbar') %>
 <%- include('partials/sidebar') %>
 
@@ -34,6 +34,11 @@
       </div>
     </div>
 
+    <div class="orders-search-bar">
+      <i data-lucide="search"></i>
+      <input id="buyer-orders-search" type="search" placeholder="Search orders, seller, product..." autocomplete="off">
+    </div>
+
     <!-- Filter pills -->
     <div class="filter-pills" id="filterPills">
       <button class="f-pill on" data-status="all">All Orders</button>
@@ -54,7 +59,14 @@
       <% } else { %>
         <div id="ordersList">
           <% orders.forEach(function(order){ %>
-            <div class="order-card" data-order-id="<%= order._id %>" data-status="<%= order.status %>">
+            <div class="order-card" data-order-id="<%= order._id %>" data-status="<%= order.status %>" data-search-text="<%= [
+              order.product?.title || '',
+              order.seller?.nickname || order.seller?.name || '',
+              String(order._id || ''),
+              order.status || '',
+              order.paymentMode || '',
+              order.deliveryMode || ''
+            ].join(' ').toLowerCase() %>">
               <div class="order-card-image-wrap">
                 <% if (order.product && order.product.images && order.product.images.length) { %>
                   <img src="<%= order.product.images[0] %>" alt="Product" class="order-card-image" />

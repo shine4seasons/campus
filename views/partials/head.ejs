@@ -3,9 +3,24 @@
 <title><%= typeof pageTitle !== 'undefined' ? pageTitle : (typeof title !== 'undefined' ? title : 'Campus Marketplace') %></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/shared.css">
 <link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/base/tokens.css">
+<link rel="stylesheet" href="/css/base/reset.css">
+<link rel="stylesheet" href="/css/base/utilities.css">
+<link rel="stylesheet" href="/css/components/layout.css">
+<link rel="stylesheet" href="/css/components/topbar.css">
+<link rel="stylesheet" href="/css/components/sidebar.css">
+<link rel="stylesheet" href="/css/components/buttons.css">
+<link rel="stylesheet" href="/css/components/forms.css">
+<link rel="stylesheet" href="/css/components/cards.css">
+<link rel="stylesheet" href="/css/components/tables.css">
+<link rel="stylesheet" href="/css/components/badges.css">
+<link rel="stylesheet" href="/css/components/dropdowns.css">
+<link rel="stylesheet" href="/css/components/modals.css">
+<link rel="stylesheet" href="/css/components/toasts.css">
+<link rel="stylesheet" href="/css/components/product-card.css">
 <% const styles = Array.isArray(pageStyles) ? pageStyles : (typeof extraCss !== 'undefined' && extraCss ? [extraCss.replace(/\.css$/, '')] : []); %>
 <% styles.forEach((styleName) => { %>
 <link rel="stylesheet" href="/css/<%= styleName %>.css">

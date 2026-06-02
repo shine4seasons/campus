@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="dashboard-shell dashboard-admin-shell">
 <head>
   <%- include('partials/head', { pageTitle: 'Admin Dashboard - Campus Marketplace', pageStyles: ['dashboard', 'rating', 'dashboard-admin-page'] }) %>
@@ -160,28 +160,30 @@
                 </div>
                 <% if (topSellers && topSellers.length> 0) { %>
                   <% topSellers.forEach((seller, index)=> { %>
-                    <% const rank=index + 1; const rankClass=rank===1 ? 'gold' : rank===2 ? 'silver' : rank===3
+                    <% const sellerName = seller.name || 'Unknown seller';
+                      const sellerRating = Number.isFinite(Number(seller.rating)) ? Number(seller.rating) : 0;
+                      const rank=index + 1; const rankClass=rank===1 ? 'gold' : rank===2 ? 'silver' : rank===3
                       ? 'bronze' : '' ; const
-                      initials=seller.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                      initials=sellerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
                 const revenueFormatted = seller.totalRevenue >= 1000000 ? (seller.totalRevenue / 1000000).toFixed(1) + ' M VND' :
                       seller.totalRevenue.toLocaleString() + ' VND' ; %>
                       <div class="list-item">
                         <div class="li-rank <%= rankClass %>">
                           <%= rank %>
                         </div>
-                        <div class="li-avatar" style="background:#dbeafe;color:#2563eb">
+                        <div class="li-avatar" style="background:#dcfce7;color:#22c55e">
                           <%= initials %>
                         </div>
                         <div class="li-info">
                           <a href="/user/<%= seller.sellerId %>" style="text-decoration:none;color:inherit;">
-                            <div class="li-name" style="color:#1B5EFF;">
-                              <%= seller.name %>
+                            <div class="li-name" style="color:#16A34A;">
+                              <%= sellerName %>
                             </div>
                             <div class="li-sub" style="display:flex;align-items:center;gap:4px;margin-top:2px">
                               <%= seller.totalOrders %> sales &middot;
-                                <%- renderStars(seller.rating, 10) %>
+                                <%- renderStars(sellerRating, 10) %>
                                   <span style="font-weight:600;font-size:11px">
-                                    <%= seller.rating.toFixed(1) %>
+                                    <%= sellerRating.toFixed(1) %>
                                   </span>
                                   &middot; <%= seller.university || 'Unknown' %>
                             </div>
@@ -212,7 +214,7 @@
                     <div class="prog-meta"><span class="prog-label">Order completion rate</span><span
                         class="prog-val">84%</span></div>
                     <div class="prog-bar">
-                      <div class="prog-fill" style="width:84%;background:#2563eb"></div>
+                      <div class="prog-fill" style="width:84%;background:#22c55e"></div>
                     </div>
                   </div>
                   <div class="prog-item">
@@ -271,7 +273,7 @@
                   <div>
                     <div class="stat-label">Return rate</div>
                   </div>
-                  <div class="stat-icon" style="background:#dbeafe;color:#2563eb"><svg viewBox="0 0 24 24">
+                  <div class="stat-icon" style="background:#dcfce7;color:#22c55e"><svg viewBox="0 0 24 24">
                       <polyline points="17 1 21 5 17 9" />
                       <path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4" />
                       <path d="M21 13v2a4 4 0 01-4 4H3" />
@@ -354,7 +356,7 @@
                 </div>
                 <div class="chart-frame chart-frame-sm" style="margin-bottom:10px"><canvas id="cDelivery"></canvas></div>
                 <div class="legend" style="flex-direction:column;gap:6px" id="dlvLegend">
-                  <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Pickup &mdash; 63%</span>
+                  <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Pickup &mdash; 63%</span>
                   <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Ship &mdash; 37%</span>
                 </div>
               </div>
@@ -381,7 +383,7 @@
                 <div class="chart-frame chart-frame-sm" style="margin-bottom:10px"><canvas id="cOrderStatus"></canvas></div>
                 <div class="legend" style="flex-direction:column;gap:6px" id="orderStsLegend">
                   <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Completed &mdash; 62%</span>
-                  <span class="leg-item"><span class="leg-dot" style="background:#2563eb"></span>Confirmed &mdash; 23%</span>
+                  <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Confirmed &mdash; 23%</span>
                   <span class="leg-item"><span class="leg-dot" style="background:#f59e0b"></span>Pending &mdash; 7%</span>
                   <span class="leg-item"><span class="leg-dot" style="background:#ef4444"></span>Cancelled &mdash; 8%</span>
                 </div>
@@ -505,9 +507,9 @@
                 <div class="sc-label">Pending confirmation</div>
                 <div class="sc-val" style="color:#d97706">14</div>
               </div>
-              <div class="status-count-card" style="border-top-color:#2563eb">
+              <div class="status-count-card" style="border-top-color:#22c55e">
                 <div class="sc-label">Confirmed</div>
-                <div class="sc-val" style="color:#2563eb">23</div>
+                <div class="sc-val" style="color:#22c55e">23</div>
               </div>
               <div class="status-count-card" style="border-top-color:#16a34a">
                 <div class="sc-label">Completed</div>
@@ -605,6 +607,11 @@
                   <button class="act-btn success" type="button" data-action="bulk-resolve-reports">Resolve selected</button>
                 </div>
               </div>
+              <div class="tbl-search">
+                <i data-lucide="search"></i>
+                <input id="admin-reports-search" type="search" placeholder="Search reports by target, reporter, reason..." autocomplete="off">
+                <span class="tbl-search-hint">Search all reports in this queue</span>
+              </div>
               <table>
                 <thead>
                   <tr>
@@ -658,6 +665,11 @@
                   <button class="f-pill" data-filter="PAID">Paid</button>
                   <button class="f-pill" data-filter="REJECTED">Rejected</button>
                 </div>
+              </div>
+              <div class="tbl-search">
+                <i data-lucide="search"></i>
+                <input id="admin-payouts-search" type="search" placeholder="Search payouts by seller, email, bank, transfer ref..." autocomplete="off">
+                <span class="tbl-search-hint">Search all payout requests</span>
               </div>
               <table>
                 <thead>
@@ -815,15 +827,21 @@
       <!-- Payout Action Modal -->
       <div id="payoutActionModal" class="success-overlay modal-surface payout-action-modal">
         <div class="success-card modal-card payout-action-card">
-          <div class="modal-icon">
-            <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="payout-action-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          </div>
           <h3 class="modal-title">Confirm Payout Action</h3>
           <p id="payoutActionText" class="modal-copy"></p>
           <div class="modal-fields">
-            <input id="payoutTransferReference" class="modal-input" type="text" placeholder="Transfer reference">
-            <textarea id="payoutTransferNote" class="modal-textarea" placeholder="Transfer note shown in payout history"></textarea>
-            <textarea id="payoutAdminNote" class="modal-textarea" placeholder="Admin note / rejection reason"></textarea>
+            <div id="payoutTransferReferenceGroup" class="modal-field-group">
+              <label class="modal-field-label" for="payoutTransferReference">Transfer reference</label>
+              <input id="payoutTransferReference" class="modal-input" type="text" placeholder="Bank transaction ID or reference code">
+            </div>
+            <div id="payoutTransferNoteGroup" class="modal-field-group">
+              <label class="modal-field-label" for="payoutTransferNote">Transfer details</label>
+              <textarea id="payoutTransferNote" class="modal-textarea" placeholder="Bank name, transfer time, internal note, or other payout details"></textarea>
+            </div>
+            <div class="modal-field-group">
+              <label id="payoutAdminNoteLabel" class="modal-field-label" for="payoutAdminNote">Admin note</label>
+              <textarea id="payoutAdminNote" class="modal-textarea" placeholder="Admin note / rejection reason"></textarea>
+            </div>
           </div>
           <div class="modal-actions">
             <button class="btn payout-modal-cancel" data-action="close-payout-modal">Cancel</button>

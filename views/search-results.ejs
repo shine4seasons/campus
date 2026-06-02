@@ -66,12 +66,12 @@
         </div>
 
         <form class="search-panel" method="get" action="/search">
-          <label class="search-field">
+          <label class="search-field search-field-keyword">
             <span>Keyword</span>
             <input type="text" name="q" value="<%= searchQuery %>" placeholder="Search for items...">
           </label>
 
-          <label class="search-field">
+          <label class="search-field search-field-select">
             <span>Category</span>
             <select name="category">
               <option value="">All categories</option>
@@ -81,7 +81,7 @@
             </select>
           </label>
 
-          <label class="search-field">
+          <label class="search-field search-field-select">
             <span>Sort</span>
             <select name="sort">
               <% sortOptions.forEach(option => { %>
@@ -92,7 +92,7 @@
             </select>
           </label>
 
-          <label class="search-field">
+          <label class="search-field search-field-select">
             <span>Condition</span>
             <select name="condition">
               <% conditionOptions.forEach(option => { %>

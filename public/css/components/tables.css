@@ -1,0 +1,29 @@
+.tbl-wrap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-sm);
+}
+
+.tbl-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tbl-wrap th {
+  padding: 12px 16px;
+  background: var(--surface-container-low);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.tbl-wrap td {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}

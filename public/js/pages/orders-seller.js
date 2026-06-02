@@ -268,16 +268,14 @@
 
     const needsConfirm = status === 'cancelled' || status === 'completed';
     if (needsConfirm) {
-      const confirmed = typeof showConfirm === 'function'
-        ? await showConfirm({
-            title: `Mark order as ${status}?`,
-            message: status === 'cancelled'
-              ? 'This action should be used intentionally because it changes the seller workflow and buyer expectation.'
-              : 'Confirm that this order has been fully completed before updating the status.',
-            confirmText: `Mark ${status}`,
-            type: status === 'cancelled' ? 'danger' : 'info'
-          })
-        : window.confirm(`Mark order as ${status}?`);
+      const confirmed = typeof showConfirm === 'function' && await showConfirm({
+        title: `Mark order as ${status}?`,
+        message: status === 'cancelled'
+          ? 'This action should be used intentionally because it changes the seller workflow and buyer expectation.'
+          : 'Confirm that this order has been fully completed before updating the status.',
+        confirmText: `Mark ${status}`,
+        type: status === 'cancelled' ? 'danger' : 'info'
+      });
       if (!confirmed) {
         decorateStatusMenu(menuEl, original);
         return;
@@ -368,6 +366,10 @@
 
   window.loadSellerOrders = loadSellerOrders;
 
-  document.addEventListener('DOMContentLoaded', () => loadSellerOrders(1));
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadSellerOrders(1), { once: true });
+  } else {
+    loadSellerOrders(1);
+  }
 })();
 

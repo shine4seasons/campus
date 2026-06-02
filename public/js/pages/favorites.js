@@ -3,6 +3,7 @@
 
   let currentPage = 1;
   let totalCount = 0;
+  let currentSearch = '';
 
   function createHeartIcon() {
     return createSvgElement('svg', {
@@ -158,7 +159,9 @@
   async function fetchFavorites(append) {
     const grid = document.getElementById('fav-grid');
     try {
-      const res = await fetch('/api/products/favorites?page=' + currentPage + '&limit=12', { credentials: 'include' });
+      const params = new URLSearchParams({ page: currentPage, limit: 12 });
+      if (currentSearch) params.set('q', currentSearch);
+      const res = await fetch('/api/products/favorites?' + params.toString(), { credentials: 'include' });
       const json = await res.json();
       if (!json.success) throw new Error(json.message || 'Failed');
       const items = json.data || [];
@@ -239,6 +242,16 @@
     if (event.target.closest('[data-action="load-more-favorites"]')) {
       window.loadMore();
     }
+  });
+
+  document.getElementById('fav-search-input')?.addEventListener('input', (event) => {
+    currentSearch = event.target.value.trim();
+    currentPage = 1;
+    setGridState(document.getElementById('fav-grid'), createElement('div', {
+      className: 'fav-loading',
+      text: currentSearch ? 'Searching favorites...' : 'Loading favorites...'
+    }));
+    fetchFavorites(false);
   });
 
   fetchFavorites();

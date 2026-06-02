@@ -1,6 +1,6 @@
-/* ── Application Specific Layout ─────────────────── */
+/* -- Application Specific Layout ------------------- */
 
-/* ── NAVBAR (public pages) ──────────────────── */
+/* -- NAVBAR (public pages) -------------------- */
 .navbar {
   position: sticky;
   top: 0;
@@ -64,7 +64,7 @@
 .nav-link:hover {
   color: var(--primary);
   background: var(--primary-light);
-  box-shadow: inset 0 0 0 1px rgba(27, 94, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.08);
 }
 
 .nav-actions {
@@ -75,7 +75,7 @@
 }
 
 .btn-sell {
-  background: linear-gradient(135deg, var(--primary), #4F7DFF);
+  background: linear-gradient(135deg, var(--primary), #22C55E);
   color: #fff;
   padding: 8px 16px;
   border-radius: var(--radius-md);
@@ -87,7 +87,7 @@
 .btn-sell:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(27, 94, 255, 0.24);
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.24);
 }
 
 .btn-login {
@@ -154,7 +154,7 @@
   transition: transform 0.2s;
 }
 
-/* ──────────────────────── SIDEBAR ──────────────────────── */
+/* ------------------------ SIDEBAR ------------------------ */
 .sidebar {
   width: var(--sb-w);
   background: var(--sb-bg);
@@ -175,7 +175,7 @@
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
 }
 
-/* ── Sidebar Collapsed State ── */
+/* -- Sidebar Collapsed State -- */
 body.sidebar-collapsed .sidebar {
   transform: translateX(-100%);
   width: 0;
@@ -224,7 +224,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
 }
 
 
-/* ── Mode toggle ── */
+/* -- Mode toggle -- */
 .sb-toggle-wrap {
   padding: 14px 14px 8px;
   flex-shrink: 0;
@@ -251,7 +251,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
     background 0.24s ease;
   pointer-events: none;
   z-index: 0;
-  box-shadow: 0 1px 6px rgba(29, 106, 229, 0.3);
+  box-shadow: 0 1px 6px rgba(22, 163, 74, 0.3);
 }
 
 .mode-pill-track[data-mode="seller"] {
@@ -299,7 +299,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
   box-shadow: none;
 }
 
-/* ── Nav container ── */
+/* -- Nav container -- */
 .sb-nav {
   flex: 1;
   padding: 4px 0 8px;
@@ -321,7 +321,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
   letter-spacing: 0.09em;
 }
 
-/* ── Nav items ── */
+/* -- Nav items -- */
 .nav-item {
   display: flex;
   align-items: center;
@@ -366,7 +366,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
   background: var(--primary-light);
   color: var(--primary);
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(29, 106, 229, 0.08);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);
 }
 
 .nav-item.active svg {
@@ -384,7 +384,7 @@ body.sidebar-collapsed #sidebar-toggle:hover {
   width: 4px;
   border-radius: 0 4px 4px 0;
   background: var(--primary);
-  box-shadow: 2px 0 10px rgba(29, 106, 229, 0.4);
+  box-shadow: 2px 0 10px rgba(22, 163, 74, 0.4);
 }
 
 /* Seller active color */
@@ -402,7 +402,7 @@ body.mode-seller .nav-item.active::before {
 .sb-user-card.active {
   background: var(--primary-light) !important;
   border-color: var(--primary) !important;
-  box-shadow: 0 4px 20px rgba(29, 106, 229, 0.15);
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.15);
 }
 
 .nav-badge {
@@ -418,7 +418,7 @@ body.mode-seller .nav-item.active::before {
   align-items: center;
 }
 
-/* ── Footer ── */
+/* -- Footer -- */
 .sb-footer {
   margin-top: auto;
   padding: 12px;
@@ -571,7 +571,7 @@ body.mode-seller .nav-item.active::before {
 
 .sb-dropdown-item:hover {
   background: #fff;
-  border-color: rgba(27, 94, 255, 0.28);
+  border-color: rgba(22, 163, 74, 0.28);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   color: var(--text);
 }
@@ -717,7 +717,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Nav Dropdown ────────────────────────────── */
+/* -- Nav Dropdown ------------------------------ */
 .nav-dropdown {
   position: absolute;
   right: 0;
@@ -805,7 +805,7 @@ body.has-sidebar {
   margin: 4px 0;
 }
 
-/* ── Topbar ──────────────────────────────────── */
+/* -- Topbar ------------------------------------ */
 .topbar {
   position: sticky;
   top: 0;
@@ -1018,7 +1018,7 @@ body.has-sidebar {
 
 .tb-icon-btn:hover {
   background: var(--primary-light);
-  border-color: rgba(27, 94, 255, 0.24);
+  border-color: rgba(22, 163, 74, 0.24);
   color: var(--primary);
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
@@ -1049,7 +1049,7 @@ body.has-sidebar {
   padding: 0 4px;
 }
 
-/* ── Content area ─────────────────────────── */
+/* -- Content area --------------------------- */
 .content {
   flex: 1;
   padding: 24px 28px 40px;
@@ -1064,7 +1064,7 @@ body.has-sidebar {
   isolation: isolate;
 }
 
-/* ── Forms ──────────────────────────────────── */
+/* -- Forms ------------------------------------ */
 .form-group {
   margin-bottom: 16px;
 }
@@ -1091,10 +1091,10 @@ body.has-sidebar {
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(29, 106, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
-/* ── Toast Notifications ─────────────────────── */
+/* -- Toast Notifications ----------------------- */
 #toast-container {
   position: fixed;
   bottom: 24px;
@@ -1140,7 +1140,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Mobile sidebar toggle (hidden globally, shown on ≤760px) ── */
+/* -- Mobile sidebar toggle (hidden globally, shown on ≤760px) -- */
 .sb-mobile-toggle {
   display: none;
   position: fixed;
@@ -1172,7 +1172,7 @@ body.has-sidebar {
   display: none;
 }
 
-/* ── Mobile sidebar overlay (≤900px) ────────── */
+/* -- Mobile sidebar overlay (≤900px) ---------- */
 @media (max-width: 900px) {
   .sb-mobile-toggle {
     display: flex;
@@ -1230,7 +1230,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Mobile topbar / navbar overrides (≤768px) ── */
+/* -- Mobile topbar / navbar overrides (≤768px) -- */
 @media (max-width: 768px) {
   .nav-link {
     font-size: 0.9rem;
@@ -1278,7 +1278,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Very small screens ──────────────────────── */
+/* -- Very small screens ------------------------ */
 @media (max-width: 420px) {
   .topbar-center .tb-search input {
     display: none;
@@ -1289,7 +1289,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Notifications Dropdown ─────────────────── */
+/* -- Notifications Dropdown ------------------- */
 .notif-dropdown {
   position: absolute;
   right: 28px;
@@ -1808,7 +1808,7 @@ body.has-sidebar {
   }
 }
 
-/* ── Global Branding Standardization ── */
+/* -- Global Branding Standardization -- */
 .nav-logo-img {
   height: var(--logo-height) !important;
   width: auto;

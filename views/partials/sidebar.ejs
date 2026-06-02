@@ -1,4 +1,4 @@
-﻿<%
+<%
   let sbInitials = '';
   if (typeof user !== 'undefined' && user && user.name) {
     sbInitials = user.name.split(' ').map(function(n){ return n[0]; }).slice(0,2).join('').toUpperCase();
@@ -8,11 +8,11 @@
   
 
 
-  <%# â”€â”€ Mode toggle (buyer / seller) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ %>
-  <%# â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ %>
+  <%# -- Mode toggle (buyer / seller) ------------------- %>
+  <%# -- Navigation -------------------------------------- %>
   <nav class="sb-nav">
 
-    <%# Admin â”€â”€ %>
+    <%# Admin -- %>
     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
 
     <div class="sb-section">
@@ -61,7 +61,7 @@
 
     <% } else { %>
 
-    <%# â”€â”€ Buyer nav â”€â”€ %>
+    <%# -- Buyer nav -- %>
     <div class="nav-links-buyer">
       <div class="sb-section">
         <span class="sb-group-label">Browse</span>
@@ -97,7 +97,7 @@
       </div>
     </div>
 
-    <%# â”€â”€ Seller nav â”€â”€ %>
+    <%# -- Seller nav -- %>
     <div class="nav-links-seller" style="display:none;">
       <div class="sb-section">
         <span class="sb-group-label">Overview</span>
@@ -136,7 +136,7 @@
     <% } %>
   </nav>
 
-  <%# â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ %>
+  <%# -- Footer ---------------------------------------- %>
   <div class="sb-footer">
     <% if (typeof user !== 'undefined' && user) { %>
       <div class="sb-user-menu">
@@ -152,7 +152,7 @@
             <div class="sb-uname" id="sbName"><%= user.name %></div>
             <div class="sb-urole" id="sbRole">
               <span class="sb-role-dot"></span>
-              <%= user.role === 'admin' ? 'Admin workspace' : 'Open workspace menu' %>
+              <%= user.role === 'admin' ? 'Admin workspace' : 'Workspace' %>
             </div>
           </div>
           <div class="sb-user-caret" aria-hidden="true">
@@ -199,7 +199,12 @@
       </div>
     <% } else { %>
       <a href="/login" class="sb-user-card premium-card glass">
-        <div class="sb-avatar" id="sbAvatar"><%= sbInitials %></div>
+        <div class="sb-avatar sb-avatar-guest" id="sbAvatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21a8 8 0 0 0-16 0"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
         <div class="sb-user-info">
           <div class="sb-uname" id="sbName">Sign In</div>
           <div class="sb-urole">to sell items</div>

@@ -8,6 +8,7 @@
     "dev": "nodemon app.js",
     "lint": "node scripts/lint-js.js",
     "test": "node scripts/test-smoke.js",
+    "test:admin-top-sellers": "node scripts/test-admin-top-sellers.js",
     "test:hardening": "node scripts/test-hardening-controls.js",
     "test:security:lite": "node scripts/test-security-integration-lite.js",
     "test:security:rate:endpoints": "node scripts/test-security-rate-limit-endpoints.js",

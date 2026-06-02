@@ -1,0 +1,141 @@
+﻿/*
+  Design tokens
+  Source of truth for color, typography, spacing, radius, shadows, and layout constants.
+  Shared values for color, typography, spacing, radius, shadows, and layout constants.
+*/
+
+:root {
+  --primary: #16a34a;
+  --primary-light: #ecfdf5;
+  --primary-dark: #15803d;
+  --primary-container: #22c55e;
+  --primary-fixed: #dcfce7;
+  --primary-fixed-dim: #86efac;
+  --on-primary: #ffffff;
+  --on-primary-container: #052e16;
+  --on-primary-fixed: #052e16;
+  --on-primary-fixed-variant: #14532d;
+
+  --secondary: #505f76;
+  --secondary-container: #dcfce7;
+  --on-secondary-container: #54647a;
+
+  --surface: #faf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f0fdf4;
+  --surface-container: #dcfce7;
+  --surface-container-high: #bbf7d0;
+  --surface-container-highest: #86efac;
+  --surface-bright: #faf8ff;
+  --surface-dim: #d1fae5;
+  --surface-variant: #dcfce7;
+
+  --background: #faf8ff;
+  --on-background: #131b2e;
+  --on-surface: #131b2e;
+  --on-surface-variant: #434655;
+  --outline: #737686;
+  --outline-variant: #c3c6d7;
+
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error: #ffffff;
+  --on-error-container: #93000a;
+
+  --amber: #f59e0b;
+  --amber-light: #fffbeb;
+  --green: #10b981;
+  --green-light: #ecfdf5;
+  --red: #ef4444;
+  --red-light: #fef2f2;
+  --blue: #16a34a;
+  --blue-light: #ecfdf5;
+  --yellow: var(--amber);
+  --yellow-light: var(--amber-light);
+  --purple: #7c3aed;
+  --purple-light: #f3e8ff;
+
+  --text: var(--on-surface);
+  --text-2: var(--on-surface-variant);
+  --text-3: var(--outline);
+  --border: var(--outline-variant);
+  --border-2: #d4d8e5;
+  --border-light: #eef2f7;
+  --bg: var(--background);
+  --surface-2: var(--surface-container-low);
+  --surface-3: var(--surface-container-lowest);
+
+  --font: "Inter", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-heading: "Geist", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.5rem;
+  --fs-3xl: 2rem;
+  --fs-4xl: 3rem;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  --sp-xs: 4px;
+  --sp-1: 8px;
+  --sp-sm: 12px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 32px;
+  --sp-gutter: 24px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --radius: var(--radius-md);
+
+  --shadow-sm: 0 1px 4px rgba(19, 27, 46, 0.06);
+  --shadow-md: 0 10px 28px rgba(19, 27, 46, 0.09);
+  --shadow-lg: 0 18px 54px rgba(19, 27, 46, 0.14);
+  --shadow-focus: 0 0 0 4px rgba(22, 163, 74, 0.16);
+  --shadow-lift: 0 18px 44px rgba(19, 27, 46, 0.12);
+
+  --logo-height: 48px;
+  --topbar-h: 64px;
+  --sb-w: 256px;
+  --sb-bg: var(--surface-container-low);
+  --sb-bg2: var(--surface-container);
+  --sb-text: var(--on-surface-variant);
+  --sb-text-hi: var(--on-surface);
+  --accent: var(--primary);
+  --accent-lt: rgba(22, 163, 74, 0.1);
+  --accent-light: var(--accent-lt);
+
+  --success: var(--green);
+  --success-light: var(--green-light);
+  --warning: var(--amber);
+  --warning-light: var(--amber-light);
+  --danger: var(--red);
+  --danger-light: var(--red-light);
+  --info: var(--blue);
+  --info-light: var(--blue-light);
+  --green-lt: var(--green-light);
+  --yellow-lt: var(--yellow-light);
+  --red-lt: var(--red-light);
+  --blue-lt: var(--blue-light);
+  --purple-lt: var(--purple-light);
+
+  /* Legacy aliases used by existing page styles. */
+  --t1: var(--text);
+  --t2: var(--text-2);
+  --t3: var(--text-3);
+  --border2: var(--border-2);
+  --card: var(--surface-container-lowest);
+  --bg1: var(--surface-container-lowest);
+  --bg2: var(--surface-container-low);
+}

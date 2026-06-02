@@ -1,7 +1,7 @@
 .adm-loader {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(27, 94, 255, 0.18);
+  border: 2px solid rgba(22, 163, 74, 0.18);
   border-top-color: var(--primary);
   border-radius: 50%;
   display: inline-block;
@@ -32,9 +32,9 @@
   --admin-warning: #b45309;
   --admin-warning-soft: #fff7ed;
   --admin-success-soft: #ecfdf5;
-  --admin-info-soft: #eff6ff;
+  --admin-info-soft: #f0fdf4;
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 30%),
     radial-gradient(circle at top left, rgba(16, 185, 129, 0.05), transparent 28%),
     var(--admin-bg);
 }
@@ -52,7 +52,7 @@
   border-radius: 28px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.96)),
-    linear-gradient(120deg, rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.04));
+    linear-gradient(120deg, rgba(34, 197, 94, 0.05), rgba(16, 185, 129, 0.04));
   box-shadow: var(--admin-primary-shadow);
 }
 
@@ -81,9 +81,9 @@
   gap: 8px;
   padding: 7px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(34, 197, 94, 0.18);
   background: rgba(255, 255, 255, 0.9);
-  color: #1d4ed8;
+  color: #15803d;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -117,7 +117,7 @@
   inset: 0 auto auto 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.14), rgba(59, 130, 246, 0.44));
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.14), rgba(34, 197, 94, 0.44));
 }
 
 .dashboard-admin .stat-card:hover,
@@ -128,15 +128,15 @@
 }
 
 .dashboard-admin .stat-card.stat-card-primary {
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(34, 197, 94, 0.2);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 30%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 30%),
     linear-gradient(180deg, #ffffff, #f4f8ff);
 }
 
 .dashboard-admin .stat-card.stat-card-primary::before {
   height: 5px;
-  background: linear-gradient(90deg, #1d4ed8, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, #15803d, #22c55e, #86efac);
 }
 
 .dashboard-admin .stat-card.stat-card-primary .stat-val {
@@ -268,9 +268,9 @@
 .dashboard-admin .card.premium-card,
 .dashboard-admin .tbl-wrap.primary-surface,
 .dashboard-admin .card.primary-surface {
-  border-color: rgba(59, 130, 246, 0.16);
+  border-color: rgba(34, 197, 94, 0.16);
   background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 24%),
     linear-gradient(180deg, #ffffff, #f7faff);
 }
 
@@ -303,10 +303,10 @@
   justify-content: center;
   min-height: 38px;
   padding: 0 14px;
-  border: 1px solid rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.14);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.88);
-  color: #1d4ed8;
+  color: #15803d;
   font-weight: 700;
 }
 
@@ -372,7 +372,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   background: rgba(219, 234, 254, 0.72);
-  color: #1d4ed8;
+  color: #15803d;
   font-size: 12px;
   font-weight: 800;
 }
@@ -421,7 +421,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.1);
 }
 
 .dashboard-admin .li-name {
@@ -437,7 +437,7 @@
 .dashboard-admin .li-val {
   font-size: 14px;
   font-weight: 800;
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .dashboard-admin .prog-row {
@@ -579,16 +579,16 @@
 }
 
 .dashboard-admin .f-pill:hover {
-  color: #1d4ed8;
-  border-color: rgba(96, 165, 250, 0.9);
-  background: rgba(239, 246, 255, 0.92);
+  color: #047857;
+  border-color: rgba(5, 150, 105, 0.55);
+  background: #ecfdf5;
 }
 
 .dashboard-admin .f-pill.on {
   color: #fff;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #059669, #10b981);
   border-color: transparent;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 10px 24px rgba(5, 150, 105, 0.18);
 }
 
 .dashboard-admin .f-pill.attention {
@@ -702,30 +702,34 @@
 }
 
 #aUsers table {
-  min-width: 1120px;
+  min-width: 980px;
 }
 
 #aUsers thead th:nth-child(2),
 #aUsers tbody td:nth-child(2) {
-  width: 27%;
+  width: 25%;
 }
 
 #aUsers thead th:nth-child(3),
 #aUsers tbody td:nth-child(3) {
-  width: 16%;
+  width: 11%;
 }
 
 #aUsers thead th:nth-child(4),
 #aUsers tbody td:nth-child(4) {
-  width: 10%;
+  width: 9%;
   white-space: nowrap;
 }
 
 #aUsers thead th:nth-child(5),
-#aUsers tbody td:nth-child(5),
+#aUsers tbody td:nth-child(5) {
+  width: 6%;
+  white-space: nowrap;
+}
+
 #aUsers thead th:nth-child(6),
 #aUsers tbody td:nth-child(6) {
-  width: 8%;
+  width: 9%;
   white-space: nowrap;
 }
 
@@ -739,7 +743,25 @@
 
 #aUsers thead th:nth-child(9),
 #aUsers tbody td:nth-child(9) {
-  width: 14%;
+  width: 18%;
+}
+
+#aUsers thead th:nth-child(n+6),
+#aUsers tbody td:nth-child(n+6) {
+  padding-left: 14px;
+}
+
+#aUsers .tbl-actions {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#aUsers .tbl-actions .act-btn {
+  width: 100%;
+  justify-content: center;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 #aProducts table.admin-products-table {
@@ -787,7 +809,7 @@
 #aProducts .admin-product-card:hover,
 #aProducts .admin-product-card:focus-visible,
 #aProducts .admin-product-card.selected {
-  border-color: rgba(27, 94, 255, 0.36);
+  border-color: rgba(22, 163, 74, 0.36);
   box-shadow: 0 20px 46px rgba(15, 23, 42, 0.12);
   transform: translateY(-2px);
 }
@@ -821,7 +843,7 @@
   width: 100%;
   height: auto;
   overflow: hidden;
-  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  background: linear-gradient(135deg, #dcfce7, #f0fdf4);
 }
 
 #aProducts .admin-product-image img {
@@ -1015,7 +1037,7 @@
 
 #aReports thead th:nth-child(2),
 #aReports tbody td:nth-child(2) {
-  width: 30%;
+  width: 35%;
 }
 
 #aReports thead th:nth-child(3),
@@ -1025,7 +1047,7 @@
 
 #aReports thead th:nth-child(4),
 #aReports tbody td:nth-child(4) {
-  width: 31%;
+  width: 22%;
 }
 
 #aReports thead th:nth-child(5),
@@ -1324,7 +1346,7 @@
 }
 
 .dashboard-admin tbody tr:hover td {
-  background: #eff6ff;
+  background: #f0fdf4;
 }
 
 .dashboard-admin .row-critical td {
@@ -1343,7 +1365,7 @@
 .dashboard-admin .admin-checkbox {
   width: 18px;
   height: 18px;
-  accent-color: #2563eb;
+  accent-color: #22c55e;
   cursor: pointer;
 }
 
@@ -1435,8 +1457,8 @@
 }
 
 .dashboard-admin .copy-btn:hover {
-  color: #1d4ed8;
-  border-color: rgba(59, 130, 246, 0.55);
+  color: #15803d;
+  border-color: rgba(34, 197, 94, 0.55);
   background: rgba(239, 246, 255, 0.95);
 }
 
@@ -1458,15 +1480,15 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #dbeafe, #eff6ff);
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #dcfce7, #f0fdf4);
+  color: #15803d;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.06em;
-  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .dashboard-admin .product-copy {
@@ -1581,9 +1603,9 @@
 }
 
 .dashboard-admin .badge-confirmed {
-  border-color: rgba(59, 130, 246, 0.18);
+  border-color: rgba(34, 197, 94, 0.18);
   background: rgba(219, 234, 254, 0.88);
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .dashboard-admin .badge-cancelled,
@@ -1606,7 +1628,7 @@
 .dashboard-admin .badge-info {
   border-color: rgba(125, 211, 252, 0.24);
   background: rgba(224, 242, 254, 0.9);
-  color: #0369a1;
+  color: #047857;
 }
 
 .dashboard-admin .badge-sold {
@@ -1642,16 +1664,16 @@
 }
 
 .dashboard-admin .act-btn.primary {
-  border-color: rgba(59, 130, 246, 0.18);
+  border-color: rgba(34, 197, 94, 0.18);
   background: rgba(239, 246, 255, 0.92);
-  color: #1d4ed8;
+  color: #15803d;
 }
 
 .dashboard-admin .act-btn.primary:hover,
 .dashboard-admin .act-btn.primary:focus-visible,
 .dashboard-admin .action-menu[open] > summary.act-btn.primary {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: #15803d;
+  border-color: #15803d;
   color: #ffffff;
 }
 
@@ -1818,7 +1840,7 @@
   justify-content: center;
   border-radius: 14px;
   background: rgba(219, 234, 254, 0.9);
-  color: #1d4ed8;
+  color: #15803d;
   font-size: 12px;
   font-weight: 900;
 }
@@ -1900,27 +1922,73 @@
 .dashboard-admin .payout-action-modal {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 10000;
   display: none;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
 }
 
 .dashboard-admin .payout-action-card {
-  width: min(90%, 560px);
+  width: min(100%, 440px);
+  padding: 24px 24px 22px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 24px;
   text-align: center;
-  background: #fff;
+  background: var(--surface-container-lowest);
+  box-shadow: 0 28px 70px rgba(19, 27, 46, 0.26);
+}
+
+.dashboard-admin .payout-action-card .modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background: var(--primary-fixed);
+  color: var(--primary);
 }
 
 .dashboard-admin .payout-action-icon {
   display: block;
-  margin: 0 auto;
-  color: var(--primary);
+  width: 32px;
+  height: 32px;
+  color: currentColor;
 }
 
-.dashboard-admin #payoutTransferReference,
-.dashboard-admin #payoutTransferNote {
+.dashboard-admin .payout-action-card .modal-title {
+  margin: 0 0 6px;
+  color: var(--on-surface);
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.dashboard-admin .payout-action-card .modal-copy {
+  margin: 0 0 18px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dashboard-admin #payoutTransferReferenceGroup,
+.dashboard-admin #payoutTransferNoteGroup {
   display: none;
+}
+
+.dashboard-admin .modal-field-group {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-admin .modal-field-label {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .dashboard-admin #payoutsTableBody td:nth-child(4),
@@ -1933,29 +2001,32 @@
 }
 
 .dashboard-admin .modal-actions {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
   gap: 12px;
+  margin-top: 20px;
 }
 
 .dashboard-admin .payout-modal-cancel,
 .dashboard-admin .payout-modal-confirm {
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: 700;
+  min-height: 44px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .dashboard-admin .payout-modal-cancel {
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text-2);
-  font-weight: 600;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface-variant);
 }
 
 .dashboard-admin .payout-modal-confirm {
-  border: none;
+  border: 1px solid var(--primary);
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
+  box-shadow: 0 12px 24px rgba(22, 163, 74, 0.16);
 }
 
 .dashboard-admin .main .pagination {
@@ -1986,7 +2057,7 @@
 
 .dashboard-admin-shell .sidebar .nav-item:hover {
   background: rgba(239, 246, 255, 0.9);
-  color: #1d4ed8;
+  color: #15803d;
   transform: translateX(2px);
 }
 
@@ -2004,14 +2075,14 @@
 
 .dashboard-admin-shell .sidebar .nav-item.active,
 .dashboard-admin-shell .sidebar .nav-item[aria-current="page"] {
-  background: linear-gradient(135deg, rgba(219, 234, 254, 0.95), rgba(239, 246, 255, 0.95));
-  color: #1d4ed8;
+  background: linear-gradient(135deg, rgba(220,252,231,0.95), rgba(236,253,245,0.95));
+  color: #047857;
   font-weight: 800;
 }
 
 .dashboard-admin-shell .sidebar .nav-item.active::before,
 .dashboard-admin-shell .sidebar .nav-item[aria-current="page"]::before {
-  background: linear-gradient(180deg, #2563eb, #60a5fa);
+  background: linear-gradient(180deg, #059669, #34d399);
 }
 
 .dashboard-admin-shell .sidebar .nav-item svg {

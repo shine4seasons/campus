@@ -1,0 +1,385 @@
+<!-- User Profile (Redesigned) -->
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CAMPUS - Admin Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#ffffff",
+            "on-primary-fixed": "#00174b",
+            "surface-container": "#eaedff",
+            "secondary-container": "#d0e1fb",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e2e7ff",
+            "surface-bright": "#faf8ff",
+            "inverse-on-surface": "#eef0ff",
+            "tertiary": "#525657",
+            "error": "#ba1a1a",
+            "inverse-primary": "#b4c5ff",
+            "on-secondary-fixed-variant": "#38485d",
+            "on-tertiary": "#ffffff",
+            "on-surface-variant": "#434655",
+            "on-secondary-container": "#54647a",
+            "primary": "#004ac6",
+            "on-tertiary-fixed": "#191c1e",
+            "secondary-fixed-dim": "#b7c8e1",
+            "error-container": "#ffdad6",
+            "surface": "#faf8ff",
+            "surface-container-highest": "#dae2fd",
+            "primary-container": "#2563eb",
+            "on-error-container": "#93000a",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#6b6e70",
+            "on-secondary-fixed": "#0b1c30",
+            "on-primary-container": "#eeefff",
+            "on-surface": "#131b2e",
+            "on-tertiary-fixed-variant": "#444749",
+            "surface-container-low": "#f2f3ff",
+            "outline": "#737686",
+            "background": "#faf8ff",
+            "inverse-surface": "#283044",
+            "surface-tint": "#0053db",
+            "primary-fixed-dim": "#b4c5ff",
+            "surface-dim": "#d2d9f4",
+            "surface-variant": "#dae2fd",
+            "on-tertiary-container": "#eff1f3",
+            "on-error": "#ffffff",
+            "primary-fixed": "#dbe1ff",
+            "secondary-fixed": "#d3e4fe",
+            "outline-variant": "#c3c6d7",
+            "on-primary-fixed-variant": "#003ea8",
+            "tertiary-fixed": "#e0e3e5",
+            "on-background": "#131b2e",
+            "tertiary-fixed-dim": "#c4c7c9",
+            "secondary": "#505f76"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sm": "12px",
+            "margin": "32px",
+            "xl": "32px",
+            "base": "8px",
+            "gutter": "24px",
+            "xs": "4px",
+            "md": "16px",
+            "lg": "24px"
+          },
+          "fontFamily": {
+            "headline-lg": ["Geist"],
+            "headline-md": ["Geist"],
+            "headline-sm": ["Geist"],
+            "label-md": ["Inter"],
+            "label-sm": ["Inter"],
+            "body-lg": ["Inter"],
+            "body-md": ["Inter"],
+            "body-sm": ["Inter"]
+          },
+          "fontSize": {
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 24px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar Implementation -->
+<header class="flex justify-between items-center w-full px-4 h-16 z-50 fixed top-0 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-6 flex-1">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface dark:text-inverse-on-surface">CAMPUS</span>
+<div class="relative max-w-md w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-label-md focus:ring-2 focus:ring-primary" placeholder="Search functions, pages..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors rounded-full">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<img alt="An Nguyen Quoc" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARF3JuJz-eJ1W9pxguHKIZSybInYxflTZctoV9G3eXASAUMCgG_1SbwSrZFKnnhmeowOyNY6J5lvlMatp9e1h-32-7FXyJ7GOFKp8ZSbzH2YhAxxleS3RLbp5x7_dgG2cn8mKRHBjRrmOxSKQFzh2Py-d47x0p7stbyV0nOMc36GVTQwbS-i47XrVKyUbriEhpDt0QF6akElQYfIxVGTMXx-Sh6KzRWhcNLm6Xb1UGQhMkg95ryKFoiVzfSGjWV3ulNWFwY7gQjyQ">
+</div>
+</header>
+<!-- SideNavBar Implementation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-surface-dim border-r border-outline-variant flex flex-col justify-between py-4 z-40 pt-20">
+<nav class="flex flex-col gap-1">
+<p class="px-6 py-2 font-label-sm text-on-surface-variant uppercase tracking-wider">Overview</p>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+        Dashboard
+      </a>
+<p class="px-6 py-2 mt-4 font-label-sm text-on-surface-variant uppercase tracking-wider">Management</p>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+        Analytics
+      </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+        Users
+      </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+        Products
+      </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">shopping_cart</span>
+        Orders
+      </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+        Payouts
+      </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high mx-2 my-1 rounded-lg flex items-center px-4 py-2 font-label-md transition-all" href="#">
+<span class="material-symbols-outlined mr-3">assessment</span>
+        Reports
+      </a>
+<p class="px-6 py-2 mt-4 font-label-sm text-on-surface-variant uppercase tracking-wider">System</p>
+<!-- Active Tab: Settings (assuming Profile/Workspace context) -->
+<a class="bg-primary text-on-primary rounded-lg mx-2 my-1 flex items-center px-4 py-2 font-label-md scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+        Settings
+      </a>
+</nav>
+<div class="px-2">
+<div class="flex items-center gap-3 p-3 bg-surface-container rounded-xl border border-outline-variant">
+<img alt="Avatar" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCepStEfzXTKSSnXq8LpXtUU9bpwCQ3_C8bI6BAiXIkXrE3NYTD5BLetzR6cM3CUlFlK2srwtGmE5sZx-qCkwKg10hK0gXP5P5Hx9QyeH5IztKKN_BSlf_BaOf-T2nwIHLIb6zw3SJi3tCWO3NsIpgXscYueiC-6uzIx08js10hyEbPv3xYTGoN11rz9dIZWnqyGM4lCgUXAj8f1srs_iZ5kf7jbIgokfNT8VoA68NOYHuunXaETKD2uHNf7ob410ElNH73ubrbQf4">
+<div class="flex flex-col min-w-0">
+<p class="font-label-md text-on-surface truncate">An Nguyen Quoc</p>
+<p class="font-body-sm text-on-surface-variant flex items-center">
+<span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+            Admin workspace
+          </p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant ml-auto">unfold_more</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen p-lg">
+<div class="max-w-7xl mx-auto space-y-gutter">
+<!-- Profile Header Banner -->
+<section class="relative rounded-2xl overflow-hidden h-64 flex items-end p-xl bg-primary-container" style="background: linear-gradient(135deg, #004ac6 0%, #2563eb 100%);">
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;"></div>
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-end w-full gap-4">
+<div>
+<span class="bg-white/20 text-white px-3 py-1 rounded-full font-label-sm uppercase tracking-widest mb-3 inline-block backdrop-blur-md">My Workspace</span>
+<h1 class="font-headline-lg text-headline-lg text-white mb-2">An Nguyen Quoc</h1>
+<p class="text-on-primary-container font-body-md max-w-2xl">Manage your public seller identity, trust signals, and store-facing information from one place.</p>
+</div>
+<div class="flex gap-3">
+<div class="glass-effect text-white px-6 py-2 rounded-xl flex items-center gap-2">
+<span class="font-label-md">2.0 rating</span>
+</div>
+<div class="glass-effect text-white px-6 py-2 rounded-xl flex items-center gap-2">
+<span class="font-label-md">5 products</span>
+</div>
+<div class="glass-effect text-white px-6 py-2 rounded-xl flex items-center gap-2">
+<span class="font-label-md">1 reviews</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Bento Content -->
+<div class="bento-grid">
+<!-- Sidebar Profile Info -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<div class="bg-surface-container-lowest p-xl rounded-2xl border border-outline-variant flex flex-col items-center text-center">
+<div class="relative mb-6">
+<div class="w-32 h-32 bg-primary flex items-center justify-center rounded-3xl text-white font-headline-lg text-headline-lg">
+                An
+              </div>
+<div class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-container rounded-full border-4 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-1">An Nguyen Quoc</h2>
+<p class="font-body-sm text-on-surface-variant mb-6">nguye2221@gmail.com</p>
+<div class="flex gap-2 mb-8">
+<span class="bg-surface-container px-3 py-1 rounded-lg font-label-sm text-primary">23323wefg</span>
+<span class="bg-surface-container px-3 py-1 rounded-lg font-label-sm text-primary">332wwd</span>
+</div>
+<div class="w-full grid grid-cols-2 gap-4 pt-6 border-t border-outline-variant">
+<div>
+<div class="flex items-center justify-center text-yellow-500 mb-1">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-lg">star</span>
+<span class="material-symbols-outlined text-lg">star</span>
+<span class="material-symbols-outlined text-lg">star</span>
+<span class="ml-2 font-label-md text-on-surface">2.0</span>
+</div>
+<p class="font-label-sm text-on-surface-variant">Rating</p>
+</div>
+<div class="border-l border-outline-variant">
+<p class="font-headline-sm text-on-surface">4</p>
+<p class="font-label-sm text-on-surface-variant">Sold</p>
+</div>
+</div>
+</div>
+<!-- My Products List -->
+<div class="bg-surface-container-lowest p-xl rounded-2xl border border-outline-variant">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">My Products</h3>
+</div>
+<div class="space-y-4">
+<!-- Product Item 1 -->
+<div class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-container-low transition-colors">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A premium high-performance bicycle with a sleek carbon fiber frame, positioned against a minimalist studio background with soft directional lighting. The color palette is professional and clean, emphasizing precision engineering and high-quality materials." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBys2FLW5VuRMr-dXkYkud63bj5bsFyW2j2ntZS2zrlnNLLk7cCXSoU6Je_IUI8gzyRaSHSNkS5ZgsXQ5BnqwbyJ2eT3lGtJ9JVkrYWvK3DYzd5iBgAbVC4oCtvmhDe7i9uX-l36Xl8sg9FfZVvc4VPSUxweSRMuKinQwsn3zoRlTbkRc4kYhulqZZf8rFtzLY72ZGsPNeFB7MmejDlyF2CrYqNmSwM75XtHL3R9Me9UhUD2ayW186gORDs8LnRtU4cevBqzk2PilM">
+</div>
+<div class="flex-1">
+<p class="font-label-md text-on-surface">Bycle</p>
+<p class="font-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active • 141
+                  </p>
+</div>
+<div class="text-right">
+<p class="font-label-md text-primary font-bold">12.345 ₫</p>
+</div>
+</div>
+<!-- Product Item 2 -->
+<div class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-container-low transition-colors">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">computer</span>
+</div>
+<div class="flex-1">
+<p class="font-label-md text-on-surface">Calculator</p>
+<p class="font-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active • 27
+                  </p>
+</div>
+<div class="text-right">
+<p class="font-label-md text-primary font-bold">800.000 ₫</p>
+</div>
+</div>
+<!-- Product Item 3 -->
+<div class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-container-low transition-colors">
+<div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">timer</span>
+</div>
+<div class="flex-1">
+<p class="font-label-md text-on-surface">Racing bycle</p>
+<p class="font-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active • 37
+                  </p>
+</div>
+<div class="text-right">
+<p class="font-label-md text-primary font-bold">1.000.000 ₫</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2.5 rounded-xl bg-surface-container-high text-primary font-label-md hover:bg-surface-container-highest transition-colors">
+              See all 5 Products
+            </button>
+</div>
+</div>
+<!-- Edit Profile Form -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-xl rounded-2xl border border-outline-variant">
+<div class="mb-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface">Edit Profile</h2>
+<p class="font-body-sm text-on-surface-variant">Manage your public seller identity and personal details.</p>
+</div>
+<form class="space-y-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Full name <span class="text-on-surface-variant font-normal">(from Google)</span></label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" readonly="" type="text" value="An Nguyen Quoc">
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Email <span class="text-on-surface-variant font-normal">(from Google)</span></label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" readonly="" type="email" value="nguye2221@gmail.com">
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Display name *</label>
+<input class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" type="text" value="An Nguyen Quoc">
+<p class="font-label-sm text-on-surface-variant">Name shown to other users</p>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Phone number</label>
+<input class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" type="text" value="1234">
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">University / College *</label>
+<input class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" type="text" value="23323wefg">
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Student ID</label>
+<input class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary" type="text" value="332wwd">
+<p class="font-label-sm text-on-surface-variant">Optional — helps verify you're a student</p>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface block">Short bio</label>
+<textarea class="w-full border border-outline-variant rounded-xl px-4 py-3 font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:border-primary resize-none" rows="4">333dwdwdw</textarea>
+<div class="flex justify-between items-center">
+<p class="font-label-sm text-on-surface-variant">Briefly describe yourself or your store.</p>
+<p class="font-label-sm text-on-surface-variant">9 / 200</p>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant flex justify-end">
+<button class="bg-primary text-on-primary font-label-md px-8 py-3 rounded-xl hover:bg-primary-container transition-all active:scale-95 shadow-lg shadow-primary/20" type="submit">
+                Save changes
+              </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+<script>
+    // Simple micro-interactions
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mousedown', () => el.classList.add('scale-95'));
+      el.addEventListener('mouseup', () => el.classList.remove('scale-95'));
+      el.addEventListener('mouseleave', () => el.classList.remove('scale-95'));
+    });
+  </script>
+</body></html>

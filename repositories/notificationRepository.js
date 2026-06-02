@@ -1,14 +1,22 @@
 const Notification = require('../models/Notification');
 
-function buildNotificationFilter({ recipientId, filter = 'all' }) {
+function buildNotificationFilter({ recipientId, filter = 'all', q = '' }) {
   const query = { recipient: recipientId };
   if (filter === 'unread') query.isRead = false;
   else if (['order', 'message', 'rating', 'system', 'info'].includes(filter)) query.type = filter;
+  const term = String(q || '').trim();
+  if (term) {
+    query.$or = [
+      { title: { $regex: term, $options: 'i' } },
+      { message: { $regex: term, $options: 'i' } },
+      { type: { $regex: term, $options: 'i' } }
+    ];
+  }
   return query;
 }
 
-async function findNotificationsForRecipient({ recipientId, filter = 'all', page = 1, limit = 20 }) {
-  const query = buildNotificationFilter({ recipientId, filter });
+async function findNotificationsForRecipient({ recipientId, filter = 'all', page = 1, limit = 20, q = '' }) {
+  const query = buildNotificationFilter({ recipientId, filter, q });
   const skip = (page - 1) * limit;
 
   const [notifications, total, unreadCount] = await Promise.all([

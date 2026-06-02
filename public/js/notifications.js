@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.showToast = function(msg, type = 'ok') {
     const wrap = document.getElementById('toast-wrap');
     if (!wrap) return window.AppUtils?.reportClientWarn('toast-wrap not found');
+    wrap.style.zIndex = '2147483647';
 
     const t = document.createElement('div');
     t.className = 'toast ' + type;
@@ -231,6 +232,44 @@ window.showToast = function(msg, type = 'ok') {
     }, 3000);
 };
 
+function buildConfirmIconSvg(type) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2.2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+
+    if (type === 'danger') {
+        const path1 = document.createElementNS(NS, 'path');
+        path1.setAttribute('d', 'm21.7 18.6-8.5-15a1.4 1.4 0 0 0-2.4 0l-8.5 15A1.4 1.4 0 0 0 3.5 21h17a1.4 1.4 0 0 0 1.2-2.4Z');
+        const path2 = document.createElementNS(NS, 'path');
+        path2.setAttribute('d', 'M12 9v4');
+        const path3 = document.createElementNS(NS, 'path');
+        path3.setAttribute('d', 'M12 17h.01');
+        svg.appendChild(path1);
+        svg.appendChild(path2);
+        svg.appendChild(path3);
+        return svg;
+    }
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '10');
+    const path1 = document.createElementNS(NS, 'path');
+    path1.setAttribute('d', 'M12 8v4');
+    const path2 = document.createElementNS(NS, 'path');
+    path2.setAttribute('d', 'M12 16h.01');
+    svg.appendChild(circle);
+    svg.appendChild(path1);
+    svg.appendChild(path2);
+    return svg;
+}
+
 // Global Confirm logic
 window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'info' }) {
     return new Promise((resolve) => {
@@ -242,22 +281,29 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
         }
 
         const modal = document.createElement('div');
-        modal.className = 'custom-modal-overlay';
+        modal.className = 'custom-modal-overlay confirm-modal-overlay';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+
         const modalBox = document.createElement('div');
-        modalBox.className = 'custom-modal';
-        const header = document.createElement('div');
-        header.className = 'custom-modal-header';
-        const titleEl = document.createElement('span');
-        titleEl.className = 'custom-modal-title';
+        modalBox.className = `custom-modal confirm-modal-card ${type === 'danger' ? 'danger' : ''}`.trim();
+
+        const icon = document.createElement('div');
+        icon.className = 'confirm-modal-icon';
+        icon.appendChild(buildConfirmIconSvg(type));
+
+        const titleEl = document.createElement('h2');
+        titleEl.className = 'custom-modal-title confirm-modal-title';
         titleEl.textContent = title || 'Confirm';
-        header.appendChild(titleEl);
+
         const body = document.createElement('div');
-        body.className = 'custom-modal-body';
+        body.className = 'custom-modal-body confirm-modal-body';
         const p = document.createElement('p');
         p.textContent = message || '';
         body.appendChild(p);
+
         const footer = document.createElement('div');
-        footer.className = 'custom-modal-footer';
+        footer.className = 'custom-modal-footer confirm-modal-actions';
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'modal-btn-cancel';
         cancelBtn.textContent = cancelText;
@@ -266,7 +312,9 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
         confirmBtn.textContent = confirmText;
         footer.appendChild(cancelBtn);
         footer.appendChild(confirmBtn);
-        modalBox.appendChild(header);
+
+        modalBox.appendChild(icon);
+        modalBox.appendChild(titleEl);
         modalBox.appendChild(body);
         modalBox.appendChild(footer);
         modal.appendChild(modalBox);
@@ -275,7 +323,7 @@ window.showConfirm = function({ title, message, confirmText = 'Confirm', cancelT
 
         const close = (res) => {
             modal.style.opacity = '0';
-            modal.querySelector('.custom-modal').style.transform = 'scale(0.95)';
+            modal.querySelector('.custom-modal').style.transform = 'scale(0.96) translateY(8px)';
             setTimeout(() => {
                 modal.remove();
                 resolve(res);

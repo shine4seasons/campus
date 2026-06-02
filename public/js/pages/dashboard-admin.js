@@ -14,7 +14,8 @@
     if (typeof window.showConfirm === 'function') {
       return window.showConfirm({ title, message, confirmText });
     }
-    return window.confirm([title, message].filter(Boolean).join('\n\n'));
+    safeToast('Confirmation dialog is still loading. Please try again.', 'info');
+    return false;
   }
 
   function setTableMessage(tbody, colspan, message, color) {
@@ -225,7 +226,7 @@
     function createRoleBadge(user) {
       if (user.role === 'admin') return createBadge('Admin', 'badge badge-admin');
       if (user.banned) return createBadge('Banned', 'badge badge-cancelled');
-      return createBadge('Active', 'badge badge-active');
+      return createBadge('User', 'badge badge-active');
     }
 
     function updateBulkBar() {
@@ -245,15 +246,13 @@
         window.location.href = `/user/${user._id}`;
       }));
 
-      const menuItems = [];
       if (user.banned) {
-        menuItems.push({ label: 'Unban', className: 'act-btn success', onClick: () => adminToggleBan(user._id, false) });
+        wrap.appendChild(createActionButton('Unban', 'act-btn success', () => adminToggleBan(user._id, false)));
       } else if (user.role === 'admin') {
-        menuItems.push({ label: 'Revoke admin', className: 'act-btn', onClick: () => safeToast('Admin privileges revoked', 'ok') });
+        wrap.appendChild(createActionButton('Revoke admin', 'act-btn', () => safeToast('Admin privileges revoked', 'ok')));
       } else {
-        menuItems.push({ label: 'Ban user', className: 'act-btn danger', onClick: () => adminToggleBan(user._id, true) });
+        wrap.appendChild(createActionButton('Ban user', 'act-btn danger', () => adminToggleBan(user._id, true)));
       }
-      wrap.appendChild(createActionMenu('Actions', menuItems));
       return wrap;
     }
 
@@ -722,6 +721,7 @@
     window.resolveReport = resolveReport;
 
     let currentReportFilter = 'all';
+    let currentReportSearch = '';
     document.querySelectorAll('#aReports .f-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
         document.querySelectorAll('#aReports .f-pill').forEach((p) => p.classList.remove('on'));
@@ -749,6 +749,7 @@
 
       const params = new URLSearchParams({ limit: 25, page });
       if (currentReportFilter && currentReportFilter !== 'all') params.set('status', currentReportFilter);
+      if (currentReportSearch) params.set('q', currentReportSearch);
 
       try {
         const res = await fetch(`/api/admin/reports?${params}`);
@@ -779,6 +780,12 @@
     }
 
     window.loadReports = loadReports;
+
+    document.getElementById('admin-reports-search')?.addEventListener('input', (event) => {
+      currentReportSearch = event.target.value.trim();
+      selectedReports.clear();
+      loadReports(1);
+    });
     refreshAdminModerationStats();
 
     async function syncSellerRatings() {
@@ -813,6 +820,7 @@
 
   (function payoutsTable() {
     let currentPayoutFilter = '';
+    let currentPayoutSearch = '';
     let activePayoutId = null;
     let activePayoutAction = null;
 
@@ -927,6 +935,7 @@
 
       const params = new URLSearchParams({ limit: 20, page });
       if (currentPayoutFilter) params.set('status', currentPayoutFilter);
+      if (currentPayoutSearch) params.set('q', currentPayoutSearch);
 
       try {
         const res = await fetch(`/api/admin/payouts?${params}`);
@@ -960,6 +969,10 @@
     }
 
     window.loadPayouts = loadPayouts;
+    document.getElementById('admin-payouts-search')?.addEventListener('input', (event) => {
+      currentPayoutSearch = event.target.value.trim();
+      loadPayouts(1);
+    });
     if (document.getElementById('aPayouts')?.classList.contains('active')) {
       loadPayouts(1);
     }
@@ -980,20 +993,29 @@
       const modal = document.getElementById('payoutActionModal');
       const text = document.getElementById('payoutActionText');
       const noteField = document.getElementById('payoutAdminNote');
+      const noteLabel = document.getElementById('payoutAdminNoteLabel');
       const refField = document.getElementById('payoutTransferReference');
+      const refGroup = document.getElementById('payoutTransferReferenceGroup');
       const transferNoteField = document.getElementById('payoutTransferNote');
+      const transferNoteGroup = document.getElementById('payoutTransferNoteGroup');
       if (!modal || !text) return;
 
       if (noteField) noteField.value = '';
       if (refField) refField.value = '';
       if (transferNoteField) transferNoteField.value = '';
-      if (refField) refField.style.display = action === 'mark-paid' ? '' : 'none';
-      if (transferNoteField) transferNoteField.style.display = action === 'mark-paid' ? '' : 'none';
+      const needsTransferDetails = action === 'mark-paid';
+      if (refGroup) refGroup.style.display = needsTransferDetails ? 'grid' : 'none';
+      if (transferNoteGroup) transferNoteGroup.style.display = needsTransferDetails ? 'grid' : 'none';
       text.textContent = action === 'mark-paid'
-        ? 'Confirm that the bank transfer to the seller has been completed.'
+        ? 'Confirm that the bank transfer to the seller has been completed and record the transfer details.'
         : `Are you sure you want to ${action} this payout?`;
       if (noteField) {
         noteField.placeholder = action === 'reject'
+          ? 'Rejection reason'
+          : 'Admin note';
+      }
+      if (noteLabel) {
+        noteLabel.textContent = action === 'reject'
           ? 'Rejection reason'
           : 'Admin note';
       }
@@ -1093,4 +1115,26 @@
     if (actionTarget.dataset.action === 'sync-seller-ratings') window.syncSellerRatings?.();
     if (actionTarget.dataset.action === 'close-payout-modal') window.closePayoutModal?.();
   });
+
+  function bootActiveAdminTable() {
+    const config = window.AppUtils?.readJsonScript?.('dashboard-page-config') || {};
+    const configuredSection = String(config.initialSection || '').trim();
+    const activeSection = document.querySelector('.dashboard-admin .section.active')?.id || '';
+    const sectionId = configuredSection || activeSection;
+
+    if (sectionId === 'aUsers') window.loadUsers?.(1);
+    if (sectionId === 'aOrders') {
+      window.loadOrders?.(1);
+      if (typeof fetchAdminOrderCounts === 'function') fetchAdminOrderCounts();
+    }
+    if (sectionId === 'aReports') window.loadReports?.(1);
+    if (sectionId === 'aPayouts') window.loadPayouts?.(1);
+    if (sectionId === 'aProducts' && typeof fetchAdminProducts === 'function') fetchAdminProducts(1);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootActiveAdminTable, { once: true });
+  } else {
+    bootActiveAdminTable();
+  }
 })();

@@ -395,9 +395,25 @@ async function getAdminReportsDataSnapshot() {
   };
 }
 
-async function findAdminReports({ status, page = 1, limit = 20 }) {
+async function findAdminReports({ status, page = 1, limit = 20, q = '' }) {
   const filter = {};
   if (status && status !== 'all') filter.status = status;
+  const term = String(q || '').trim();
+  if (term) {
+    const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const [reporterIds, productIds, userIds] = await Promise.all([
+      User.find({ $or: [{ name: regex }, { nickname: regex }, { email: regex }] }).select('_id').lean(),
+      Product.find({ $or: [{ title: regex }, { category: regex }] }).select('_id').lean(),
+      User.find({ $or: [{ name: regex }, { nickname: regex }, { email: regex }, { university: regex }] }).select('_id').lean()
+    ]);
+    filter.$or = [
+      { reason: regex },
+      { content: regex },
+      { status: regex },
+      { reporter: { $in: reporterIds.map((item) => item._id) } },
+      { targetId: { $in: [...productIds, ...userIds].map((item) => item._id) } }
+    ];
+  }
   const normalizedPage = Number(page);
   const normalizedLimit = Number(limit);
   const skip = (normalizedPage - 1) * normalizedLimit;
@@ -471,9 +487,23 @@ async function updateSystemSettings({ platformName, serviceFee, productImageLimi
   return settings;
 }
 
-async function findAdminPayouts({ status, page = 1, limit = 25 }) {
+async function findAdminPayouts({ status, page = 1, limit = 25, q = '' }) {
   const filter = {};
   if (status && status !== 'ALL') filter.status = status;
+  const term = String(q || '').trim();
+  if (term) {
+    const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const users = await User.find({ $or: [{ name: regex }, { nickname: regex }, { email: regex }] }).select('_id').lean();
+    filter.$or = [
+      { user: { $in: users.map((item) => item._id) } },
+      { 'bankInfo.bankName': regex },
+      { 'bankInfo.accountNumber': regex },
+      { 'bankInfo.accountName': regex },
+      { transferReference: regex },
+      { transferNote: regex },
+      { adminNote: regex }
+    ];
+  }
   const normalizedPage = Number(page);
   const normalizedLimit = Number(limit);
   const skip = (normalizedPage - 1) * normalizedLimit;
