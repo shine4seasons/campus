@@ -188,7 +188,7 @@ body.mode-seller .nav-item.active::before {
   height: 36px;
   overflow: hidden;
   border-radius: var(--radius-md);
-  background: var(--primary);
+  background: var(--blue, #2563eb);
   color: var(--on-primary);
   font-size: 13px;
   font-weight: var(--fw-bold);
@@ -207,8 +207,8 @@ body.mode-seller .nav-item.active::before {
 }
 
 .sb-avatar-guest {
-  background: var(--primary-container);
-  color: var(--primary);
+  background: var(--blue-light, #dbeafe);
+  color: var(--blue, #2563eb);
 }
 
 .sb-user-info {
@@ -246,7 +246,7 @@ body.mode-seller .nav-item.active::before {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--blue, #2563eb);
 }
 
 .sb-user-caret {

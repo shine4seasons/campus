@@ -4,6 +4,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const CSS_ROOT = path.join(ROOT, 'public', 'css');
 const VIEWS_ROOT = path.join(ROOT, 'views');
+const DUPLICATE_BASELINE_PATH = path.join(ROOT, 'docs', 'css-duplicate-selector-baseline.json');
 
 let failed = 0;
 const warnings = [];
@@ -162,18 +163,93 @@ function auditHighRiskDuplicateSelectors(cssFiles) {
     });
   });
 
+  const duplicates = {};
   selectorLocations.forEach((locations, selector) => {
-    if (locations.length > 1) {
-      warn(`High-risk duplicate selector ${selector}: ${locations.join(', ')}`);
+    const files = Array.from(new Set(locations.map((location) => location.split(':')[0]))).sort();
+    if (files.length > 1) duplicates[selector] = files;
+  });
+
+  if (!fs.existsSync(DUPLICATE_BASELINE_PATH)) {
+    Object.entries(duplicates).forEach(([selector, files]) => {
+      warn(`High-risk duplicate selector ${selector}: ${files.join(', ')}`);
+    });
+    check('High-risk duplicate selector audit completed', true);
+    return;
+  }
+
+  const baseline = JSON.parse(read(DUPLICATE_BASELINE_PATH));
+  const newOrExpanded = [];
+  const improved = [];
+
+  Object.entries(duplicates).forEach(([selector, files]) => {
+    const baselineFiles = baseline[selector] || [];
+    const unexpectedFiles = files.filter((filePath) => !baselineFiles.includes(filePath));
+    if (baselineFiles.length === 0 || unexpectedFiles.length > 0) {
+      newOrExpanded.push(`${selector}: ${files.join(', ')}`);
     }
   });
 
-  check('High-risk duplicate selector audit completed', true);
+  Object.entries(baseline).forEach(([selector, files]) => {
+    const currentFiles = duplicates[selector] || [];
+    if (currentFiles.length < files.length) {
+      improved.push(`${selector}: ${files.length} -> ${currentFiles.length}`);
+    }
+  });
+
+  check(
+    'High-risk duplicate selectors do not exceed baseline',
+    newOrExpanded.length === 0,
+    newOrExpanded.join('; ')
+  );
+
+  if (improved.length > 0) {
+    console.log(`[INFO] CSS duplicate baseline improved: ${improved.join('; ')}`);
+  }
 }
 
 function auditConflictMarkers(cssFiles) {
   const conflictFiles = cssFiles.filter((filePath) => /<<<<<<<|=======|>>>>>>>/.test(read(filePath)));
   check('CSS has no merge conflict markers', conflictFiles.length === 0, conflictFiles.map(rel).join(', '));
+}
+
+function auditHeadLoadOrder() {
+  const headPath = path.join(VIEWS_ROOT, 'partials', 'head.ejs');
+  const text = read(headPath);
+  const expectedOrder = [
+    '/css/shared.css',
+    '/css/main.css',
+    '/css/base/tokens.css',
+    '/css/base/reset.css',
+    '/css/base/utilities.css',
+    '/css/components/layout.css',
+    '/css/components/topbar.css',
+    '/css/components/sidebar.css',
+    '/css/components/buttons.css',
+    '/css/components/forms.css',
+    '/css/components/cards.css',
+    '/css/components/tables.css',
+    '/css/components/badges.css',
+    '/css/components/dropdowns.css',
+    '/css/components/modals.css',
+    '/css/components/toasts.css',
+    '/css/components/product-card.css',
+  ];
+
+  let previousIndex = -1;
+  const outOfOrder = [];
+  expectedOrder.forEach((href) => {
+    const currentIndex = text.indexOf(`href="${href}"`);
+    if (currentIndex === -1) {
+      outOfOrder.push(`${href} missing`);
+      return;
+    }
+    if (currentIndex < previousIndex) {
+      outOfOrder.push(`${href} loaded out of order`);
+    }
+    previousIndex = currentIndex;
+  });
+
+  check('Shared CSS load order is stable', outOfOrder.length === 0, outOfOrder.join('; '));
 }
 
 function main() {
@@ -183,6 +259,7 @@ function main() {
   auditBalancedBraces(cssFiles);
   auditReferences(cssFiles);
   auditConflictMarkers(cssFiles);
+  auditHeadLoadOrder();
   auditHighRiskDuplicateSelectors(cssFiles);
 
   if (warnings.length > 0) {

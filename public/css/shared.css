@@ -14,8 +14,8 @@
   --green-light:   #ECFDF5;
   --red:           #EF4444;
   --red-light:     #FEF2F2;
-  --blue:          #16A34A;
-  --blue-light:    #ECFDF5;
+  --blue:          #2563EB;
+  --blue-light:    #DBEAFE;
   --text:          #0D0F1A;
   --text-2:        #4A506A;
   --text-3:        #8288A4;
@@ -1203,6 +1203,11 @@ select:not(.search-select-native):not(.sort-select-native):not(.sell-cat-native-
   box-shadow: 0 14px 30px rgba(22, 163, 74, 0.24);
 }
 
+.leaflet-control-attribution,
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
 
 
 

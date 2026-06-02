@@ -47,14 +47,15 @@
 
   function createRatingDisplay(product) {
     const cell = createElementSafe('span', { className: 'seller-product-rating' });
+    const starIcon = createElementSafe('span', {
+      className: 'seller-product-rating-star',
+      text: '★',
+      attrs: { 'aria-hidden': 'true' }
+    });
     if (product.ratingCount > 0) {
-      const icon = createElementSafe('i', {
-        attrs: { 'data-lucide': 'star' },
-        style: { width: '12px', height: '12px', display: 'inline-block', verticalAlign: 'middle', marginRight: '2px', fill: 'currentColor' }
-      });
-      cell.append(icon, document.createTextNode(` ${parseFloat(product.ratingAverage || 0).toFixed(1)} (${product.ratingCount})`));
+      cell.append(starIcon, document.createTextNode(` ${parseFloat(product.ratingAverage || 0).toFixed(1)} (${product.ratingCount})`));
     } else {
-      cell.textContent = 'No ratings';
+      cell.append(starIcon, document.createTextNode(' No ratings'));
     }
     return cell;
   }
@@ -102,7 +103,11 @@
     });
 
     const actionWrap = createElementSafe('div', { className: 'tbl-actions' });
-    const editBtn = createElementSafe('button', { className: 'act-btn primary', text: 'Edit', attrs: { type: 'button' } });
+    const editBtn = createElementSafe('button', {
+      className: 'act-btn seller-edit-btn',
+      text: 'Edit',
+      attrs: { type: 'button', 'aria-label': `Edit ${product.title || 'product'}` }
+    });
     editBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       window.location = `/sell?id=${product._id}`;
@@ -220,6 +225,17 @@
 
   window.loadProducts = loadProducts;
 
+  function setStatusFilter(nextFilter) {
+    currentFilter = nextFilter || '';
+    document.querySelectorAll('.filter-pills .f-pill').forEach((pill) => {
+      const pillFilter = pill.textContent.trim().toLowerCase();
+      pill.classList.toggle('on', currentFilter === (pillFilter === 'all' ? '' : pillFilter));
+    });
+    const statusSelect = document.getElementById('products-status-filter');
+    if (statusSelect) statusSelect.value = currentFilter;
+    loadProducts(1);
+  }
+
   window.toggleHide = async function toggleHide(productId, newStatus) {
     try {
       const res = await fetch('/api/products/' + encodeURIComponent(productId) + '/status', {
@@ -247,12 +263,13 @@
 
   document.querySelectorAll('.filter-pills .f-pill').forEach((pill) => {
     pill.addEventListener('click', () => {
-      document.querySelectorAll('.filter-pills .f-pill').forEach((p) => p.classList.remove('on'));
-      pill.classList.add('on');
       const txt = pill.textContent.trim().toLowerCase();
-      currentFilter = txt === 'all' ? '' : txt;
-      loadProducts(1);
+      setStatusFilter(txt === 'all' ? '' : txt);
     });
+  });
+
+  document.getElementById('products-status-filter')?.addEventListener('change', (event) => {
+    setStatusFilter(event.target.value);
   });
 
   document.getElementById('products-search')?.addEventListener('input', (event) => {

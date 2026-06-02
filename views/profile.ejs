@@ -344,18 +344,17 @@
           <div id="toast-wrap"></div>
 
           <!-- Report Modal -->
-          <div id="report-modal"
+          <div id="report-modal" class="profile-report-modal"
             style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;flex-direction:column;">
-            <div
+            <div class="profile-report-dialog"
               style="background:#fff;border-radius:16px;padding:24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-              <div style="font-size:20px;font-weight:800;margin-bottom:16px;">Report this item</div>
-              <div style="color:#666;font-size:16px;margin-bottom:20px;">Help us keep Campus safe by reporting
+              <div class="profile-report-title" style="font-size:20px;font-weight:800;margin-bottom:16px;">Report this profile</div>
+              <div class="profile-report-subtitle" style="color:#666;font-size:16px;margin-bottom:20px;">Help us keep Campus safe by reporting
                 inappropriate content.</div>
 
-              <div style="margin-bottom:16px;">
-                <label style="display:block;font-size:15px;font-weight:600;margin-bottom:6px;">Reason *</label>
-                <select id="report-reason"
-                  style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;font-family:inherit;">
+              <div class="profile-report-field" style="margin-bottom:16px;">
+                <label class="profile-report-label" style="display:block;font-size:15px;font-weight:600;margin-bottom:6px;">Reason *</label>
+                <select id="report-reason" class="report-reason-select">
                   <option value="">Select a reason...</option>
                   <option value="inappropriate-content">Inappropriate content</option>
                   <option value="offensive-language">Offensive language</option>
@@ -369,19 +368,19 @@
                 </select>
               </div>
 
-              <div style="margin-bottom:20px;">
-                <label style="display:block;font-size:15px;font-weight:600;margin-bottom:6px;">Description</label>
-                <textarea id="report-content" maxlength="500"
+              <div class="profile-report-field" style="margin-bottom:20px;">
+                <label class="profile-report-label" style="display:block;font-size:15px;font-weight:600;margin-bottom:6px;">Description</label>
+                <textarea id="report-content" class="profile-report-textarea" maxlength="500"
                   style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;font-family:inherit;resize:vertical;min-height:120px;"
                   placeholder="Provide details (optional)..."></textarea>
-                <div style="font-size:14px;color:#999;margin-top:4px;text-align:right;"><span
+                <div class="profile-report-count" style="font-size:14px;color:#999;margin-top:4px;text-align:right;"><span
                     id="report-char-count">0</span>/500</div>
               </div>
 
-              <div style="display:flex;gap:12px;">
-                <button data-action="close-report-modal"
+              <div class="profile-report-actions" style="display:flex;gap:12px;">
+                <button class="profile-report-btn profile-report-btn-cancel" data-action="close-report-modal"
                   style="flex:1;padding:12px;border:1px solid #ddd;background:#fff;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.18s;">Cancel</button>
-                <button data-action="submit-report"
+                <button class="profile-report-btn profile-report-btn-submit" data-action="submit-report"
                   style="flex:1;padding:12px;border:none;background:#dc2626;color:#fff;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.18s;">Submit
                   Report</button>
               </div>

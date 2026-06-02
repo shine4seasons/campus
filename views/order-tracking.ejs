@@ -13,12 +13,15 @@
     const meId = String(user._id);
     const isBuyer = order.buyer && String(order.buyer._id) === meId;
     const isSeller = order.seller && String(order.seller._id) === meId;
+    const canManageStatus = isSeller || (user && user.role === 'admin');
     const canDispute = (isBuyer || isSeller) &&
       (order.status === 'confirmed' || order.status === 'completed') &&
       (!order.dispute || order.dispute.status === 'resolved' || order.dispute.status === 'rejected');
     const hasActiveDispute = order.dispute && (order.dispute.status === 'open' || order.dispute.status === 'in_review');
     const canResumePayment = isBuyer && order.paymentMode === 'qr' && order.status === 'pending_payment' && payment && payment.status === 'PENDING';
     const contactUser = isSeller ? order.buyer : order.seller;
+    const contactLabel = isSeller ? 'buyer' : 'seller';
+    const backUrl = isSeller ? '/orders-seller' : '/orders';
     const statusKey = order.status === 'pending_payment' ? 'pending' : order.status;
     const statusBadgeClass = 'badge-' + (['pending', 'confirmed', 'completed', 'cancelled'].includes(statusKey) ? statusKey : 'pending');
     const productImage = order.product && Array.isArray(order.product.images) && order.product.images.length ? order.product.images[0] : '';
@@ -55,7 +58,7 @@
         <header class="tracking-page-header">
           <div class="tracking-page-copy">
             <div class="tracking-title-row">
-              <a href="/orders" class="back-button" aria-label="Back to orders">
+              <a href="<%= backUrl %>" class="back-button" aria-label="Back to orders">
                 <i data-lucide="arrow-left"></i>
               </a>
               <h1>Order #<%= String(order._id).substring(0, 8).toUpperCase() %></h1>
@@ -66,7 +69,7 @@
           <div class="tracking-page-actions">
             <a href="/messages?id=<%= order.conversation || '' %>" class="btn-message">
               <i data-lucide="message-circle"></i>
-              Message
+              Message <%= contactLabel %>
             </a>
             <% if (canResumePayment) { %>
               <a href="/checkout/payment/<%= payment._id %>" class="payment-resume-btn">
@@ -186,6 +189,37 @@
               </div>
             </div>
 
+            <% if (canManageStatus) { %>
+            <div class="tracking-card tracking-status-card">
+              <h2 class="tracking-card-title">Order Status</h2>
+              <p class="tracking-status-caption">Update this order directly from tracking.</p>
+              <div class="tracking-status-menu tracking-status-<%= statusKey %>" data-order-status-menu data-order-id="<%= order._id %>" data-prev-status="<%= order.status %>" data-status="<%= order.status %>" data-raw-status="<%= order.status %>">
+                <button type="button" class="tracking-status-trigger" data-action="toggle-order-status" aria-haspopup="true" aria-expanded="false">
+                  <span class="tracking-status-trigger-label"><%= order.status === 'pending_payment' ? 'Pending payment' : order.status.replace(/_/g, ' ') %></span>
+                  <span class="tracking-status-trigger-icon">▾</span>
+                </button>
+                <div class="tracking-status-panel" role="menu">
+                  <button type="button" class="tracking-status-option" data-action="select-order-status" data-status-value="pending" role="menuitem">
+                    <span class="tracking-status-option-dot"></span>
+                    <span>Pending</span>
+                  </button>
+                  <button type="button" class="tracking-status-option" data-action="select-order-status" data-status-value="confirmed" role="menuitem">
+                    <span class="tracking-status-option-dot"></span>
+                    <span>Confirmed</span>
+                  </button>
+                  <button type="button" class="tracking-status-option" data-action="select-order-status" data-status-value="completed" role="menuitem">
+                    <span class="tracking-status-option-dot"></span>
+                    <span>Completed</span>
+                  </button>
+                  <button type="button" class="tracking-status-option" data-action="select-order-status" data-status-value="cancelled" role="menuitem">
+                    <span class="tracking-status-option-dot"></span>
+                    <span>Cancelled</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
             <div class="tracking-card">
               <h2 class="tracking-card-title">Order Summary</h2>
               <div class="tracking-product-row">
@@ -284,6 +318,7 @@
     order,
     isBuyer,
     isSeller,
+    canManageStatus,
     orderId: String(order._id)
   }) %></script>
   <script defer src="/js/pages/order-tracking.js"></script>

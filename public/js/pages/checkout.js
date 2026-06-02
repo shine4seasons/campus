@@ -336,6 +336,7 @@ const checkoutConfig = window.AppUtils?.readJsonScript
 
       const map = new maplibregl.Map({
         container: 'checkout-location-map',
+        attributionControl: false,
         style: {
           version: 8,
           sources: { 'osm': { type:'raster', tiles: window.AppUtils.mapServices.rasterTiles, tileSize:256 } },

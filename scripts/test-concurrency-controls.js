@@ -47,7 +47,8 @@ function runDb001Checks() {
 
   check(
     'DB-001 idempotency key for order completion credit',
-    orderService.includes('idempotencyKey: `ORDER_COMPLETE:${updatedOrder._id}`')
+    orderService.includes('`ORDER_COMPLETE:${updatedOrder._id}`')
+      && orderService.includes('idempotencyKey: settlementKey')
   );
 
   check(

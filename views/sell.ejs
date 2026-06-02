@@ -129,6 +129,27 @@
                     <input class="sf-input" id="f-title" type="text" value="<%= ep ? ep.title : '' %>"
                       placeholder="e.g. Calculus 1 Textbook" maxlength="120">
                     <p class="field-help">Keep it specific so buyers can recognize the item at a glance.</p>
+                    <div class="ai-option ai-title-language">
+                      <label class="sf-label">Title language</label>
+                      <div class="ai-select" data-ai-select="title-language">
+                        <button type="button" class="ai-select-trigger" id="ai-title-language-trigger" aria-haspopup="listbox" aria-expanded="false">
+                          <span class="ai-select-label" id="ai-title-language-label">English</span>
+                          <i data-lucide="chevron-down" class="ai-select-chevron"></i>
+                        </button>
+                        <div class="ai-select-panel" id="ai-title-language-panel" role="listbox" aria-label="Title language">
+                          <button type="button" class="ai-select-option selected" data-value="english" data-label="English" role="option" aria-selected="true">English</button>
+                          <button type="button" class="ai-select-option" data-value="vietnamese" data-label="Vietnamese" role="option" aria-selected="false">Vietnamese</button>
+                        </div>
+                        <input type="hidden" id="ai-title-language" value="english">
+                      </div>
+                    </div>
+                    <div class="sell-ai-actions sell-ai-actions-title">
+                      <button type="button" class="btn-ai-title sell-ai-btn" id="btn-ai-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        <span>AI Title</span>
+                      </button>
+                    </div>
+                    <p class="field-help">Choose the title language here before generating.</p>
                   </div>
 
                   <div class="sell-detail-grid">
@@ -200,27 +221,72 @@
                   <div class="sf">
                     <div class="sell-desc-head">
                       <label class="sf-label sell-desc-label">Description *</label>
-                      <button type="button" class="btn-ai-describe sell-ai-btn" id="btn-ai-describe">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                        <span>AI Generate</span>
-                      </button>
                     </div>
                     <div class="ai-options">
                       <div class="ai-option">
-                        <label for="ai-tone">Tone</label>
-                        <select id="ai-tone">
-                          <option value="friendly" selected>Friendly</option>
-                          <option value="concise">Concise</option>
-                          <option value="detailed">Detailed</option>
-                          <option value="urgent">Sell fast</option>
-                        </select>
+                        <label for="ai-brand">Brand / Model</label>
+                        <input id="ai-brand" class="sf-input" type="text" placeholder="e.g. Logitech MX Master 3">
                       </div>
                       <div class="ai-option">
-                        <label for="ai-language">Language</label>
-                        <select id="ai-language">
-                          <option value="english" selected>English</option>
-                          <option value="vietnamese">Vietnamese</option>
-                        </select>
+                        <label class="sf-label">AI image source</label>
+                        <div class="ai-select" data-ai-select="image">
+                          <button type="button" class="ai-select-trigger" id="ai-image-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="ai-select-label" id="ai-image-label">Auto select best image</span>
+                            <i data-lucide="chevron-down" class="ai-select-chevron"></i>
+                          </button>
+                          <div class="ai-select-panel" id="ai-image-panel" role="listbox" aria-label="AI image source"></div>
+                          <input type="hidden" id="ai-image" value="">
+                        </div>
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-color">Color</label>
+                        <input id="ai-color" class="sf-input" type="text" placeholder="e.g. black, silver, navy">
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-accessories">Accessories included</label>
+                        <input id="ai-accessories" class="sf-input" type="text" placeholder="e.g. charger, case, box">
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-defects">Known defects</label>
+                        <input id="ai-defects" class="sf-input" type="text" placeholder="e.g. small scratch on corner">
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-reason">Reason for selling</label>
+                        <input id="ai-reason" class="sf-input" type="text" placeholder="e.g. upgraded, no longer needed">
+                      </div>
+                      <div class="ai-option">
+                        <label for="ai-extras">Extra details</label>
+                        <input id="ai-extras" class="sf-input" type="text" placeholder="Anything else AI should know">
+                      </div>
+                      <div class="ai-option">
+                        <label class="sf-label">Tone</label>
+                        <div class="ai-select" data-ai-select="tone">
+                          <button type="button" class="ai-select-trigger" id="ai-tone-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="ai-select-label" id="ai-tone-label">Friendly</span>
+                            <i data-lucide="chevron-down" class="ai-select-chevron"></i>
+                          </button>
+                          <div class="ai-select-panel" id="ai-tone-panel" role="listbox" aria-label="Tone">
+                            <button type="button" class="ai-select-option selected" data-value="friendly" data-label="Friendly" role="option" aria-selected="true">Friendly</button>
+                            <button type="button" class="ai-select-option" data-value="concise" data-label="Concise" role="option" aria-selected="false">Concise</button>
+                            <button type="button" class="ai-select-option" data-value="detailed" data-label="Detailed" role="option" aria-selected="false">Detailed</button>
+                            <button type="button" class="ai-select-option" data-value="urgent" data-label="Sell fast" role="option" aria-selected="false">Sell fast</button>
+                          </div>
+                          <input type="hidden" id="ai-tone" value="friendly">
+                        </div>
+                      </div>
+                      <div class="ai-option">
+                        <label class="sf-label">Language</label>
+                        <div class="ai-select" data-ai-select="language">
+                          <button type="button" class="ai-select-trigger" id="ai-language-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="ai-select-label" id="ai-language-label">English</span>
+                            <i data-lucide="chevron-down" class="ai-select-chevron"></i>
+                          </button>
+                          <div class="ai-select-panel" id="ai-language-panel" role="listbox" aria-label="Language">
+                            <button type="button" class="ai-select-option selected" data-value="english" data-label="English" role="option" aria-selected="true">English</button>
+                            <button type="button" class="ai-select-option" data-value="vietnamese" data-label="Vietnamese" role="option" aria-selected="false">Vietnamese</button>
+                          </div>
+                          <input type="hidden" id="ai-language" value="english">
+                        </div>
                       </div>
                       <div class="ai-option">
                         <div class="ai-length-head">
@@ -233,6 +299,12 @@
                     <textarea class="sf-textarea" id="f-desc" rows="5"
                       placeholder="Tell buyers more about your item..."><%= ep ? ep.description : '' %></textarea>
                     <p class="field-help">Include usage history, defects, included accessories, and why the buyer should trust this listing.</p>
+                    <div class="sell-ai-actions">
+                      <button type="button" class="btn-ai-describe sell-ai-btn" id="btn-ai-describe">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        <span>AI Generate</span>
+                      </button>
+                    </div>
                     <div id="ai-status" class="sell-ai-status"></div>
                   </div>
                 </div>

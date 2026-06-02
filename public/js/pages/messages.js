@@ -456,6 +456,7 @@ async function fetchMessages() {
       skel.style.display = 'none';
       cont.style.display = 'flex';
       isInitialFetch = false;
+      scrollMessagesToBottom();
     }
   }
 }
@@ -663,8 +664,7 @@ document.getElementById('chat-more-menu')?.addEventListener('click', (e) => {
     fetchInbox();
   }
   if (action === 'scroll-bottom') {
-    const container = document.getElementById('chat-messages');
-    if (container) container.scrollTop = container.scrollHeight;
+    scrollMessagesToBottom();
   }
 });
 
@@ -979,8 +979,20 @@ function renderMessages(messages) {
   });
 
   if (shouldScroll) {
-    container.scrollTop = container.scrollHeight;
     autoScroll = false;
+  }
+}
+
+function scrollMessagesToBottom() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const run = () => {
+    container.scrollTop = container.scrollHeight;
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => window.requestAnimationFrame(run));
+  } else {
+    setTimeout(run, 0);
   }
 }
 

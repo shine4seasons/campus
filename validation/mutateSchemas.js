@@ -115,14 +115,24 @@ const adminSettingsSchema = z.object({
 }).strict();
 
 const aiDescribeSchema = z.object({
-  title: z.string().trim().min(1).max(200),
+  mode: z.enum(['title', 'description']).optional(),
+  title: z.string().trim().max(200).optional(),
   category: z.string().trim().max(80).optional(),
   condition: z.string().trim().max(80).optional(),
+  brand: z.string().trim().max(120).optional(),
+  model: z.string().trim().max(120).optional(),
+  color: z.string().trim().max(80).optional(),
+  size: z.string().trim().max(80).optional(),
+  accessories: z.string().trim().max(300).optional(),
+  defects: z.string().trim().max(300).optional(),
+  reasonForSelling: z.string().trim().max(200).optional(),
   price: z.coerce.number().nonnegative().optional(),
   location: z.string().trim().max(255).optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().url().optional().or(z.literal('')).or(z.null()),
+  extraNotes: z.string().trim().max(1000).optional(),
   tone: z.string().trim().max(80).optional(),
   language: z.string().trim().max(40).optional(),
+  titleLanguage: z.string().trim().max(40).optional(),
   targetWords: z.coerce.number().int().min(60).max(140).optional(),
 }).strict();
 

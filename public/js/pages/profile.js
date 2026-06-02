@@ -1,4 +1,4 @@
-const { createElement, createSvgElement } = window.AppUtils || {};
+const { createElement: appCreateElement, createSvgElement: appCreateSvgElement } = window.AppUtils || {};
 const profileConfig = window.AppUtils?.readJsonScript
   ? window.AppUtils.readJsonScript('profile-page-config')
   : {};
@@ -7,21 +7,21 @@ lucide.createIcons();
 
 function createToastIcon(type) {
   if (type === 'err') {
-    return createSvgElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', style: 'flex-shrink:0' }, [
-      createSvgElement('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
-      createSvgElement('line', { x1: '6', y1: '6', x2: '18', y2: '18' })
+    return appCreateSvgElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', style: 'flex-shrink:0' }, [
+      appCreateSvgElement('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
+      appCreateSvgElement('line', { x1: '6', y1: '6', x2: '18', y2: '18' })
     ]);
   }
-  return createSvgElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', style: 'flex-shrink:0' }, [
-    createSvgElement('polyline', { points: '20 6 9 17 4 12' })
+  return appCreateSvgElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '14', height: '14', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', style: 'flex-shrink:0' }, [
+    appCreateSvgElement('polyline', { points: '20 6 9 17 4 12' })
   ]);
 }
 
 function setButtonLoading(button, text) {
   button.replaceChildren(
-    createSvgElement('svg', { width: '16', height: '16', viewBox: '0 0 24 24', style: 'animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;' }, [
-      createSvgElement('circle', { cx: '12', cy: '12', r: '10', fill: 'none', stroke: 'rgba(255,255,255,0.4)', 'stroke-width': '2' }),
-      createSvgElement('path', { d: 'M12 2a10 10 0 0 1 10 10', fill: 'none', stroke: '#fff', 'stroke-width': '2' })
+    appCreateSvgElement('svg', { width: '16', height: '16', viewBox: '0 0 24 24', style: 'animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;' }, [
+      appCreateSvgElement('circle', { cx: '12', cy: '12', r: '10', fill: 'none', stroke: 'rgba(255,255,255,0.4)', 'stroke-width': '2' }),
+      appCreateSvgElement('path', { d: 'M12 2a10 10 0 0 1 10 10', fill: 'none', stroke: '#fff', 'stroke-width': '2' })
     ]),
     document.createTextNode(' ' + text)
   );
@@ -29,10 +29,12 @@ function setButtonLoading(button, text) {
 
 function toast(msg, type) {
   const c = document.getElementById('toast-wrap');
+  if (!c) return;
   const t = document.createElement('div');
   t.className = 'toast ' + (type || 'ok');
-  t.style.cssText = 'display:flex;align-items:center;gap:8px;';
-  t.append(createToastIcon(type), document.createTextNode(msg));
+  const text = document.createElement('span');
+  text.textContent = msg;
+  t.append(createToastIcon(type), text);
   c.appendChild(t);
   setTimeout(() => {
     t.style.opacity = '0';
@@ -94,7 +96,7 @@ if (profileConfig.isOwnProfile) {
     } finally {
       btn.disabled = false;
       btn.replaceChildren(
-        createElement('i', { attrs: { 'data-lucide': 'check' }, style: { width: '16px', height: '16px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' } }),
+        appCreateElement('i', { attrs: { 'data-lucide': 'check' }, style: { width: '16px', height: '16px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' } }),
         document.createTextNode(' Save changes')
       );
       lucide.createIcons({ nodes: [document.getElementById('btn-save')] });

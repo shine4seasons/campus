@@ -48,6 +48,7 @@ router.get('/callback', (req, res) => {
 router.get('/products/:id', pageController.getProduct);
 router.get('/my-products', requireAuth, pageController.getMyProducts);
 router.get('/sell', requireAuth, pageController.getSellPage);
+router.get('/edit-product/:id', requireAuth, (req, res) => res.redirect(`/sell?id=${encodeURIComponent(req.params.id)}`));
 router.get('/profile', requireAuth, pageController.getProfile);
 router.get('/user/:userId', pageController.getUserProfile);
 router.get('/orders', requireAuth, pageController.getBuyerOrders);

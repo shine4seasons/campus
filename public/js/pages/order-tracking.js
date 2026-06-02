@@ -6,13 +6,21 @@
   const order = config.order;
   const isBuyer = !!config.isBuyer;
   const isSeller = !!config.isSeller;
+  const canManageStatus = !!config.canManageStatus;
   const disputeOrderId = config.orderId;
 
   if (!order) return;
 
-  const map = L.map('map').setView([21.0285, 105.8542], 13);
+  const statusToLabel = {
+    pending_payment: 'Pending payment',
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    completed: 'Completed',
+    cancelled: 'Cancelled'
+  };
+
+  const map = L.map('map', { attributionControl: false }).setView([21.0285, 105.8542], 13);
   L.tileLayer(window.AppUtils.mapServices.leafletTiles, {
-    attribution: 'OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map);
 
@@ -77,6 +85,95 @@
     buyerPos = buyerPoint || [21.0285, 105.8542];
   }
 
+  function closeStatusMenu(exceptMenu = null) {
+    document.querySelectorAll('.tracking-status-menu.open').forEach((menu) => {
+      if (exceptMenu && menu === exceptMenu) return;
+      menu.classList.remove('open');
+      const trigger = menu.querySelector('.tracking-status-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function normalizeStatus(status) {
+    if (status === 'pending_payment') return 'pending';
+    if (['pending', 'confirmed', 'completed', 'cancelled'].includes(status)) return status;
+    return 'pending';
+  }
+
+  function formatStatusLabel(status) {
+    return statusToLabel[status] || (String(status || '').replace(/_/g, ' ') || 'pending');
+  }
+
+  function syncStatusMenu(menu, status, labelStatus = status) {
+    if (!menu) return;
+    const nextStatus = normalizeStatus(status);
+    ['status-pending', 'status-confirmed', 'status-completed', 'status-cancelled'].forEach((className) => {
+      menu.classList.remove(className);
+    });
+    menu.classList.add(`status-${nextStatus}`);
+    menu.dataset.status = nextStatus;
+
+    const label = menu.querySelector('.tracking-status-trigger-label');
+    if (label) label.textContent = formatStatusLabel(labelStatus);
+
+    menu.querySelectorAll('.tracking-status-option').forEach((option) => {
+      const selected = option.dataset.statusValue === nextStatus;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+  }
+
+  async function updateOrderStatus(status, menu) {
+    const orderId = menu?.dataset.orderId || disputeOrderId;
+    const original = normalizeStatus(menu?.dataset.prevStatus || menu?.dataset.status || order.status || 'pending');
+    if (!menu || status === original) return;
+
+    const needsConfirm = status === 'cancelled' || status === 'completed';
+    if (needsConfirm && typeof showConfirm === 'function') {
+      const confirmed = await showConfirm({
+        title: `Mark order as ${status}?`,
+        message: status === 'cancelled'
+          ? 'This will change the seller workflow and buyer expectation.'
+          : 'Confirm that the order has been fully completed before updating the status.',
+        confirmText: `Mark ${status}`,
+        type: status === 'cancelled' ? 'danger' : 'info'
+      });
+      if (!confirmed) {
+        syncStatusMenu(menu, original, original);
+        return;
+      }
+    }
+
+    menu.classList.add('is-busy');
+    menu.querySelectorAll('button').forEach((button) => {
+      button.disabled = true;
+    });
+
+    try {
+      const response = await fetch('/api/orders/' + encodeURIComponent(orderId) + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status })
+      });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json || !json.success) {
+        throw new Error(json?.message || 'Failed to update order status');
+      }
+
+      showToast('Order updated to ' + status, 'ok');
+      window.location.reload();
+    } catch (error) {
+      syncStatusMenu(menu, original, original);
+      showToast(error.message || 'Failed to update order', 'err');
+    } finally {
+      menu.classList.remove('is-busy');
+      menu.querySelectorAll('button').forEach((button) => {
+        button.disabled = false;
+      });
+    }
+  }
+
   function calcDist(pointA, pointB) {
     const earthRadiusKm = 6371;
     const dLat = (pointB[0] - pointA[0]) * Math.PI / 180;
@@ -134,6 +231,13 @@
 
     drawRoute();
   })();
+
+  if (canManageStatus) {
+    const statusMenu = document.querySelector('.tracking-status-menu[data-order-status-menu]');
+    if (statusMenu) {
+      syncStatusMenu(statusMenu, statusMenu.dataset.status || order.status || 'pending', statusMenu.dataset.rawStatus || order.status || 'pending');
+    }
+  }
 
   let disputeEvidenceUrls = [];
   const backdrop = document.getElementById('dispute-modal-backdrop');
@@ -249,8 +353,35 @@
     const target = event.target.closest('[data-action]');
     if (!target) return;
 
+    if (target.dataset.action === 'toggle-order-status') {
+      const menu = target.closest('.tracking-status-menu');
+      if (!menu || menu.classList.contains('is-busy')) return;
+      const nextOpen = !menu.classList.contains('open');
+      closeStatusMenu(nextOpen ? menu : null);
+      menu.classList.toggle('open', nextOpen);
+      target.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      return;
+    }
+
+    if (target.dataset.action === 'select-order-status') {
+      const menu = target.closest('.tracking-status-menu');
+      if (!menu || menu.classList.contains('is-busy')) return;
+      const nextStatus = target.dataset.statusValue;
+      if (!nextStatus) return;
+      closeStatusMenu();
+      syncStatusMenu(menu, nextStatus, nextStatus);
+      updateOrderStatus(nextStatus, menu);
+      return;
+    }
+
     if (target.dataset.action === 'open-dispute-modal') window.openDisputeModal();
     if (target.dataset.action === 'close-dispute-modal') window.closeDisputeModal();
     if (target.dataset.action === 'submit-dispute') window.submitDispute();
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!event.target.closest('.tracking-status-menu')) {
+      closeStatusMenu();
+    }
   });
 })();

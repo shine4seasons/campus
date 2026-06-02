@@ -350,6 +350,16 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
 
         const amount = updatedOrder.priceSnapshot || 0;
         if (amount > 0) {
+          const settlementKey = `ORDER_COMPLETE:${updatedOrder._id}`;
+          const existingSettlement = await walletRepository.findTransactionByIdempotencyKey(settlementKey, session);
+          if (existingSettlement) {
+            logger.info('orders.wallet_settlement_skipped', {
+              orderId: String(updatedOrder._id),
+              idempotencyKey: settlementKey
+            });
+            return;
+          }
+
           const walletInc = {
             availableBalance: amount,
             totalSales: amount
@@ -374,7 +384,7 @@ exports.updateOrderStatus = async function updateOrderStatus({ actor, orderId, s
             status: 'COMPLETED',
             referenceId: updatedOrder._id,
             referenceType: 'Order',
-            idempotencyKey: `ORDER_COMPLETE:${updatedOrder._id}`
+            idempotencyKey: settlementKey
           }, session);
         }
       });

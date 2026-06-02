@@ -6,6 +6,7 @@ const { validate, validateParams, validateQuery } = require('../middleware/valid
 const {
   idParamSchema,
   productFeedQuerySchema,
+  productSellerQuerySchema,
   orderListQuerySchema,
   ratingEntityQuerySchema,
 } = require('../validation/requestSchemas');
@@ -77,6 +78,14 @@ check('VAL-201 query validator coerces pagination', () => {
   assert.strictEqual(req.query.page, 2);
   assert.strictEqual(req.query.limit, 12);
   assert.strictEqual(req.query.minPrice, 1000);
+});
+
+check('VAL-201 seller product query accepts pagination', () => {
+  const req = { query: { page: '1', limit: '12' } };
+  const result = runMiddleware(validateQuery(productSellerQuerySchema), req);
+  assert.strictEqual(result.nextCalled, true);
+  assert.strictEqual(req.query.page, 1);
+  assert.strictEqual(req.query.limit, 12);
 });
 
 check('VAL-201 query validator rejects invalid role', () => {

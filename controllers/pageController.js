@@ -142,7 +142,7 @@ exports.getSellPage = async (req, res, next) => {
         editProduct = product;
       }
     } catch (error) {
-      logger.error('page.edit_product_fetch_failed', { err: error.message, stack: error.stack, productId });
+      logger.error('page.edit_product_fetch_failed', { err: error.message, stack: error.stack, productId: editId });
     }
   }
 

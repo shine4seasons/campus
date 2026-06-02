@@ -473,8 +473,8 @@
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--primary-light)',
-            color: 'var(--primary)',
+            background: 'var(--blue-light)',
+            color: 'var(--blue)',
             fontSize: '10px',
             fontWeight: '800'
           },
@@ -483,7 +483,7 @@
 
     const ratingNode = product.ratingCount > 0
       ? createElement('span', { className: 'product-rating-row', text: `★ ${product.ratingAverage.toFixed(1)} (${product.ratingCount})` })
-      : createElement('span', { className: 'product-rating-row', style: { color: 'var(--primary)', fontWeight: '600' }, text: 'New product' });
+      : createElement('span', { className: 'product-rating-row', style: { color: 'var(--blue)', fontWeight: '600' }, text: 'New product' });
 
     return createElement('div', {
       className: 'product-card',

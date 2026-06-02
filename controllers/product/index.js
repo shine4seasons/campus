@@ -166,11 +166,22 @@ const deleteProduct = async (req, res, next) => {
 
 const getMyProducts = async (req, res, next) => {
   try {
-    const products = await productRepository.findProductsBySeller({
+    const result = await productRepository.findProductsBySeller({
       sellerId: req.user._id,
-      status: req.query.status
+      status: req.query.status,
+      page: req.query.page,
+      limit: req.query.limit
     });
-    res.json({ success: true, data: products });
+    res.json({
+      success: true,
+      data: result.products,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      }
+    });
   } catch (err) {
     return next(err);
   }

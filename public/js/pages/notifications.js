@@ -8,7 +8,7 @@
 
   const TYPE_COLORS = {
     order: { color: '#1B5EFF', bg: '#EBF0FF', icon: 'box' },
-    message: { color: '#10B981', bg: '#D1FAE5', icon: 'message' },
+    message: { color: '#2563EB', bg: '#DBEAFE', icon: 'message' },
     rating: { color: '#F59E0B', bg: '#FEF3C7', icon: 'star' },
     system: { color: '#7C3AED', bg: '#F3E8FF', icon: 'bell' },
     info: { color: '#6B7280', bg: '#F3F4F6', icon: 'info' }

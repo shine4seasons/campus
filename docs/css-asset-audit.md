@@ -30,10 +30,11 @@ The audit fails only on objective breakages:
 5. Merge conflict markers appear in CSS.
 
 Duplicate high-risk selectors are reported as warnings, not failures, because removing them can change the rendered cascade.
+The current duplicate selector map is frozen in `docs/css-duplicate-selector-baseline.json`; new or expanded duplicate selector groups fail the audit.
 
 ## Known Non-Blocking Cleanup Targets
 
-These selectors are intentionally left unchanged until visual regression screenshots are available:
+These selectors are intentionally left unchanged until visual regression screenshots are available. They are tracked in `docs/css-duplicate-selector-baseline.json`.
 
 1. `.container`
 2. `.btn`, `.btn-*`
@@ -52,3 +53,4 @@ Preferred sequence:
 2. Capture before/after screenshots for affected pages.
 3. Move one component family at a time from `shared.css`/`main.css` into `components/*`.
 4. Delete old declarations only after screenshots confirm no layout or appearance drift.
+5. Reduce `docs/css-duplicate-selector-baseline.json` after the duplicate group is safely removed.

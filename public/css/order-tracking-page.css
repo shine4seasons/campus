@@ -151,6 +151,17 @@
   margin-bottom: 24px;
 }
 
+.tracking-status-card .tracking-card-title {
+  margin-bottom: 10px;
+}
+
+.tracking-status-caption {
+  margin: 0 0 14px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .status-timeline {
   position: relative;
   display: grid;
@@ -366,6 +377,130 @@
   white-space: nowrap;
 }
 
+.tracking-status-menu {
+  position: relative;
+  display: inline-flex;
+  min-width: 220px;
+}
+
+.tracking-status-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.tracking-status-menu:hover .tracking-status-trigger {
+  border-color: var(--primary-fixed-dim);
+}
+
+.tracking-status-trigger-icon {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+}
+
+.tracking-status-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: none;
+  width: 100%;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  background: var(--surface-container-lowest);
+  box-shadow: 0 16px 36px rgba(19, 27, 46, 0.16);
+}
+
+.tracking-status-menu.open .tracking-status-panel {
+  display: grid;
+  gap: 4px;
+}
+
+.tracking-status-menu.is-busy {
+  opacity: 0.75;
+}
+
+.tracking-status-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tracking-status-option:hover,
+.tracking-status-option.active {
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+}
+
+.tracking-status-option-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--outline);
+}
+
+.tracking-status-option[data-status-value="pending"] .tracking-status-option-dot {
+  background: var(--amber);
+}
+
+.tracking-status-option[data-status-value="confirmed"] .tracking-status-option-dot {
+  background: var(--primary);
+}
+
+.tracking-status-option[data-status-value="completed"] .tracking-status-option-dot {
+  background: var(--green);
+}
+
+.tracking-status-option[data-status-value="cancelled"] .tracking-status-option-dot {
+  background: var(--red);
+}
+
+.tracking-status-menu.status-pending .tracking-status-trigger {
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+.tracking-status-menu.status-confirmed .tracking-status-trigger {
+  border-color: var(--primary-fixed-dim);
+  color: var(--primary);
+}
+
+.tracking-status-menu.status-completed .tracking-status-trigger {
+  border-color: #bbf7d0;
+  color: #047857;
+}
+
+.tracking-status-menu.status-cancelled .tracking-status-trigger {
+  border-color: var(--error-container);
+  color: var(--error);
+}
+
 .tracking-summary-list {
   display: flex;
   flex-direction: column;
@@ -424,6 +559,10 @@
 .btn-message:hover {
   background: var(--surface-container);
   color: var(--primary);
+}
+
+.btn-message {
+  min-width: 0;
 }
 
 .payment-resume-btn {
@@ -773,5 +912,10 @@
 
   .tracking-product-row > strong {
     grid-column: 2;
+  }
+
+  .tracking-status-menu {
+    min-width: 0;
+    width: 100%;
   }
 }

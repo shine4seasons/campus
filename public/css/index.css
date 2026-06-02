@@ -33,10 +33,10 @@ body.index-page .nav-item.active::before {
   margin-left: var(--sb-w);
   padding: 84px 0 96px;
   overflow: visible;
-  background-color: var(--primary);
+  background-color: var(--inverse-surface, #131b2e);
   background-image:
-    radial-gradient(circle at 20% 35%, rgba(34, 197, 94, 0.42) 0%, transparent 40%),
-    radial-gradient(circle at 75% 60%, rgba(180, 197, 255, 0.24) 0%, transparent 45%);
+    radial-gradient(circle at 12% 0%, rgba(180, 197, 255, 0.24), transparent 30%),
+    linear-gradient(135deg, var(--inverse-surface, #283044), #131b2e);
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -852,7 +852,7 @@ body.has-sidebar > .hero .hero-content {
 }
 
 .product-price {
-  color: var(--primary);
+  color: var(--blue, #2563eb);
   font-size: 18px;
   font-weight: 800;
 }
@@ -893,11 +893,20 @@ body.has-sidebar > .hero .hero-content {
 }
 
 .product-category {
-  color: var(--primary);
+  color: var(--blue, #2563eb);
 }
 
 .product-meta-dot {
   color: var(--outline);
+}
+
+.product-rating-row {
+  color: var(--blue, #2563eb);
+}
+
+.product-rating-row svg,
+.product-rating-row i {
+  color: inherit;
 }
 
 .product-condition {
@@ -924,7 +933,7 @@ body.has-sidebar > .hero .hero-content {
   overflow: hidden;
   border-radius: 50%;
   background: var(--primary-fixed, #dbe1ff);
-  color: var(--primary);
+  color: var(--blue, #2563eb);
 }
 
 .seller-name {

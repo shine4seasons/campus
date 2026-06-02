@@ -40,6 +40,8 @@ const productFeedQuerySchema = z.object({
 
 const productSellerQuerySchema = z.object({
   status: z.enum(Object.values(PRODUCT_STATUS)).optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(12),
 }).strict();
 
 const favoriteQuerySchema = z.object({

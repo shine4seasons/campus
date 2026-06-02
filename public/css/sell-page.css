@@ -260,6 +260,18 @@ body.seller-post-view .content {
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
+.sf-select,
+.ai-option select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 42px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--on-surface-variant) 50%), linear-gradient(135deg, var(--on-surface-variant) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
 .sf-input,
 .sf-select,
 .category-trigger {
@@ -408,7 +420,7 @@ body.seller-post-view .content {
 
 .sell-image-actions {
   display: flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .sell-image-action,
@@ -416,12 +428,17 @@ body.seller-post-view .content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: 0;
   border-radius: var(--radius-full);
-  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(19, 27, 46, 0.12);
   cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  font-family: inherit;
 }
 
 .sell-image-action {
@@ -429,9 +446,27 @@ body.seller-post-view .content {
   color: var(--on-surface);
 }
 
+.sell-image-action i,
+.sell-image-action svg,
+.remove-image-btn i,
+.remove-image-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+  flex: 0 0 auto;
+  display: block;
+}
+
 .remove-image-btn {
-  background: var(--error);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  background: rgba(190, 18, 60, 0.96);
   color: var(--on-error);
+  box-shadow: 0 4px 10px rgba(19, 27, 46, 0.18);
 }
 
 .cond-grid {
@@ -561,11 +596,11 @@ body.seller-post-view .content {
   inset: calc(100% + 8px) 0 auto;
   z-index: 120;
   display: none;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid var(--outline-variant);
   border-radius: 14px;
   background: var(--surface-container-lowest);
-  box-shadow: 0 16px 36px rgba(19, 27, 46, 0.14);
+  box-shadow: 0 18px 40px rgba(19, 27, 46, 0.16);
 }
 
 .category-combobox.open .category-panel {
@@ -596,9 +631,10 @@ body.seller-post-view .content {
 
 .category-options {
   display: grid;
-  gap: 6px;
-  max-height: 260px;
+  gap: 8px;
+  max-height: 280px;
   overflow-y: auto;
+  padding-right: 2px;
 }
 
 .category-option {
@@ -615,6 +651,7 @@ body.seller-post-view .content {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
 
 .category-option:hover,
@@ -622,6 +659,10 @@ body.seller-post-view .content {
 .category-option.selected {
   border-color: var(--primary-fixed-dim);
   background: var(--surface-container-low);
+}
+
+.category-option.active {
+  transform: translateX(1px);
 }
 
 .category-empty {
@@ -678,6 +719,12 @@ body.seller-post-view .content {
   cursor: pointer;
 }
 
+.sell-ai-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
 .sell-ai-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
@@ -710,8 +757,102 @@ body.seller-post-view .content {
 
 .ai-option select {
   min-height: 40px;
-  padding: 0 10px;
+  padding: 0 36px 0 10px;
   font-size: 13px;
+}
+
+.ai-select {
+  position: relative;
+}
+
+.ai-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ai-select-trigger:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 83, 219, 0.14);
+}
+
+.ai-select-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--on-surface);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-select-chevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--on-surface-variant);
+  transition: transform 160ms ease;
+}
+
+.ai-select.open .ai-select-chevron {
+  transform: rotate(180deg);
+}
+
+.ai-select-panel {
+  position: absolute;
+  inset: calc(100% + 6px) 0 auto;
+  z-index: 90;
+  display: none;
+  padding: 8px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 14px;
+  background: var(--surface-container-lowest);
+  box-shadow: 0 18px 40px rgba(19, 27, 46, 0.16);
+}
+
+.ai-select.open .ai-select-panel {
+  display: grid;
+  gap: 6px;
+}
+
+.ai-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--on-surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.ai-select-option:hover,
+.ai-select-option.selected {
+  border-color: var(--primary-fixed-dim);
+  background: var(--surface-container-low);
+}
+
+.ai-select-option.selected {
+  transform: translateX(1px);
 }
 
 .ai-length-value {
@@ -743,15 +884,16 @@ body.seller-post-view .content {
   max-height: 220px;
   overflow-y: auto;
   border: 1px solid var(--outline-variant);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface-container-lowest);
-  box-shadow: 0 16px 36px rgba(19, 27, 46, 0.14);
+  box-shadow: 0 18px 40px rgba(19, 27, 46, 0.16);
 }
 
 .dropdown-item {
-  padding: 11px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--outline-variant);
   cursor: pointer;
+  transition: background-color 140ms ease;
 }
 
 .dropdown-item:last-child {
@@ -764,7 +906,7 @@ body.seller-post-view .content {
 
 .dropdown-name {
   color: var(--on-surface);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -772,6 +914,17 @@ body.seller-post-view .content {
   margin-top: 2px;
   color: var(--on-surface-variant);
   font-size: 12px;
+}
+
+.sf-select option,
+.ai-option select option {
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+}
+
+.sf-select:focus,
+.ai-option select:focus {
+  background-color: var(--surface-container-lowest);
 }
 
 .sell-location-summary {

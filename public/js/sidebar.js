@@ -176,7 +176,8 @@
       try { url = new URL(hrefAttr, window.location.origin); } catch { return; }
       const path = url.pathname;
       const mode = getMode();
-      if (mode === 'seller' && (/^\/orders(\/|$)/.test(path) && path !== '/orders-seller')) {
+      const isSellerOrderTracking = /^\/orders\/tracking(\/|$)/.test(path);
+      if (mode === 'seller' && (/^\/orders(\/|$)/.test(path) && path !== '/orders-seller' && !isSellerOrderTracking)) {
         e.preventDefault();
         showSwitchModal(hrefAttr);
       }

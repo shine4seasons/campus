@@ -37,6 +37,11 @@ function findTransactionsByWallet(walletId, limit = 50) {
     .lean();
 }
 
+function findTransactionByIdempotencyKey(idempotencyKey, session = null) {
+  const query = WalletTransaction.findOne({ idempotencyKey });
+  return session ? query.session(session) : query;
+}
+
 function findPayoutRequestsByUser(userId, limit = 30) {
   return PayoutRequest.find({ user: userId })
     .sort('-createdAt')
@@ -70,6 +75,7 @@ module.exports = {
   createWalletTransactions,
   upsertWalletForUser,
   findTransactionsByWallet,
+  findTransactionByIdempotencyKey,
   findPayoutRequestsByUser,
   getPayoutStatsByUser
 };

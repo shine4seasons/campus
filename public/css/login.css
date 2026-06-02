@@ -45,7 +45,7 @@ body.sidebar-collapsed .page {
   inset: 0;
   opacity: 0.26;
   pointer-events: none;
-  background-image: radial-gradient(var(--primary-fixed, #dbe1ff) 1px, transparent 1px);
+  background-image: radial-gradient(var(--blue-light, #dbeafe) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -56,7 +56,7 @@ body.sidebar-collapsed .page {
 
 .left-headline {
   margin-bottom: 28px;
-  color: var(--primary);
+  color: var(--blue, #2563eb);
   font-family: var(--font-heading);
   font-size: clamp(32px, 4vw, 48px);
   font-weight: 700;
@@ -98,8 +98,8 @@ body.sidebar-collapsed .page {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  background: var(--primary-container);
-  color: var(--on-primary-container);
+  background: var(--blue-light, #dbeafe);
+  color: var(--blue, #2563eb);
 }
 
 .feature-icon svg,
@@ -205,15 +205,15 @@ body.sidebar-collapsed .page {
 }
 
 .step-dot.active {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--blue, #2563eb);
+  border-color: var(--blue, #2563eb);
   color: var(--on-primary);
 }
 
 .step-dot.done {
-  background: var(--green-light);
-  border-color: var(--green);
-  color: var(--green);
+  background: var(--blue-light, #dbeafe);
+  border-color: var(--blue, #2563eb);
+  color: var(--blue, #2563eb);
 }
 
 .step-line {
@@ -224,12 +224,12 @@ body.sidebar-collapsed .page {
 }
 
 .step-line.done {
-  background: var(--green);
+  background: var(--blue, #2563eb);
 }
 
 .card-eyebrow {
   margin-bottom: 16px;
-  color: var(--primary);
+  color: var(--blue, #2563eb);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -286,7 +286,7 @@ body.sidebar-collapsed .page {
 }
 
 .btn-google:hover {
-  border-color: var(--primary-container);
+  border-color: var(--blue, #2563eb);
   background: var(--surface-container-low);
   transform: translateY(-1px);
 }
@@ -344,7 +344,7 @@ body.sidebar-collapsed .page {
 
 .card-footer a:hover,
 .skip-link:hover {
-  color: var(--primary);
+  color: var(--blue, #2563eb);
 }
 
 .form-row {
@@ -384,8 +384,8 @@ body.sidebar-collapsed .page {
 }
 
 .form-input:focus {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-focus);
+  border-color: var(--blue, #2563eb);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
 }
 
 .form-input.has-error {
@@ -417,10 +417,10 @@ body.sidebar-collapsed .page {
   width: 52px;
   height: 52px;
   overflow: hidden;
-  border: 2px solid var(--primary-fixed-dim, #b4c5ff);
+  border: 2px solid var(--blue, #2563eb);
   border-radius: 50%;
-  background: var(--primary-fixed, #dbe1ff);
-  color: var(--primary);
+  background: var(--blue-light, #dbeafe);
+  color: var(--blue, #2563eb);
   font-size: 20px;
   font-weight: 800;
 }
@@ -457,16 +457,16 @@ body.sidebar-collapsed .page {
   padding: 14px;
   border: 0;
   border-radius: var(--radius-md);
-  background: var(--primary);
+  background: var(--blue, #2563eb);
   color: var(--on-primary);
   cursor: pointer;
   font-size: 15px;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.18);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
 }
 
 .btn-submit:hover {
-  background: var(--primary-dark);
+  background: #1d4ed8;
   transform: translateY(-1px);
 }
 
@@ -518,7 +518,7 @@ body.sidebar-collapsed .page {
 
 .success-icon {
   margin-bottom: 16px;
-  color: var(--primary);
+  color: var(--blue, #2563eb);
 }
 
 .success-icon svg,

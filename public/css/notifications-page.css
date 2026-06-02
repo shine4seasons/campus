@@ -50,7 +50,7 @@ body.notifications-page {
   min-height: 24px;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: var(--primary-container);
+  background: var(--blue, #2563eb);
   color: var(--on-primary);
   font-family: var(--font-body);
   font-size: 12px;
@@ -162,14 +162,14 @@ body.notifications-page {
 }
 
 .notif-tab:hover:not(.active) {
-  border-color: rgba(5, 150, 105, 0.55);
-  background: #ecfdf5;
-  color: #047857;
+  border-color: rgba(37, 99, 235, 0.55);
+  background: #eff6ff;
+  color: var(--blue, #2563eb);
 }
 
 .notif-tab.active {
-  border-color: #059669;
-  background: #059669;
+  border-color: var(--blue, #2563eb);
+  background: var(--blue, #2563eb);
   color: #ffffff !important;
 }
 
@@ -239,7 +239,7 @@ body.notifications-page {
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: var(--primary);
+  background: var(--blue, #2563eb);
 }
 
 .notif-unread-dot {
@@ -249,7 +249,7 @@ body.notifications-page {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: var(--primary);
+  background: var(--blue, #2563eb);
 }
 
 .notif-icon {
@@ -323,7 +323,7 @@ body.notifications-page {
 }
 
 .notif-item.unread .notif-time {
-  color: var(--primary);
+  color: var(--blue, #2563eb);
   font-weight: 600;
 }
 
@@ -338,7 +338,7 @@ body.notifications-page {
   display: inline-flex;
   align-items: center;
   margin-top: 10px;
-  color: var(--primary);
+  color: var(--blue, #2563eb);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -441,7 +441,7 @@ body.notifications-page {
 }
 
 .notif-toast[data-type="success"] {
-  background: #0f8f5f;
+  background: #1d4ed8;
   color: #fff;
 }
 

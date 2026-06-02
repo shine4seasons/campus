@@ -1,5 +1,5 @@
 (function () {
-  const { createElement, readJsonScript } = window.AppUtils || {};
+  const { createElement, createSvgElement, readJsonScript } = window.AppUtils || {};
   const config = typeof readJsonScript === 'function' ? readJsonScript('sell-page-config') : {};
   const submitUrl = config.submitUrl || '/api/products';
   const submitMethod = config.submitMethod || 'POST';
@@ -148,6 +148,42 @@
     flowSteps.forEach((step, index) => step.classList.toggle('active', index === stepIndex));
   }
 
+  function getScrollActiveStepIndex() {
+    if (!stepCards.length) return 0;
+
+    const headerOffset = 140;
+    const probeLine = Math.max(0, headerOffset + 140);
+    let fallbackIndex = 0;
+
+    for (let index = 0; index < stepCards.length; index += 1) {
+      const rect = stepCards[index].getBoundingClientRect();
+      if (rect.top <= probeLine && rect.bottom > headerOffset) {
+        return index;
+      }
+      if (rect.top > probeLine) {
+        fallbackIndex = index;
+        break;
+      }
+      fallbackIndex = index;
+    }
+
+    return fallbackIndex;
+  }
+
+  function syncActiveStepFromScroll() {
+    const nextIndex = getScrollActiveStepIndex();
+    setActiveStep(nextIndex);
+  }
+
+  let scrollStepRaf = 0;
+  function scheduleScrollStepSync() {
+    if (scrollStepRaf) return;
+    scrollStepRaf = window.requestAnimationFrame(() => {
+      scrollStepRaf = 0;
+      syncActiveStepFromScroll();
+    });
+  }
+
   function syncStepState(preferredStep) {
     const completion = getStepCompletion();
     const firstIncomplete = completion.findIndex((step) => !step);
@@ -172,6 +208,109 @@
     uploadStatus.textContent = message || (uploadedImages.length ? 'Cover photo ready' : 'Ready to upload');
   }
 
+  function closeAiSelects(except = null) {
+    document.querySelectorAll('.ai-select.open').forEach((container) => {
+      if (container === except) return;
+      container.classList.remove('open');
+      const trigger = container.querySelector('.ai-select-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function selectAiOption(container, option) {
+    if (!container || !option) return;
+    const hidden = container.querySelector('input[type="hidden"]');
+    const labelEl = container.querySelector('.ai-select-label');
+    const options = Array.from(container.querySelectorAll('.ai-select-option[data-value]'));
+    const value = option.dataset.value || '';
+    const label = option.dataset.label || option.textContent.trim();
+
+    if (hidden) hidden.value = value;
+    if (labelEl) labelEl.textContent = label;
+    options.forEach((candidate) => {
+      const selected = candidate === option;
+      candidate.classList.toggle('selected', selected);
+      candidate.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+
+    container.classList.remove('open');
+    const trigger = container.querySelector('.ai-select-trigger');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    markDirty(true);
+    saveDraft();
+    validateForm();
+  }
+
+  function initAiSelects() {
+    document.querySelectorAll('.ai-select').forEach((container) => {
+      const trigger = container.querySelector('.ai-select-trigger');
+      const panel = container.querySelector('.ai-select-panel');
+      const hidden = container.querySelector('input[type="hidden"]');
+      const labelEl = container.querySelector('.ai-select-label');
+      if (!trigger || !panel || !hidden || !labelEl) return;
+
+      const initialOption = panel.querySelector(`.ai-select-option[data-value="${CSS.escape(hidden.value || '')}"]`);
+      if (initialOption) {
+        labelEl.textContent = initialOption.dataset.label || initialOption.textContent.trim();
+        panel.querySelectorAll('.ai-select-option').forEach((option) => {
+          const selected = option === initialOption;
+          option.classList.toggle('selected', selected);
+          option.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+      }
+
+      trigger.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = container.classList.contains('open');
+        closeAiSelects(isOpen ? null : container);
+        container.classList.toggle('open', !isOpen);
+        trigger.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+      });
+
+      panel.addEventListener('click', (event) => {
+        const option = event.target.closest('.ai-select-option[data-value]');
+        if (!option) return;
+        selectAiOption(container, option);
+      });
+    });
+
+    document.addEventListener('click', () => closeAiSelects());
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeAiSelects();
+    });
+  }
+
+  function refreshAiImageOptions() {
+    const container = document.querySelector('.ai-select[data-ai-select="image"]');
+    if (!container) return;
+
+    const panel = container.querySelector('#ai-image-panel');
+    const hidden = container.querySelector('#ai-image');
+    const labelEl = container.querySelector('#ai-image-label');
+    if (!panel || !hidden || !labelEl) return;
+
+    const currentValue = hidden.value || '';
+    const options = [
+      createElement('button', {
+        attrs: { type: 'button', role: 'option', 'aria-selected': String(currentValue === '') },
+        className: `ai-select-option${currentValue === '' ? ' selected' : ''}`,
+        dataset: { value: '', label: 'Auto select best image' },
+        text: 'Auto select best image'
+      }),
+      ...uploadedImages.map((url, index) => createElement('button', {
+        attrs: { type: 'button', role: 'option', 'aria-selected': String(currentValue === url) },
+        className: `ai-select-option${currentValue === url ? ' selected' : ''}`,
+        dataset: { value: url, label: index === 0 ? `Image ${index + 1} (cover)` : `Image ${index + 1}` },
+        text: index === 0 ? `Image ${index + 1} (cover)` : `Image ${index + 1}`
+      }))
+    ];
+
+    panel.replaceChildren(...options);
+    const selected = options.find((option) => option.dataset.value === currentValue) || options[0];
+    hidden.value = selected?.dataset.value || '';
+    labelEl.textContent = selected?.dataset.label || selected?.textContent?.trim() || 'Auto select best image';
+  }
+
   function updateLocationSummary() {
     if (!locationSummary) return;
     const address = document.getElementById('f-location')?.value.trim();
@@ -188,14 +327,14 @@
     const hasExisting = !!latInput.value;
     const map = new maplibregl.Map({
       container: 'location-map',
+      attributionControl: false,
       style: {
         version: 8,
         sources: {
           osm: {
             type: 'raster',
             tiles: window.AppUtils.mapServices.rasterTiles,
-            tileSize: 256,
-            attribution: 'OpenStreetMap contributors'
+            tileSize: 256
           }
         },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
@@ -454,6 +593,7 @@
 
     lengthInput.addEventListener('input', syncLength);
     syncLength();
+    initAiSelects();
   }
 
   function setupImageUpload() {
@@ -532,6 +672,27 @@
       className: 'sell-image-tile',
       children: [
         createElement('img', { attrs: { src: url, alt: `image ${index + 1}` } }),
+        createElement('button', {
+          attrs: { type: 'button', title: 'Remove image' },
+          className: 'remove-image-btn',
+          dataset: { index },
+          children: [
+            createSvgElement('svg', {
+              width: '16',
+              height: '16',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              stroke: 'currentColor',
+              'stroke-width': '2.8',
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round',
+              'aria-hidden': 'true'
+            }, [
+              createSvgElement('path', { d: 'M18 6L6 18' }),
+              createSvgElement('path', { d: 'M6 6l12 12' })
+            ])
+          ]
+        }),
         createElement('div', {
           className: 'sell-image-toolbar',
           children: [
@@ -549,34 +710,17 @@
                   attrs: { type: 'button', title: 'Move right' },
                   className: 'sell-image-action',
                   dataset: { action: 'right', index },
-                  text: '>'
+                  text: '>',
                 }),
-                createElement('button', {
-                  attrs: { type: 'button', title: 'Remove image' },
-                  className: 'remove-image-btn',
-                  dataset: { index },
-                  text: 'x'
-                })
               ]
             })
           ]
         })
       ]
     })));
+    refreshAiImageOptions();
     updateImageMeta();
   }
-
-  function removeImage(index) {
-    uploadedImages.splice(index, 1);
-    renderImagePreview();
-    updatePreview();
-    document.getElementById('f-images').value = JSON.stringify(uploadedImages);
-    markDirty(true);
-    saveDraft();
-    updateImageMeta(uploadedImages.length ? 'Photos updated' : 'Ready to upload');
-    syncStepState(0);
-  }
-
   function moveImage(index, direction) {
     const targetIndex = direction === 'left' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= uploadedImages.length) return;
@@ -640,32 +784,53 @@
   }
 
   async function generateAIDescription() {
-    const button = document.getElementById('btn-ai-describe');
+    await requestAIGeneration('description');
+  }
+
+  async function generateAITitle() {
+    await requestAIGeneration('title');
+  }
+
+  async function requestAIGeneration(mode) {
+    const button = document.getElementById(mode === 'title' ? 'btn-ai-title' : 'btn-ai-describe');
     const statusDiv = document.getElementById('ai-status');
-    const textarea = document.getElementById('f-desc');
-    const title = document.getElementById('f-title').value.trim();
+    const titleInput = document.getElementById('f-title');
+    const descriptionInput = document.getElementById('f-desc');
     const category = document.getElementById('f-cat').value;
     const condition = document.getElementById('f-condition').value;
+    const brand = document.getElementById('ai-brand')?.value.trim() || '';
+    const color = document.getElementById('ai-color')?.value.trim() || '';
+    const accessories = document.getElementById('ai-accessories')?.value.trim() || '';
+    const defects = document.getElementById('ai-defects')?.value.trim() || '';
+    const reasonForSelling = document.getElementById('ai-reason')?.value.trim() || '';
+    const extraNotes = document.getElementById('ai-extras')?.value.trim() || '';
     const price = document.getElementById('f-price').value;
     const location = document.getElementById('f-location').value;
     const tone = document.getElementById('ai-tone').value;
     const language = document.getElementById('ai-language').value;
+    const titleLanguage = document.getElementById('ai-title-language')?.value || language;
     const targetWords = Number(document.getElementById('ai-length').value);
-    const imageUrl = uploadedImages.find((url) => !url.startsWith('temp-')) || '';
+    const imageSelect = document.getElementById('ai-image');
+    const imageUrl = imageSelect?.value?.trim() || uploadedImages.find((url) => !url.startsWith('temp-')) || '';
+    const currentTitle = titleInput.value.trim();
 
-    if (!title) {
+    if (mode !== 'title' && !currentTitle) {
       notify('Please enter a title first');
       return;
     }
-    if (!category) {
+    if (mode !== 'title' && !category) {
       notify('Please select a category first');
       return;
     }
-    if (!condition) {
+    if (mode !== 'title' && !condition) {
       notify('Please select the item condition first');
       return;
     }
-    if (textarea.value.trim()) {
+    if (mode === 'title' && !imageUrl) {
+      notify('Upload at least one photo first');
+      return;
+    }
+    if (mode === 'description' && descriptionInput.value.trim()) {
       if (typeof showConfirm !== 'function') {
         notify('Clear the current description before generating a new one');
         return;
@@ -678,26 +843,69 @@
       });
       if (!replace) return;
     }
+    if (mode === 'title' && currentTitle) {
+      if (typeof showConfirm !== 'function') {
+        notify('Clear the current title before generating a new one');
+        return;
+      }
+      const replaceTitle = await showConfirm({
+        title: 'Replace Title',
+        message: 'AI will replace the current title. Continue?',
+        confirmText: 'Replace',
+        type: 'danger'
+      });
+      if (!replaceTitle) return;
+    }
 
     button.disabled = true;
     button.style.opacity = '0.6';
     statusDiv.style.display = 'block';
-    statusDiv.textContent = 'Generating description with AI...';
+    statusDiv.textContent = mode === 'title'
+      ? 'Generating title with AI...'
+      : 'Generating description with AI...';
+    statusDiv.style.background = '#eff6ff';
+    statusDiv.style.borderLeftColor = '#2563eb';
+    statusDiv.style.color = '#1d4ed8';
 
     try {
+      const payload = { mode, title: currentTitle, category, condition, price, location, tone, language, titleLanguage, targetWords };
+      if (imageUrl) payload.imageUrl = imageUrl;
+      if (brand) payload.brand = brand;
+      if (color) payload.color = color;
+      if (accessories) payload.accessories = accessories;
+      if (defects) payload.defects = defects;
+      if (reasonForSelling) payload.reasonForSelling = reasonForSelling;
+      if (extraNotes) payload.extraNotes = extraNotes;
+
       const response = await fetch('/api/ai/describe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, category, condition, price, location, imageUrl, tone, language, targetWords })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
-      if (data.success && data.description) {
-        textarea.value = data.description;
-        statusDiv.style.background = '#e8f5e9';
-        statusDiv.style.borderLeftColor = '#4caf50';
-        statusDiv.style.color = '#2e7d32';
-        statusDiv.textContent = 'Description generated successfully.';
+      if (data.success) {
+        if (mode === 'title' && data.titleSuggestion) {
+          titleInput.value = data.titleSuggestion;
+          updatePreview();
+        } else if (mode === 'description' && data.description) {
+          descriptionInput.value = data.description;
+        }
+
+        statusDiv.style.background = '#eff6ff';
+        statusDiv.style.borderLeftColor = '#2563eb';
+        statusDiv.style.color = '#1d4ed8';
+        if (mode === 'title') {
+          statusDiv.textContent = data.usedImage
+            ? 'Title generated successfully using your image.'
+            : 'Title generated successfully. Text-only fallback was used.';
+        } else {
+          statusDiv.textContent = imageUrl
+            ? (data.usedImage
+              ? 'Description generated successfully using your image.'
+              : 'Description generated successfully. Text-only fallback was used.')
+            : 'Description generated successfully.';
+        }
         setTimeout(() => {
           statusDiv.style.display = 'none';
         }, 3000);
@@ -784,6 +992,7 @@
       renderImagePreview();
       document.getElementById('f-images').value = JSON.stringify(uploadedImages);
     }
+    refreshAiImageOptions();
     updateImageMeta();
     updateLocationSummary();
     initLocationPicker();
@@ -801,6 +1010,12 @@
         const aiBtn = event.target.closest('#btn-ai-describe');
         if (aiBtn) {
           generateAIDescription();
+          return;
+        }
+
+        const aiTitleBtn = event.target.closest('#btn-ai-title');
+        if (aiTitleBtn) {
+          generateAITitle();
           return;
         }
 
@@ -842,6 +1057,9 @@
       });
     }
 
+    window.addEventListener('scroll', scheduleScrollStepSync, { passive: true });
+    window.addEventListener('resize', scheduleScrollStepSync);
+
     const dropdown = document.getElementById('location-dropdown');
     if (dropdown) {
       dropdown.addEventListener('click', (event) => {
@@ -866,6 +1084,7 @@
     updatePreview();
     validateForm();
     syncStepState();
+    syncActiveStepFromScroll();
     setDraftIndicator(existingImages.length ? 'Editing existing product' : 'Draft saved');
   });
 

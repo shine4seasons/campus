@@ -61,6 +61,39 @@ function withTimeout(promise, timeoutMs, label) {
   });
 }
 
+function normalizeDescription(text) {
+  const cleaned = String(text || '')
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ''))
+    .replace(/^\s*(description|product description|generated description)\s*:\s*/i, '')
+    .replace(/^\s*[-*\u2022]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, '');
+
+  if (!cleaned) return '';
+
+  const words = cleaned.split(/\s+/);
+  if (words.length < 20) return '';
+
+  return cleaned;
+}
+
+function normalizeTitle(text) {
+  const cleaned = String(text || '')
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ''))
+    .replace(/^\s*(title|product title)\s*:\s*/i, '')
+    .replace(/^\s*[-*\u2022]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, '');
+
+  if (!cleaned) return '';
+
+  const words = cleaned.split(/\s+/);
+  const short = words.slice(0, 10).join(' ');
+  return short.length > 80 ? short.slice(0, 80).trim() : short;
+}
+
 async function generateWithGroq({ prompt, imageUrl, maxTokens }) {
   if (!groq) throw serviceUnavailable('AI provider is not configured');
 
@@ -138,11 +171,33 @@ async function generateWithGemini({ prompt, imageUrl, maxTokens }) {
 
 const describeProduct = async (req, res, next) => {
   try {
-    const { title, category, condition, price, location, imageUrl, tone, language } = req.body;
-    if (!title) throw badRequest('Title is required');
-    if (imageUrl && typeof imageUrl === 'string') {
+    const {
+      mode,
+      title,
+      category,
+      condition,
+      brand,
+      model,
+      color,
+      size,
+      accessories,
+      defects,
+      reasonForSelling,
+      extraNotes,
+      price,
+      location,
+      imageUrl,
+      tone,
+      language,
+      titleLanguage
+    } = req.body;
+    const generationMode = mode === 'title' ? 'title' : 'description';
+    const suppliedTitle = String(title || '').trim();
+    if (generationMode !== 'title' && !suppliedTitle) throw badRequest('Title is required');
+    const normalizedImageUrl = typeof imageUrl === 'string' ? imageUrl.trim() : '';
+    if (normalizedImageUrl) {
       try {
-        new URL(imageUrl);
+        new URL(normalizedImageUrl);
       } catch {
         throw badRequest('Invalid image URL');
       }
@@ -150,63 +205,113 @@ const describeProduct = async (req, res, next) => {
 
     const requestedWords = Number(req.body.targetWords);
     const targetWords = Math.min(140, Math.max(60, Number.isFinite(requestedWords) ? requestedWords : 100));
-    const maxTokens = Math.min(420, Math.max(180, Math.ceil(targetWords * 2.4)));
+    const maxTokens = generationMode === 'title'
+      ? 80
+      : Math.min(420, Math.max(180, Math.ceil(targetWords * 2.4)));
     const priceNote = price ? `Asking price: ${new Intl.NumberFormat('en-US').format(price)} VND` : '';
     const locationNote = location ? `Exchange location: ${location}` : '';
     const promptInput = {
-      title,
+      mode: generationMode,
+      title: suppliedTitle || 'Unknown item',
       category,
       condition,
+      brand,
+      model,
+      color,
+      size,
+      accessories,
+      defects,
+      reasonForSelling,
+      extraNotes,
       priceNote,
       locationNote,
       categoryLabels,
       conditionContext,
       tone,
       language,
+      titleLanguage: generationMode === 'title' ? (String(titleLanguage || '').trim() || String(language || '').trim() || 'english') : '',
       targetWords,
     };
     const cacheKey = getDescribeCacheKey({
       ...promptInput,
-      imageUrl: imageUrl || '',
+      imageUrl: normalizedImageUrl,
       provider: AI_PROVIDER
     });
     const cached = getCachedDescription(cacheKey);
     if (cached) {
-      return res.json({ success: true, description: cached, cached: true });
+      const cachedValue = typeof cached === 'string' ? { description: cached } : cached;
+      const cachedUsedImage = typeof cachedValue === 'object' && cachedValue ? !!cachedValue.usedImage : false;
+      return res.json({
+        success: true,
+        description: cachedValue.description || '',
+        titleSuggestion: cachedValue.titleSuggestion || '',
+        usedImage: cachedUsedImage,
+        cached: true
+      });
     }
     if (aiInFlight.has(cacheKey)) {
       const pendingResult = await aiInFlight.get(cacheKey);
-      return res.json({ success: true, description: pendingResult, cached: true });
+      const pendingValue = typeof pendingResult === 'string' ? { description: pendingResult } : pendingResult;
+      const pendingUsedImage = typeof pendingValue === 'object' && pendingValue ? !!pendingValue.usedImage : false;
+      return res.json({
+        success: true,
+        description: pendingValue.description || '',
+        titleSuggestion: pendingValue.titleSuggestion || '',
+        usedImage: pendingUsedImage,
+        cached: true
+      });
     }
 
-    const prompt = buildPrompt({ ...promptInput, hasImage: Boolean(imageUrl) });
+    const prompt = buildPrompt({ ...promptInput, hasImage: Boolean(normalizedImageUrl) });
 
     const compute = (async () => {
       let description;
+      let titleSuggestion = '';
+      let usedImage = Boolean(normalizedImageUrl);
       try {
         description = AI_PROVIDER === 'gemini'
-          ? await generateWithGemini({ prompt, imageUrl, maxTokens })
-          : await generateWithGroq({ prompt, imageUrl, maxTokens });
+          ? await generateWithGemini({ prompt, imageUrl: normalizedImageUrl, maxTokens })
+          : await generateWithGroq({ prompt, imageUrl: normalizedImageUrl, maxTokens });
       } catch (err) {
-        if (!imageUrl || AI_PROVIDER !== 'groq') throw err;
+        if (!normalizedImageUrl || AI_PROVIDER !== 'groq') throw err;
         logger.warn('ai.groq_vision_retry_text_only', { err: err.message });
         const textOnlyPrompt = buildPrompt({ ...promptInput, hasImage: false });
         description = await generateWithGroq({ prompt: textOnlyPrompt, imageUrl: '', maxTokens });
+        usedImage = false;
       }
-      return description;
+      if (generationMode === 'title') {
+        titleSuggestion = normalizeTitle(description);
+        description = '';
+      }
+      return { description, titleSuggestion, usedImage };
     })();
     aiInFlight.set(cacheKey, compute);
 
-    let description;
+    let result;
     try {
-      description = await compute;
+      result = await compute;
     } finally {
       aiInFlight.delete(cacheKey);
     }
 
-    if (!description) throw serviceUnavailable('AI service did not return any result');
-    setCachedDescription(cacheKey, description);
-    res.json({ success: true, description });
+    const normalizedDescription = generationMode === 'title'
+      ? ''
+      : normalizeDescription(result?.description);
+    const normalizedTitle = generationMode === 'title'
+      ? normalizeTitle(result?.titleSuggestion || result?.description)
+      : '';
+    if (generationMode === 'title') {
+      if (!normalizedTitle) throw serviceUnavailable('AI service did not return any result');
+    } else if (!normalizedDescription) {
+      throw serviceUnavailable('AI service did not return any result');
+    }
+    const responsePayload = {
+      description: normalizedDescription,
+      titleSuggestion: normalizedTitle,
+      usedImage: !!result?.usedImage
+    };
+    setCachedDescription(cacheKey, responsePayload);
+    res.json({ success: true, ...responsePayload });
   } catch (err) {
     logger.error('ai.describe_failed', { err: err.message, stack: err.stack });
     return next(err);
@@ -214,3 +319,4 @@ const describeProduct = async (req, res, next) => {
 };
 
 module.exports = { describeProduct };
+

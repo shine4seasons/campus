@@ -190,10 +190,29 @@ function incrementSellerSales(userId, amount) {
   return User.findByIdAndUpdate(userId, { $inc: { totalSales: amount } });
 }
 
-function findProductsBySeller({ sellerId, status }) {
+async function findProductsBySeller({ sellerId, status, page = 1, limit = 12 }) {
   const filter = { seller: sellerId };
   if (status) filter.status = status;
-  return Product.find(filter).sort('-createdAt').lean();
+  const normalizedPage = Number(page);
+  const normalizedLimit = Number(limit);
+  const skip = (normalizedPage - 1) * normalizedLimit;
+
+  const [total, products] = await Promise.all([
+    Product.countDocuments(filter),
+    Product.find(filter)
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(normalizedLimit)
+      .lean()
+  ]);
+
+  return {
+    products,
+    total,
+    page: normalizedPage,
+    limit: normalizedLimit,
+    totalPages: Math.ceil(total / normalizedLimit)
+  };
 }
 
 function findFavoriteByUserAndProduct(userId, productId) {

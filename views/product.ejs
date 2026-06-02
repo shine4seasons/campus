@@ -118,7 +118,7 @@
           <% } else if (isOwner) { %>
             <div class="owner-actions" style="display:flex; flex-direction:column; gap:12px;">
               <div style="display:flex; gap:10px;">
-                <a href="/edit-product/<%= p._id %>" class="btn-interested" style="flex:1;">
+                <a href="/sell?id=<%= p._id %>" class="btn-edit-product" style="flex:1;">
                   <i data-lucide="edit-3"></i> Edit Product
                 </a>
                 <button class="btn-contact" style="flex:2;" data-action="mark-sold">
@@ -348,8 +348,7 @@
 
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Reason *</label>
-        <select id="report-reason"
-          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit;">
+        <select id="report-reason" class="report-reason-select">
           <option value="">Select a reason...</option>
           <option value="inappropriate-content">Inappropriate content</option>
           <option value="offensive-language">Offensive language</option>

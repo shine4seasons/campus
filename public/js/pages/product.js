@@ -509,9 +509,9 @@
 
       if (lat && lng && document.getElementById('product-map') && typeof L !== 'undefined') {
         try {
-          const map = L.map('product-map').setView([lat, lng], 15);
+          const map = L.map('product-map', { attributionControl: false }).setView([lat, lng], 15);
           L.tileLayer(window.AppUtils.mapServices.leafletTiles, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            maxZoom: 19
           }).addTo(map);
 
           L.marker([lat, lng]).addTo(map)
