@@ -1,11 +1,3 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 /* dashboard.css inheriting from main.css design tokens */
 
 html,
@@ -54,10 +46,6 @@ body.dashboard-admin .main {
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {

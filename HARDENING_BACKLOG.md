@@ -109,7 +109,12 @@ This file contains only the remaining work required to push each rubric category
 2. Contract presence check in CI.
 
 ### VAL-201 Validate params, query, and multipart with same rigor as body
-- Status: TODO
+- Status: IN_PROGRESS
+- Progress notes:
+1. Added `validateParams(schema)` and `validateQuery(schema)` alongside the existing body validator.
+2. Added shared request schemas in `validation/requestSchemas.js` for ObjectId params, pagination, product filters, order role/status filters, ratings, notifications, wallet history, and admin list/moderation queries.
+3. Wired params/query validation into critical API surfaces: products, orders, chat, payments, notifications, wallet, ratings, and admin moderation.
+4. Added `npm run test:validation:request` and included it in `npm run test:gates` so validation coverage is enforced automatically.
 - Required work:
 1. Add param schemas for every `:id` route.
 2. Add query schemas for filters, pagination, sort, and dashboard analytics inputs.
@@ -177,7 +182,10 @@ This file contains only the remaining work required to push each rubric category
 2. `.env.example` and `ENV_SETUP.md` aligned with runtime checks.
 
 ### DOC-201 Single operator runbook
-- Status: TODO
+- Status: DONE
+- Progress notes:
+1. Added `docs/operator-runbook.md` as the canonical path for local setup, validation gates, migrations, runtime evidence capture, and release verification.
+2. The runbook links the existing hardening docs, evidence commands, and release scoring flow from one place.
 - Required work:
 1. Create one runbook for local setup, test gates, migrations, evidence collection, and release checks.
 2. Link all scripts and docs from one place.

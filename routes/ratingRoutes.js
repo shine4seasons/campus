@@ -1,25 +1,16 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
+const { validate, validateQuery } = require('../middleware/validate');
 const { ratingSubmitSchema, ratingDeleteSchema } = require('../validation/mutateSchemas');
+const { ratingEntityQuerySchema } = require('../validation/requestSchemas');
 const ratingController = require('../controllers/rating');
 
-// All rating routes require authentication
 router.use(protect);
 
-// POST /api/ratings — submit or update rating
 router.post('/', validate(ratingSubmitSchema), ratingController.submitRating);
-
-// GET /api/ratings — get ratings for product or user
-router.get('/', ratingController.getRatings);
-
-// GET /api/ratings/user-rating — get current user's rating
-router.get('/user-rating', ratingController.getUserRating);
-
-// GET /api/ratings/stats — get rating stats
-router.get('/stats', ratingController.getRatingStats);
-
-// DELETE /api/ratings — delete rating
+router.get('/', validateQuery(ratingEntityQuerySchema), ratingController.getRatings);
+router.get('/user-rating', validateQuery(ratingEntityQuerySchema), ratingController.getUserRating);
+router.get('/stats', validateQuery(ratingEntityQuerySchema), ratingController.getRatingStats);
 router.delete('/', validate(ratingDeleteSchema), ratingController.deleteRating);
 
 module.exports = router;

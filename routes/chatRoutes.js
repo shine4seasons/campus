@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
+const { validate, validateParams } = require('../middleware/validate');
 const { limitChatSend } = require('../middleware/security');
 const { chatInitSchema, chatSendMessageSchema } = require('../validation/mutateSchemas');
+const { idParamSchema } = require('../validation/requestSchemas');
 const chatController = require('../controllers/chat');
 
 // All chat APIs require user to be authenticated
@@ -10,7 +11,7 @@ router.use(protect);
 
 router.post('/init', validate(chatInitSchema), chatController.initChat);
 router.get('/', chatController.getConversations);
-router.get('/:id/messages', chatController.getMessages);
-router.post('/:id/messages', limitChatSend, validate(chatSendMessageSchema), chatController.sendMessage);
+router.get('/:id/messages', validateParams(idParamSchema), chatController.getMessages);
+router.post('/:id/messages', validateParams(idParamSchema), limitChatSend, validate(chatSendMessageSchema), chatController.sendMessage);
 
 module.exports = router;

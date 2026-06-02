@@ -747,12 +747,6 @@ body.product-page {
   background: var(--surface-container-low);
 }
 
-.product-img-placeholder img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .product-cta {
   position: absolute;
   right: 10px;

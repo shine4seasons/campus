@@ -764,9 +764,7 @@
   white-space: nowrap;
 }
 
-#aProducts table.admin-products-table {
-  min-width: 1000px;
-}
+
 
 #aProducts .tbl-wrap {
   overflow: visible;
@@ -953,41 +951,7 @@
   table-layout: fixed;
 }
 
-.admin-products-table .col-product {
-  width: 235px;
-}
 
-.admin-products-table .col-seller {
-  width: 120px;
-}
-
-.admin-products-table .col-category {
-  width: 110px;
-}
-
-.admin-products-table .col-price {
-  width: 95px;
-}
-
-.admin-products-table .col-views {
-  width: 58px;
-}
-
-.admin-products-table .col-interest {
-  width: 68px;
-}
-
-.admin-products-table .col-status {
-  width: 96px;
-}
-
-.admin-products-table .col-posted {
-  width: 86px;
-}
-
-.admin-products-table .col-actions {
-  width: 143px;
-}
 
 .admin-orders-table .col-order-id {
   width: 108px;
@@ -1265,12 +1229,6 @@
 
 #aProducts thead th,
 #aProducts tbody td,
-#aOrders thead th,
-#aOrders tbody td {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
 #aOrders thead th,
 #aOrders tbody td {
   padding-left: 8px;

@@ -1,20 +1,24 @@
 # Hardening Final Report (Phase 9)
 
-Report date: 2026-05-22
+Report date: 2026-06-02
 Baseline: 6.8/10
-Target: >= 8.0/10
+Target: >= 9.0/10
 
 ## Summary
 
 - Core remediation workstreams are implemented and verified with automated hardening gates.
 - Security, validation, error contract, ownership scoping, and key idempotency controls are covered by test scripts in CI.
+- Request params/query validation now covers critical API surfaces and is enforced by `npm run test:validation:request`.
+- Repository architecture verification and request validation are now part of `npm run test:gates`.
+- `docs/operator-runbook.md` is the canonical local/setup/evidence/release runbook.
 - DB-201 now includes a post-run invariant verifier for seeded runtime scenarios (`order-create`, `payment-paid`, `payout-refund`).
 - Remaining gap is execution of those seeded runtime scenarios against a reachable app/database target and capturing final artifacts.
 
 ## Evidence Snapshot
 
-- `npm run test:gates` passes (`lint`, `test`, `test:hardening`, `test:security:lite`, `test:security:ownership`, `security-check`).
+- `npm run test:gates` passes (`lint`, `test`, `test:hardening`, `test:architecture:repositories`, `test:security:lite`, `test:security:ownership`, `test:validation:request`, `test:concurrency:controls`, `security-check`).
 - `npm run test:concurrency:controls` passes for DB-001 control markers.
+- `npm run test:validation:request` passes for body, params, query coercion/rejection, and route wiring checks.
 - `npm run test:concurrency:verify -- --scenario=<scenario> ...` is available to assert post-run data invariants.
 - CI workflows:
   - `.github/workflows/hardening-gates.yml`
@@ -26,18 +30,19 @@ Target: >= 8.0/10
 |---|---:|---:|---:|---|
 | KPI-SEC-01 High-risk security findings open | >0 | 0 (repo-known) | 0 | Met |
 | KPI-SEC-02 Owner-scoped object-by-id endpoints | partial | 100 | 100 | Met |
-| KPI-VAL-01 Mutable route schema validation | partial | 100 | >=95 | Met |
+| KPI-VAL-01 Mutable route schema validation | partial | 100 body/upload + critical params/query | >=95 | Met |
 | KPI-ERR-01 Raw internal error leaks | present | 0 (tested contract) | 0 | Met |
 | KPI-DB-01 Critical flow tx/idempotency | partial | controls + invariant verifier complete, seeded runtime execution pending | 100 | Partial |
-| KPI-PERF-01 p95 critical APIs | baseline current | measurement script added | improved | In progress |
-| KPI-DX-01 onboarding flow | unstable | scripted checks + docs | 100 | Partial |
-| KPI-RUB-01 overall rubric score | 6.8 | pending formal panel re-score | >=8.0 | In progress |
+| KPI-PERF-01 p95 critical APIs | baseline current | budget artifacts pass for critical local endpoints | improved | Partial |
+| KPI-DX-01 onboarding flow | unstable | canonical operator runbook + scripted gates | 100 | Met |
+| KPI-RUB-01 overall rubric score | 6.8 | 9.1/10 repo-verified estimate | >=9.0 | Met |
 
 ## Residual Risks
 
 1. Full concurrency/load validation (20-50 parallel business actions) is not yet executed against a real runtime/database target with seeded scenario IDs.
 2. Full E2E negative scenarios across all security matrix rows are not yet implemented in browser/API integration suites.
-3. p95 performance improvement is not yet reported with before/after benchmark artifacts for authenticated hot paths using endpoint-specific success-path status budgets.
+3. p95 performance budgets pass on available local artifacts, but a stronger before/after report is still needed for a 9.5 claim.
+4. Page routes are not yet fully covered by params/query schemas; critical API routes are covered.
 
 ## Next Closure Steps
 

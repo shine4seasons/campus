@@ -12,10 +12,14 @@ All mutable API routes (`POST`, `PATCH`, `PUT`, `DELETE`) under `routes/*`.
 - Routes protected by body/schema validation middleware: 30
 - Upload routes protected by upload-specific validation middleware: 3
 - Coverage: 33/33 = 100%
+- Critical object-id params are now validated before controller/service access on products, orders, chat, payments, notifications, and admin moderation routes.
+- Critical list/filter querystrings are now validated/coerced on products, orders, ratings, notifications, wallet history, and admin list endpoints.
 
 Validation middleware in use:
 1. `validate(schema)` (Zod body validation)
 2. `validateUploadRequest` (multipart upload validation for file/mime/size/no-extra-fields)
+3. `validateParams(schema)` (Zod params validation)
+4. `validateQuery(schema)` (Zod querystring validation/coercion)
 
 ## Route matrix
 
@@ -55,4 +59,21 @@ Validation middleware in use:
 | `/api/upload/image` | POST | `validateUploadRequest` |
 | `/api/upload/avatar` | POST | `validateUploadRequest` |
 | `/api/upload/chat` | POST | `validateUploadRequest` |
+
+## Params and query coverage (VAL-201)
+
+| Surface | Routes | Validation |
+|---|---|---|
+| Product IDs | `/api/products/:id`, `/api/products/:id/status`, mark-sold, relist, delete, interested | `validateParams(idParamSchema)` |
+| Product list filters | `/api/products`, `/api/products/my`, `/api/products/favorites` | `validateQuery(productFeedQuerySchema/productSellerQuerySchema/favoriteQuerySchema)` |
+| Order IDs | `/api/orders/:id`, status, dispute, dispute resolve | `validateParams(idParamSchema)` |
+| Order list/role filters | `/api/orders`, `/api/orders/stats`, `/api/orders/analytics` | `validateQuery(orderListQuerySchema/orderRoleQuerySchema/orderAnalyticsQuerySchema)` |
+| Chat conversation IDs | `/api/chat/:id/messages` | `validateParams(idParamSchema)` |
+| Payment IDs | `/api/payments/:id/status`, `/api/payments/:paymentId/check` | `validateParams(idParamSchema/paymentIdParamSchema)` |
+| Notification IDs and filters | `/api/notifications`, `/api/notifications/:id/read`, `/api/notifications/:id` | `validateQuery(notificationsQuerySchema)`, `validateParams(idParamSchema)` |
+| Wallet history pagination | `/api/wallet/transactions`, `/api/wallet/payout-requests` | `validateQuery(paginationQuerySchema)` |
+| Rating entity queries | `/api/ratings`, `/api/ratings/user-rating`, `/api/ratings/stats` | `validateQuery(ratingEntityQuerySchema)` |
+| Admin list/moderation surface | users, orders, products, reports, payouts, product actions | `validateQuery(admin*QuerySchema)`, `validateParams(idParamSchema)` |
+
+Automated evidence: `npm run test:validation:request`.
 

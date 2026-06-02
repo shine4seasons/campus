@@ -570,11 +570,6 @@ body.orders-page {
   line-height: 1.45;
 }
 
-.tbl-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
 .tbl-wrap th,
 .tbl-wrap td {
   padding: 14px 16px;

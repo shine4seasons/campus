@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { protect, restrictTo } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
+const { validate, validateParams, validateQuery } = require('../middleware/validate');
 const {
   emptyBodySchema,
   adminToggleBanSchema,
@@ -10,27 +10,35 @@ const {
   adminPayoutRejectSchema,
   adminSettingsSchema,
 } = require('../validation/mutateSchemas');
+const {
+  idParamSchema,
+  adminUsersQuerySchema,
+  adminOrdersQuerySchema,
+  adminProductsQuerySchema,
+  adminReportsQuerySchema,
+  adminPayoutsQuerySchema,
+} = require('../validation/requestSchemas');
 const adminCtrl = require('../controllers/admin');
 
 // All admin APIs require auth + admin role
 router.use(protect);
 router.use(restrictTo('admin'));
 
-router.get('/users', adminCtrl.getUsers);
-router.patch('/users/:id/ban', validate(adminToggleBanSchema), adminCtrl.toggleBan);
+router.get('/users', validateQuery(adminUsersQuerySchema), adminCtrl.getUsers);
+router.patch('/users/:id/ban', validateParams(idParamSchema), validate(adminToggleBanSchema), adminCtrl.toggleBan);
 
-router.get('/orders', adminCtrl.getOrders);
+router.get('/orders', validateQuery(adminOrdersQuerySchema), adminCtrl.getOrders);
 
-router.get('/reports', adminCtrl.getReports);
-router.patch('/reports/:id', validate(adminUpdateReportSchema), adminCtrl.updateReport);
+router.get('/reports', validateQuery(adminReportsQuerySchema), adminCtrl.getReports);
+router.patch('/reports/:id', validateParams(idParamSchema), validate(adminUpdateReportSchema), adminCtrl.updateReport);
 
-router.get('/products', adminCtrl.getProducts);
+router.get('/products', validateQuery(adminProductsQuerySchema), adminCtrl.getProducts);
 
 // Payouts
-router.get('/payouts', adminCtrl.getPayouts);
-router.post('/payouts/:id/approve', validate(adminPayoutApproveSchema), adminCtrl.approvePayout);
-router.post('/payouts/:id/mark-paid', validate(adminPayoutMarkPaidSchema), adminCtrl.markPayoutPaid);
-router.post('/payouts/:id/reject', validate(adminPayoutRejectSchema), adminCtrl.rejectPayout);
+router.get('/payouts', validateQuery(adminPayoutsQuerySchema), adminCtrl.getPayouts);
+router.post('/payouts/:id/approve', validateParams(idParamSchema), validate(adminPayoutApproveSchema), adminCtrl.approvePayout);
+router.post('/payouts/:id/mark-paid', validateParams(idParamSchema), validate(adminPayoutMarkPaidSchema), adminCtrl.markPayoutPaid);
+router.post('/payouts/:id/reject', validateParams(idParamSchema), validate(adminPayoutRejectSchema), adminCtrl.rejectPayout);
 
 // Stats
 router.get('/stats', adminCtrl.getStats);
@@ -44,9 +52,9 @@ router.get('/settings', adminCtrl.getSettings);
 router.post('/settings', validate(adminSettingsSchema), adminCtrl.updateSettings);
 
 // Product actions
-router.patch('/products/:id/hide', validate(emptyBodySchema), adminCtrl.hideProduct);
-router.patch('/products/:id/restore', validate(emptyBodySchema), adminCtrl.restoreProduct);
-router.delete('/products/:id', validate(emptyBodySchema), adminCtrl.deleteProductAdmin);
+router.patch('/products/:id/hide', validateParams(idParamSchema), validate(emptyBodySchema), adminCtrl.hideProduct);
+router.patch('/products/:id/restore', validateParams(idParamSchema), validate(emptyBodySchema), adminCtrl.restoreProduct);
+router.delete('/products/:id', validateParams(idParamSchema), validate(emptyBodySchema), adminCtrl.deleteProductAdmin);
 
 // Ratings Sync
 const ratingCtrl = require('../controllers/rating');

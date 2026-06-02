@@ -1,5 +1,4 @@
 const router = require('express');
-const { z } = require('zod');
 const routerInst = router.Router();
 const { 
   getNotifications, 
@@ -8,14 +7,15 @@ const {
   deleteNotification 
 } = require('../controllers/notificationController');
 const { protect } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
+const { validate, validateParams, validateQuery } = require('../middleware/validate');
 const { emptyBodySchema } = require('../validation/mutateSchemas');
+const { idParamSchema, notificationsQuerySchema } = require('../validation/requestSchemas');
 
 routerInst.use(protect);
 
-routerInst.get('/', getNotifications);
-routerInst.patch('/:id/read', validate(emptyBodySchema), markAsRead);
+routerInst.get('/', validateQuery(notificationsQuerySchema), getNotifications);
+routerInst.patch('/:id/read', validateParams(idParamSchema), validate(emptyBodySchema), markAsRead);
 routerInst.post('/read-all', validate(emptyBodySchema), markAllAsRead);
-routerInst.delete('/:id', validate(emptyBodySchema), deleteNotification);
+routerInst.delete('/:id', validateParams(idParamSchema), validate(emptyBodySchema), deleteNotification);
 
 module.exports = routerInst;
