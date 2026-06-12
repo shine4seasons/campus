@@ -224,18 +224,24 @@
       </div>
 
       <% if (user && canBuyerAct) { %>
-        <div class="pdp-leave-review">
-          <div class="pdp-leave-title">Write a review</div>
-          <div class="pdp-stars-input rating-input" id="rating-stars">
-            <% for (let i = 1; i <= 5; i++) { %>
-              <span class="star star-empty" data-score="<%= i %>">★</span>
-            <% } %>
-          </div>
-          <textarea id="rating-comment" class="pdp-review-textarea"
-            placeholder="What did you think of this product?"></textarea>
-          <div class="pdp-review-actions">
-            <button class="btn-cancel-rating" data-action="reset-rating">Cancel</button>
-            <button class="btn-submit-rating" data-action="submit-rating">Submit review</button>
+        <div class="pdp-leave-review" id="rating-panel">
+          <button type="button" class="pdp-leave-toggle" data-action="toggle-review-form" aria-expanded="false"
+            aria-controls="rating-form-body">
+            <span>Write a review</span>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </button>
+          <div class="pdp-review-form-body" id="rating-form-body" hidden>
+            <div class="pdp-stars-input rating-input" id="rating-stars">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <span class="star star-empty" data-score="<%= i %>">★</span>
+              <% } %>
+            </div>
+            <textarea id="rating-comment" class="pdp-review-textarea"
+              placeholder="What did you think of this product?"></textarea>
+            <div class="pdp-review-actions">
+              <button class="btn-cancel-rating" data-action="reset-rating">Cancel</button>
+              <button class="btn-submit-rating" data-action="submit-rating">Submit review</button>
+            </div>
           </div>
         </div>
       <% } %>
@@ -348,18 +354,25 @@
 
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Reason *</label>
-        <select id="report-reason" class="report-reason-select">
-          <option value="">Select a reason...</option>
-          <option value="inappropriate-content">Inappropriate content</option>
-          <option value="offensive-language">Offensive language</option>
-          <option value="fraud-scam">Fraud/Scam</option>
-          <option value="counterfeit-item">Counterfeit item</option>
-          <option value="damaged-item">Damaged/Missing item</option>
-          <option value="misleading-description">Misleading description</option>
-          <option value="fake-account">Fake account</option>
-          <option value="suspicious-behavior">Suspicious behavior</option>
-          <option value="other">Other</option>
-        </select>
+        <div class="report-reason-field" id="report-reason-field">
+          <button type="button" class="report-reason-trigger" id="report-reason-trigger" aria-haspopup="listbox"
+            aria-expanded="false">
+            <span id="report-reason-label">Select a reason...</span>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </button>
+          <div class="report-reason-menu" id="report-reason-menu" role="listbox" aria-label="Report reason">
+            <button type="button" class="report-reason-option" data-value="inappropriate-content" role="option">Inappropriate content</button>
+            <button type="button" class="report-reason-option" data-value="offensive-language" role="option">Offensive language</button>
+            <button type="button" class="report-reason-option" data-value="fraud-scam" role="option">Fraud/Scam</button>
+            <button type="button" class="report-reason-option" data-value="counterfeit-item" role="option">Counterfeit item</button>
+            <button type="button" class="report-reason-option" data-value="damaged-item" role="option">Damaged/Missing item</button>
+            <button type="button" class="report-reason-option" data-value="misleading-description" role="option">Misleading description</button>
+            <button type="button" class="report-reason-option" data-value="fake-account" role="option">Fake account</button>
+            <button type="button" class="report-reason-option" data-value="suspicious-behavior" role="option">Suspicious behavior</button>
+            <button type="button" class="report-reason-option" data-value="other" role="option">Other</button>
+          </div>
+          <input type="hidden" id="report-reason" value="">
+        </div>
       </div>
 
       <div style="margin-bottom:20px;">

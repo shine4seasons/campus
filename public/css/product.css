@@ -360,29 +360,114 @@ body.product-page {
   color: var(--on-error);
 }
 
-.report-reason-select {
+.report-reason-field {
+  position: relative;
+}
+
+.report-reason-trigger {
   width: 100%;
-  min-height: 44px;
-  padding: 0 42px 0 12px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
   border: 1px solid var(--outline-variant);
-  border-radius: 10px;
-  appearance: none;
+  border-radius: 14px;
   background-color: var(--surface-container-lowest);
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   color: var(--on-surface);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
 
-.report-reason-select:focus {
+.report-reason-trigger:hover {
+  border-color: rgba(22, 163, 74, 0.48);
+  background: var(--surface-container-low);
+}
+
+.report-reason-trigger i,
+.report-reason-trigger svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--on-surface-variant);
+  transition: transform 0.16s ease;
+}
+
+.report-reason-trigger:focus-visible,
+.report-reason-field.open .report-reason-trigger {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 83, 219, 0.14);
+  box-shadow: 0 0 0 4px rgba(0, 83, 219, 0.12);
   outline: none;
+}
+
+.report-reason-field.open .report-reason-trigger svg {
+  transform: rotate(180deg);
+}
+
+.report-reason-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  display: none;
+  max-height: 276px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 14px;
+  background: var(--surface-container-lowest);
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.22);
+}
+
+.report-reason-field.open .report-reason-menu {
+  display: grid;
+  gap: 4px;
+}
+
+.report-reason-option {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--on-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-reason-option:hover,
+.report-reason-option:focus-visible {
+  background: rgba(0, 83, 219, 0.08);
+  color: var(--primary);
+  outline: none;
+}
+
+.report-reason-option[aria-selected="true"] {
+  background: rgba(22, 163, 74, 0.12);
+  color: #047857;
+}
+
+.report-reason-option[aria-selected="true"]::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .sold-overlay {
@@ -594,10 +679,39 @@ body.product-page {
   margin: 20px 0;
 }
 
-.pdp-leave-title {
-  margin-bottom: 12px;
+.pdp-leave-toggle {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--on-surface);
+  font: inherit;
+  font-size: 18px;
   font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pdp-leave-toggle i,
+.pdp-leave-toggle svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: var(--on-surface-variant);
+  transition: transform 0.16s ease;
+}
+
+.pdp-leave-review.open .pdp-leave-toggle svg {
+  transform: rotate(180deg);
+}
+
+.pdp-review-form-body {
+  padding-top: 12px;
 }
 
 .pdp-stars-input {

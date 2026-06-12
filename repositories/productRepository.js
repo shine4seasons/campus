@@ -19,7 +19,41 @@ function normalizeSort(value) {
   return SORT_MAP[value] || '-createdAt';
 }
 
-function buildActiveProductFilter(query, userId) {
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizeSearchTokens(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(token => token.trim())
+    .filter(token => token.length >= 2)
+    .slice(0, 6);
+}
+
+function buildKeywordFilter(tokens) {
+  if (!tokens.length) return null;
+
+  return {
+    $and: tokens.map((token) => {
+      const regex = new RegExp(escapeRegExp(token), 'i');
+      return {
+        $or: [
+          { title: regex },
+          { description: regex },
+          { aiDescription: regex },
+          { category: regex },
+          { condition: regex },
+          { 'location.address': regex }
+        ]
+      };
+    })
+  };
+}
+
+function buildActiveProductFilter(query, userId, blockedSellerIds = []) {
   const filter = {
     status: PRODUCT_STATUS.ACTIVE,
     $or: [{ quantity: { $gt: 0 } }, { quantity: { $exists: false } }]
@@ -34,8 +68,10 @@ function buildActiveProductFilter(query, userId) {
     if (query.maxPrice) filter.price.$lte = Number(query.maxPrice);
   }
 
-  if (userId && !query.seller) {
-    filter.seller = { $ne: userId };
+  if (!query.seller) {
+    const excludedSellerIds = [...blockedSellerIds];
+    if (userId) excludedSellerIds.push(userId);
+    if (excludedSellerIds.length) filter.seller = { $nin: excludedSellerIds };
   }
 
   return filter;
@@ -43,20 +79,26 @@ function buildActiveProductFilter(query, userId) {
 
 async function findProductsForFeed({ query, userId }) {
   const { q, page = 1, limit = 12, sort = '-createdAt' } = query;
-  const baseFilter = buildActiveProductFilter(query, userId);
+  const blockedSellerIds = await User.distinct('_id', { banned: true });
+
+  if (query.seller && blockedSellerIds.some((sellerId) => String(sellerId) === String(query.seller))) {
+    return {
+      total: 0,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: 0,
+      products: []
+    };
+  }
+
+  const baseFilter = buildActiveProductFilter(query, userId, blockedSellerIds);
   const normalizedSort = normalizeSort(sort);
   const skip = (Number(page) - 1) * Number(limit);
+  const tokens = normalizeSearchTokens(q);
+  const keywordFilter = buildKeywordFilter(tokens);
+  const countFilter = keywordFilter ? { $and: [baseFilter, keywordFilter] } : baseFilter;
 
-  let cursor;
-  let countFilter = baseFilter;
-
-  if (q) {
-    countFilter = { ...baseFilter, $text: { $search: q } };
-    cursor = Product.find(countFilter, { score: { $meta: 'textScore' } })
-      .sort({ score: { $meta: 'textScore' } });
-  } else {
-    cursor = Product.find(baseFilter).sort(normalizedSort);
-  }
+  const cursor = Product.find(countFilter).sort(normalizedSort);
 
   const [total, products] = await Promise.all([
     Product.countDocuments(countFilter),

@@ -2,7 +2,8 @@
 module.exports = function requirePageAuth(req, res, next) {
   if (!res.locals.user) {
     const back = encodeURIComponent(req.originalUrl || '/');
-    return res.redirect('/login?redirect=' + back);
+    const error = req.authError === 'banned' ? '&error=banned' : '';
+    return res.redirect('/login?redirect=' + back + error);
   }
   next();
 };

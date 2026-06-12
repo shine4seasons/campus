@@ -34,6 +34,11 @@ const clearAuthCookies = (res) => {
 
 // GET /api/auth/google/callback
 const googleCallback = async (req, res) => {
+  if (req.user?.banned) {
+    clearAuthCookies(res);
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=banned`);
+  }
+
   const token = signToken(req.user._id);
   sendTokenCookie(res, token);
 
@@ -65,7 +70,7 @@ const logoutRedirect = (req, res) => {
 };
 
 // POST /api/auth/refresh
-const refresh = (req, res) => {
+const refresh = async (req, res) => {
   const old = req.cookies?.token;
   if (!old) return res.status(401).json({ success: false });
   try {
@@ -79,6 +84,16 @@ const refresh = (req, res) => {
       });
     }
     const { sub } = decoded;
+    const user = await authRepository.findUserById(sub);
+    if (!user || user.banned) {
+      clearAuthCookies(res);
+      return res.status(401).json({
+        success: false,
+        code: user?.banned ? 'banned' : 'invalid_user',
+        message: user?.banned ? 'This account has been banned' : 'Invalid user'
+      });
+    }
+
     const newToken = signToken(sub);
     sendTokenCookie(res, newToken);
     res.json({ success: true, token: newToken });

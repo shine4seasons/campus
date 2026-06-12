@@ -1,4 +1,20 @@
-const { userFromToken } = require('./resolveUser');
+const { authStateFromToken, TOKEN_AUTH_REASONS } = require('./resolveUser');
+const { getAuthCookieOptions, getCsrfCookieOptions } = require('../utils/authSecurity');
+
+function clearAuthCookies(res) {
+  const authOptions = getAuthCookieOptions();
+  const csrfOptions = getCsrfCookieOptions();
+  res.clearCookie('token', {
+    httpOnly: authOptions.httpOnly,
+    secure: authOptions.secure,
+    sameSite: authOptions.sameSite
+  });
+  res.clearCookie('csrf', {
+    httpOnly: csrfOptions.httpOnly,
+    secure: csrfOptions.secure,
+    sameSite: csrfOptions.sameSite
+  });
+}
 
 /**
  * Read the JWT from the httpOnly cookie and expose the user on res.locals.
@@ -37,10 +53,15 @@ const injectUser = async (req, res, next) => {
     return next();
   }
 
-  res.locals.user = await userFromToken(token);
+  const { user, reason } = await authStateFromToken(token);
+  res.locals.user = user;
   req.user = res.locals.user;
   if (!res.locals.user) {
-    res.clearCookie('token');
+    clearAuthCookies(res);
+    if (reason === TOKEN_AUTH_REASONS.ACCOUNT_BANNED) {
+      res.locals.authError = 'banned';
+      req.authError = 'banned';
+    }
   }
 
   if (!res.locals.user && res.locals.mode === 'seller') {

@@ -508,6 +508,8 @@
 
     window.loadOrders = loadOrders;
     let currentOrderFilter = '';
+    let currentOrderSearch = '';
+    let orderSearchTimeout;
 
     document.querySelectorAll('#aOrders .f-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
@@ -515,8 +517,14 @@
         pill.classList.add('on');
         const txt = pill.textContent.trim().toLowerCase();
         currentOrderFilter = txt === 'all' ? '' : txt;
-        loadOrders();
+        loadOrders(1);
       });
+    });
+
+    document.getElementById('adminOrdersSearch')?.addEventListener('input', (event) => {
+      currentOrderSearch = event.target.value.trim();
+      clearTimeout(orderSearchTimeout);
+      orderSearchTimeout = setTimeout(() => loadOrders(1), 300);
     });
 
     async function loadOrders(page = 1) {
@@ -526,6 +534,7 @@
 
       const params = new URLSearchParams({ limit: 20, page });
       if (currentOrderFilter) params.set('status', currentOrderFilter);
+      if (currentOrderSearch) params.set('q', currentOrderSearch);
 
       try {
         const res = await fetch(`/api/admin/orders?${params}`);

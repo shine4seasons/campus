@@ -324,9 +324,9 @@
                     <div class="sell-location-summary" id="sell-location-summary">No meetup point selected yet.</div>
                     <div id="location-map" class="sell-location-map"></div>
                     <p class="field-help">Pick a clear, familiar campus location to reduce coordination friction with buyers.</p>
-                    <input type="hidden" id="f-lat" value="<%= ep ? (ep.location?.lat || '') : '' %>">
-                    <input type="hidden" id="f-lng" value="<%= ep ? (ep.location?.lng || '') : '' %>">
-                    <input type="hidden" id="f-location" value="<%= ep ? (ep.locationName || '') : '' %>">
+                    <input type="hidden" id="f-lat" value="<%= ep && ep.location?.lat != null ? ep.location.lat : '' %>">
+                    <input type="hidden" id="f-lng" value="<%= ep && ep.location?.lng != null ? ep.location.lng : '' %>">
+                    <input type="hidden" id="f-location" value="<%= ep ? (ep.location?.address || '') : '' %>">
                   </div>
                 </div>
 
@@ -390,7 +390,8 @@
             submitUrl: ep ? "/api/products/" + ep._id : "/api/products",
             submitMethod: ep ? "PATCH" : "POST",
             submitLabel: ep ? "Save Changes" : "Post Product Now",
-            existingImages: ep && ep.images ? ep.images : []
+            existingImages: ep && ep.images ? ep.images : [],
+            existingLocation: ep && ep.location ? ep.location : null
           }) %></script>
         <script defer src="/js/pages/sell.js"></script>
 </body>

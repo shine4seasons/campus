@@ -171,7 +171,20 @@
         }
       }
 
-      return nativeFetch(input, nextInit);
+      return nativeFetch(input, nextInit).then(async function handleAuthResponse(response) {
+        if (response.status === 401) {
+          try {
+            const clone = response.clone();
+            const payload = await clone.json();
+            if (payload?.code === 'ACCOUNT_BANNED') {
+              window.location.href = '/login?error=banned';
+            }
+          } catch {
+            // Keep the original response behavior when the body is not JSON.
+          }
+        }
+        return response;
+      });
     };
   }
 

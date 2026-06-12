@@ -321,6 +321,21 @@
       window.location.href = '/checkout/' + PRODUCT_ID;
     };
 
+    function setReviewFormOpen(open) {
+      const panel = document.getElementById('rating-panel');
+      const body = document.getElementById('rating-form-body');
+      const toggle = document.querySelector('[data-action="toggle-review-form"]');
+      if (!panel || !body || !toggle) return;
+      panel.classList.toggle('open', open);
+      body.hidden = !open;
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    window.toggleReviewForm = function () {
+      const body = document.getElementById('rating-form-body');
+      setReviewFormOpen(Boolean(body && body.hidden));
+    };
+
     // ── Submit Product Rating ─────────────────────────────────────────────
     window.submitProductRating = async function () {
       if (IS_ADMIN) return;
@@ -337,6 +352,7 @@
         const success = await submitRating('product', PRODUCT_ID, score, comment);
         if (success) {
           resetRatingForm();
+          setReviewFormOpen(false);
           // Reload ratings
           setTimeout(() => {
             loadRatings('product', PRODUCT_ID, 'product-ratings-list-content');
@@ -359,6 +375,55 @@
     // ── Report Modal ──────────────────────────────────────────────────────
     let reportTargetType = '';
     let reportTargetId = '';
+    const REPORT_REASON_PLACEHOLDER = 'Select a reason...';
+
+    function closeReportReasonDropdown() {
+      const field = document.getElementById('report-reason-field');
+      const trigger = document.getElementById('report-reason-trigger');
+      if (!field || !trigger) return;
+      field.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function setReportReason(value, label) {
+      const input = document.getElementById('report-reason');
+      const labelEl = document.getElementById('report-reason-label');
+      const options = document.querySelectorAll('.report-reason-option');
+      if (input) input.value = value || '';
+      if (labelEl) labelEl.textContent = label || REPORT_REASON_PLACEHOLDER;
+      options.forEach((option) => {
+        const isSelected = Boolean(value) && option.dataset.value === value;
+        option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      });
+    }
+
+    function initReportReasonDropdown() {
+      const field = document.getElementById('report-reason-field');
+      const trigger = document.getElementById('report-reason-trigger');
+      if (!field || !trigger) return;
+
+      trigger.addEventListener('click', () => {
+        const isOpen = field.classList.toggle('open');
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      field.querySelectorAll('.report-reason-option').forEach((option) => {
+        option.setAttribute('aria-selected', 'false');
+        option.addEventListener('click', () => {
+          setReportReason(option.dataset.value || '', option.textContent.trim());
+          closeReportReasonDropdown();
+          trigger.focus();
+        });
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!field.contains(event.target)) closeReportReasonDropdown();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeReportReasonDropdown();
+      });
+    }
 
     window.showReportModal = function (targetType, targetId) {
       if (IS_ADMIN) return;
@@ -367,12 +432,14 @@
       document.getElementById('report-modal').style.display = 'flex';
       const modalTitle = document.getElementById('report-modal-title');
       if (modalTitle) modalTitle.textContent = targetType === 'user' ? 'Report this seller' : 'Report this product';
-      document.getElementById('report-reason').value = '';
+      setReportReason('', REPORT_REASON_PLACEHOLDER);
+      closeReportReasonDropdown();
       document.getElementById('report-content').value = '';
       document.getElementById('report-char-count').textContent = '0';
     };
 
     window.closeReportModal = function () {
+      closeReportReasonDropdown();
       document.getElementById('report-modal').style.display = 'none';
     };
 
@@ -411,6 +478,8 @@
 
     // Character counter for report textarea
     document.addEventListener('DOMContentLoaded', () => {
+      initReportReasonDropdown();
+
       document.addEventListener('click', (event) => {
         const actionEl = event.target.closest('[data-action]');
         if (!actionEl) return;
@@ -444,8 +513,13 @@
         if (action === 'delete-product') return window.deleteProduct();
         if (action === 'init-chat') return window.initChat();
         if (action === 'toggle-interested') return window.toggleInterested();
+        if (action === 'toggle-review-form') return window.toggleReviewForm();
         if (action === 'submit-rating') return window.submitProductRating();
-        if (action === 'reset-rating') return window.resetRatingForm();
+        if (action === 'reset-rating') {
+          window.resetRatingForm();
+          setReviewFormOpen(false);
+          return;
+        }
         if (action === 'go-checkout') return window.goCheckout();
         if (action === 'close-report-modal') return window.closeReportModal();
         if (action === 'submit-report') return window.submitReport();

@@ -4,7 +4,7 @@ const Payment = require('../models/Payment');
 const Rating = require('../models/Rating');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
-const { ORDER_STATUS, PRODUCT_STATUS, PRODUCT_CONDITIONS } = require('../config/appConstants');
+const { ORDER_STATUS, PRODUCT_STATUS, PRODUCT_CATEGORIES, PRODUCT_CONDITIONS } = require('../config/appConstants');
 
 function findPageProductById(productId) {
   return Product.findById(productId)
@@ -23,15 +23,82 @@ function findRelatedProducts({ category, excludeProductId, limit }) {
     .lean();
 }
 
-function findSearchProducts({ query, page, limit, currentUserId }) {
-  const q = String(query.q || '').trim();
-  const category = String(query.category || '').trim();
-  const condition = String(query.condition || '').trim();
-  const minPrice = Number.parseInt(query.minPrice, 10);
-  const maxPrice = Number.parseInt(query.maxPrice, 10);
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function parsePrice(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function normalizeSearchTokens(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(token => token.trim())
+    .filter(token => token.length >= 2)
+    .slice(0, 6);
+}
+
+function buildKeywordFilter(tokens) {
+  if (!tokens.length) return null;
+
+  return {
+    $and: tokens.map((token) => {
+      const regex = new RegExp(escapeRegExp(token), 'i');
+      return {
+        $or: [
+          { title: regex },
+          { description: regex },
+          { aiDescription: regex },
+          { category: regex },
+          { condition: regex },
+          { 'location.address': regex }
+        ]
+      };
+    })
+  };
+}
+
+function buildSearchScoreExpression(tokens) {
+  const scoreTerms = tokens.flatMap((token) => {
+    const regex = escapeRegExp(token);
+    return [
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$title', ''] }, regex, options: 'i' } }, 10, 0] },
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$description', ''] }, regex, options: 'i' } }, 4, 0] },
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$aiDescription', ''] }, regex, options: 'i' } }, 3, 0] },
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$category', ''] }, regex, options: 'i' } }, 2, 0] },
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$condition', ''] }, regex, options: 'i' } }, 1, 0] },
+      { $cond: [{ $regexMatch: { input: { $ifNull: ['$location.address', ''] }, regex, options: 'i' } }, 1, 0] }
+    ];
+  });
+
+  return scoreTerms.length ? { $add: scoreTerms } : 0;
+}
+
+async function findSearchProducts({ query, page, limit, currentUserId }) {
+  const rawQ = String(query.q || '').trim().replace(/\s+/g, ' ');
+  const tokens = normalizeSearchTokens(rawQ);
+  const q = tokens.length ? rawQ : '';
+  const rawCategory = String(query.category || '').trim();
+  const category = PRODUCT_CATEGORIES.includes(rawCategory) ? rawCategory : '';
+  const rawCondition = String(query.condition || '').trim();
+  const condition = PRODUCT_CONDITIONS.includes(rawCondition) ? rawCondition : '';
+  let minPrice = parsePrice(query.minPrice);
+  let maxPrice = parsePrice(query.maxPrice);
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    [minPrice, maxPrice] = [maxPrice, minPrice];
+  }
+
   const allowedSorts = new Set(['relevance', 'newest', 'price-asc', 'price-desc', 'rating']);
   const rawSort = String(query.sort || (q ? 'relevance' : 'newest')).trim();
-  const sort = allowedSorts.has(rawSort) ? rawSort : (q ? 'relevance' : 'newest');
+  const canUseRequestedSort = allowedSorts.has(rawSort) && (q || rawSort !== 'relevance');
+  const sort = canUseRequestedSort ? rawSort : (q ? 'relevance' : 'newest');
+
+  const blockedSellerIds = await User.distinct('_id', { banned: true });
+  if (currentUserId) blockedSellerIds.push(currentUserId);
 
   const filter = {
     status: PRODUCT_STATUS.ACTIVE,
@@ -39,19 +106,45 @@ function findSearchProducts({ query, page, limit, currentUserId }) {
   };
 
   if (category) filter.category = category;
-  if (PRODUCT_CONDITIONS.includes(condition)) filter.condition = condition;
-  if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+  if (condition) filter.condition = condition;
+  if (minPrice !== null || maxPrice !== null) {
     filter.price = {};
-    if (Number.isFinite(minPrice)) filter.price.$gte = minPrice;
-    if (Number.isFinite(maxPrice)) filter.price.$lte = maxPrice;
+    if (minPrice !== null) filter.price.$gte = minPrice;
+    if (maxPrice !== null) filter.price.$lte = maxPrice;
   }
-  if (currentUserId) filter.seller = { $ne: currentUserId };
+  if (blockedSellerIds.length) {
+    filter.seller = { $nin: blockedSellerIds };
+  }
 
-  const queryFilter = q ? { ...filter, $text: { $search: q } } : filter;
-  let productQuery;
+  const keywordFilter = buildKeywordFilter(tokens);
+  const queryFilter = keywordFilter ? { $and: [filter, keywordFilter] } : filter;
+  const skip = (page - 1) * limit;
+  let productsPromise;
+
   if (q && sort === 'relevance') {
-    productQuery = Product.find(queryFilter, { score: { $meta: 'textScore' } })
-      .sort({ score: { $meta: 'textScore' } });
+    productsPromise = Product.aggregate([
+      { $match: queryFilter },
+      { $addFields: { searchScore: buildSearchScoreExpression(tokens) } },
+      { $sort: { searchScore: -1, ratingAverage: -1, ratingCount: -1, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'seller',
+          foreignField: '_id',
+          as: 'seller'
+        }
+      },
+      { $unwind: { path: '$seller', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          searchScore: 0,
+          'seller.googleId': 0,
+          'seller.__v': 0
+        }
+      }
+    ]);
   } else {
     const sortMap = {
       newest: { createdAt: -1 },
@@ -59,16 +152,16 @@ function findSearchProducts({ query, page, limit, currentUserId }) {
       'price-desc': { price: -1, createdAt: -1 },
       rating: { ratingAverage: -1, ratingCount: -1, createdAt: -1 }
     };
-    productQuery = Product.find(queryFilter).sort(sortMap[sort] || sortMap.newest);
-  }
-
-  const skip = (page - 1) * limit;
-  return Promise.all([
-    productQuery
+    productsPromise = Product.find(queryFilter)
+      .sort(sortMap[sort] || sortMap.newest)
       .skip(skip)
       .limit(limit)
       .populate('seller', 'name nickname avatar university rating ratingCount totalSales')
-      .lean(),
+      .lean();
+  }
+
+  return Promise.all([
+    productsPromise,
     Product.countDocuments(queryFilter)
   ]).then(([products, total]) => ({
     products,
@@ -77,8 +170,8 @@ function findSearchProducts({ query, page, limit, currentUserId }) {
     q,
     category,
     condition,
-    minPrice,
-    maxPrice
+    minPrice: minPrice === null ? NaN : minPrice,
+    maxPrice: maxPrice === null ? NaN : maxPrice
   }));
 }
 

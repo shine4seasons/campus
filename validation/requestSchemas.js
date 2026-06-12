@@ -81,9 +81,8 @@ const adminUsersQuerySchema = searchPaginationQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 }).strict();
 
-const adminOrdersQuerySchema = z.object({
+const adminOrdersQuerySchema = searchPaginationQuerySchema.extend({
   status: z.enum(Object.values(ORDER_STATUS)).optional(),
-  page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(25),
 }).strict();
 

@@ -1,7 +1,0 @@
-controllers\product\index.js:57:    const populated = await product.populate('seller', 'name nickname avatar university');
-controllers\product\index.js:87:    await product.populate('seller', 'name nickname avatar university');
-controllers\product\index.js:100:    await product.populate('seller', 'name nickname avatar university');
-controllers\product\index.js:122:    await product.populate('seller', 'name nickname avatar university');
-controllers\product\index.js:139:    await product.populate('seller', 'name nickname avatar university');
-controllers\product\index.js:150:    await product.deleteOne();
-controllers\pageController.js:67:    const categoryMeta = CATEGORIES.find(item => item.slug === category) || null;

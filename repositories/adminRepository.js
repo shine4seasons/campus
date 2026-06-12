@@ -23,6 +23,10 @@ function toObjectIdString(value) {
   }
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function findPendingProductReportIds() {
   return Report.find({
     targetType: 'product',
@@ -50,13 +54,25 @@ async function findAdminUsers({ q, page = 1, limit = 20, status }) {
     User.countDocuments(filter),
     User.find(filter).sort('-createdAt').skip(skip).limit(normalizedLimit).lean()
   ]);
+  const userIds = users.map((user) => user._id);
+  const purchaseCounts = userIds.length
+    ? await Order.aggregate([
+      { $match: { buyer: { $in: userIds } } },
+      { $group: { _id: '$buyer', count: { $sum: 1 } } }
+    ])
+    : [];
+  const purchasesByUserId = new Map(purchaseCounts.map((row) => [String(row._id), row.count]));
+  const usersWithPurchaseCounts = users.map((user) => ({
+    ...user,
+    totalPurchases: purchasesByUserId.get(String(user._id)) || 0
+  }));
 
   return {
     total,
     page: normalizedPage,
     limit: normalizedLimit,
     totalPages: Math.ceil(total / normalizedLimit),
-    users
+    users: usersWithPurchaseCounts
   };
 }
 
@@ -68,9 +84,47 @@ function findActiveUserIds() {
   return User.find({ banned: { $ne: true } }).select('_id').lean();
 }
 
-async function findAdminOrders({ status, page = 1, limit = 25 }) {
+async function findAdminOrders({ status, page = 1, limit = 25, q = '' }) {
   const filter = {};
   if (status) filter.status = status;
+  const term = String(q || '').trim();
+  if (term) {
+    const regex = new RegExp(escapeRegExp(term), 'i');
+    const orderIdTerm = term.replace(/^#?\s*ORD-?/i, '').trim();
+    const orderIdRegex = /^[a-fA-F0-9]{6,24}$/.test(orderIdTerm)
+      ? new RegExp(`${escapeRegExp(orderIdTerm)}$`, 'i')
+      : null;
+    const orderIdMatchPipeline = orderIdRegex
+      ? [
+        { $match: filter },
+        { $addFields: { orderIdString: { $toString: '$_id' } } },
+        { $match: { orderIdString: orderIdRegex } },
+        { $project: { _id: 1 } },
+        { $limit: 250 }
+      ]
+      : [];
+    const [users, products, orderIds] = await Promise.all([
+      User.find({ $or: [{ name: regex }, { nickname: regex }, { email: regex }] }).select('_id').lean(),
+      Product.find({ $or: [{ title: regex }, { category: regex }] }).select('_id').lean(),
+      orderIdRegex ? Order.aggregate(orderIdMatchPipeline) : Promise.resolve([])
+    ]);
+    filter.$or = [
+      { buyer: { $in: users.map((item) => item._id) } },
+      { seller: { $in: users.map((item) => item._id) } },
+      { product: { $in: products.map((item) => item._id) } },
+      { _id: { $in: orderIds.map((item) => item._id) } },
+      { status: regex },
+      { deliveryMode: regex },
+      { paymentMode: regex },
+      { note: regex },
+      { 'shippingAddress.name': regex },
+      { 'shippingAddress.phone': regex },
+      { 'shippingAddress.street': regex },
+      { 'shippingAddress.district': regex },
+      { 'shippingAddress.city': regex },
+      { 'pickupLocation.address': regex }
+    ];
+  }
   const normalizedPage = Number(page);
   const normalizedLimit = Number(limit);
   const skip = (normalizedPage - 1) * normalizedLimit;

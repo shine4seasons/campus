@@ -38,6 +38,12 @@ if (process.env.NODE_ENV === 'development') {
     const { userId } = req.query;
     if (!userId) return res.status(400).send('userId is required');
 
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user?.banned) {
+      return res.redirect('/login?error=banned');
+    }
+
     const jwt = require('jsonwebtoken');
     const token = jwt.sign({ sub: userId.toString() }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE || '7d',
@@ -46,8 +52,6 @@ if (process.env.NODE_ENV === 'development') {
     res.cookie('token', token, getAuthCookieOptions());
 
     // Set campus_mode cookie to buyer/seller/admin based on role
-    const User = require('../models/User');
-    const user = await User.findById(userId);
     if (user) {
       const mode = user.role === 'admin' ? 'admin' : 'buyer';
       res.cookie('campus_mode', mode, { path: '/', maxAge: 30*24*60*60*1000 });

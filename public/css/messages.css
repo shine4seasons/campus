@@ -647,11 +647,6 @@ body.messages-page .message-time {
   line-height: 1;
 }
 
-body.messages-page .message-row.me .message-time::after {
-  content: " âœ“âœ“";
-  color: var(--blue, #2563eb);
-}
-
 body.messages-page .message-image {
   display: block;
   max-width: min(320px, 70vw);

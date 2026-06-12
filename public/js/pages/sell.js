@@ -5,6 +5,9 @@
   const submitMethod = config.submitMethod || 'POST';
   const submitLabel = config.submitLabel || 'Post Product Now';
   const existingImages = Array.isArray(config.existingImages) ? config.existingImages : [];
+  const existingLocation = config.existingLocation && typeof config.existingLocation === 'object'
+    ? config.existingLocation
+    : null;
   const draftKey = submitMethod === 'POST' ? 'seller_product_draft_v1' : '';
 
   let uploadedImages = [];
@@ -124,7 +127,11 @@
     const validQuantity = validateField('f-quantity', (value) => Number(value) >= 1);
     const validDesc = validateField('f-desc', (value) => value.trim().length >= 10);
     const validCondition = validateField('f-condition', (value) => value.trim().length > 0);
-    const validLocation = validateField('f-location', (value) => value.trim().length > 0);
+    const validLocation = validateField('f-location', (value) => {
+      const hasAddress = value.trim().length > 0;
+      const hasCoordinates = Boolean(document.getElementById('f-lat')?.value && document.getElementById('f-lng')?.value);
+      return hasAddress || hasCoordinates;
+    });
     return validTitle && validCategory && validPrice && validQuantity && validDesc && validCondition && validLocation;
   }
 
@@ -139,7 +146,7 @@
         && Number(document.getElementById('f-quantity')?.value) >= 1
         && document.getElementById('f-desc')?.value.trim().length >= 10
       ),
-      Boolean(document.getElementById('f-location')?.value.trim() && document.getElementById('f-lat')?.value && document.getElementById('f-lng')?.value)
+      Boolean(document.getElementById('f-lat')?.value && document.getElementById('f-lng')?.value)
     ];
   }
 
@@ -314,7 +321,20 @@
   function updateLocationSummary() {
     if (!locationSummary) return;
     const address = document.getElementById('f-location')?.value.trim();
-    locationSummary.textContent = address || 'No meetup point selected yet.';
+    const hasCoordinates = Boolean(document.getElementById('f-lat')?.value && document.getElementById('f-lng')?.value);
+    locationSummary.textContent = address || (hasCoordinates ? 'Meetup point selected.' : 'No meetup point selected yet.');
+  }
+
+  function hydrateExistingLocation() {
+    if (!existingLocation || submitMethod !== 'PATCH') return;
+    const latInput = document.getElementById('f-lat');
+    const lngInput = document.getElementById('f-lng');
+    const locationInput = document.getElementById('f-location');
+    const locationSearch = document.getElementById('location-search');
+    if (latInput && !latInput.value && existingLocation.lat != null) latInput.value = existingLocation.lat;
+    if (lngInput && !lngInput.value && existingLocation.lng != null) lngInput.value = existingLocation.lng;
+    if (locationInput && !locationInput.value && existingLocation.address) locationInput.value = existingLocation.address;
+    if (locationSearch && !locationSearch.value && locationInput?.value) locationSearch.value = locationInput.value;
   }
 
   function initLocationPicker() {
@@ -947,6 +967,9 @@
     );
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
+    const latValue = document.getElementById('f-lat').value || (existingLocation?.lat ?? '');
+    const lngValue = document.getElementById('f-lng').value || (existingLocation?.lng ?? '');
+    const addressValue = document.getElementById('f-location').value || existingLocation?.address || '';
     const payload = {
       title: document.getElementById('f-title').value,
       category: document.getElementById('f-cat').value,
@@ -956,9 +979,9 @@
       condition: document.getElementById('f-condition').value,
       images: uploadedImages,
       location: {
-        lat: document.getElementById('f-lat').value,
-        lng: document.getElementById('f-lng').value,
-        address: document.getElementById('f-location').value
+        lat: latValue,
+        lng: lngValue,
+        address: addressValue
       }
     };
 
@@ -994,6 +1017,7 @@
     }
     refreshAiImageOptions();
     updateImageMeta();
+    hydrateExistingLocation();
     updateLocationSummary();
     initLocationPicker();
     setupImageUpload();
