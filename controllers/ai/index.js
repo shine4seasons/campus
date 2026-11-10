@@ -6,14 +6,21 @@ const logger = require('../../utils/logger');
 // AI provider: 'groq' (default, OpenAI-compatible) or 'gemini'.
 const AI_PROVIDER = (process.env.AI_PROVIDER || 'groq').toLowerCase();
 
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b';
+const DEFAULT_GROQ_VISION_MODEL = 'qwen/qwen3.8-27b';
+const GROQ_MODEL = process.env.GROQ_MODEL?.trim() || DEFAULT_GROQ_MODEL;
+const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL?.trim() || DEFAULT_GROQ_VISION_MODEL;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 const AI_TIMEOUT_MS = Number.parseInt(process.env.AI_TIMEOUT_MS || '', 10) || 15000;
 const AI_IMAGE_FETCH_TIMEOUT_MS = Number.parseInt(process.env.AI_IMAGE_FETCH_TIMEOUT_MS || '', 10) || 5000;
 
 const groq = process.env.GROQ_API_KEY
-  ? new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' })
+  ? new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+      timeout: AI_TIMEOUT_MS,
+      maxRetries: 0,
+    })
   : null;
 
 const AI_CACHE_TTL_MS = 60000;
@@ -41,24 +48,6 @@ function setCachedDescription(key, value) {
     const firstKey = aiCache.keys().next().value;
     if (firstKey) aiCache.delete(firstKey);
   }
-}
-
-function withTimeout(promise, timeoutMs, label) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
-
-    Promise.resolve(promise)
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
 }
 
 function normalizeDescription(text) {
@@ -94,27 +83,67 @@ function normalizeTitle(text) {
   return short.length > 80 ? short.slice(0, 80).trim() : short;
 }
 
-async function generateWithGroq({ prompt, imageUrl, maxTokens }) {
+async function generateWithGroq({ model, prompt, imageUrl, maxTokens }) {
   if (!groq) throw serviceUnavailable('AI provider is not configured');
 
   const userContent = imageUrl
     ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageUrl } }]
     : prompt;
 
-  const model = imageUrl ? GROQ_VISION_MODEL : GROQ_MODEL;
-
-  const completion = await withTimeout(
-    groq.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: userContent }],
-      max_tokens: maxTokens,
-      temperature: 0.9,
-      top_p: 0.95,
-    }),
-    AI_TIMEOUT_MS,
-    'Groq request'
-  );
+  const usesGptOss = /^openai\/gpt-oss-(20b|120b)$/.test(model);
+  const completion = await groq.chat.completions.create({
+    model,
+    messages: [{ role: 'user', content: userContent }],
+    // GPT-OSS counts reasoning tokens against the same completion limit.
+    max_completion_tokens: usesGptOss ? maxTokens + 256 : maxTokens,
+    temperature: 0.9,
+    top_p: 0.95,
+    ...(usesGptOss && { reasoning_effort: 'low' }),
+  });
   return completion.choices?.[0]?.message?.content?.trim();
+}
+
+function isGroqModelUnavailable(err) {
+  return err.status === 404
+    || ['model_not_found', 'model_decommissioned', 'model_permission_blocked'].includes(err.code);
+}
+
+async function generateGroqDescription({ promptInput, imageUrl, maxTokens }) {
+  try {
+    if (imageUrl) {
+      try {
+        const description = await generateWithGroq({
+          model: GROQ_VISION_MODEL,
+          prompt: buildPrompt({ ...promptInput, hasImage: true }),
+          imageUrl,
+          maxTokens,
+        });
+        if (description) return { description, usedImage: true };
+        logger.warn('ai.groq_vision_empty_response');
+      } catch (err) {
+        if (!isGroqModelUnavailable(err) && ![400, 413, 422].includes(err.status)) throw err;
+        logger.warn('ai.groq_vision_retry_text_only', { status: err.status });
+      }
+    }
+
+    const input = { prompt: buildPrompt({ ...promptInput, hasImage: false }), maxTokens };
+    try {
+      return {
+        description: await generateWithGroq({ ...input, model: GROQ_MODEL }),
+        usedImage: false,
+      };
+    } catch (err) {
+      if (GROQ_MODEL === DEFAULT_GROQ_MODEL || !isGroqModelUnavailable(err)) throw err;
+      logger.warn('ai.groq_text_retry_default_model', { status: err.status });
+      return {
+        description: await generateWithGroq({ ...input, model: DEFAULT_GROQ_MODEL }),
+        usedImage: false,
+      };
+    }
+  } catch (err) {
+    logger.warn('ai.groq_request_failed', { status: err.status, type: err.name });
+    throw serviceUnavailable('Groq is currently unavailable');
+  }
 }
 
 async function fetchImageAsInlineData(url) {
@@ -262,22 +291,17 @@ const describeProduct = async (req, res, next) => {
       });
     }
 
-    const prompt = buildPrompt({ ...promptInput, hasImage: Boolean(normalizedImageUrl) });
-
     const compute = (async () => {
       let description;
       let titleSuggestion = '';
       let usedImage = Boolean(normalizedImageUrl);
-      try {
-        description = AI_PROVIDER === 'gemini'
-          ? await generateWithGemini({ prompt, imageUrl: normalizedImageUrl, maxTokens })
-          : await generateWithGroq({ prompt, imageUrl: normalizedImageUrl, maxTokens });
-      } catch (err) {
-        if (!normalizedImageUrl || AI_PROVIDER !== 'groq') throw err;
-        logger.warn('ai.groq_vision_retry_text_only', { err: err.message });
-        const textOnlyPrompt = buildPrompt({ ...promptInput, hasImage: false });
-        description = await generateWithGroq({ prompt: textOnlyPrompt, imageUrl: '', maxTokens });
-        usedImage = false;
+      if (AI_PROVIDER === 'gemini') {
+        const prompt = buildPrompt({ ...promptInput, hasImage: usedImage });
+        description = await generateWithGemini({ prompt, imageUrl: normalizedImageUrl, maxTokens });
+      } else {
+        ({ description, usedImage } = await generateGroqDescription({
+          promptInput, imageUrl: normalizedImageUrl, maxTokens,
+        }));
       }
       if (generationMode === 'title') {
         titleSuggestion = normalizeTitle(description);
