@@ -30,6 +30,11 @@ const ratingRoutes = require('./routes/ratingRoutes');
 
 const app = express();
 
+// Render terminates HTTPS at its reverse proxy.
+if (process.env.RENDER === 'true' || process.env.RENDER_EXTERNAL_URL || process.env.RENDER_EXTERNAL_HOSTNAME) {
+  app.set('trust proxy', 1);
+}
+
 connectDB();
 
 app.set('view engine', 'ejs');
@@ -148,5 +153,5 @@ try {
 }
 
 server.listen(PORT, () => {
-  logger.info('server.started', { url: `http://localhost:${PORT}` });
+  logger.info('server.started', { url: process.env.SERVER_URL, port: PORT });
 });

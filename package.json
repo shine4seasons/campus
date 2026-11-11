@@ -4,6 +4,7 @@
   "description": "Campus Marketplace - Node.js + EJS",
   "main": "app.js",
   "scripts": {
+    "test:deployment": "node --test scripts/test-deployment-config.js",
     "start": "node app.js",
     "dev": "nodemon app.js",
     "build:css": "tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/tailwind.css --minify",

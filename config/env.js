@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { configurePublicUrls } = require('./publicUrls');
 
 function normalizeCsv(value) {
   if (!value) return [];
@@ -46,6 +47,7 @@ const baseSchema = z.object({
 });
 
 function validateEnv(env = process.env) {
+  configurePublicUrls(env);
   const parsed = baseSchema.safeParse(env);
   if (!parsed.success) {
     const details = parsed.error.issues.map((i) => `${i.path.join('.') || 'env'}: ${i.message}`).join('; ');

@@ -8,7 +8,7 @@ const AUTH_ROUTES = {
   UPDATE_PROFILE: '/profile'
 };
 
-const OAUTH_FAILURE_REDIRECT = '/pages/login.html?error=oauth_failed';
+const OAUTH_FAILURE_REDIRECT = '/login?error=oauth_failed';
 
 const PASSPORT_STRATEGIES = {
   GOOGLE: 'google'

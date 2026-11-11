@@ -73,6 +73,38 @@ Group01_SmartCampusMarketplace_source_code/
 
 ## Environment Variable Setup
 
+### Render deployment and Google login
+
+The application uses Render's `RENDER_EXTERNAL_URL` (or `RENDER_EXTERNAL_HOSTNAME`)
+when `SERVER_URL` / `CLIENT_URL` are missing or still point to localhost. The same
+public origins are allowed for Socket.IO. Explicit public custom domains are
+preserved. On Render the app uses production cookies and disables development login.
+
+For this deployment, use these values in Render's Environment settings:
+
+```text
+NODE_ENV=production
+SERVER_URL=https://campus-ecpa.onrender.com
+CLIENT_URL=https://campus-ecpa.onrender.com
+SOCKET_ALLOWED_ORIGINS=https://campus-ecpa.onrender.com
+```
+
+In Google Cloud Console, open the OAuth **Web application** client matching
+`GOOGLE_CLIENT_ID`. Add this exact **Authorized redirect URI**, keeping the local
+URI as well if you still develop locally:
+
+```text
+https://campus-ecpa.onrender.com/api/auth/google/callback
+```
+
+Save the Google settings and redeploy the updated source. URL configuration cannot
+register the redirect URI with Google automatically. Keep the Google client secret
+and other credentials in Render's environment settings, never in source control.
+
+Run `npm run test:deployment` to check URL resolution, Google redirect generation,
+login success/failure redirects, secure cookies and the Socket.IO origin handshake
+without contacting Google or the application database.
+
 Copy the example environment file:
 
 ```bash

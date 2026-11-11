@@ -1,15 +1,11 @@
 const crypto = require('crypto');
+const { getCsrfCookieOptions } = require('../utils/authSecurity');
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 function issueCsrfCookie(req, res, next) {
   if (!req.cookies?.csrf) {
-    res.cookie('csrf', crypto.randomBytes(24).toString('hex'), {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('csrf', crypto.randomBytes(24).toString('hex'), getCsrfCookieOptions());
   }
   return next();
 }
