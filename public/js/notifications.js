@@ -11,11 +11,41 @@ function setEmptyState(container, text) {
     container.appendChild(div);
 }
 
+function setAuthPrompt(container, text) {
+    clearNode(container);
+    const wrap = document.createElement('div');
+    wrap.className = 'dropdown-auth-prompt';
+    const msg = document.createElement('p');
+    msg.textContent = text;
+    const link = document.createElement('a');
+    link.href = '/login';
+    link.className = 'dropdown-auth-btn';
+    link.textContent = 'Sign in';
+    wrap.append(msg, link);
+    container.appendChild(wrap);
+}
+
+function syncTopbarDropdownState() {
+    const notifOpen = document.getElementById('notif-dropdown')?.classList.contains('show');
+    const chatOpen = document.getElementById('chat-dropdown')?.classList.contains('show');
+    document.body.classList.toggle('topbar-dropdown-open', Boolean(notifOpen || chatOpen));
+}
+
+function clearGlobalToasts() {
+    const wrap = document.getElementById('toast-wrap');
+    if (wrap) wrap.replaceChildren();
+}
+
+window.addEventListener('pagehide', clearGlobalToasts);
+window.addEventListener('pageshow', clearGlobalToasts);
+
 document.addEventListener('DOMContentLoaded', () => {
     const notifBtn = document.getElementById('notif-btn');
     const notifDropdown = document.getElementById('notif-dropdown');
     const notifDot = document.getElementById('notif-dot');
     const notifList = document.getElementById('notif-list');
+    const notifFooter = notifDropdown?.querySelector('.notif-footer');
+    const notifMarkAll = notifDropdown?.querySelector('.mark-all');
 
     if (!notifBtn) return;
 
@@ -52,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatDropdown) chatDropdown.classList.remove('show');
         
         notifDropdown.classList.toggle('show');
+        syncTopbarDropdownState();
         if (notifDropdown.classList.contains('show')) {
             fetchNotifications();
         }
@@ -62,14 +93,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (notifDropdown && notifDropdown.contains(e.target)) return;
         if (notifBtn && notifBtn.contains(e.target)) return;
         notifDropdown.classList.remove('show');
+        syncTopbarDropdownState();
     });
 
-    // Initial check for unread count
-    checkUnreadCount();
+    // Initial check for unread count only when signed in
+    if (window.SOCKET_USER_ID) {
+        checkUnreadCount();
+    }
 
     async function checkUnreadCount() {
+        if (!window.SOCKET_USER_ID) return;
         try {
             const res = await fetch('/api/notifications');
+            if (res.status === 401) return;
             const data = await res.json();
             if (data.success) {
                 if (data.unreadCount > 0) {
@@ -84,11 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchNotifications() {
+        if (!window.SOCKET_USER_ID) {
+            if (notifFooter) notifFooter.style.display = 'none';
+            if (notifMarkAll) notifMarkAll.style.display = 'none';
+            setAuthPrompt(notifList, 'Please sign in to view your notifications.');
+            return;
+        }
+        if (notifFooter) notifFooter.style.display = '';
+        if (notifMarkAll) notifMarkAll.style.display = '';
         try {
             const res = await fetch('/api/notifications');
+            if (res.status === 401) {
+                if (notifFooter) notifFooter.style.display = 'none';
+                if (notifMarkAll) notifMarkAll.style.display = 'none';
+                setAuthPrompt(notifList, 'Please sign in to view your notifications.');
+                return;
+            }
             const data = await res.json();
             if (data.success) {
                 renderNotifications(data.notifications);
+            } else {
+                setEmptyState(notifList, 'Could not load notifications.');
             }
         } catch (err) {
             setEmptyState(notifList, 'Could not load notifications.');

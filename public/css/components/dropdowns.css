@@ -195,6 +195,37 @@
   text-align: center;
 }
 
+.dropdown-auth-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dropdown-auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.dropdown-auth-btn:hover {
+  background: var(--primary-dark, #15803d);
+  transform: translateY(-1px);
+}
+
 .notif-footer {
   padding: 12px;
   border-top: 1px solid var(--border);
@@ -250,7 +281,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .notif-dropdown {
     right: 10px;
     left: 10px;

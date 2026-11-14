@@ -195,10 +195,17 @@
       });
     }
 
+    const socketConfig = window.AppUtils?.readJsonScript
+      ? window.AppUtils.readJsonScript('socket-user-config')
+      : {};
+    const isAuthenticated = Boolean(window.SOCKET_USER_ID || (socketConfig && socketConfig.userId));
+
     // Chat badge
     async function updateChatBadge() {
+      if (!isAuthenticated) return;
       try {
         const res = await fetch('/api/chat', { credentials: 'include' });
+        if (res.status === 401) return;
         const json = await res.json();
         if (!json.success) return;
         const uiMode = getMode();
@@ -217,8 +224,10 @@
         }
       } catch {}
     }
-    updateChatBadge();
-    if (!window.location.pathname.startsWith('/messages')) setInterval(updateChatBadge, 15000);
+    if (isAuthenticated) {
+      updateChatBadge();
+      if (!window.location.pathname.startsWith('/messages')) setInterval(updateChatBadge, 15000);
+    }
 
     // Admin: restrict navigation
     const sidebarConfig = window.AppUtils?.readJsonScript
@@ -277,6 +286,9 @@
 
     function openMobileSidebar() {
       if (!isMobileSidebarViewport()) return;
+      document.getElementById('notif-dropdown')?.classList.remove('show');
+      document.getElementById('chat-dropdown')?.classList.remove('show');
+      document.body.classList.remove('topbar-dropdown-open');
       document.body.classList.add('sb-open');
       syncSidebarToggleState();
     }

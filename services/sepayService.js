@@ -47,15 +47,28 @@ const getPaymentCode = (order, description) => {
 exports.createSePayPayment = async (order, amount, description) => {
   try {
     const paymentCode = getPaymentCode(order, description);
+    const qrAcc = String(process.env.SEPAY_QR_ACC || process.env.SEPAY_ACCOUNT_NUMBER || SEPAY_QR_ACC || '').trim();
+    const qrBank = String(process.env.SEPAY_QR_BANK || process.env.SEPAY_BANK_CODE || SEPAY_QR_BANK || 'BIDV').trim() || 'BIDV';
+    const roundedAmount = String(Math.round(Number(amount) || 0));
 
-    if (!SEPAY_QR_ACC) {
-      throw new Error('SEPAY_QR_ACC is not set. Cannot generate SePay QR.');
+    if (!qrAcc) {
+      logger.warn('sepay.qr_acc_missing_fallback', { orderId: String(order?._id || ''), paymentCode });
+      const qrData = `SMART_CAMPUS|BANK:${qrBank}|AMOUNT:${roundedAmount}|CODE:${paymentCode}`;
+      return {
+        sepayPaymentId: paymentCode,
+        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrData)}`,
+        referenceCode: paymentCode,
+        expiryTime: null,
+        bankAccountId: null,
+        status: 'PENDING',
+        isDemoQr: true
+      };
     }
 
     const qrParams = new URLSearchParams({
-      acc: SEPAY_QR_ACC,
-      bank: SEPAY_QR_BANK,
-      amount: String(Math.round(Number(amount) || 0)),
+      acc: qrAcc,
+      bank: qrBank,
+      amount: roundedAmount,
       des: paymentCode
     });
 
@@ -65,7 +78,8 @@ exports.createSePayPayment = async (order, amount, description) => {
       referenceCode: paymentCode,
       expiryTime: null,
       bankAccountId: null,
-      status: 'PENDING'
+      status: 'PENDING',
+      isDemoQr: false
     };
   } catch (err) {
     logger.error('sepay.create_payment_failed', { err: formatError('CreatePayment', err) });

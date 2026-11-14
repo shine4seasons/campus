@@ -19,6 +19,12 @@
             <h1 class="payment-heading">Scan to Pay</h1>
             <p class="payment-subcopy">Please transfer the exact amount using any banking app. We use SePay for automatic verification.</p>
 
+            <% if (typeof isDemoMode !== 'undefined' && isDemoMode) { %>
+              <div style="margin: 0 auto 14px; padding: 8px 14px; border-radius: 10px; background: #FEF3C7; color: #92400E; font-size: 13px; font-weight: 600;">
+                Demo QR Mode — Sandbox preview (SePay bank account is not configured).
+              </div>
+            <% } %>
+
             <div class="qr-frame">
               <img src="<%= qrUrl %>" alt="SePay Payment QR Code">
             </div>
@@ -44,10 +50,12 @@
                 <span class="detail-label">Account Number</span>
                 <span class="detail-value">
                   <%= platformBank.accountNumber %>
-                    <button class="copy-btn" data-action="copy" data-copy-value="<%= platformBank.accountNumber %>"
-                      title="Copy">
-                      <i data-lucide="copy" class="copy-icon"></i>
-                    </button>
+                    <% if (!(typeof isDemoMode !== 'undefined' && isDemoMode)) { %>
+                      <button class="copy-btn" data-action="copy" data-copy-value="<%= platformBank.accountNumber %>"
+                        title="Copy">
+                        <i data-lucide="copy" class="copy-icon"></i>
+                      </button>
+                    <% } %>
                 </span>
               </div>
               <div class="detail-row">

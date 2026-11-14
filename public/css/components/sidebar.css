@@ -360,6 +360,14 @@ body.mode-seller .nav-item.active::before {
 
   .sb-mobile-toggle {
     display: flex;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  body.topbar-dropdown-open .sb-mobile-toggle,
+  body.sb-open .sb-mobile-toggle {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.92);
   }
 
   .sidebar {

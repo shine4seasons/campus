@@ -5,11 +5,13 @@ const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid object id'
 const emptyBodySchema = z.object({}).strict();
 
 const authUpdateProfileSchema = z.object({
-  nickname: z.string().trim().min(1).max(100).optional(),
-  phone: z.string().trim().min(6).max(30).optional(),
-  university: z.string().trim().min(1).max(150).optional(),
-  studentId: z.string().trim().min(1).max(50).optional(),
-  bio: z.string().trim().max(500).optional(),
+  nickname: z.string().trim().min(1, 'Display name is required').max(100).optional(),
+  phone: z.string().trim().max(30, 'Phone number must be at most 30 characters')
+    .refine((value) => value === '' || value.length >= 6, 'Phone number must be at least 6 characters')
+    .optional(),
+  university: z.string().trim().min(1, 'University is required').max(150).optional(),
+  studentId: z.string().trim().max(50, 'Student ID must be at most 50 characters').optional(),
+  bio: z.string().trim().max(200, 'Bio must be at most 200 characters').optional(),
   profileComplete: z.boolean().optional(),
   avatar: z.string().url().optional(),
 }).strict();

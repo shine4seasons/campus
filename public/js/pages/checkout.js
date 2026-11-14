@@ -211,6 +211,12 @@ const checkoutConfig = window.AppUtils?.readJsonScript
         form?.querySelectorAll('input, textarea, button:not(#place-btn)').forEach(el => el.disabled = false);
       };
 
+      const toNullableNumber = (val) => {
+        if (val === '' || val == null) return null;
+        const parsed = Number(val);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+
       const orderData = {
         productId:    PRODUCT_ID,
         quantity:     getOrderQuantity(),
@@ -223,13 +229,13 @@ const checkoutConfig = window.AppUtils?.readJsonScript
           street:   document.getElementById('addr-street').value.trim(),
           district: document.getElementById('addr-district').value.trim(),
           city:     document.getElementById('addr-city').value.trim(),
-          lat:      document.getElementById('ship-f-lat').value,
-          lng:      document.getElementById('ship-f-lng').value
+          lat:      toNullableNumber(document.getElementById('ship-f-lat').value),
+          lng:      toNullableNumber(document.getElementById('ship-f-lng').value)
         } : null,
         pickupLocation: deliveryMode === 'pickup' ? {
           address: document.getElementById('checkout-f-location').value,
-          lat:     document.getElementById('checkout-f-lat').value,
-          lng:     document.getElementById('checkout-f-lng').value
+          lat:     toNullableNumber(document.getElementById('checkout-f-lat').value),
+          lng:     toNullableNumber(document.getElementById('checkout-f-lng').value)
         } : null
       };
 

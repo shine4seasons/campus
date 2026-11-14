@@ -57,9 +57,11 @@ const getPaymentPage = async (req, res, next) => {
       return res.redirect(`/orders/tracking/${payment.order._id}`);
     }
 
+    const configuredAccount = String(process.env.SEPAY_QR_ACC || process.env.SEPAY_ACCOUNT_NUMBER || '').trim();
+    const isDemoMode = !configuredAccount;
     const platformBank = {
       bankName: process.env.SEPAY_QR_BANK || process.env.SEPAY_BANK_CODE || 'BIDV',
-      accountNumber: process.env.SEPAY_QR_ACC || process.env.SEPAY_ACCOUNT_NUMBER || '',
+      accountNumber: configuredAccount || 'Demo Sandbox Account',
       accountName: process.env.SEPAY_ACCOUNT_NAME || 'SMART CAMPUS MARKETPLACE',
     };
 
@@ -75,6 +77,7 @@ const getPaymentPage = async (req, res, next) => {
       payment,
       platformBank,
       qrUrl,
+      isDemoMode,
       isAlreadyPaid: payment.status === PAYMENT_STATUS.PAID,
       user: req.user,
     });

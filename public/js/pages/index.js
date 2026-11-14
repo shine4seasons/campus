@@ -664,15 +664,65 @@
     window.location.href = '/';
   }
 
+  let authRedirectTimer = null;
+  let authToastDismissTimer = null;
+
+  function clearCatalogToasts() {
+    if (authRedirectTimer) {
+      clearTimeout(authRedirectTimer);
+      authRedirectTimer = null;
+    }
+    if (authToastDismissTimer) {
+      clearTimeout(authToastDismissTimer);
+      authToastDismissTimer = null;
+    }
+    toastContainer.replaceChildren();
+  }
+
+  window.addEventListener('pagehide', clearCatalogToasts);
+  window.addEventListener('pageshow', clearCatalogToasts);
+
   window.openProduct = function openProduct(id) {
     if (!IS_AUTH) {
+      clearCatalogToasts();
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2.2');
+      const circle = document.createElementNS(NS, 'circle');
+      circle.setAttribute('cx', '12');
+      circle.setAttribute('cy', '12');
+      circle.setAttribute('r', '10');
+      const l1 = document.createElementNS(NS, 'line');
+      l1.setAttribute('x1', '12');
+      l1.setAttribute('y1', '8');
+      l1.setAttribute('x2', '12');
+      l1.setAttribute('y2', '12');
+      const l2 = document.createElementNS(NS, 'line');
+      l2.setAttribute('x1', '12');
+      l2.setAttribute('y1', '16');
+      l2.setAttribute('x2', '12.01');
+      l2.setAttribute('y2', '16');
+      svg.append(circle, l1, l2);
+
+      const label = document.createElement('span');
+      label.textContent = 'Please sign in to view product details';
+
       const element = document.createElement('div');
       element.className = 'toast error';
-      element.textContent = 'Please sign in to view product details';
+      element.append(svg, label);
       toastContainer.appendChild(element);
-      setTimeout(() => {
+
+      authToastDismissTimer = setTimeout(() => {
+        element.remove();
+      }, 2800);
+
+      authRedirectTimer = setTimeout(() => {
+        clearCatalogToasts();
         window.location.href = '/login';
-      }, 1200);
+      }, 900);
       return;
     }
     window.location.href = '/products/' + id;

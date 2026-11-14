@@ -52,8 +52,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return document.createTextNode((safeName[0] || '?').toUpperCase());
     }
 
+    function isAuthenticated() {
+        if (window.SOCKET_USER_ID) return true;
+        const socketConfig = window.AppUtils?.readJsonScript
+            ? window.AppUtils.readJsonScript('socket-user-config')
+            : {};
+        return Boolean(socketConfig && socketConfig.userId);
+    }
+
+    function setAuthPrompt(container, text) {
+        clearNode(container);
+        const wrap = document.createElement('div');
+        wrap.className = 'dropdown-auth-prompt';
+        const msg = document.createElement('p');
+        msg.textContent = text;
+        const link = document.createElement('a');
+        link.href = '/login';
+        link.className = 'dropdown-auth-btn';
+        link.textContent = 'Sign in';
+        wrap.append(msg, link);
+        container.appendChild(wrap);
+    }
+
+    function syncTopbarDropdownState() {
+        const notifOpen = notifDropdown?.classList.contains('show');
+        const chatOpen = chatDropdown?.classList.contains('show');
+        document.body.classList.toggle('topbar-dropdown-open', Boolean(notifOpen || chatOpen));
+    }
+
     // --- Socket.io ---
-    if (window.SOCKET_USER_ID) {
+    if (isAuthenticated()) {
         // Reuse socket if io() is already initialized in notifications.js or index.ejs
         // For simplicity, we assume io() is available globally
         socket = window.socket || (typeof io !== 'undefined' ? io() : null);
@@ -70,9 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!isOpen) {
             chatDropdown.classList.add('show');
+            syncTopbarDropdownState();
             showConversationList();
         } else {
             chatDropdown.classList.remove('show');
+            syncTopbarDropdownState();
         }
     });
 
@@ -85,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         if (!chatDropdown.contains(e.target) && !chatBtn.contains(e.target)) {
             chatDropdown.classList.remove('show');
+            syncTopbarDropdownState();
         }
     });
 
@@ -102,17 +133,29 @@ document.addEventListener('DOMContentLoaded', () => {
         clearNode(chatTitle);
         chatTitle.appendChild(document.createTextNode('Messages'));
         chatBackBtn.style.display = 'none';
+
+        if (!isAuthenticated()) {
+            chatFooter.style.display = 'none';
+            setAuthPrompt(chatBody, 'Please sign in to view and send messages.');
+            return;
+        }
+
         chatFooter.style.display = 'block';
         setEmpty(chatBody, 'Loading conversations...');
 
         try {
             const res = await fetch('/api/chat');
+            if (res.status === 401) {
+                chatFooter.style.display = 'none';
+                setAuthPrompt(chatBody, 'Please sign in to view and send messages.');
+                return;
+            }
             const data = await res.json();
             if (data.success) {
                 renderConversationList(data.data);
                 updateUnreadBadge(data.data);
             } else {
-                setEmpty(chatBody, 'Error loading chats.');
+                setEmpty(chatBody, 'Could not load conversations.');
             }
         } catch (err) {
             setEmpty(chatBody, 'Could not connect to server.');

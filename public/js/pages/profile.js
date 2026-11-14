@@ -51,18 +51,85 @@ if (profileConfig.isOwnProfile) {
     });
   }
 
+  function extractValidationMessage(data, fallback) {
+    const fieldErrors = data && data.details && data.details.fieldErrors;
+    if (fieldErrors && typeof fieldErrors === 'object') {
+      for (const messages of Object.values(fieldErrors)) {
+        if (Array.isArray(messages) && messages.length > 0) {
+          return messages[0];
+        }
+      }
+    }
+    return (data && data.message) || fallback;
+  }
+
+  function syncSidebarAvatar(url, altText) {
+    const sbAvatar = document.getElementById('sbAvatar');
+    if (!sbAvatar || !url) return;
+    let img = sbAvatar.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      sbAvatar.replaceChildren(img);
+    }
+    img.src = url;
+    img.alt = altText || 'Avatar';
+  }
+
+  function syncProfileCardMeta(savedUser) {
+    const displayName = savedUser.nickname || savedUser.name || '';
+    const avatarNameEl = document.querySelector('.avatar-name');
+    if (avatarNameEl && displayName) avatarNameEl.textContent = displayName;
+
+    const headerTitleEl = document.querySelector('.profile-page-copy h1');
+    if (headerTitleEl && displayName) headerTitleEl.textContent = displayName;
+
+    const metaRow = document.querySelector('.avatar-meta-row');
+    if (metaRow) {
+      const uniPill = appCreateElement('span', {
+        className: 'avatar-meta-pill',
+        children: [
+          appCreateElement('i', { attrs: { 'data-lucide': 'building-2' } }),
+          document.createTextNode(savedUser.university || 'University not set')
+        ]
+      });
+      const pills = [uniPill];
+      if (savedUser.studentId) {
+        pills.push(appCreateElement('span', {
+          className: 'avatar-meta-pill',
+          children: [
+            appCreateElement('i', { attrs: { 'data-lucide': 'id-card' } }),
+            document.createTextNode(savedUser.studentId)
+          ]
+        }));
+      }
+      metaRow.replaceChildren(...pills);
+      if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [metaRow] });
+    }
+  }
+
   window.saveProfile = async function () {
-    const nickname = document.getElementById('f-nickname').value.trim();
-    const university = document.getElementById('f-university').value.trim();
+    const nicknameEl = document.getElementById('f-nickname');
+    const universityEl = document.getElementById('f-university');
+    const phoneEl = document.getElementById('f-phone');
+    const nickname = nicknameEl.value.trim();
+    const university = universityEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const studentId = document.getElementById('f-student-id').value.trim();
+    const bio = document.getElementById('f-bio').value.trim();
 
     if (!nickname) {
-      document.getElementById('f-nickname').style.borderColor = '#E84040';
+      nicknameEl.style.borderColor = '#E84040';
       toast('Display name is required', 'err');
       return;
     }
     if (!university) {
-      document.getElementById('f-university').style.borderColor = '#E84040';
+      universityEl.style.borderColor = '#E84040';
       toast('University is required', 'err');
+      return;
+    }
+    if (phone && phone.length < 6) {
+      phoneEl.style.borderColor = '#E84040';
+      toast('Phone number must be at least 6 characters (or leave blank)', 'err');
       return;
     }
 
@@ -78,19 +145,19 @@ if (profileConfig.isOwnProfile) {
         body: JSON.stringify({
           nickname,
           university,
-          phone: document.getElementById('f-phone').value.trim(),
-          studentId: document.getElementById('f-student-id').value.trim(),
-          bio: document.getElementById('f-bio').value.trim(),
+          phone,
+          studentId,
+          bio,
           profileComplete: true,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Save failed');
+      if (!res.ok) throw new Error(extractValidationMessage(data, 'Save failed'));
 
       toast('Profile saved!', 'ok');
       document.getElementById('save-status').textContent = 'Last saved: ' + new Date().toLocaleTimeString();
-      document.querySelector('.avatar-name').textContent = data.data.nickname || data.data.name;
+      syncProfileCardMeta(data.data || { nickname, university, studentId });
     } catch (err) {
       toast(err.message || 'Failed to save', 'err');
     } finally {
@@ -128,14 +195,19 @@ if (profileConfig.isOwnProfile) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Upload failed');
 
-        document.getElementById('avatar-img').src = data.url;
-
-        await fetch('/api/auth/profile', {
+        const patchRes = await fetch('/api/auth/profile', {
           method: 'PATCH',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ avatar: data.url }),
         });
+        const patchData = await patchRes.json().catch(() => ({}));
+        if (!patchRes.ok) throw new Error(extractValidationMessage(patchData, 'Could not save avatar'));
+
+        const savedAvatarUrl = (patchData.data && patchData.data.avatar) || data.url;
+        const avatarImg = document.getElementById('avatar-img');
+        if (avatarImg) avatarImg.src = savedAvatarUrl;
+        syncSidebarAvatar(savedAvatarUrl, (patchData.data && patchData.data.name) || avatarImg?.alt);
 
         toast('Avatar updated!', 'ok');
       } catch (err) {
@@ -147,7 +219,7 @@ if (profileConfig.isOwnProfile) {
     });
   }
 
-  ['f-nickname', 'f-university'].forEach((id) => {
+  ['f-nickname', 'f-university', 'f-phone'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener('focus', function () {

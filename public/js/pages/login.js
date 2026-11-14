@@ -29,16 +29,37 @@ function setSubmitButton(button, loading) {
   );
 }
 
+function extractValidationMessage(data) {
+  if (!data) return 'Unable to save profile. Please try again.';
+  const fieldErrors = data.details && data.details.fieldErrors;
+  if (fieldErrors && typeof fieldErrors === 'object') {
+    for (const messages of Object.values(fieldErrors)) {
+      if (Array.isArray(messages) && messages.length > 0) {
+        return messages[0];
+      }
+    }
+  }
+  return data.message || 'Unable to save profile. Please try again.';
+}
+
 window.submitProfile = async function () {
-  const nickname = document.getElementById('f-nickname').value.trim();
-  const university = document.getElementById('f-university').value.trim();
-  const phone = document.getElementById('f-phone').value.trim();
+  const nicknameEl = document.getElementById('f-nickname');
+  const universityEl = document.getElementById('f-university');
+  const phoneEl = document.getElementById('f-phone');
+  const errEl = document.getElementById('step2-error');
+  const errTextEl = document.getElementById('step2-error-text');
+
+  const nickname = nicknameEl.value.trim();
+  const university = universityEl.value.trim();
+  const phone = phoneEl.value.trim();
   const studentId = document.getElementById('f-student-id').value.trim();
   const bio = document.getElementById('f-bio').value.trim();
 
+  errEl.style.display = 'none';
+  phoneEl.classList.remove('has-error');
+
   let ok = true;
-  ['f-nickname', 'f-university'].forEach((id) => {
-    const el = document.getElementById(id);
+  [nicknameEl, universityEl].forEach((el) => {
     if (!el.value.trim()) {
       el.classList.add('has-error');
       ok = false;
@@ -46,7 +67,18 @@ window.submitProfile = async function () {
       el.classList.remove('has-error');
     }
   });
-  if (!ok) return;
+  if (!ok) {
+    errTextEl.textContent = 'Please fill in your display name and university.';
+    errEl.style.display = 'flex';
+    return;
+  }
+
+  if (phone && phone.length < 6) {
+    phoneEl.classList.add('has-error');
+    errTextEl.textContent = 'Phone number must be at least 6 characters (or leave blank).';
+    errEl.style.display = 'flex';
+    return;
+  }
 
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
@@ -60,13 +92,12 @@ window.submitProfile = async function () {
       body: JSON.stringify({ nickname, phone, university, studentId, bio, profileComplete: true }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Failed');
+    if (!res.ok) throw new Error(extractValidationMessage(data));
     showSuccess('Profile saved. Redirecting to homepage...');
   } catch (err) {
     btn.disabled = false;
     setSubmitButton(btn, false);
-    const errEl = document.getElementById('step2-error');
-    document.getElementById('step2-error-text').textContent = err.message || 'Unable to save profile. Please try again.';
+    errTextEl.textContent = err.message || 'Unable to save profile. Please try again.';
     errEl.style.display = 'flex';
   }
 };
