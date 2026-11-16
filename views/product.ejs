@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: product.title + ' - Campus Marketplace', pageStyles: ['product', 'image-modal', 'rating'] }) %>
+  <%- include('partials/head', { pageTitle: product.title + ' - HanuCampusTrade', pageStyles: ['product', 'image-modal', 'rating'] }) %>
   <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.css" />
   <script defer src="/vendor/leaflet-1.9.4/leaflet.js"></script>
 </head>
@@ -132,6 +132,8 @@
           <% } else if (isAdmin) { %>
             <div class="sold-overlay">Admin preview mode</div>
           <% } else { %>
+            <button type="button" class="hct-button" data-cart-add="<%= p._id %>" data-cart-stock="<%= availableQty %>">Add to cart</button>
+            <a href="/cart" class="hct-button secondary">View cart</a>
             <button class="btn-contact" id="btn-msg-seller" data-action="init-chat">
               <i data-lucide="message-circle"></i> Chat with Seller
             </button>
@@ -140,6 +142,9 @@
             </button>
           <% } %>
         </div>
+
+        <p id="hct-product-cart-status" role="status" aria-live="polite"></p>
+        <%- include('partials/policy-links') %>
 
         <!-- Seller Trust Card -->
         <div class="pdp-seller-mini">
@@ -203,9 +208,10 @@
         <div class="pdp-buy-inline-copy">
           <div class="pdp-buy-inline-label">Ready to buy?</div>
           <div class="pdp-buy-inline-price"><%= fmtPrice(p.price) %></div>
-          <div class="pdp-buy-inline-sub">This button stays in the page flow and scrolls with you.</div>
+          <div class="pdp-buy-inline-sub">Use Test checkout for coursework. No money is collected and no real order is placed.</div>
         </div>
         <div class="pdp-buy-inline-actions">
+          <button type="button" class="hct-button" data-cart-add="<%= p._id %>" data-cart-stock="<%= availableQty %>" data-cart-next="true">Test checkout</button>
           <button class="buy-bar-buy" data-action="go-checkout">
             Buy Now
           </button>
@@ -269,7 +275,7 @@
           <a href="/user/<%= seller._id %>" class="pdp-seller-full-name"><%= sellerName %></a>
           <div class="pdp-seller-uni">
             <i data-lucide="graduation-cap" style="width:14px; margin-right:4px;"></i>
-            <%= seller.university || 'Campus Marketplace' %>
+            <%= seller.university || 'HanuCampusTrade' %>
             <% if (joinDate) { %> · Joined <%= joinDate %><% } %>
           </div>
           <div class="pdp-seller-grid">

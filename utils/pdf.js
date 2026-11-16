@@ -19,7 +19,7 @@ async function generateOrderInvoice(order) {
             // Header
             doc.fillColor('#444444')
                .fontSize(20)
-               .text('CAMPUS MARKETPLACE', 50, 50)
+               .text('HANUCAMPUSTRADE', 50, 50)
                .fontSize(10)
                .text('Invoice #' + order._id.toString().substring(0, 8).toUpperCase(), 200, 50, { align: 'right' })
                .text('Date: ' + new Date().toLocaleDateString(), 200, 65, { align: 'right' })
@@ -72,7 +72,7 @@ async function generateOrderInvoice(order) {
 
             // Footer
             doc.fontSize(10).fillColor('#888888');
-            doc.text('Thank you for shopping at Campus Marketplace!', 50, 700, { align: 'center', width: 500 });
+            doc.text('Thank you for shopping at HanuCampusTrade!', 50, 700, { align: 'center', width: 500 });
 
             doc.end();
         } catch (err) {
@@ -194,7 +194,7 @@ async function generateSystemReport(data) {
             doc.on('end', () => resolve(Buffer.concat(buffers)));
 
             doc.fillColor('#1D6AE5').fontSize(24).text('SYSTEM PERFORMANCE REPORT', 50, 50);
-            doc.fontSize(10).fillColor('#666666').text('Platform: Campus Marketplace', 50, 80);
+            doc.fontSize(10).fillColor('#666666').text('Platform: HanuCampusTrade', 50, 80);
             doc.text('Report Period: Last 30 Days', 50, 95);
             doc.text('Generated: ' + new Date().toLocaleString(), 50, 110);
 

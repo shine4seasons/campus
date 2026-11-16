@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head', { pageTitle: 'Project policies - HanuCampusTrade', pageStyles: [] }) %></head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+  <main class="main"><div class="hct-page">
+    <div class="hct-eyebrow">For Hanoi University students</div>
+    <h1>Project policies</h1>
+    <p>HanuCampusTrade is a student-to-student marketplace prototype for Hanoi University students. It is a student project, with no claim of university endorsement.</p>
+    <div class="hct-notice"><strong>Student project – E-Business, Hanoi University</strong><br>The cart's Test checkout is a simulation: no payment, reservation, delivery or real order is created. Use it for coursework testing.</div>
+    <%- include('partials/policy-links') %>
+    <section class="hct-card" id="delivery">
+      <h2>Pickup & delivery</h2>
+      <p>In Test checkout, choose the HANU main gate or library entrance as a mock pickup location. Campus pickup is shown at 0 VND; there are no additional charges in this simulation.</p>
+      <p>For any actual exchange outside this simulation, contact the seller through the product page to agree a public meeting point, time and any delivery costs before proceeding. The project team does not operate a delivery service. Inspect the item and confirm its condition before paying.</p>
+      <p>A cart does not reserve an item. Availability, condition and current price must be checked before an exchange. Each seller is responsible for describing their own items and known defects.</p>
+    </section>
+    <section class="hct-card" id="returns">
+      <h2>Returns & disputes</h2>
+      <p>A test confirmation can be discarded without cost. It is not a purchase, so it cannot create a payment or refund.</p>
+      <p>For an actual peer-to-peer exchange, ask the seller about defects, accessories and their proposed return arrangements before agreeing to buy. Contact the seller through Messages if an item differs from its description, and keep the listing, messages and order details.</p>
+      <p>Use Report Product on the product page to flag a misleading listing or inappropriate conduct. If an order exists in the platform, use its available order dispute tools. The project does not promise an automatic refund or a blanket warranty for used goods.</p>
+    </section>
+    <section class="hct-card" id="privacy">
+      <h2>Privacy</h2>
+      <p>Browsing the cart and Test checkout does not require a name, phone number, student ID, address or payment details. Item identifiers and quantities are saved in this browser's local storage. The most recent test receipt is saved in this tab's session storage. Clear the cart or site data to remove saved cart items; closing the tab normally clears the test receipt.</p>
+      <p>If you sign in to the wider platform through Google, the application uses your account identifier, name, email and profile picture. Profile setup can also store a nickname, phone number, university and student ID. Listings, uploaded images, messages, favorites, ratings, reports and order activity are stored when you use those features.</p>
+      <p>Public profiles and listings can show your chosen display name, avatar, university, bio, ratings, listings and listing location. Do not post your home address or sensitive documents in public listings or chat. Google handles sign-in, Cloudinary handles uploaded images, and map features may request external map services. Payment-related information is used if you enter the separate payment flow.</p>
+      <p>To ask about your project data, contact the student project team through the same channel used for your test invitation and identify the account or tester code concerned. Do not send passwords or banking credentials. There is no verified-student guarantee merely because a university or student ID has been entered in a profile.</p>
+    </section>
+    <a href="/search" class="hct-button">Browse student listings</a>
+  </div></main>
+</body></html>

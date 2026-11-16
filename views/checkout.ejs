@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('partials/head', { pageTitle: 'Checkout - Campus Marketplace', pageStyles: ['checkout'] }) %>
+  <%- include('partials/head', { pageTitle: 'Checkout - HanuCampusTrade', pageStyles: ['checkout'] }) %>
   <link href="/vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <script defer src="/vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
 </head>
@@ -17,7 +17,9 @@
       <div class="checkout-hero-copy">
         <div class="checkout-kicker">Secure checkout</div>
         <h1>Review your order and choose the best way to pay</h1>
-        <p>Keep the same flow, but with clearer guidance, stronger selected states, and a premium checkout feel.</p>
+        <p>Check item condition, quantity, delivery fees and the final total before continuing.</p>
+        <p>For coursework without payment, use <a href="/cart">Cart → Test checkout</a>. This separate order flow can create a platform order.</p>
+        <%- include('partials/policy-links') %>
       </div>
       <div class="checkout-steps" aria-label="Checkout progress">
         <div class="checkout-step active"><span>1</span> Review</div>

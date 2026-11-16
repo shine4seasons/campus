@@ -64,7 +64,7 @@ app.use((req, res, next) => {
     if (view === '404' && res.statusCode >= 500) {
       return originalRender('error', {
         ...renderLocals,
-        title: 'Error - Campus Marketplace',
+        title: 'Error - HanuCampusTrade',
         message: 'An unexpected error occurred. Please try again.',
         isLoginPage: false,
       }, renderCallback);
@@ -73,7 +73,7 @@ app.use((req, res, next) => {
     if (view === '404' && res.statusCode === 403) {
       return originalRender('error', {
         ...renderLocals,
-        title: 'Forbidden - Campus Marketplace',
+        title: 'Forbidden - HanuCampusTrade',
         message: 'You do not have permission to access this page.',
         isLoginPage: false,
       }, renderCallback);

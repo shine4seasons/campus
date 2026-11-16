@@ -26,6 +26,20 @@ router.get('/', (req, res) => {
 
 router.get('/search', pageController.getSearchResults);
 
+// Coursework purchase simulation: public, and deliberately separate from payments.
+for (const [path, view, label] of [
+  ['/cart', 'cart', 'Cart'],
+  ['/test-checkout', 'test-checkout', 'Test checkout'],
+  ['/test-confirmation', 'test-confirmation', 'Test confirmation'],
+  ['/policies', 'policies', 'Project policies'],
+]) {
+  router.get(path, (req, res) => res.render(view, {
+    title: `${label}${TITLE_SEPARATOR}${APP_NAME}`,
+    isLoginPage: false,
+    activePage: view,
+  }));
+}
+
 router.get('/login', (req, res) => {
   if (res.locals.user && res.locals.user.profileComplete) {
     return res.redirect('/');

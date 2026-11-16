@@ -1,4 +1,4 @@
-const APP_NAME = 'Campus Marketplace';
+const APP_NAME = 'HanuCampusTrade';
 const TITLE_SEPARATOR = ' - ';
 
 const VIEWS = {

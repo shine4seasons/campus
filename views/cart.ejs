@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head', { pageTitle: 'Cart - HanuCampusTrade', pageStyles: [] }) %></head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+  <main class="main"><div class="hct-page">
+    <div class="hct-eyebrow">HanuCampusTrade / Hanoi University</div>
+    <h1>Your cart</h1>
+    <p>Review prices, condition and quantities before trying checkout.</p>
+    <div class="hct-notice">Student project checkout is a simulation. No money is collected, no stock is reserved and no seller is notified.</div>
+    <p id="hct-flow-status" role="status" aria-live="polite">Loading your cart…</p>
+    <div class="hct-grid">
+      <section class="hct-card" aria-label="Cart items" id="hct-cart-items"></section>
+      <aside class="hct-card" aria-label="Order summary">
+        <h2>Summary</h2>
+        <div class="hct-line"><span>Items</span><span id="hct-count">0</span></div>
+        <div class="hct-line"><span>Campus pickup</span><span>0 ₫</span></div>
+        <div class="hct-line hct-total"><span>Total</span><span id="hct-total">0 ₫</span></div>
+        <button class="hct-button" id="hct-checkout-button" type="button" disabled>Test checkout</button>
+        <div class="hct-actions"><a href="/search">Continue browsing</a></div>
+      </aside>
+    </div>
+    <%- include('partials/policy-links') %>
+  </div></main>
+  <script id="hct-flow-config" type="application/json"><%- JSON.stringify({ page: 'cart', userId: user ? String(user._id) : null }).replace(/</g, '\\u003c') %></script>
+  <script defer src="/js/pages/test-purchase.js"></script>
+</body></html>

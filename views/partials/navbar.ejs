@@ -4,8 +4,9 @@
 		<button class="tb-toggle-sidebar" id="sidebar-toggle" title="Toggle Sidebar" aria-controls="sb-sidebar" aria-expanded="true" type="button">
 			<i data-lucide="menu"></i>
 		</button>
-		<a href="/" class="nav-brand">
-			<img src="/img/logo.png" alt="Campus Marketplace" class="nav-logo-img">
+		<a href="/" class="nav-brand hct-brand" aria-label="HanuCampusTrade home">
+			<strong>HanuCampusTrade</strong>
+			<small>HANU student marketplace</small>
 		</a>
 
 	</div>
@@ -19,6 +20,7 @@
 	</div>
 
 	<div class="topbar-right">
+		<a href="/cart" class="hct-cart-link" aria-label="Open cart">Cart <span data-cart-count>0</span></a>
 		<% if (showUserTopbarActions) { %>
 		<button class="tb-icon-btn" id="notif-btn" title="Notifications" aria-label="Notifications">
 			<svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -62,6 +64,14 @@
 		<button class="btn btn-primary" id="tbPrimaryBtn" style="display:none"><span id="tbPrimaryLabel">Action</span></button>
 	</div>
 </header>
+<div class="hct-project-bar">
+  <span>Student project – E-Business, Hanoi University</span>
+  <nav aria-label="Project information">
+    <a href="/policies#delivery">Pickup</a>
+    <a href="/policies#returns">Returns</a>
+    <a href="/policies#privacy">Privacy</a>
+  </nav>
+</div>
 <script defer src="/js/navbar-init.js"></script>
 <script defer src="/socket.io/socket.io.js"></script>
 <script id="socket-user-config" type="application/json"><%- JSON.stringify({ userId: user ? String(user._id) : "" }).replace(/</g, '\\u003c') %></script>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head', { pageTitle: 'Test confirmation - HanuCampusTrade', pageStyles: [] }) %></head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+  <main class="main"><div class="hct-page">
+    <div class="hct-eyebrow">HanuCampusTrade / Test receipt</div>
+    <h1>Test order confirmation</h1>
+    <div class="hct-notice">This receipt is a simulation. No payment was made, no seller was notified and no goods will be delivered.</div>
+    <p id="hct-flow-status" role="status" aria-live="polite"></p>
+    <section id="hct-receipt" class="hct-card" aria-label="Test order receipt"></section>
+    <div class="hct-actions"><a href="/search" class="hct-button">Continue browsing</a><a href="/cart" class="hct-button secondary">View cart</a></div>
+    <%- include('partials/policy-links') %>
+  </div></main>
+  <script id="hct-flow-config" type="application/json">{"page":"confirmation"}</script>
+  <script defer src="/js/pages/test-purchase.js"></script>
+</body></html>

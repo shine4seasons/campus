@@ -40,7 +40,7 @@
         { title: 'Revenue', sub: 'Revenue & Finances', icon: 'revenue', sectionId: 'sRevenue', path: '/revenue', role: 'seller', keywords: 'revenue finances seller' },
         { title: 'Messages (Seller)', sub: 'Customer messages', icon: 'report', sectionId: 'sMessages', path: '/dashboard', role: 'seller', keywords: 'messages chat seller inbox' },
         { title: 'Post Product', sub: 'List a new item', icon: 'package', path: '/sell', role: 'seller', keywords: 'sell post product list' },
-        { title: 'Home', sub: 'Campus marketplace', icon: 'dash', path: '/', keywords: 'home main campus marketplace' },
+        { title: 'Home', sub: 'HanuCampusTrade', icon: 'dash', path: '/', keywords: 'home main campus marketplace' },
         { title: 'Categories', sub: 'Explore product categories', icon: 'categories', path: '/#categories', role: 'buyer', keywords: 'categories explore browse' },
         { title: 'Featured Products', sub: 'Featured items', icon: 'star', path: '/#featured', role: 'buyer', keywords: 'featured products hot items' },
         { title: 'My Orders (Buyer)', sub: 'Purchased orders', icon: 'orders', path: '/orders', role: 'buyer', keywords: 'my orders purchase history' },

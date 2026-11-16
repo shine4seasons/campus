@@ -29,9 +29,9 @@ body.index-page .nav-item.active::before {
 
 .hero {
   position: relative;
-  min-height: 560px;
+  min-height: 440px;
   margin-left: var(--sb-w);
-  padding: 84px 0 96px;
+  padding: 64px 0 76px;
   overflow: visible;
   background-color: var(--inverse-surface, #131b2e);
   background-image:

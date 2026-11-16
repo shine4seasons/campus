@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head', { pageTitle: 'Test checkout - HanuCampusTrade', pageStyles: [] }) %></head>
+<body>
+  <%- include('partials/navbar') %>
+  <%- include('partials/sidebar') %>
+  <main class="main"><div class="hct-page">
+    <div class="hct-eyebrow">Cart → Review → Test confirmation</div>
+    <h1>Test checkout</h1>
+    <div class="hct-notice"><strong>Simulation only.</strong> Do not transfer money. This flow creates a test confirmation in this browser, without placing a real order.</div>
+    <p id="hct-flow-status" role="status" aria-live="polite">Checking current prices and availability…</p>
+    <div class="hct-grid">
+      <section class="hct-card" aria-label="Items to review" id="hct-cart-items"></section>
+      <form class="hct-card" id="hct-checkout-form">
+        <h2>Review & confirm</h2>
+        <div class="hct-line"><span>Items</span><span id="hct-count">0</span></div>
+        <label for="hct-pickup">Campus pickup location</label>
+        <select id="hct-pickup" required><option value="">Choose a location</option><option value="HANU main gate">HANU main gate</option><option value="HANU library entrance">HANU library entrance</option></select>
+        <p>For an actual exchange, agree the time and exact meeting point with each seller through chat.</p>
+        <div class="hct-line"><span>Pickup fee</span><span>0 ₫</span></div>
+        <div class="hct-line hct-total"><span>Test total</span><span id="hct-total">0 ₫</span></div>
+        <label><input type="checkbox" id="hct-agree" required>I have read the <a href="/policies">project policies</a> and understand that this is a test with no payment or delivery.</label>
+        <button type="submit" class="hct-button" id="hct-confirm-button" disabled>Confirm test order</button>
+        <div class="hct-actions"><a href="/cart">Back to cart</a></div>
+      </form>
+    </div>
+    <%- include('partials/policy-links') %>
+  </div></main>
+  <script id="hct-flow-config" type="application/json"><%- JSON.stringify({ page: 'checkout', userId: user ? String(user._id) : null }).replace(/</g, '\\u003c') %></script>
+  <script defer src="/js/pages/test-purchase.js"></script>
+</body></html>

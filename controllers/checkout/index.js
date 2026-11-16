@@ -9,7 +9,7 @@ const getCheckoutPage = async (req, res, next) => {
 
     if (!product) {
       return res.status(404).render('error', {
-        title: 'Product not found - Campus Marketplace',
+        title: 'Product not found - HanuCampusTrade',
         message: 'Product not found',
         user: req.user,
       });
@@ -39,7 +39,7 @@ const getPaymentPage = async (req, res, next) => {
 
     if (!payment) {
       return res.status(404).render('error', {
-        title: 'Payment not found - Campus Marketplace',
+        title: 'Payment not found - HanuCampusTrade',
         message: 'Payment not found',
         user: req.user,
       });
@@ -47,7 +47,7 @@ const getPaymentPage = async (req, res, next) => {
 
     if (String(payment.buyer) !== String(req.user._id)) {
       return res.status(403).render('error', {
-        title: 'Forbidden - Campus Marketplace',
+        title: 'Forbidden - HanuCampusTrade',
         message: 'Unauthorized',
         user: req.user,
       });
@@ -62,7 +62,7 @@ const getPaymentPage = async (req, res, next) => {
     const platformBank = {
       bankName: process.env.SEPAY_QR_BANK || process.env.SEPAY_BANK_CODE || 'BIDV',
       accountNumber: configuredAccount || 'Demo Sandbox Account',
-      accountName: process.env.SEPAY_ACCOUNT_NAME || 'SMART CAMPUS MARKETPLACE',
+      accountName: process.env.SEPAY_ACCOUNT_NAME || 'SMART HANUCAMPUSTRADE',
     };
 
     const qrUrl = payment.sepayQrUrl || payment.qrUrl;
